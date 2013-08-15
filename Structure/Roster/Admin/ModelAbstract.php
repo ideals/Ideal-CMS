@@ -1,0 +1,73 @@
+<?php
+namespace Ideal\Structure\Roster\Admin;
+
+use Ideal\Core\Db;
+
+/**
+ * Класс для работы со списками
+ *
+ */
+
+class ModelAbstract extends \Ideal\Core\Admin\Model
+{
+
+    public function detectPageByIds($par)
+    {
+        $first = array_shift($par);
+        if ($first != null) {
+            $first = intval($first);
+            $_sql = "SELECT * FROM {$this->_table} WHERE ID={$first}";
+            $db = Db::getInstance();
+            $this->path = $db->queryArray($_sql);
+        } else {
+            $par = array();
+            $this->path = array();
+        }
+        return $par;
+    }
+
+
+    public function setObjectNew()
+    {
+
+    }
+
+
+    public function delete()
+    {
+        $db = Db::getInstance();
+        $db->delete($this->_table, $this->object['ID']);
+
+        if(isset($this->object['pos'])) {
+            // Если есть сортировка pos, то нужно уменьшить все следующие за удаляемым
+            // элементы на единицу
+            $_sql = "UPDATE {$this->_table} SET pos = pos - 1
+                        WHERE structure_path = '{$this->structurePath}'
+                              AND pos > {$this->object['pos']}";
+            $db->query($_sql);
+        }
+        // TODO сделать проверку успешности удаления
+        return 1;
+    }
+
+
+    public function getNewPos()
+    {
+        /* @var Db $db */
+        $db = Db::getInstance();
+
+        $_sql = "SELECT pos FROM {$this->_table} WHERE structure_path='{$this->structurePath}' ORDER BY pos DESC LIMIT 1";
+        $posArr = $db->queryArray($_sql);
+
+        $pos = 0;
+        if (count($posArr) > 0) {
+            // Если элементы на этом уровне есть, берём cid последнего
+            $pos = $posArr[0]['pos'];
+        }
+
+        // Прибавляем единицу в pos
+        return $pos + 1;
+
+    }
+
+}

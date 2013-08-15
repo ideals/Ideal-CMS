@@ -1,0 +1,17 @@
+{% extends "site.twig" %}
+
+{% block content %}
+
+    <h1>{{ header }}</h1>
+
+    {{ template.content|raw }}
+
+    {%if parts|length > 0 %}
+    <ul>
+    {% for part in parts %}
+        <li><a href="{{ part.url }}">{{ part.name }}</a></li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+
+{% endblock %}
