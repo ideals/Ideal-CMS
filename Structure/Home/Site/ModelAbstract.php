@@ -1,0 +1,48 @@
+<?php
+namespace Ideal\Structure\Home\Site;
+
+use Ideal\Structure\Part;
+use Ideal\Core\Config;
+use Ideal\Core\Db;
+
+class ModelAbstract extends Part\Site\Model
+{
+
+    public function construct($structurePath)
+    {
+        $this->structurePath = $structurePath;
+
+        $config = Config::getInstance();
+
+        // Находим начальную структуру
+        $structures = $config->structures;
+        $structure = reset($structures);
+
+        $this->params = $structure['params'];
+        $this->fields = $structure['fields'];
+
+        $this->_table = strtolower($config->db['prefix'] . 'Structure_' . $structure['structure']);
+    }
+
+
+    public function detectPageByUrl($url, $path)
+    {
+        $db = Db::getInstance();
+
+        $_sql = "SELECT * FROM {$this->_table} WHERE url='{$url}' LIMIT 1";
+
+        $list = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
+
+        // Страницу не нашли, возвращаем 404
+        if (!isset($list[0]['cid'])) {
+            return '404';
+        }
+
+        $this->path = array_merge($path, $list);
+        $this->object = end($list);
+
+        return array();
+    }
+
+
+}

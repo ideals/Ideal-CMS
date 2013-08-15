@@ -1,0 +1,38 @@
+body {
+    padding-top: 15px;
+    padding-bottom: 40px;
+}
+h1 {
+    line-height: 30px;
+    margin-bottom: 18px;
+    text-align: center;
+}
+table.table tr.inactive td, table.table tr.not-menu td {
+    color: slategray;
+    background-color: #E9F1F0!important;
+}
+table.table tr.inactive td a {
+    color: slategray;
+}
+table.table-hover tbody tr.inactive:hover td, table.table-hover tbody tr.not-menu:hover td {
+    background-color: #BED1DB!important;
+}
+table.table tr.not-menu td a {
+    color: slategray;
+    font-weight: bold;
+}
+tr.element td div.button-edit {
+    display: none;
+}
+table.table-hover tbody tr:hover td {
+    background-color: #D9EDF7;
+}
+table.table-hover tbody tr:hover td div.button-edit {
+    display: inline;
+}
+.form-horizontal .help-block {
+    margin-top: 3px;
+}
+.nav-tabs li a.error {
+    color: red!important;
+}
