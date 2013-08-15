@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>{{ title }}</title>
+    {{ metaTags|raw }}
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="/favicon.ico">
+
+    <script type="text/javascript" src="/js/jquery/jquery-1.8.3.min.js"></script>
+
+    <link href="/js/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/js/bootstrap/js/bootstrap.min.js"></script>
+
+    <link href="/css/style.css" rel="stylesheet" type="text/css" media="all">
+
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <style>
+        body {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="navbar">
+        <div class="navbar-inner">
+            <div class="container">
+                <a class="brand" href="/">{{ domain }}</a>
+                <div class="nav-collapse">
+                    <ul class="nav">
+                        {% for item in mainMenu %}
+                            <li {% if item.isActivePage %} class="active" {% endif %}>
+                                <a {{ item.url | raw }}>{{ item.name }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div><!--/.nav-collapse -->
+            </div>
+        </div>
+    </div>
+
+    {% if breadCrumbs != '' %}
+        <ul class="breadcrumb">
+            {% for item in breadCrumbs %}
+                <li>
+                    {% if loop.last %}
+                        {{ item.name }}
+                    {% else %}
+                        <a {% if item.url %}href="{{ item.url }}"{% endif %}>{{ item.name }}</a> <span class="divider">→</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+
+    {% block content %}
+    {% endblock %}
+
+    <hr>
+
+    <div class="footer">
+        <div class="copy">
+            &copy; 2012&#8212;{{ year }} <a href="http://idealcms.ru/" target="_blank">Ideal CMS</a>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

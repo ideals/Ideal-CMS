@@ -1,0 +1,24 @@
+{% extends "admin.twig" %}
+
+{% block content %}
+    <style>
+        .nav-tabs > .active > a, .nav-tabs > .active > a:hover {
+            background-color: #0088CC;
+            color: #FFF;
+        }
+    </style>
+
+    <ul class="nav nav-tabs nav-stacked span3">
+    {% for item in items %}
+        <li {% if ID == item.ID %}class="active"{% endif %}>
+            <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}">{{ item.name }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+
+    <div class="offset3">
+        {{ text|raw }}
+    </div>
+
+
+{% endblock %}

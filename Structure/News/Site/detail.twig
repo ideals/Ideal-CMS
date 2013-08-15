@@ -1,0 +1,11 @@
+{% extends "site.twig" %}
+
+{% block content %}
+
+    <h1>{{ header }}</h1>
+
+    {{ text|raw }}
+
+    <p><a href="{{ allNewsUrl }}">Все новости</a></p>
+
+{% endblock %}
