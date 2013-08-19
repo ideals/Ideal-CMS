@@ -148,14 +148,14 @@
         </div>
     </div>
 
-    {%if pages|length > 0 %}
+    {%if pager.pages|length > 1 %}
     <div class="pagination pagination-centered">
         <ul>
-        {% if pagePrev != '' %}
+        {% if pager.pagePrev != '' %}
             <li><a href="{{ pagePrev }}">← назад</a></li>
         {% endif %}
 
-        {% for page in pages %}
+        {% for page in pager.pages %}
             {% if page.current == 1 %}
                 <li class="active"><a>{{ page.num }}</a></li>
             {% else %}
@@ -163,7 +163,7 @@
             {% endif %}
         {% endfor %}
 
-        {% if pageNext != '' %}
+        {% if pager.pageNext != '' %}
             <li><a href="{{ pageNext }}">вперёд →</a></li>
         {% endif %}
         </ul>

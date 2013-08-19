@@ -17,18 +17,12 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         // Считываем список элементов
         $request = new Request();
         $page = intval($request->page);
-        $onPage = $this->model->params['elements_cms'];
         $listing = $this->model->getList($page);
         $headers = $this->model->getHeaderNames();
 
         $this->parseList($headers, $listing);
 
-        $pagination = new Pagination();
-        $this->view->pages = $pagination->getPages($this->model->getListCount(),
-            $onPage, $page, $request->getQueryWithout('page'), 'page');
-
-        $this->view->pagePrev = $pagination->getPrev();
-        $this->view->pageNext = $pagination->getNext();
+        $this->view->pager = $this->model->getPager('page');
     }
 
 

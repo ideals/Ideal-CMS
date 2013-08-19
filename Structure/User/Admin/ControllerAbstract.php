@@ -36,11 +36,13 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
 
         // Считываем список элементов
         $page = 0;
-        $onPage = 10;
-        $listing = $this->model->getList($page, $onPage);
+        $listing = $this->model->getList($page);
         $headers = $this->model->getHeaderNames();
 
         $this->parseList($headers, $listing);
+
+        $this->view->pager = $this->model->getPager('page');
+
     }
 
 

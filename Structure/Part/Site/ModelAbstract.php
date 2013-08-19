@@ -15,9 +15,9 @@ class ModelAbstract extends Site\Model
      * @param int $onPage Кол-во элементов на странице
      * @return array Полученный список элементов
      */
-    public function getList($page, $onPage)
+    public function getList($page)
     {
-        $list = parent::getList($page, $onPage);
+        $list = parent::getList($page);
 
         // Построение правильных URL
         $url = new Field\Url\Model();
