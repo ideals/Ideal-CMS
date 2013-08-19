@@ -37,15 +37,11 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
 
         $request = new Request();
         $page = intval($request->page);
-        $onPage = $this->model->params['elements_site'];
 
-        $this->view->parts = $this->model->getList($page, $onPage);
+        $this->view->parts = $this->model->getList($page);
 
         // Отображение листалки
-        $pagination = new Pagination();
-        $this->view->pages = $pagination->getPages($this->model->getListCount(),
-            $onPage, $page, $request->getQueryWithout('page'), 'page');
-
+        $this->view->pager = $this->model->getPager('page');
     }
 
 
