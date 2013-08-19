@@ -11,27 +11,21 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     public $cid;
 
 
+    public function getWhere($where)
+    {
+        $where = 'WHERE ' . $where . ' AND is_active=1 AND date_create < ' . time();
+        return $where;
+    }
+
+
     /**
      * @param int $page Номер отображаемой страницы
-     * @param int $onPage
      * @return array Полученный список элементов
      */
-    public function getList($page, $onPage)
+    public function getList($page)
     {
         $config = Config::getInstance();
-        $db = Db::getInstance();
-
-        $start = ($page < 2) ? 0 : ($page - 1) * $onPage;
-
-        $orderBy = $this->params['field_sort'];
-        $orderBy = ($orderBy == '') ? '' : 'ORDER BY ' . $orderBy;
-
-        // Считываем новости из базы
-        $structurePath = $this->object['structure_path'] . '-' . $this->object['ID'];
-        $_sql = "SELECT * FROM {$this->_table} WHERE is_active=1 AND structure_path='{$structurePath}'"
-              . ' AND date_create < ' . time() . " {$orderBy} LIMIT {$start}, {$onPage}";
-
-        $news = $db->queryArray($_sql);
+        $news = parent::getList($page);
 
         $parentUrl = $this->getParentUrl();
         foreach ($news as $k => $v) {
@@ -44,24 +38,6 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         }
 
         return $news;
-    }
-
-
-    /**
-     * Получить общее количество элементов в списке
-     * @return array Полученный список элементов
-     */
-    public function getListCount()
-    {
-        /* @var Db $db */
-        $db = Db::getInstance();
-
-        $_sql = "SELECT COUNT(ID) FROM {$this->_table} WHERE is_active=1
-                    AND structure_path='{$this->structurePath}'  AND date_create < " . time();
-
-        $list = $db->queryArray($_sql);
-
-        return $list[0]['COUNT(ID)'];
     }
 
 
@@ -112,12 +88,6 @@ class ModelAbstract extends \Ideal\Core\Site\Model
             $this->header = $header[1];
         }
         return $text;
-    }
-
-
-    public function setObjectNew()
-    {
-
     }
 
 

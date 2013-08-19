@@ -121,7 +121,6 @@ abstract class Model
 
     /**
      * @param int $page Номер отображаемой страницы
-     * @param int $onPage Кол-во элементов на странице
      * @return array Полученный список элементов
      */
     public function getList($page)
@@ -174,11 +173,21 @@ abstract class Model
     }
 
 
-    public function getPager($page, $query)
+    /**
+     * Получение листалки для шаблона и стрелок вправо/влево
+     * @param $pageName Название get-параметра, содержащего страницу
+     * @return mixed
+     */
+    public function getPager($pageName)
     {
+        $request = new Request();
+        $query = $request->getQueryWithout($pageName);
+        $page = intval($request->{$pageName});
         $page = ($page == 0) ? 1 : $page;
+
         // todo сделать определение elements_site | elements_admin на основании имени класса
         $onPage = $this->params['elements_site'];
+
         $countList = $this->getListCount();
 
         $pagination = new Pagination();
