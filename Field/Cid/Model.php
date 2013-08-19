@@ -178,4 +178,22 @@ class Model
         // На основании массива $update составляем список запросов для обновления cid'ов
         return $_sql;
     }
+
+
+    /**
+     * Возвращает массив с родительскими cid'ами для заданного cid
+     * @param $cid Сид для которого нужно определить родительские сиды
+     * @return array Массив родительских сидов
+     */
+    public function getParents($cid)
+    {
+        $parents = array();
+        $parentCid = '';
+        $blocks = str_split($cid, $this->digits);
+        foreach ($blocks as $v) {
+            $parentCid .= $v;
+            $parents[] = $this->reconstruct($parentCid);
+        }
+        return $parents;
+    }
 }
