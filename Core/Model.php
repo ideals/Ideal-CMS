@@ -125,8 +125,10 @@ abstract class Model
      */
     public function getList($page)
     {
-        $db = Db::getInstance();
+        $list = array();
         $where = $this->getWhere("e.structure_path='{$this->structurePath}'");
+        if ($where === false) return $list;
+        $db = Db::getInstance();
 
         // todo сделать определение elements_site | elements_admin на основании имени класса
         $onPage = $this->params['elements_site'];
