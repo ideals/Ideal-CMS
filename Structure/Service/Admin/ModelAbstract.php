@@ -39,9 +39,9 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         // Считываем конфиги из папки Ideal/Service и Custom/Service
         $actions = array_merge(
             $this->getActions('Ideal/Structure/Service'),
-            $this->getActions('Custom/Structure/Service'),
-            $this->getModulesActions('Modules'),
-            $this->getModulesActions('Custom/Modules')
+            $this->getActions('Ideal.c/Structure/Service'),
+            $this->getModulesActions('Mods'),
+            $this->getModulesActions('Mods.c')
         );
 
         // Сортируем экшены по полю pos
