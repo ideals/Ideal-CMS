@@ -284,10 +284,11 @@ class Util
      * @param int    $len максимальное количество символов в строке
      * @return string
      */
-    function smartTrim($str, $len)
+    static function smartTrim($str, $len)
     {
+        $firstLen = strlen($str);
         $str = substr($str, 0, $len);
-        $str = substr($str, 0, strrpos($str, ' '));
+        if ($firstLen !== strlen($str)) $str = substr($str, 0, strrpos($str, ' '));
         return $str;
     }
 
