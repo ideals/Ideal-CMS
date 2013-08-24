@@ -136,7 +136,7 @@ abstract class Model
         if ($page == 0) $page = 1;
         $start = ($page - 1) * $onPage;
 
-        $_sql = "SELECT * FROM {$this->_table} AS e {$where}
+        $_sql = "SELECT e.* FROM {$this->_table} AS e {$where}
                           ORDER BY e.{$this->params['field_sort']} LIMIT {$start}, {$onPage}";
         $list = $db->queryArray($_sql);
 
