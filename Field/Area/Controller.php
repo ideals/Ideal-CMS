@@ -13,7 +13,7 @@ class Controller extends AbstractController
         return '<textarea class="' . $this->widthEditField
              . '" name="' . $this->htmlName
              . '" id="' . $this->htmlName
-             .'">' . $this->getValue() . '</textarea>';
+             .'">' . htmlspecialchars($this->getValue()) . '</textarea>';
     }
 
 }

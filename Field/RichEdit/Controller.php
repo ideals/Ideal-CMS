@@ -12,9 +12,10 @@ class Controller extends AbstractController
     public function getInputText()
     {
         $config = Config::getInstance();
+        $value = htmlspecialchars($this->getValue());
         $html = <<<HTML
             <textarea class="{$this->widthEditField}" name="{$this->htmlName}"
-                id="{$this->htmlName}">{$this->getValue()}</textarea>
+                id="{$this->htmlName}">{$value}</textarea>
             <script>
                 CKFinder.setupCKEditor( null, "/{$config->cmsFolder}/Ideal/Library/ckfinder/" );
                 CKEDITOR.replace("{$this->htmlName}", {
