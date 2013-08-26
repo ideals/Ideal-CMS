@@ -8,5 +8,5 @@ return array(
     'urlSuffix' => '.html', // Стандартный суффикс URL | Ideal_Text
     'templateCachePath' => '/tmp/templates', // Путь к папке с кэшем twig-шаблонов | Ideal_Text
     'isTemplateCache' => '0', // Кэширование twig-шаблонов | Ideal_Checkbox
-    'isTemplateAdminCache' => '0', // Кэширование twig-шаблонов админской части | Ideal_C   heckbox
+    'isTemplateAdminCache' => '0', // Кэширование twig-шаблонов админской части | Ideal_Checkbox
 );
