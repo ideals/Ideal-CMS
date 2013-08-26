@@ -45,20 +45,6 @@ return array(
             'name'      => 'Сервис',
             'isShow'    => 1,
             'hasTable'  => false,
-            'items'     => array(
-                1 => array(
-                    'ID'     => 1,
-                    'name'   => 'Настройки',
-                    'info'   => '',
-                    'action' => 'Config'
-                ),
-                2 => array(
-                    'ID'     => 2,
-                    'name'   => 'Проверка целостности базы данных',
-                    'info'   => '',
-                    'action' => 'CheckDb'
-                )
-            )
         )
     )
 );
