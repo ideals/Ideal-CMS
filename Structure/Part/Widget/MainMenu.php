@@ -30,14 +30,14 @@ class MainMenu extends \Ideal\Core\Widget
         $object = $this->model->object;
 
         foreach ($menu as $k => $v) {
-            $menu[$k]['url'] = 'href="' . $url->getUrl($v) . '"';
+            $menu[$k]['link'] = 'href="' . $url->getUrl($v) . '"';
 
             // Определяем активен ли данный пункт меню
             $menu[$k]['isActivePage'] = 0;
             if (isset($path[1]['ID']) and ($v['ID'] == $path[1]['ID'])) {
                 if (($object['ID'] == $v['ID']) AND isset($object['lvl']) AND ($object['lvl'] == 1)
                         AND ($object['structure_path'] == $path[1]['structure_path'])) {
-                    $menu[$k]['url'] = '';
+                    $menu[$k]['link'] = '';
                 }
                 $menu[$k]['isActivePage'] = 1;
             }
