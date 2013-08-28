@@ -75,6 +75,19 @@ abstract class Model
     }
 
 
+    public function setObjectById($id)
+    {
+        $db = Db::getInstance();
+
+        $_sql = "SELECT * FROM {$this->_table} WHERE ID='{$id}'";
+        $object = $db->queryArray($_sql);
+        if (isset($object[0]['ID'])) {
+            // TODO сделать обработку ошибки, когда по ID ничего не нашлось
+            $this->object = $object[0];
+        }
+    }
+
+
     public function setObjectByStructurePath($structurePath)
     {
         $db = Db::getInstance();
@@ -82,7 +95,7 @@ abstract class Model
         $_sql = "SELECT * FROM {$this->_table} WHERE structure_path='{$structurePath}'";
         $object = $db->queryArray($_sql);
         if (isset($object[0]['ID'])) {
-            // TODO сделать обработку ошибки, когда по ID ничего не нашлось
+            // TODO сделать обработку ошибки, когда по structurePath ничего не нашлось
             $this->object = $object[0];
         }
     }
@@ -180,10 +193,13 @@ abstract class Model
      */
     public function getPager($pageName)
     {
+        // По заданному названию параметра страницы определяем номер активной страницы
         $request = new Request();
-        $query = $request->getQueryWithout($pageName);
         $page = intval($request->{$pageName});
         $page = ($page == 0) ? 1 : $page;
+
+        // Строка запроса без нашего параметра номера страницы
+        $query = $request->getQueryWithout($pageName);
 
         // todo сделать определение elements_site | elements_admin на основании имени класса
         $onPage = $this->params['elements_site'];
@@ -191,13 +207,48 @@ abstract class Model
         $countList = $this->getListCount();
 
         $pagination = new Pagination();
+        // Номера и ссылки на доступные страницы
         $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, 'page');
-        $pager['prev'] = $pagination->getPrev();
-        $pager['next'] = $pagination->getNext();
+        $pager['prev'] = $pagination->getPrev(); // ссылка на предыдущю страницу
+        $pager['next'] = $pagination->getNext(); // cсылка на следующую страницу
 
         return $pager;
     }
 
+    /**
+     * Определение пути с помощью structure_path по инициализированному $this->object
+     * @return array Массив, содержащий элементы пути к $this->object
+     */
+    public function detectPath()
+    {
+        $config = Config::getInstance();
 
+        $structurePath = explode('-', $this->object['structure_path']);
+        $sP = array_shift($structurePath);
+        $structure = $config->getStructureById($sP);
+        $path = array($structure);
+        foreach ($structurePath as $v) {
+            $className = \Ideal\Core\Util::getClassName($structure['structure'], 'Structure') . '\\Site\\Model';
+            /* @var $structure \Ideal\Core\Model */
+            $structure = new $className($sP);
+            $structure->setObjectById($v);
+            $elements = $structure->getLocalPath();
+            $path = array_merge($path, $elements);
+            $structure = end($path);
+            $sP .= '-' . $structure['ID'];
+        }
+        $path = array_merge($path, $this->getLocalPath());
+        return $path;
+    }
 
+    /**
+     * Построение пути в рамках одной структуры.
+     * Этот метод обязательно должен быть переопределён перед использованием.
+     * Если он не будет переопределён, то будет вызвано исключение.
+     * @throws \Exception
+     */
+    protected function getLocalPath()
+    {
+        throw new \Exception('Вызов не переопределённого метода getLocalPath');
+    }
 }
