@@ -88,9 +88,20 @@ class Config
 
     public function getStructureByName($name)
     {
-        // TODO сделать уведомление об ошибке, если такого модуля нет
+        // TODO сделать уведомление об ошибке, если такой структуры нет
         foreach($this->structures as $structure) {
             if ($structure['structure'] == $name) {
+                return $structure;
+            }
+        }
+        return false;
+    }
+
+    public function getStructureById($structureId)
+    {
+        // TODO сделать уведомление об ошибке, если такой структуры нет
+        foreach($this->structures as $structure) {
+            if ($structure['ID'] == $structureId) {
                 return $structure;
             }
         }
