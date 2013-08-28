@@ -7,7 +7,7 @@
  *
  */
 
-namespace Mail;
+namespace Ideal\Library\Mail;
 
 class Sender
 {
@@ -28,6 +28,7 @@ class Sender
     protected $body;          // все письмо целиком
     protected $attach;        // вложенные файлы
     protected $attach_type;   // типы (форматы) вложенных файлов
+    protected $charset;       // Кодировка письма
 
 
     function __construct()
@@ -35,6 +36,16 @@ class Sender
         // Установка разделителей письма псевдослучайным образом
         $this->boundary = '----_=_' . md5(mt_rand());
         $this->boundary2 = '----_=_' . md5(mt_rand());
+        // Установка кодировки по умолчанию
+        $this->charset = 'utf-8';
+    }
+
+    /**
+     * Установка кодировки письма
+     * @param $code
+     */
+    public function setCharset($code){
+        $this->charset = strtoupper($code);
     }
 
 
@@ -42,7 +53,7 @@ class Sender
      * Установка заголовка письма
      * @param $subject string Заголовок письма
      */
-    function subj($subject)
+    public function setSubj($subject)
     {
         $subject = stripslashes($subject);
         $this->subj = '=?UTF-8?B?' . base64_encode($subject) . '?=';
@@ -54,12 +65,12 @@ class Sender
      *
      *@return string
      */
-    function header()
+    protected function header()
     {
         $header = "MIME-Version: 1.0\n";
 
         // Если выбрана отправка письма только в текстовом виде,
-        $header_cnt = "Content-type: text/plain; charset=windows-1251\n"
+        $header_cnt = "Content-type: text/plain; charset={$this->charset}\n"
             . "Content-transfer-encoding: 8bit";
 
         // Если выбрана отправка в html-виде и нет аттача
@@ -79,25 +90,24 @@ class Sender
         return $header;
     }
 
-
     /**
      * Добавление текста письма
-     *
-     *
+     * @param $plain
+     * @param $html
      */
-    function body($plain, $html)
+    public function setBody($plain, $html)
     {
         $this->body_html = $html;
         $this->body_plain = $plain;
     }
 
-
     /**
      * Добавление вложения в письмо
-     *
-     *
+     * @param $name
+     * @param $type
+     * @param $data
      */
-    function attach($name, $type, $data)
+    protected function attach($name, $type, $data)
     {
         $this->attach_type[$name] = $type;
         $this->attach[$name] = $data;
@@ -112,16 +122,16 @@ class Sender
      * @param string $saveAs Имя, под которым нужно прикрепить файл
      * @return boolean
      */
-    function fileattach($path, $type, $saveAs = '')
+    public function fileAttach($path, $type, $saveAs = '')
     {
         $saveAs = ($saveAs == '') ? $path : $saveAs;
         $name = preg_replace("/(.+\/)/", '', $saveAs);
         if (!$r = fopen($path, 'r')) {
-            return 1;
+            return false;
         }
         $this->attach($name, $type, fread($r, filesize($path)));
         fclose($r);
-        return 0;
+        return true;
     }
 
 
@@ -130,7 +140,7 @@ class Sender
      *
      *
      */
-    function body_create()
+    protected function body_create()
     {
         if (isSet($this->attach_type)) {
             // Если есть аттач
@@ -138,7 +148,7 @@ class Sender
             if ($this->body_html != '') {
                 $this->body .= 'Content-Type: multipart/alternative; boundary="' . $this->boundary . '"' . "\n\n";
             } else {
-                $this->body .= "Content-Type: text/plain; charset=windows-1251\n";
+                $this->body .= "Content-Type: text/plain; charset={$this->charset}\n";
                 $this->body .= "Content-Transfer-Encoding: 8bit\n\n";
             }
         }
@@ -146,7 +156,7 @@ class Sender
         if ($this->body_html != '') {
             // Если HTML
             $this->body .= '--' . $this->boundary . "\n";
-            $this->body .= "Content-Type: text/plain; charset=windows-1251\n";
+            $this->body .= "Content-Type: text/plain; charset={$this->charset}\n";
             $this->body .= "Content-Transfer-Encoding: 8bit\n\n";
         }
 
@@ -163,7 +173,7 @@ class Sender
             $this->body_html = stripslashes($this->body_html);
 
             $this->body .= '--' . $this->boundary . "\n";
-            $this->body .= "Content-Type: text/html; charset=windows-1251\n";
+            $this->body .= "Content-Type: text/html; charset={$this->charset}\n";
             $this->body .= "Content-Transfer-Encoding: quoted-printable\n\n";
             $this->body .= $this->body_html . "\n\n";
         }
@@ -183,13 +193,13 @@ class Sender
         }
     }
 
-
     /**
      * Отправляет письмо получателю
-     *
-     *@return boolean
+     * @param $from адрес откуда будет отправлено письмо
+     * @param $to адрес кому будет отправлено письмо
+     * @return bool
      */
-    function sent($from, $to)
+    public function sent($from, $to)
     {
         $this->from = $this->conv_in($from);
         $this->to = $this->conv_in($to);
@@ -213,48 +223,34 @@ class Sender
         return mail($this->to, $this->subj, $this->body, 'From: ' . $this->from . "\r\n" . $header );
     }
 
-
     /**
      * Проверка адреса электронной почты
-     *
-     *@return boolean
+     * @param $mail
+     * @return bool
      */
-    function is_email($mail)
+    public function is_email($mail)
     {
-        $mail = $this->conv_in($mail);
-        // Проверяем правильно ли в мыле поставлены знаки @ и .
-        $posAT = strpos($mail, '@');
-        $posDOT = strrpos($mail, '.');
-        if (($posAT < 1) or ($posDOT < 3) or ($posAT > $posDOT)) {
-            return false;
-        }
-
-        //Проверяем, нет ли в мыле русских букв
-        for ($i=0; $i<strlen($mail); $i++) {
-            if (ord($mail[$i]) > 127) {
-                return false;
-            }
-        }
-
-        return true;
+        $filter = filter_var($mail, FILTER_VALIDATE_EMAIL);
+        if($filter == $mail) return true;
+        return false;
     }
-
 
     /**
      * Устанавливает кодировку текста
-     *
-     *@return string
+     * @param $text
+     * @return string
      */
-    function conv_in($text)
+    protected function conv_in($text)
     {
-        if ($this->charset == CHARSET_BLOG) {
+        $code = mb_detect_encoding($text);
+        if (strnatcasecmp($this->charset, $code) === 0) {
             return $text;
         }
         if (function_exists('mb_convert_encoding')) {
-            $text= mb_convert_encoding($text, $this->charset, CHARSET_BLOG);
+            $text= mb_convert_encoding($text, $this->charset, $code);
         } else {
             if (function_exists('iconv')) {
-                $text = iconv(CHARSET_BLOG, $this->charset, $text);
+                $text = iconv(iconv, $this->charset, $text);
             }
         }
         return $text;
