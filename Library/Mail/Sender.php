@@ -7,7 +7,7 @@
  *
  */
 
-namespace Ideal\Library\Mail;
+namespace Mail;
 
 class Sender
 {
@@ -38,6 +38,8 @@ class Sender
         $this->boundary2 = '----_=_' . md5(mt_rand());
         // Установка кодировки по умолчанию
         $this->charset = 'utf-8';
+
+        $this->body = null;
     }
 
     /**
@@ -47,7 +49,6 @@ class Sender
     public function setCharset($code){
         $this->charset = strtoupper($code);
     }
-
 
     /**
      * Установка заголовка письма
@@ -87,6 +88,7 @@ class Sender
 
         $header .= $header_cnt;
 
+
         return $header;
     }
 
@@ -99,6 +101,7 @@ class Sender
     {
         $this->body_html = $html;
         $this->body_plain = $plain;
+        if($this->body !== null) $this->body = null;
     }
 
     /**
@@ -205,20 +208,22 @@ class Sender
         $this->to = $this->conv_in($to);
         $header = $this->conv_in($this->header());
 
-        $this->body_create();
-        $this->body = $this->conv_in($this->body);
+        if ($this->body === null) {
+            $this->body_create();
+            $this->body = $this->conv_in($this->body);
 
-        // Разрезаем строчки, длиннее 2020 символов (это ограничение почтовиков)
-        $body = explode("\n", $this->body);
-        foreach ($body as $k => $row) {
-            // TODO придумать, как резать больше, чем один раз
-            if (strlen($row) > 2030) {
-                $splitPos = strpos($row, ' ', 2020);
-                $row = substr_replace($row, "\n", $splitPos + 1 , 0);
-                $body[$k] = $row;
+            // Разрезаем строчки, длиннее 2020 символов (это ограничение почтовиков)
+            $body = explode("\n", $this->body);
+            foreach ($body as $k => $row) {
+                // TODO придумать, как резать больше, чем один раз
+                if (strlen($row) > 2030) {
+                    $splitPos = strpos($row, ' ', 2020);
+                    $row = substr_replace($row, "\n", $splitPos + 1, 0);
+                    $body[$k] = $row;
+                }
             }
+            $this->body = implode("\n", $body);
         }
-        $this->body = implode("\n", $body);
 
         return mail($this->to, $this->subj, $this->body, 'From: ' . $this->from . "\r\n" . $header );
     }
