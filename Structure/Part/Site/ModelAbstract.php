@@ -207,4 +207,40 @@ class ModelAbstract extends Site\Model
         return $list;
     }
 
+    /**
+     * Построение пути в рамках одной структуры.
+     */
+    public function getLocalPath()
+    {
+        $category = $this->object;
+
+        if ($category['lvl'] == 1) {
+            // Если в локальной структуре родителей нет, возвращаем сам объект
+            return array($category);
+        }
+
+        // По cid определяем cid'ы всех родителей
+        $cid = new \Ideal\Field\Cid\Model($this->params['levels'], $this->params['digits']);
+        $cids = $cid->getParents($category['cid']);
+
+        $path = array();
+        if (count($cids) > 0) {
+            // Выстраиваем строку cid'ов для запроса в БД
+            $strCids = $separator = '';
+            foreach ($cids as $v) {
+                $strCids .= $separator . "'" . $v . "'";
+                $separator = ', ';
+            }
+
+            // Считываем все элементы с указанными cid'ами
+            $db = Db::getInstance();
+            $_sql = "SELECT * FROM {$this->_table} WHERE cid IN ({$strCids}) ORDER BY cid";
+            $path = $db->queryArray($_sql);
+        }
+
+        $path = array_merge($path, array($category)); // добавляем наш элемент к родительским
+
+        return $path;
+    }
+
 }
