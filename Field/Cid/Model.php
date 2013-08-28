@@ -191,9 +191,11 @@ class Model
         $parentCid = '';
         $blocks = str_split($cid, $this->digits);
         foreach ($blocks as $v) {
+            if (intval($v) == 0) break;
             $parentCid .= $v;
             $parents[] = $this->reconstruct($parentCid);
         }
+        array_pop($parents); // убираем последний элемент
         return $parents;
     }
 }
