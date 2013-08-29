@@ -18,17 +18,17 @@ class ConfigPhp
             if (in_array(trim($v), $skip)) {
                 continue;
             }
-            list ($other, $label) = explode(", // ", $v);
+            list ($other, $label) = explode("', // ", $v);
             $label = chop($label);
             list($label, $type) = explode(' | ', $label);
             if ($type == '') {
                 $type = 'Ideal_Text';
             }
-            list ($name, $value) = explode(" => ", $other);
+            list ($name, $value) = explode(" => '", $other);
             $fieldName = trim(substr($name, 5), '\'');
             $this->params[$fieldName] = array(
                 'label' => $label,
-                'value' => trim($value, '\''),
+                'value' => $value,
                 'type' => $type
             );
         }
@@ -52,10 +52,8 @@ class ConfigPhp
 
             $value = $fieldModel->pickupNewValue();
 
-            if ($param['type'] == 'Ideal_Text') $value = '\'' . $value . '\'';
-
-            $file .= "    '" . $fieldName . "' => " . $value
-                . ", // " . $param['label'] . ' | ' . $param['type'] . "\n";
+            $file .= "    '" . $fieldName . "' => '" . $value
+                . "', // " . $param['label'] . ' | ' . $param['type'] . "\n";
         }
         $file .= ");\n";
         if (fwrite($fp, $file)) {
