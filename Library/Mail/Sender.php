@@ -71,7 +71,7 @@ class Sender
         $header = "MIME-Version: 1.0\n";
 
         // Если выбрана отправка письма только в текстовом виде,
-        $header_cnt = "Content-type: text/plain; charset={$this->charset}\n"
+        $header_cnt = "Content-type: text/plain; charset=utf-8\n"
             . "Content-transfer-encoding: 8bit";
 
         // Если выбрана отправка в html-виде и нет аттача
@@ -151,7 +151,7 @@ class Sender
             if ($this->body_html != '') {
                 $this->body .= 'Content-Type: multipart/alternative; boundary="' . $this->boundary . '"' . "\n\n";
             } else {
-                $this->body .= "Content-Type: text/plain; charset={$this->charset}\n";
+                $this->body .= "Content-Type: text/plain; charset=utf-8\n";
                 $this->body .= "Content-Transfer-Encoding: 8bit\n\n";
             }
         }
@@ -159,7 +159,7 @@ class Sender
         if ($this->body_html != '') {
             // Если HTML
             $this->body .= '--' . $this->boundary . "\n";
-            $this->body .= "Content-Type: text/plain; charset={$this->charset}\n";
+            $this->body .= "Content-Type: text/plain; charset=utf-8\n";
             $this->body .= "Content-Transfer-Encoding: 8bit\n\n";
         }
 
@@ -176,7 +176,7 @@ class Sender
             $this->body_html = stripslashes($this->body_html);
 
             $this->body .= '--' . $this->boundary . "\n";
-            $this->body .= "Content-Type: text/html; charset={$this->charset}\n";
+            $this->body .= "Content-Type: text/html; charset=utf-8\n";
             $this->body .= "Content-Transfer-Encoding: quoted-printable\n\n";
             $this->body .= $this->body_html . "\n\n";
         }
