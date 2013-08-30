@@ -80,7 +80,7 @@ class ModelAbstract extends Site\Model
         }
 
         $_sql = "SELECT * FROM {$this->_table} WHERE ({$_sql})
-                    AND structure_path='{$this->structurePath}' AND is_active=1 ORDER BY lvl, cid";
+                    AND prev_structure='{$this->prevStructure}' AND is_active=1 ORDER BY lvl, cid";
 
         $list = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
 

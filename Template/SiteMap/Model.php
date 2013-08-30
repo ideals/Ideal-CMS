@@ -10,7 +10,7 @@ class Model extends \Ideal\Core\Admin\Model
 
     public function getObject($parentModel)
     {
-        $this->setObjectByStructurePath($this->structurePath);
+        $this->setObjectByprevStructure($this->prevStructure);
 
         // Считываем из БД все открытые разделы
         $list = $this->getList();
@@ -52,8 +52,8 @@ class Model extends \Ideal\Core\Admin\Model
             }
             // Если структуры не совпадают, считываем элементы вложенной структуры
             $className = Util::getClassName($element['structure'], 'Structure') . '\\Site\\Model';
-            $structurePath = $element['structure_path'] . '-' . $element['ID'];
-            $nextStructure = new $className($structurePath);
+            $prevStructure = $element['prev_structure'] . '-' . $element['ID'];
+            $nextStructure = new $className($prevStructure);
             $fullPath = array_merge($path, array($element));
             $nextStructure->setPath($fullPath);
             // Считываем элементы из вложенной структуры

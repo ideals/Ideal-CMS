@@ -19,8 +19,8 @@ class Controller extends Select\Controller
         // Загрузка данных связанного объекта
         $id = '';
         if (isset($this->model->object['ID'])) {
-            $structurePath = $this->model->object['structure_path'] . '-' . $this->model->object['ID'];
-            $model->setObjectByStructurePath($structurePath);
+            $prevStructure = $this->model->object['prev_structure'] . '-' . $this->model->object['ID'];
+            $model->setObjectByprevStructure($prevStructure);
             $id = $this->model->object['ID'];
         }
         // Получение содержимого таба

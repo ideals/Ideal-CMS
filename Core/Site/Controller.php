@@ -32,10 +32,10 @@ class Controller extends Core\Controller
         $modelClass = get_class($this->model);
         if ($controllerModelClass != $modelClass) {
             // Если определенная роутером модель не совпадает с моделью контроллера,
-            // то нужно определить модель контроллера, передав ей path и structurePath
+            // то нужно определить модель контроллера, передав ей path и prevStructure
             $end = end($this->path);
-            $structurePath = $this->model->getStructurePath() . '-' . $end['ID'];
-            $this->model = new $controllerModelClass($structurePath);
+            $prevStructure = $this->model->getprevStructure() . '-' . $end['ID'];
+            $this->model = new $controllerModelClass($prevStructure);
             $this->model->setPath($this->path);
         }
         $this->model->object = end($this->path);

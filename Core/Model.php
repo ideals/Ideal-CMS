@@ -13,14 +13,14 @@ abstract class Model
     public $fields;
     public $object;
     protected $_table;
-    protected $structurePath;
+    protected $prevStructure;
     protected $path = array();
     protected $parentUrl;
     protected $module;
 
-    public function __construct($structurePath)
+    public function __construct($prevStructure)
     {
-        $this->structurePath = $structurePath;
+        $this->prevStructure = $prevStructure;
 
         $config = Config::getInstance();
 
@@ -63,9 +63,9 @@ abstract class Model
     }
 
 
-    public function setStructurePath($structurePath)
+    public function setprevStructure($prevStructure)
     {
-        $this->structurePath = $structurePath;
+        $this->prevStructure = $prevStructure;
     }
 
 
@@ -88,14 +88,14 @@ abstract class Model
     }
 
 
-    public function setObjectByStructurePath($structurePath)
+    public function setObjectByprevStructure($prevStructure)
     {
         $db = Db::getInstance();
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE structure_path='{$structurePath}'";
+        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure='{$prevStructure}'";
         $object = $db->queryArray($_sql);
         if (isset($object[0]['ID'])) {
-            // TODO сделать обработку ошибки, когда по structurePath ничего не нашлось
+            // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
             $this->object = $object[0];
         }
     }
@@ -126,9 +126,9 @@ abstract class Model
     }
 
 
-    public function getStructurePath()
+    public function getprevStructure()
     {
-        return $this->structurePath;
+        return $this->prevStructure;
     }
 
 
@@ -139,7 +139,7 @@ abstract class Model
     public function getList($page)
     {
         $list = array();
-        $where = $this->getWhere("e.structure_path='{$this->structurePath}'");
+        $where = $this->getWhere("e.prev_structure='{$this->prevStructure}'");
         if ($where === false) return $list;
         $db = Db::getInstance();
 
@@ -164,7 +164,7 @@ abstract class Model
     public function getListCount()
     {
         $db = Db::getInstance();
-        $where = $this->getWhere("e.structure_path='{$this->structurePath}'");
+        $where = $this->getWhere("e.prev_structure='{$this->prevStructure}'");
 
         // Считываем все элементы первого уровня
         $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
@@ -218,18 +218,18 @@ abstract class Model
     }
 
     /**
-     * Определение пути с помощью structure_path по инициализированному $this->object
+     * Определение пути с помощью prev_structure по инициализированному $this->object
      * @return array Массив, содержащий элементы пути к $this->object
      */
     public function detectPath()
     {
         $config = Config::getInstance();
 
-        $structurePath = explode('-', $this->object['structure_path']);
-        $sP = array_shift($structurePath);
+        $prevStructure = explode('-', $this->object['prev_structure']);
+        $sP = array_shift($prevStructure);
         $structure = $config->getStructureById($sP);
         $path = array($structure);
-        foreach ($structurePath as $v) {
+        foreach ($prevStructure as $v) {
             $className = \Ideal\Core\Util::getClassName($structure['structure'], 'Structure') . '\\Site\\Model';
             /* @var $structure \Ideal\Core\Model */
             $structure = new $className($sP);

@@ -144,9 +144,9 @@ abstract class Model extends Core\Model
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName
-                AND $field == 'structure_path' AND $v['value'] == '') {
-                $result['items'][$v['fieldName']]['value'] = $this->structurePath;
-                $v['value'] = $this->structurePath;
+                AND $field == 'prev_structure' AND $v['value'] == '') {
+                $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
+                $v['value'] = $this->prevStructure;
             }
 
             // Если в значении NULL, то сохранять это поле не надо
@@ -193,9 +193,9 @@ abstract class Model extends Core\Model
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName
-                AND $field == 'structure_path' AND $v['value'] == '') {
-                $result['items'][$v['fieldName']]['value'] = $this->structurePath;
-                $v['value'] = $this->structurePath;
+                AND $field == 'prev_structure' AND $v['value'] == '') {
+                $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
+                $v['value'] = $this->prevStructure;
             }
 
             // Если в значении NULL, то сохранять это поле не надо
@@ -241,7 +241,7 @@ abstract class Model extends Core\Model
             if (strpos($field['type'], '_Template') === false) continue;
 
             $templateData = $groups[$fieldName];
-            $templateData['structure_path'] = $groups[$groupName]['structure_path']
+            $templateData['prev_structure'] = $groups[$groupName]['prev_structure']
                 . '-' . $groups[$groupName]['ID'];
             if (empty($templateData['ID'])) {
                 // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
@@ -254,7 +254,7 @@ abstract class Model extends Core\Model
             $templateModelName = Util::getClassName($groups[$groupName][$fieldName], 'Template') . '\\Model';
 
             /* @var $templateModel \Ideal\Core\Admin\Model */
-            $templateModel = new $templateModelName($templateData['structure_path']);
+            $templateModel = new $templateModelName($templateData['prev_structure']);
             if ($isCreate) {
                 // Записываем данные шаблона в БД и в $result
                 $result = $templateModel->createElement($result, $fieldName);

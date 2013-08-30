@@ -47,8 +47,8 @@ abstract class Model extends Core\Model
             // Пропускаем все поля, которые не являются шаблоном
             if (strpos($v['type'], '_Template') === false) continue;
             $className = Util::getClassName($this->object[$k], 'Template') . '\\Model';
-            $structurePath = $this->object['structure_path'] . '-' . $this->object['ID'];
-            $template = new $className($structurePath);
+            $prevStructure = $this->object['prev_structure'] . '-' . $this->object['ID'];
+            $template = new $className($prevStructure);
             $templatesVars[$k] = $template->getObject($this);
         }
         return $templatesVars;

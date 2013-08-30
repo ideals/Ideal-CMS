@@ -77,8 +77,8 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         } else {
             // TODO проработать ситуацию, когда текст в шаблоне (сейчас нет определения модуля)
             $table = $config->db['prefix'] . 'Template_' . $this->object['template'];
-            $structurePath = $this->object['structure_path'] . '-' . $this->object['ID'];
-            $text = $db->select($table, $structurePath, '', 'structure_path');
+            $prevStructure = $this->object['prev_structure'] . '-' . $this->object['ID'];
+            $text = $db->select($table, $prevStructure, '', 'prev_structure');
             $text = $text[0]['content'];
         }
 

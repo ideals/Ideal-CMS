@@ -6,7 +6,7 @@ class Model extends \Ideal\Core\Admin\Model
 
     public function getObject($model)
     {
-        $this->setObjectByStructurePath($this->structurePath);
+        $this->setObjectByprevStructure($this->prevStructure);
         return $this->object;
     }
 

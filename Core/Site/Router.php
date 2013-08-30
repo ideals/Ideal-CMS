@@ -37,15 +37,15 @@ class Router
             $prev = prev($this->path);
 
             if ($prev['structure'] == $end['structure']) {
-                $structurePath = $end['structure_path'];
+                $prevStructure = $end['prev_structure'];
             } else {
-                $structurePath = $end['structure_path'] . $end['ID'];
+                $prevStructure = $end['prev_structure'] . $end['ID'];
             }
 
             $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
 
             /** @var $structure \Ideal\Core\Site\Model */
-            $structure = new $modelClassName($structurePath);
+            $structure = new $modelClassName($prevStructure);
             $structure->setPath($this->path);
             $structure->object = $end;
             $this->model = $structure;
@@ -97,7 +97,7 @@ class Router
         // Находим начальную структуру
         $structures = $config->structures;
         $startStructure = reset($structures);
-        $structurePath = $startStructure['ID'];
+        $prevStructure = $startStructure['ID'];
         $this->path = array($startStructure);
 
         // Вырезаем стартовый URL
@@ -110,7 +110,7 @@ class Router
 
         if ($url == '') {
             // Если главная страница
-            $this->model = new \Ideal\Structure\Home\Site\Model($structurePath);
+            $this->model = new \Ideal\Structure\Home\Site\Model($prevStructure);
             $url = $this->model->detectPageByUrl('/', $this->path);
             if ($url != '404') {
                 return $this->model->getPath();
@@ -138,7 +138,7 @@ class Router
                 $this->is404 = true;
                 if (count($this->path) == 1) {
                     // Если у страницы нет ни одного существующего предка
-                    $this->model = new \Ideal\Structure\Home\Site\Model($structurePath);
+                    $this->model = new \Ideal\Structure\Home\Site\Model($prevStructure);
                     $this->model->detectPageByUrl('/', $this->path);
                     $this->path = $this->model->getPath();
                     $request = new Request();
@@ -150,13 +150,13 @@ class Router
             }
             $modelClassName = Util::getClassName($nextStructure['structure'], 'Structure') . '\\Site\\Model';
             /** @var $structure \Ideal\Core\Site\Model */
-            $structure = new $modelClassName($structurePath);
+            $structure = new $modelClassName($prevStructure);
             // Если на предыдущем шаге не было 404 ошибки и массив $url не кончился
             $url = $structure->detectPageByUrl($url, $this->path);
             if ($url == '404') continue;
             $this->path = $structure->getPath();
             $nextStructure = end($this->path);
-            $structurePath .= '-' . $nextStructure['ID'];
+            $prevStructure .= '-' . $nextStructure['ID'];
             $this->model = $structure;
         } while (count($url) != 0);
 

@@ -32,17 +32,17 @@ class Controller extends Core\Controller
         $modelName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Model';
 
         // Определение пути структур
-        $structurePath = $end['ID']; // для корневого раздела
-        if (isset($end['structure_path'])) {
+        $prevStructure = $end['ID']; // для корневого раздела
+        if (isset($end['prev_structure'])) {
             // Если отображается подраздел
-            $structurePath = $end['structure_path'];
+            $prevStructure = $end['prev_structure'];
         }
         if (isset($prev['structure']) AND ($prev['structure'] != $end['structure'])) {
             // Если отображаемая структура имеет другой тип, по сравнению с предыдущей
-            $structurePath .= '-' . $end['ID'];
+            $prevStructure .= '-' . $end['ID'];
         }
 
-        $this->model = new $modelName($structurePath);
+        $this->model = new $modelName($prevStructure);
         $this->model->setPath($this->path); // записываем полный путь
 
         $request = new Request();

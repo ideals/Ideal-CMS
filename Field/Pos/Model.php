@@ -7,10 +7,10 @@ class Model
      * Изменение позиции $oldPos на новую $newPos
      * @param $oldPos старое значение позиции
      * @param $newPos новое значение позиции
-     * @param $structurePath путь к структуре в которой меняются позиции
+     * @param $prevStructure путь к структуре в которой меняются позиции
      * @return string sql-запрос изменения позиции
      */
-    public function movePos($oldPos, $newPos, $structurePath)
+    public function movePos($oldPos, $newPos, $prevStructure)
     {
         $update = array($oldPos => $newPos);
 
@@ -34,7 +34,7 @@ class Model
             $where .= $or . " pos = {$old}";
             $or = ' OR';
         }
-        $_sql .= "\n ELSE pos END WHERE structure_path='{$structurePath}' AND ({$where})";
+        $_sql .= "\n ELSE pos END WHERE prev_structure='{$prevStructure}' AND ({$where})";
         // На основании массива $update составляем список запросов для обновления cid'ов
         return $_sql;
     }

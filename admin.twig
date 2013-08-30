@@ -44,7 +44,7 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-user"></i> <strong>{{ user.email }}</strong><b class="caret"></b></a>
                         <ul class="dropdown-menu">
-                            <li><a onClick="showModal('{{ user.structure_path }}', {{ user.ID }}, 'showEdit'); return false;" href="#">Профиль</a></li>
+                            <li><a onClick="showModal('{{ user.prev_structure }}', {{ user.ID }}, 'showEdit'); return false;" href="#">Профиль</a></li>
                             <li><a href="index.php?action=logout">Выход</a></li>
                         </ul>
                     </li>
@@ -288,7 +288,7 @@
                         // Прописываем полученный ID для созданного элемента
                         $.each(data.items, function (i, item) {
                             if (item.fieldName.lastIndexOf('_ID') != -1
-                                    || item.fieldName.lastIndexOf('_structure_path') != -1) {
+                                    || item.fieldName.lastIndexOf('_prev_structure') != -1) {
                                 fieldName = '#' + item.fieldName;
                                 $(fieldName).val(item.value);
                             }

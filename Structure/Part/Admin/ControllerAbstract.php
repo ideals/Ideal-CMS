@@ -48,12 +48,12 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
 
         $template = $request->template;
         $templateModelName = Util::getClassName($template, 'Template') . '\\Model';
-        $model = new $templateModelName($template, $this->model->object['structure_path']);
+        $model = new $templateModelName($template, $this->model->object['prev_structure']);
         $model->setFieldsGroup($request->name);
         // Загрузка данных связанного объекта
         if (isset($this->model->object['ID'])) {
-            $structurePath = $this->model->object['structure_path'] . '-' . $this->model->object['ID'];
-            $model->setObjectByStructurePath($structurePath);
+            $prevStructure = $this->model->object['prev_structure'] . '-' . $this->model->object['ID'];
+            $model->setObjectByprevStructure($prevStructure);
         }
 
         echo $model->getFieldsList($model->fields, $model);

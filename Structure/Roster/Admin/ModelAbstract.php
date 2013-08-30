@@ -42,7 +42,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             // Если есть сортировка pos, то нужно уменьшить все следующие за удаляемым
             // элементы на единицу
             $_sql = "UPDATE {$this->_table} SET pos = pos - 1
-                        WHERE structure_path = '{$this->structurePath}'
+                        WHERE prev_structure = '{$this->prevStructure}'
                               AND pos > {$this->object['pos']}";
             $db->query($_sql);
         }
@@ -56,7 +56,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         /* @var Db $db */
         $db = Db::getInstance();
 
-        $_sql = "SELECT pos FROM {$this->_table} WHERE structure_path='{$this->structurePath}' ORDER BY pos DESC LIMIT 1";
+        $_sql = "SELECT pos FROM {$this->_table} WHERE prev_structure='{$this->prevStructure}' ORDER BY pos DESC LIMIT 1";
         $posArr = $db->queryArray($_sql);
 
         $pos = 0;

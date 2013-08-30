@@ -41,7 +41,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         } else {
             $ids = implode(',', $par);
             $_sql = "SELECT * FROM {$this->_table}
-                              WHERE ID IN ({$ids}) AND structure_path='{$this->structurePath}' ORDER BY cid";
+                              WHERE ID IN ({$ids}) AND prev_structure='{$this->prevStructure}' ORDER BY cid";
             $result = $db->queryArray($_sql);
 
             // Проверка найденных элементов из БД на соответствие последовательности ID в par
@@ -109,17 +109,17 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $c = count($path);
         $end = end($path);
         if ($c < 2 OR ($c > 1 AND $path[$c - 2]['structure'] != $end['structure'])) {
-            $structurePath = $this->structurePath;
+            $prevStructure = $this->prevStructure;
             $lvl = 1;
         } else {
             // Остаёмся в рамках того же модуля
             $lvl = $end['lvl'] + 1;
-            $structurePath = $end['structure_path'];
+            $prevStructure = $end['prev_structure'];
         }
 
         $this->object = array(
             'lvl' => $lvl,
-            'structure_path' => $structurePath
+            'prev_structure' => $prevStructure
         );
 
     }

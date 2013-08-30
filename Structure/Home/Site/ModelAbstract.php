@@ -8,9 +8,9 @@ use Ideal\Core\Db;
 class ModelAbstract extends Part\Site\Model
 {
 
-    public function construct($structurePath)
+    public function construct($prevStructure)
     {
-        $this->structurePath = $structurePath;
+        $this->prevStructure = $prevStructure;
 
         $config = Config::getInstance();
 

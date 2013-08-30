@@ -63,12 +63,12 @@ class Router
 
         unset($par[0]); // убираем первый элемент - ID начальной структуры
         $path = array($nextStructure);
-        $structurePath = $nextStructure['ID'];
+        $prevStructure = $nextStructure['ID'];
 
         // Определяем оставшиеся элементы пути
         do {
             $modelClassName = Util::getClassName($nextStructure['structure'], 'Structure') . '\\Admin\\Model';
-            $structure = new $modelClassName($structurePath);
+            $structure = new $modelClassName($prevStructure);
             $par = $structure->detectPageByIds($par);
             if ($par == 404) {
                 $this->is404 = true;
@@ -77,7 +77,7 @@ class Router
             $newPath = $structure->getPath();
             $path = array_merge($path, $newPath);
             $nextStructure = end($path);
-            $structurePath .= '-' . $nextStructure['ID'];
+            $prevStructure .= '-' . $nextStructure['ID'];
         } while (count($par) != 0);
 
         return $path;

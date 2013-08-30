@@ -18,7 +18,7 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
         $prev = $this->path[(count($this->path) - 2)];
         $end = end($this->path);
         $className = Util::getClassName($prev['structure'], 'Structure') . '\\Site\\Model';
-        $part = new $className($end['structure_path']);
+        $part = new $className($end['prev_structure']);
         $part->object = $this->model->object;
 
         $header = '';
