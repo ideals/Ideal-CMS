@@ -3,23 +3,24 @@ namespace Ideal\Core\Admin;
 
 use Ideal\Core;
 use Ideal\Core\Config;
+use Ideal\Core\View;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
-use Ideal\Core\View;
 use Ideal\Structure;
 
-class Controller extends Core\Controller
+class Controller
 {
-    /* @var $model Model */
+    /* @var $model Model Модель соответствующая этому контроллеру */
     protected $model;
+    /* @var $path array Путь к этой странице, включая и её саму */
+    protected $path;
+    /* @var $view View Объект вида — twig-шаблонизатор */
+    protected $view;
 
     /**
-     * Отображение структуры в браузере
-     * @param \Ideal\Core\Admin\Router $router
-     * @return mixed
-     * @internal param $structure
-     * @internal param $actionName
-     * @internal param $path
+     * Генерация контента страницы для отображения в браузере
+     * @param Router $router
+     * @return string Содержимое отображаемой страницы
      */
     function run(Router $router)
     {
@@ -91,7 +92,10 @@ class Controller extends Core\Controller
         return $this->view->render();
     }
 
-
+    /**
+     * Инициализация админского twig-шаблона
+     * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     */
     public function templateInit($tplName = '')
     {
         // Инициализация общего шаблона страницы
@@ -101,6 +105,7 @@ class Controller extends Core\Controller
         }
         $gblRoot = dirname(stream_resolve_include_path($gblName));
 
+        // Определение названия модуля из названия класса контроллера
         $parts = explode('\\', get_class($this));
         $moduleName = $parts[0];
         $moduleName = ($moduleName == 'Ideal') ? '' : $moduleName . '/';
@@ -124,17 +129,33 @@ class Controller extends Core\Controller
             $tplName = basename($tplName);
         }
 
+        // Инициализируем Twig-шаблонизатор
         $config = Config::getInstance();
         $this->view = new View(array($gblRoot, $tplRoot), $config->isTemplateAdminCache);
         $this->view->loadTemplate($tplName);
     }
 
-
-    public function getHttpStatus()
+    /**
+     * Получение дополнительных HTTP-заголовков
+     * По умолчанию система ставит только заголовок Content-Type, но и его можно
+     * переопределить в этом методе.
+     *
+     * @return array Массив где ключи - названия заголовков, а значения - содержание заголовков
+     */
+    public function getHttpHeaders()
     {
-        return 'X-Robots-Tag: noindex, nofollow';
+        return array(
+            'X-Robots-Tag' => 'noindex, nofollow'
+        );
     }
 
+    /**
+     * Внесение финальных изменений в шаблон, после всех-всех-всех
+     * @param string $actionName
+     */
+    public function finishMod($actionName)
+    {
+    }
 
     public function parseList($headers, $list)
     {

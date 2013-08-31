@@ -5,23 +5,22 @@ use Ideal\Core;
 use Ideal\Core\Config;
 use Ideal\Core\View;
 use Ideal\Core\Request;
-use Ideal\Core\Pagination;
 
-class Controller extends Core\Controller
+class Controller
 {
-    /** @var $model Model */
+    /* @var $model Model Модель соответствующая этому контроллеру */
     protected $model;
-
+    /* @var $path array Путь к этой странице, включая и её саму */
+    protected $path;
+    /* @var $view View Объект вида — twig-шаблонизатор */
+    protected $view;
     /** @var bool Включение листалки (пагинации) */
     protected $isPager = true;
 
     /**
      * Отображение структуры в браузере
      * @param Router $router
-     * @return
-     * @internal param $structure
-     * @internal param $actionName
-     * @internal param $path
+     * @return string Содержимое отображаемой страницы
      */
     function run(Router $router)
     {
@@ -66,10 +65,15 @@ class Controller extends Core\Controller
         $this->view->title = $this->model->getTitle();
         $this->view->metaTags = $this->model->getMetaTags($helper->xhtml);
 
+        $this->finishMod($actionName);
+
         return $this->view->render();
     }
 
-
+    /**
+     * Инициализация twig-шаблона сайта
+     * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     */
     public function templateInit($tplName = '')
     {
         // Инициализация общего шаблона страницы
@@ -101,18 +105,36 @@ class Controller extends Core\Controller
         $this->view->loadTemplate($tplName);
     }
 
-
-    public function getHttpStatus()
+    /**
+     * Получение дополнительных HTTP-заголовков
+     * По умолчанию система ставит только заголовок Content-Type, но и его можно
+     * переопределить в этом методе.
+     *
+     * @return array Массив где ключи - названия заголовков, а значения - содержание заголовков
+     */
+    public function getHttpHeaders()
     {
-        return '';
+        return array(
+            // Дата последней модификации страницы
+            // 'Last-Modified' => gmdate('D, d M Y H:i:s', $lastMod ) . ' GMT',
+            // Затирание информации о языке, на котором написан сайт
+            // 'X-Powered-By' => 'Hello, man!',
+            // Дата завершения срока годности странички :)
+            // 'Expires' => gmdate('D, d M Y H:i:s')+900 . ' GMT\r\n',
+            // Варианты управления кэшем. Можно выбрать только один из вариантов.
+            // 'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            // 'Cache-Control' => 'post-check=0, pre-check=0',
+            // 'Cache-Control' => 'Pragma: no-cache',
+        );
     }
 
-
-    public function getLastMod()
+    /**
+     * Внесение финальных изменений в шаблон, после всех-всех-всех
+     * @param string $actionName
+     */
+    public function finishMod($actionName)
     {
-        return '';
     }
-
 
     /**
      * Действие по умолчанию для большинства контроллеров внешней части сайта.
