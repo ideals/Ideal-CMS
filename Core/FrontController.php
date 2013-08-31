@@ -14,7 +14,17 @@ class FrontController
     {
         $isContentType = false;
         foreach ($httpHeaders as $k => $v) {
-            header ($k . ': ' . $v . "\r\n");
+            if ($k == intval($k)) {
+                // Ключ не указан, значит выводим только значение
+                header ($v . "\r\n");
+            } else {
+                // Ключ указан, значит выводим и ключ и значение
+                header ($k . ': ' . $v . "\r\n");
+            }
+            // Проверяем, не переопределён ли Content-Type
+            if (strtolower($k) == 'content-type') {
+                $isContentType = true;
+            }
         }
 
         if (!$isContentType) {
@@ -54,7 +64,7 @@ class FrontController
             $httpHeaders = $controller->getHttpHeaders();
         }
 
-        $this->sendHttpHeaders($httpHeaders); // вывод http-заголовков
+        $this->sendHttpHeaders($httpHeaders, $lastMod); // вывод http-заголовков
 
         echo $content; // отображение страницы
     }
