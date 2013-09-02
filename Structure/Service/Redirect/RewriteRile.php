@@ -33,27 +33,26 @@ class RewriteRile
         // Изменяем постоянные настройки сайта
         $fp = fopen($this->fileName, 'w');
         $file = '';
-        foreach($_POST['rule'] as $k => $v){
-            if(!isset($v['from']) || $v['from'] =='') continue;
-            if(!isset($v['on']) || $v['on'] =='') continue;
-            if(strnatcasecmp($v['from'], $v['on']) === 0) continue;
-            $file .= "RewriteRule {$v['from']} {$v['on']} {$v['rule']}\n";
+        $tmp = array();
+        $tmp[0] = 'RewriteRule';
+        $tmp[1] = $_POST['from'];
+        $tmp[2] = $_POST['on'];
+        $tmp[3] = '[R=301,L]';
+        $this->params[] = $tmp;
+        unset($tmp);
+        foreach($this->params as $k => $v){
+            if(!isset($v[1]) || $v[1] =='') continue;
+            if(!isset($v[2]) || $v[2] =='') continue;
+            if(strnatcasecmp($v[1], $v[2]) === 0) continue;
+            $file .= "{$v[0]} {$v[1]} {$v[2]} {$v[3]}\n";
         }
-        if (fwrite($fp, $file)) {
-            $this->loadFile($this->fileName);
-            print <<<DONE
-<script type="text/javascript">
-        var text = '<div class="alert alert-block alert-success fade in"><button type="button" class="close" data-dismiss="alert">&times;</button><span class="alert-heading">Редиректы сохранены!</span></div>';
-        $("form").prepend(text);
-</script>
-DONE;
-
-        }
+        fwrite($fp, $file);
     }
 
-    public function checkUrl($ulr){
+    public function checkUrl(){
+        $url = $_GET['url'];
         foreach($this->params as $v){
-            if(strnatcasecmp($v[1],$ulr)===0){
+            if(strnatcasecmp($v[1],$url)===0){
                 // TODO перенаправить по редиректу
             }
         }
@@ -66,15 +65,19 @@ DONE;
         $str = '';
         foreach($this->params as $k => $v){
             $str .= <<<RULE
-            <tr>
-<td><input class="input span3" type="text" name="rule[{$k}][from]" value="{$v[1]}"></td>
-<td><input class="input span3" type="text" name="rule[{$k}][on]" value="{$v[2]}"></td>
-<td><input class="input span2" type="text" name="rule[{$k}][rule]" value="{$v[3]}"></td>
-<td><button onclick="delLine(this)" type="button" class="btn btn-danger" style="font-size:22px">&times</button></td>
+            <tr id="line{$k}">
+<td class="from">{$v[1]}</td><td class="on">{$v[2]}</td>
+<td style="text-align: right;">
+    <span class="input-prepend">
+    <button style="width: 47px;" onclick="editLine({$k})" title="Изменить" class="btn btn-info btn-mini">
+    <i class="icon-pencil icon-white"></i></button></span>
+    <span class="input-append"><button onclick="delLine({$k})" title="Удалить" class="btn btn-danger btn-mini">
+    <i class="icon-remove icon-white"></i></button></span>
+</td>
 </tr>
 RULE;
         }
-        $str .= '</tr>';
+        $str .= '';
         return $str;
     }
 }
