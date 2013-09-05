@@ -8,6 +8,7 @@ class FrontController
 {
     /**
      * Формирование заголовков (отдаются браузерам, паукам и проч.)
+     *
      * @param array $httpHeaders
      */
     function sendHttpHeaders($httpHeaders)
@@ -35,8 +36,10 @@ class FrontController
 
     /**
      * Запуск FrontController'а
+     *
      * Проводится роутинг, определяется контроллер страницы и отображаемый текст.
      * Выводятся HTTP-заголовки и отображается текст, сгенерированный с помощью view в controller
+     *
      * @param string $mode Режим работы admin или site
      */
     function run($mode)
@@ -64,8 +67,9 @@ class FrontController
             $httpHeaders = $controller->getHttpHeaders();
         }
 
-        $this->sendHttpHeaders($httpHeaders, $lastMod); // вывод http-заголовков
+        $this->sendHttpHeaders($httpHeaders); // вывод http-заголовков
 
         echo $content; // отображение страницы
     }
+
 }
