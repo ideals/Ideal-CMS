@@ -11,19 +11,21 @@ use Ideal\Core\Db;
 class ModelAbstract extends \Ideal\Core\Admin\Model
 {
 
-    public function detectPageByIds($par)
+    public function detectPageByIds($path, $par)
     {
+        $this->path = $path;
         $first = array_shift($par);
         if ($first != null) {
             $first = intval($first);
             $_sql = "SELECT * FROM {$this->_table} WHERE ID={$first}";
             $db = Db::getInstance();
-            $this->path = $db->queryArray($_sql);
-        } else {
-            $par = array();
-            $this->path = array();
+            $localPath = $db->queryArray($_sql);
+            if (!isset($localPath[0]['ID'])) {
+                return 404;
+            }
+            array_push($this->path, $localPath[0]);
         }
-        return $par;
+        return $this;
     }
 
 

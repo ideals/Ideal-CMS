@@ -10,11 +10,11 @@ use Ideal\Structure;
 
 class Controller
 {
-    /* @var $model Model Модель соответствующая этому контроллеру */
+    /** @var Model Модель соответствующая этому контроллеру */
     protected $model;
-    /* @var $path array Путь к этой странице, включая и её саму */
+    /** @var array Путь к этой странице, включая и её саму */
     protected $path;
-    /* @var $view View Объект вида — twig-шаблонизатор */
+    /** @var View Объект вида — twig-шаблонизатор */
     protected $view;
 
     /**
@@ -24,36 +24,15 @@ class Controller
      */
     function run(Router $router)
     {
-        $this->path = $router->getPath();
+        $this->model = $router->getModel();
 
-        // Инициализация модели
-        $path = $this->path;
-        $end = array_pop($path);
-        $prev = end($path);
-        $modelName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Model';
-
-        // Определение пути структур
-        $prevStructure = $end['ID']; // для корневого раздела
-        if (isset($end['prev_structure'])) {
-            // Если отображается подраздел
-            $prevStructure = $end['prev_structure'];
-        }
-        if (isset($prev['structure']) AND ($prev['structure'] != $end['structure'])) {
-            // Если отображаемая структура имеет другой тип, по сравнению с предыдущей
-            $prevStructure .= '-' . $end['ID'];
-        }
-
-        $this->model = new $modelName($prevStructure);
-        $this->model->setPath($this->path); // записываем полный путь
-
+        // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
         $actionName = $request->action;
         if ($actionName == '') {
             $actionName = 'index';
         }
-
         $actionName = $actionName . 'Action';
-
         $this->$actionName();
 
         $config = Config::getInstance();
@@ -70,11 +49,12 @@ class Controller
 
         // Отображение верхнего меню структур
         $this->view->structures = $config->structures;
-        $this->view->activeStructureId = $this->path[0]['ID'];
+        $path = $this->model->getPath();
+        $this->view->activeStructureId = $path[0]['ID'];
 
         // Отображение хлебных крошек
         $pars = $breadCrumbs = array();
-        foreach ($this->path as $v) {
+        foreach ($path as $v) {
             $pars[] = $v['ID'];
             $breadCrumbs[] = array(
                 'link' => implode('-', $pars),
