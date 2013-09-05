@@ -28,7 +28,7 @@ return array(
         ),
         'password' => array(
             'label' => 'Пароль',
-            'sql'   => 'varchar(34) NOT NULL',
+            'sql'   => 'varchar(255) NOT NULL',
             'type'  => 'Ideal_Password'
         ),
         'reg_date' => array(
