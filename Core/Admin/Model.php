@@ -10,7 +10,15 @@ abstract class Model extends Core\Model
 {
     protected $fieldsGroup = 'general';
 
-    abstract function setObjectNew();
+    public function setObjectNew()
+    {
+        throw new \Exception('Попытка вызвать непереопределённый метод setObjectNew в классе ' . get_class($this));
+    }
+
+    public function detectPageByIds($path, $par)
+    {
+        throw new \Exception('Попытка вызвать непереопределённый метод detectPageByIds в классе ' . get_class($this));
+    }
 
     public function getHeaders()
     {
@@ -20,7 +28,7 @@ abstract class Model extends Core\Model
         foreach ($this->params['field_list'] as $v) {
             $column = explode('!', $v);
             $headers[] = $column[0];
-        }
+            }
 
         return $headers;
     }
