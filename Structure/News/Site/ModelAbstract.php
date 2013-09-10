@@ -41,7 +41,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     }
 
 
-    public function detectPageByUrl($url, $path)
+    public function detectPageByUrl($path, $url)
     {
         $db = Db::getInstance();
 
@@ -63,7 +63,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $request = new Request();
         $request->action = 'detail';
 
-        return array();
+        return $this;
     }
 
 
@@ -71,13 +71,14 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
+        $end = end($this->path);
 
-        if (isset($this->object['content'])) {
-            $text = $this->object['content'];
+        if (isset($end['content'])) {
+            $text = $end['content'];
         } else {
             // TODO проработать ситуацию, когда текст в шаблоне (сейчас нет определения модуля)
-            $table = $config->db['prefix'] . 'Template_' . $this->object['template'];
-            $prevStructure = $this->object['prev_structure'] . '-' . $this->object['ID'];
+            $table = $config->db['prefix'] . 'Template_' . $end['template'];
+            $prevStructure = $end['prev_structure'] . '-' . $end['ID'];
             $text = $db->select($table, $prevStructure, '', 'prev_structure');
             $text = $text[0]['content'];
         }

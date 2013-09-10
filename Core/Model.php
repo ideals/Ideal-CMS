@@ -11,12 +11,12 @@ abstract class Model
 {
     public $params;
     public $fields;
-    public $object;
     protected $_table;
     protected $prevStructure;
     protected $path = array();
     protected $parentUrl;
     protected $module;
+    protected $prevModel;
 
     public function __construct($prevStructure)
     {
@@ -252,5 +252,46 @@ abstract class Model
     protected function getLocalPath()
     {
         throw new \Exception('Вызов не переопределённого метода getLocalPath');
+    }
+
+    public function setPrevModel($prevModel)
+    {
+        $this->prevModel = $prevModel;
+    }
+
+    public function getPrevModel()
+    {
+        return $this->prevModel;
+    }
+
+    public function detectActualModel()
+    {
+        $config = Config::getInstance();
+        $model = $this;
+        $count = count($this->path);
+
+        if ($count > 1) {
+            $end = $this->path[($count - 1)];
+            $prev = $this->path[($count - 2)];
+            if ($prev['structure'] != $end['structure']) {
+                // Если структура активного элемента не равна структуре предыдущего элемента,
+                // то нужно инициализировать модель структуры активного элемента
+                $name = explode('\\', get_class($this));
+                $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\' . $name[3] . '\\Model';
+                $prevStructure = $config->getStructureByName($prev['structure']);
+                /* @var $model Model */
+                $model = new $modelClassName($prevStructure['ID'] . '-' . $end['ID']);
+                $model->setPath($this->path);
+                $model->setPrevModel($this);
+            }
+        }
+        return $model;
+    }
+
+    public function __get($name)
+    {
+        if ($name == 'object') {
+            throw new \Exception('Свойство object упразднено.');
+        }
     }
 }

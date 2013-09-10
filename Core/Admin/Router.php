@@ -93,23 +93,6 @@ class Router
             return $structure;
         }
 
-        $path = $model->getPath();
-        $count = count($path);
-
-        if ($count > 1) {
-            $end = $path[($count - 1)];
-            $prev = $path[($count - 2)];
-            if ($prev['structure'] != $end['structure']) {
-                // Если структура активного элемента не равна структуре предыдущего элемента,
-                // то нужно инициализировать модель структуры активного элемента
-                $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Model';
-                $prevStructure = $config->getStructureByName($prev['structure']);
-                /* @var $model Model */
-                $model = new $modelClassName($prevStructure['ID'] . '-' . $end['ID']);
-                $model->setPath($path);
-            }
-        }
-
         return $model;
     }
 

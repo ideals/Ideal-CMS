@@ -25,7 +25,7 @@ class ModelAbstract extends Part\Site\Model
     }
 
 
-    public function detectPageByUrl($url, $path)
+    public function detectPageByUrl($path, $url)
     {
         $db = Db::getInstance();
 
@@ -39,9 +39,8 @@ class ModelAbstract extends Part\Site\Model
         }
 
         $this->path = array_merge($path, $list);
-        $this->object = end($list);
 
-        return array();
+        return $this;
     }
 
 

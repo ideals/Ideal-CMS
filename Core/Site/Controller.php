@@ -24,21 +24,10 @@ class Controller
      */
     function run(Router $router)
     {
-        $this->path  = $router->getPath();
-        $this->model = $router->getModel();
+        /* @var $this->model Model Модель соответствующая этому контроллеру */
+        $this->model = $router->getModel()->detectActualModel();
 
-        $controllerModelClass = str_replace('Controller', 'Model', get_called_class());
-        $modelClass = get_class($this->model);
-        if ($controllerModelClass != $modelClass) {
-            // Если определенная роутером модель не совпадает с моделью контроллера,
-            // то нужно определить модель контроллера, передав ей path и prevStructure
-            $end = end($this->path);
-            $prevStructure = $this->model->getprevStructure() . '-' . $end['ID'];
-            $this->model = new $controllerModelClass($prevStructure);
-            $this->model->setPath($this->path);
-        }
-        $this->model->object = end($this->path);
-
+        // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
         $actionName = $request->action;
         if ($actionName == '') {
@@ -147,11 +136,6 @@ class Controller
 
         $header = '';
         $templatesVars = $this->model->getTemplatesVars();
-
-        if (isset($templatesVars['template']['content'])) {
-            list($header, $text) = $this->model->extractHeader($templatesVars['template']['content']);
-            $templatesVars['template']['content'] = $text;
-        }
 
         foreach ($templatesVars as $k => $v) {
             $this->view->$k = $v;

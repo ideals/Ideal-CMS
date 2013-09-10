@@ -24,7 +24,7 @@ class Controller
      */
     function run(Router $router)
     {
-        $this->model = $router->getModel();
+        $this->model = $router->getModel()->detectActualModel();
 
         // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
@@ -144,6 +144,10 @@ class Controller
 
         // Отображение списка заголовков
         $this->view->headers = $headers;
+
+        if ($request->par == '') {
+            $request->par = 1;
+        }
         $this->view->par = $request->par;
 
         // Отображение списка элементов
