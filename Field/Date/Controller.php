@@ -32,7 +32,7 @@ HTML;
 
     public function getValueForList($values, $fieldName)
     {
-        return date('d.m.Y &\nb\sp; h:i', $values[$fieldName]);
+        return date('d.m.Y &\nb\sp; H:i', $values[$fieldName]);
     }
 
 
