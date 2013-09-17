@@ -169,7 +169,7 @@ function checkPost($post)
 
     // Проверка наличия папки кастомных скриптов CMS
     if (is_dir(CMS_ROOT . '/Ideal.c')) {
-        $errorText = "<strong>Ошибка</strong>. При установке системы папка кастомных скриптов " . CMS_ROOT . "/Custom не должна существовать.";
+        $errorText = "<strong>Ошибка</strong>. При установке системы папка кастомных скриптов " . CMS_ROOT . "/Ideal.c не должна существовать.";
         return $errorText;
     }
 
@@ -422,6 +422,9 @@ function createTables()
 
     $config = \Ideal\Core\Config::getInstance();
 
+    // Каталог, в котором находятся модифицированные скрипты CMS
+    $config->cmsFolder = CMS_ROOT;
+	
     // Загружаем список структур из конфигурационных файлов структур
     $config->loadSettings();
 
