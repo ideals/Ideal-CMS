@@ -286,9 +286,9 @@ class Util
      */
     static function smartTrim($str, $len)
     {
-        $firstLen = strlen($str);
-        $str = substr($str, 0, $len);
-        if ($firstLen !== strlen($str)) $str = substr($str, 0, strrpos($str, ' '));
+        $firstLen = mb_strlen($str);
+        $str = mb_substr($str, 0, $len);
+        if ($firstLen !== mb_strlen($str)) $str = mb_substr($str, 0, mb_strrpos($str, ' '));
         return $str;
     }
 
