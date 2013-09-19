@@ -23,6 +23,7 @@ $fields = array(
     'sitePath',
     'cmsLogin',
     'cmsPass',
+    'cmsPassRepeated',
     'dbHost',
     'dbLogin',
     'dbPass',
@@ -115,6 +116,12 @@ if ($errorText == 'Ok') {
             <label class="control-label" for="cmsPass">Пароль к админке:</label>
             <div class="controls">
                 <input type="password" class="input-xlarge" id="cmsPass" name="cmsPass" value="<?php echo $formValue['cmsPass']; ?>" />
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="dbPass">Повторите пароль:</label>
+            <div class="controls">
+                <input type="password" class="input-xlarge" id="cmsPassRepeated" name="cmsPassRepeated" value="<?php echo $formValue['cmsPassRepeated']; ?>" />
             </div>
         </div>
         <div class="control-group">
@@ -213,6 +220,12 @@ function checkPost($post)
             $errorText = '<strong>Ошибка</strong>. Полe ' . $v . ' обязательно для заполнения.';
             return $errorText;
         }
+    }
+
+    //Сравниваем указанные пароли от админки
+    if ($post['cmsPass'] !== $post['cmsPassRepeated']) {
+        $errorText = '<strong>Ошибка</strong>. Пароль к админке не соответсвует повторно введённому паролю.';
+        return $errorText;
     }
 
     // Проверяем возможность подключиться к БД
@@ -429,7 +442,7 @@ function createTables()
     require_once 'Core/AutoLoader.php';
 
     $config = \Ideal\Core\Config::getInstance();
-	
+
     // Каталог, в котором находятся модифицированные скрипты CMS
     $config->cmsFolder = CMS_ROOT;
 	
