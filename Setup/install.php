@@ -5,6 +5,14 @@ ini_set('display_errors', 'On');
 
 set_error_handler('installErrorHandler');
 
+//Проверяем правильность Url
+//Если Url неправильный (путь к скрипту содержит символы в неправильном регистре), делаем редирект с указанием правильного пути
+$scriptDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', $_SERVER['SCRIPT_FILENAME']);
+if ($scriptDir !== $_SERVER['REQUEST_URI']) {
+    header("Location: $scriptDir");
+}
+
+
 define('CMS_ROOT', $_SERVER['DOCUMENT_ROOT']
     . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/Setup')));
 
