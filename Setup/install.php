@@ -421,7 +421,10 @@ function createTables()
     require_once 'Core/AutoLoader.php';
 
     $config = \Ideal\Core\Config::getInstance();
-
+	
+	// Каталог, в котором находятся модифицированные скрипты CMS
+    $config->cmsFolder = CMS_ROOT;
+	
     // Каталог, в котором находятся модифицированные скрипты CMS
     $config->cmsFolder = CMS_ROOT;
 	
