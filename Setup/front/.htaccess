@@ -29,6 +29,9 @@ RewriteRule ^(.*)/$ $1.html [R=permanent,L]
 [[COMMENT_FOR_SUBFOLDER]]RewriteRule ^index.html$ $1 [R=permanent,L]
 RewriteRule ^(.*)/index.html$ $1.html [R=permanent,L]
 
+#START redirect
+#END redirect
+
 # TODO добавить правила для переадресации всех НЕСУЩЕСТВУЮЩИХ файлов в скрипт
 RewriteRule ^[[SUBFOLDER_INDEX]]$ /[[SUBFOLDER]]_.php?url= [L,QSA]
 RewriteRule ^(.*)\.html$ /[[SUBFOLDER]]_.php?url=$1 [L,QSA]
