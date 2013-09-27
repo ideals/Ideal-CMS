@@ -8,12 +8,21 @@ use Ideal\Core\Util;
 
 class Router
 {
-    protected $path = array();
-    protected $model;
+    /** @var Model Модель активной страницы */
+    protected $model = null;
+    /** @var string Название контроллера активной страницы */
     protected $controllerName = '';
+    /** @var bool Флаг 404-ошибки */
     public $is404 = false;
 
 
+    /**
+     * Производит роутинг исходя из запрошенного URL-адреса
+     *
+     * Конструктор генерирует событие onPreDispatch, затем определяет модель активной страницы
+     * и генерирует событие onPostDispatch.
+     * В результате работы конструктора инициализируются переменные $this->model и $this->ControllerName
+     */
     public function __construct()
     {
         // Проверка на AJAX-запрос
@@ -27,145 +36,128 @@ class Router
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
 
-        if (count($this->path) == 0) {
-            // С помощью плагинов страница не найдена, ищем обычным рутером
-            $this->path = $this->routeByUrl();
-        } else {
-            // Страница была найдена с помощью плагина
-
-            $end = end($this->path);
-            $prev = prev($this->path);
-
-            if ($prev['structure'] == $end['structure']) {
-                $structurePath = $end['structure_path'];
-            } else {
-                $structurePath = $end['structure_path'] . $end['ID'];
-            }
-
-            $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
-
-            /** @var $structure \Ideal\Core\Site\Model */
-            $structure = new $modelClassName($structurePath);
-            $structure->setPath($this->path);
-            $structure->object = $end;
-            $this->model = $structure;
+        if (is_null($this->model)) {
+            $this->model = $this->routeByUrl();
         }
 
         $pluginBroker->makeEvent('onPostDispatch', $this);
     }
 
-
-    public function setPath($path)
-    {
-        $this->path = $path;
-    }
-
-
-    public function getPath()
-    {
-        return $this->path;
-    }
-
-
-    public function setControllerName($name)
-    {
-        $this->controllerName = $name;
-    }
-
-
+    /**
+     * Возвращает название контроллера для активной страницы
+     *
+     * @return string Название контроллера
+     */
     public function getControllerName()
     {
         if ($this->controllerName != '') {
             return $this->controllerName;
         }
 
-        $end = end($this->path);
+        $path = $this->model->getPath();
+        $end = array_pop($path);
+        $prev = array_pop($path);
+
         if ($end['url'] == '/') {
-            $end['structure'] = 'Ideal_Home';
+            // Если запрошена главная страница, принудительно устанавливаем структуру Ideal_Home
+            $structure = 'Ideal_Home';
+        } elseif (!isset($end['structure'])) {
+            // Если в последнем элементе нет поля structure (например в новостях), то берём название
+            // структуры из предыдущего элемента пути
+            $structure = $prev['structure'];
+        } else {
+            // В обычном случае название отображаемой структуры определяется по соответствующему
+            // полю последнего элемента пути
+            $structure = $end['structure'];
         }
 
-        $controllerName =  Util::getClassName($end['structure'], 'Structure') . '\\Site\\Controller';
+        $controllerName =  Util::getClassName($structure, 'Structure') . '\\Site\\Controller';
 
         return $controllerName;
     }
 
-
+    /**
+     * Определение модели активной страницы и пути к ней на основе запрошенного URL
+     *
+     * @return Model Модель активной страницы
+     */
     protected function routeByUrl()
     {
         $config = Config::getInstance();
 
         // Находим начальную структуру
-        $structures = $config->structures;
-        $startStructure = reset($structures);
-        $structurePath = $startStructure['ID'];
-        $this->path = array($startStructure);
+        $path = array($config->getStartStructure());
+        $prevStructureId = $path[0]['ID'];
 
         // Вырезаем стартовый URL
         $url = substr($_GET['url'], strlen($config->startUrl));
-        $url = rtrim($url, '/'); // убираем завершающие слэши, если они есть (это костыль)
 
-        // TODO здесь должно быть правильное отрезание суффикса, вместо того, что выше
-        // а в htaccess убрать переадресацию по суффиксу, оставить только переадресацию
-        // по отстутствующему файлу
-
-        if ($url == '') {
-            // Если главная страница
-            $this->model = new \Ideal\Structure\Home\Site\Model($structurePath);
-            $url = $this->model->detectPageByUrl('/', $this->path);
+        // Если запрошена главная страница
+        if ($url == '' || $url == '/') {
+            $this->model = new \Ideal\Structure\Home\Site\Model('0-' . $prevStructureId);
+            $url = $this->model->detectPageByUrl($path, '/');
             if ($url != '404') {
-                return $this->model->getPath();
+                return $this->model;
             }
         }
 
-        // TODO Тут можно подключить плагин для кастомного роутинга
+        // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
+        $suffix = substr($url, -strlen($config->urlSuffix));
+        if ($suffix != $config->urlSuffix) {
+            $this->is404 = true;
+        } else {
+            $url = substr($url, 0, -strlen($config->urlSuffix));
+        }
+
+        // Проверка, не остался ли в конце URL слэш
+        if (substr($url, -1) == '/') {
+            // Убираем завершающие слэши, если они есть
+            $url = rtrim($url, '/');
+            // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
+            // то ставим 404-ошибку
+            $this->is404 = true;
+        }
 
         // Разрезаем URL на части
         $url = explode('/', $url);
 
-        if($url[0] == 'goods'){
-            $this->model = new \Shop\Structure\Good\Site\Model(6);
-            $url = $this->model->detectPageByUrl($url[1], $this->path);
-            if ($url != '404') {
-                return $this->model->getPath();
-            }
+        // Определяем оставшиеся элементы пути
+        $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Site\\Model';
+        /* @var $structure Model */
+        $structure = new $modelClassName('0-' . $prevStructureId);
+
+        // Запускаем определение пути и активной модели по $par
+        $model = $structure->detectPageByUrl($path, $url);
+
+        if (!is_object($model) && ($model == 404)) {
+            // Если модель сообщила, что такой путь не найден — ставим флаг is404 и выходим
+            $this->is404 = true;
+            return $structure;
         }
 
-        // Определяем оставшиеся элементы пути
-        $nextStructure = $startStructure;
-        do {
-            if ($url == 404) {
-                // Если на предыдущем шаге возникла ошибка 404
-                $this->is404 = true;
-                if (count($this->path) == 1) {
-                    // Если у страницы нет ни одного существующего предка
-                    $this->model = new \Ideal\Structure\Home\Site\Model($structurePath);
-                    $this->model->detectPageByUrl('/', $this->path);
-                    $this->path = $this->model->getPath();
-                    $request = new Request();
-                    $request->action = 'error404';
-                    return array($startStructure, array('structure' => 'Ideal_Home', 'url' => '/', 'ID' => 0));
-                }
-                $url = array();
-                break;
-            }
-            $modelClassName = Util::getClassName($nextStructure['structure'], 'Structure') . '\\Site\\Model';
-            /** @var $structure \Ideal\Core\Site\Model */
-            $structure = new $modelClassName($structurePath);
-            // Если на предыдущем шаге не было 404 ошибки и массив $url не кончился
-            $url = $structure->detectPageByUrl($url, $this->path);
-            if ($url == '404') continue;
-            $this->path = $structure->getPath();
-            $nextStructure = end($this->path);
-            $structurePath .= '-' . $nextStructure['ID'];
-            $this->model = $structure;
-        } while (count($url) != 0);
-
-        return $this->path;
+        return $model;
     }
 
-
+    /**
+     * Возвращает объект модели активной страницы
+     *
+     * @return Model Инициализированный объект модели активной страницы
+     */
     public function getModel()
     {
         return $this->model;
     }
+
+    /**
+     * Устанавливает название контроллера для активной страницы
+     *
+     * Обычно используется в обработчиках событий onPreDispatch, onPostDispatch
+     *
+     * @param $name string Название контроллера
+     */
+    public function setControllerName($name)
+    {
+        $this->controllerName = $name;
+    }
+
 }

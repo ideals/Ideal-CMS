@@ -3,56 +3,36 @@ namespace Ideal\Core\Admin;
 
 use Ideal\Core;
 use Ideal\Core\Config;
+use Ideal\Core\View;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
-use Ideal\Core\View;
 use Ideal\Structure;
 
-class Controller extends Core\Controller
+class Controller
 {
-    /* @var $model Model */
+    /** @var Model Модель соответствующая этому контроллеру */
     protected $model;
+    /** @var array Путь к этой странице, включая и её саму */
+    protected $path;
+    /** @var View Объект вида — twig-шаблонизатор */
+    protected $view;
 
     /**
-     * Отображение структуры в браузере
-     * @param \Ideal\Core\Admin\Router $router
-     * @return mixed
-     * @internal param $structure
-     * @internal param $actionName
-     * @internal param $path
+     * Генерация контента страницы для отображения в браузере
+     * @param Router $router
+     * @return string Содержимое отображаемой страницы
      */
     function run(Router $router)
     {
-        $this->path = $router->getPath();
+        $this->model = $router->getModel()->detectActualModel();
 
-        // Инициализация модели
-        $path = $this->path;
-        $end = array_pop($path);
-        $prev = end($path);
-        $modelName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Model';
-
-        // Определение пути структур
-        $structurePath = $end['ID']; // для корневого раздела
-        if (isset($end['structure_path'])) {
-            // Если отображается подраздел
-            $structurePath = $end['structure_path'];
-        }
-        if (isset($prev['structure']) AND ($prev['structure'] != $end['structure'])) {
-            // Если отображаемая структура имеет другой тип, по сравнению с предыдущей
-            $structurePath .= '-' . $end['ID'];
-        }
-
-        $this->model = new $modelName($structurePath);
-        $this->model->setPath($this->path); // записываем полный путь
-
+        // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
         $actionName = $request->action;
         if ($actionName == '') {
             $actionName = 'index';
         }
-
         $actionName = $actionName . 'Action';
-
         $this->$actionName();
 
         $config = Config::getInstance();
@@ -69,11 +49,12 @@ class Controller extends Core\Controller
 
         // Отображение верхнего меню структур
         $this->view->structures = $config->structures;
-        $this->view->activeStructureId = $this->path[0]['ID'];
+        $path = $this->model->getPath();
+        $this->view->activeStructureId = $path[0]['ID'];
 
         // Отображение хлебных крошек
         $pars = $breadCrumbs = array();
-        foreach ($this->path as $v) {
+        foreach ($path as $v) {
             $pars[] = $v['ID'];
             $breadCrumbs[] = array(
                 'link' => implode('-', $pars),
@@ -91,7 +72,10 @@ class Controller extends Core\Controller
         return $this->view->render();
     }
 
-
+    /**
+     * Инициализация админского twig-шаблона
+     * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     */
     public function templateInit($tplName = '')
     {
         // Инициализация общего шаблона страницы
@@ -101,6 +85,7 @@ class Controller extends Core\Controller
         }
         $gblRoot = dirname(stream_resolve_include_path($gblName));
 
+        // Определение названия модуля из названия класса контроллера
         $parts = explode('\\', get_class($this));
         $moduleName = $parts[0];
         $moduleName = ($moduleName == 'Ideal') ? '' : $moduleName . '/';
@@ -124,17 +109,33 @@ class Controller extends Core\Controller
             $tplName = basename($tplName);
         }
 
+        // Инициализируем Twig-шаблонизатор
         $config = Config::getInstance();
         $this->view = new View(array($gblRoot, $tplRoot), $config->isTemplateAdminCache);
         $this->view->loadTemplate($tplName);
     }
 
-
-    public function getHttpStatus()
+    /**
+     * Получение дополнительных HTTP-заголовков
+     * По умолчанию система ставит только заголовок Content-Type, но и его можно
+     * переопределить в этом методе.
+     *
+     * @return array Массив где ключи - названия заголовков, а значения - содержание заголовков
+     */
+    public function getHttpHeaders()
     {
-        return 'X-Robots-Tag: noindex, nofollow';
+        return array(
+            'X-Robots-Tag' => 'noindex, nofollow'
+        );
     }
 
+    /**
+     * Внесение финальных изменений в шаблон, после всех-всех-всех
+     * @param string $actionName
+     */
+    public function finishMod($actionName)
+    {
+    }
 
     public function parseList($headers, $list)
     {
@@ -143,6 +144,10 @@ class Controller extends Core\Controller
 
         // Отображение списка заголовков
         $this->view->headers = $headers;
+
+        if ($request->par == '') {
+            $request->par = 1;
+        }
         $this->view->par = $request->par;
 
         // Отображение списка элементов

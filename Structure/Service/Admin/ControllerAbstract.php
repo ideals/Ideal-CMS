@@ -24,7 +24,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
 
         $this->view->items = $this->model->getMenu();// $structure['items'];
 
-        $item = end($this->path);
+        $item = $this->model->object;
         $this->view->ID = $item['ID'];
 
         list($module, $structure) = explode('_', $item['ID']);

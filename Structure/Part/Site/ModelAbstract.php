@@ -4,6 +4,7 @@ namespace Ideal\Structure\Part\Site;
 use Ideal\Core\Db;
 use Ideal\Core\Site;
 use Ideal\Core\Config;
+use Ideal\Core\Util;
 use Ideal\Field;
 use Ideal\Field\Url;
 
@@ -67,7 +68,7 @@ class ModelAbstract extends Site\Model
     }
 
 
-    public function detectPageByUrl($url, $path)
+    public function detectPageByUrl($path, $url)
     {
         $this->path = $path;
         $db = Db::getInstance();
@@ -80,7 +81,7 @@ class ModelAbstract extends Site\Model
         }
 
         $_sql = "SELECT * FROM {$this->_table} WHERE ({$_sql})
-                    AND structure_path='{$this->structurePath}' AND is_active=1 ORDER BY lvl, cid";
+                    AND prev_structure='{$this->prevStructure}' AND is_active=1 ORDER BY lvl, cid";
 
         $list = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
 
@@ -160,10 +161,24 @@ class ModelAbstract extends Site\Model
             return '404';
         }
 
-        $this->object = end($newPath);
+        $url = array_slice($url, $count);
+        if (count($url) > 0) {
+            // Остались неразобранные сегменты URL, запускаем вложенную структуру
+            // Определяем оставшиеся элементы пути
+            $end = end($this->path);
+            $config = Config::getInstance();
+            $rootStructure = $config->getStructureByName($end['structure']);
+            $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
+            /* @var $structure Model */
+            $structure = new $modelClassName($rootStructure['ID'] . '-' . $end['ID']);
 
-        return array_slice($url, $count);
-
+            // Запускаем определение пути и активной модели по $par
+            $model = $structure->detectPageByUrl($this->path, $url);
+            return $model;
+        } else {
+            // Неразобранных сегментов не осталось, возвращаем в качестве модели сам объект
+            return $this;
+        }
     }
 
 

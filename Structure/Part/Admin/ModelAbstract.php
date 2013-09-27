@@ -1,7 +1,9 @@
 <?php
 namespace Ideal\Structure\Part\Admin;
 
+use Ideal\Core\Config;
 use Ideal\Core\Db;
+use Ideal\Core\Util;
 use Ideal\Field\Cid;
 
 class ModelAbstract extends \Ideal\Core\Admin\Model
@@ -30,47 +32,69 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         return $where;
     }
 
-
-    public function detectPageByIds($par)
+    /**
+     * Определение пути по ID элементов пути
+     * @param array $path Начальная, уже найденная часть пути
+     * @param $par
+     * @return $this
+     */
+    public function detectPageByIds($path, $par)
     {
         /* @var Db $db */
         $db = Db::getInstance();
 
-        if (count($par) == 0) {
-            $trueResult = array();
-        } else {
-            $ids = implode(',', $par);
-            $_sql = "SELECT * FROM {$this->_table}
-                              WHERE ID IN ({$ids}) AND structure_path='{$this->structurePath}' ORDER BY cid";
-            $result = $db->queryArray($_sql);
-
-            // Проверка найденных элементов из БД на соответствие последовательности ID в par
-            // и последовательности cid адресов
-            $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
-            $start = reset($result);
-            $cidPrev = $cidModel->getBlock($start['cid'], $start['lvl'] - 1); // находим блок cid предыдущего уровня
-            $trueResult = array();
-            $parElement = reset($par);
-            foreach ($result as $v) {
-                if ($v['ID'] != $parElement) {
-                    // Если ID найденного элемента не сооветствует ID в переданной строке par
-                    continue;
-                }
-                $cidCurr = $cidModel->getBlock($v['cid'], $v['lvl'] - 1); // находим блок cid предыдущего уровня
-                if ($cidPrev != $cidCurr) {
-                    // Если предыдущий блок cid не равен предыдущему блоку этого cid
-                    continue;
-                }
-                $trueResult[] = $v;
-                $parElement = next($par);
-                $cidPrev = $cidModel->getBlock($v['cid'], $v['lvl']); // запоминаем блок cid пройденного уровня
-            }
-
-            $par = array_slice($par, count($trueResult));
+        if (0 == count($par)) {
+            $this->path = $path;
+            return $this;
         }
 
-        $this->path = $trueResult;
-        return $par;
+        $ids = implode(',', $par);
+        $_sql = "SELECT * FROM {$this->_table}
+                          WHERE ID IN ({$ids}) AND prev_structure='{$this->prevStructure}' ORDER BY cid";
+        $result = $db->queryArray($_sql);
+
+        // Проверка найденных элементов из БД на соответствие последовательности ID в par
+        // и последовательности cid адресов
+        $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
+        $start = reset($result);
+        $cidPrev = $cidModel->getBlock($start['cid'], $start['lvl'] - 1); // находим блок cid предыдущего уровня
+        $trueResult = array();
+        $parElement = reset($par);
+        foreach ($result as $v) {
+            if ($v['ID'] != $parElement) {
+                // Если ID найденного элемента не сооветствует ID в переданной строке par
+                continue;
+            }
+            $cidCurr = $cidModel->getBlock($v['cid'], $v['lvl'] - 1); // находим блок cid предыдущего уровня
+            if ($cidPrev != $cidCurr) {
+                // Если предыдущий блок cid не равен предыдущему блоку этого cid
+                continue;
+            }
+            $trueResult[] = $v;
+            $parElement = next($par);
+            $cidPrev = $cidModel->getBlock($v['cid'], $v['lvl']); // запоминаем блок cid пройденного уровня
+        }
+
+        $par = array_slice($par, count($trueResult)); // отрезаем найденную часть пути от $par
+
+        $this->path = array_merge($path, $trueResult);
+
+        $config = Config::getInstance();
+        if (0 != count($par)) {
+            // Ещё остались неопределённые элементы пути. Запускаем вложенную структуру.
+            $trueResult = $this->path;
+            $end  = array_pop($trueResult);
+            $prev = array_pop($trueResult);
+            $structure = $config->getStructureByName($prev['structure']);
+            $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Model';
+            /* @var $structure Model */
+            $structure = new $modelClassName($structure['ID'] . '-' . $end['ID']);
+            // Запускаем определение пути и активного объекта по $par
+            $model = $structure->detectPageByIds($this->path, $par);
+            return $model;
+        }
+
+        return $this;
     }
 
 
@@ -109,17 +133,17 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $c = count($path);
         $end = end($path);
         if ($c < 2 OR ($c > 1 AND $path[$c - 2]['structure'] != $end['structure'])) {
-            $structurePath = $this->structurePath;
+            $prevStructure = $this->prevStructure;
             $lvl = 1;
         } else {
             // Остаёмся в рамках того же модуля
             $lvl = $end['lvl'] + 1;
-            $structurePath = $end['structure_path'];
+            $prevStructure = $end['prev_structure'];
         }
 
         $this->object = array(
             'lvl' => $lvl,
-            'structure_path' => $structurePath
+            'prev_structure' => $prevStructure
         );
 
     }

@@ -9,21 +9,32 @@ abstract class Model extends Core\Model
 {
     public $metaTags = array(
         'robots' => 'index, follow');
+    protected $templatesVars = array();
 
     public function getTitle()
     {
-        if (isset($this->object['title']) AND $this->object['title'] != '') {
-            return $this->object['title'];
+        $end = end($this->path);
+        if (isset($end['title']) AND $end['title'] != '') {
+            return $end['title'];
         } else {
-            return $this->object['name'];
+            return $end['name'];
         }
     }
 
 
-    public function getHeader($header = '')
+    public function getHeader()
     {
+        $templatesVars = $this->getTemplatesVars();
+
+        $header = '';
+        if (isset($templatesVars['template']['content'])) {
+            list($header, $text) = $this->extractHeader($templatesVars['template']['content']);
+            $templatesVars['template']['content'] = $text;
+        }
+
         if ($header == '') {
-            $header = $this->object['name'];
+            $end = end($this->path);
+            $header = $end['name'];
         }
         return $header;
     }
@@ -42,13 +53,17 @@ abstract class Model extends Core\Model
 
     public function getTemplatesVars()
     {
+        if (count($this->templatesVars) > 0) {
+            return $this->templatesVars;
+        }
+        $end = end($this->path);
         $templatesVars = array();
         foreach ($this->fields as $k => $v) {
             // Пропускаем все поля, которые не являются шаблоном
             if (strpos($v['type'], '_Template') === false) continue;
-            $className = Util::getClassName($this->object[$k], 'Template') . '\\Model';
-            $structurePath = $this->object['structure_path'] . '-' . $this->object['ID'];
-            $template = new $className($structurePath);
+            $className = Util::getClassName($end[$k], 'Template') . '\\Model';
+            $prevStructure = $end['prev_structure'] . '-' . $end['ID'];
+            $template = new $className($prevStructure);
             $templatesVars[$k] = $template->getObject($this);
         }
         return $templatesVars;
@@ -59,16 +74,17 @@ abstract class Model extends Core\Model
     {
         $meta = '';
         $xhtml = ($xhtml) ? '/' : '';
+        $end = end($this->path);
 
-        if (isset($this->object['description']) AND $this->object['description'] != '') {
+        if (isset($end['description']) AND $end['description'] != '') {
             $meta .= '<meta name="description" content="'
-                   . str_replace('"', '&quot;', $this->object['description'])
+                   . str_replace('"', '&quot;', $end['description'])
                    . '" ' . $xhtml . '>';
         }
 
-        if (isset($this->object['keywords']) AND $this->object['keywords'] != '') {
+        if (isset($end['keywords']) AND $end['keywords'] != '') {
             $meta .= '<meta name="keywords" content="'
-                   . str_replace('"', '&quot;', $this->object['keywords'])
+                   . str_replace('"', '&quot;', $end['keywords'])
                    . '" ' . $xhtml . '>';
         }
 

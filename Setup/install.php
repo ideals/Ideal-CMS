@@ -464,7 +464,7 @@ function createTables()
         'reg_date' => time(),
         'password' => crypt($formValue['cmsPass']),
         'is_active' => 1,
-        'structure_path' => 2
+        'prev_structure' => '0-2'
     ));
 
     if ($handle = opendir('../Template')) {

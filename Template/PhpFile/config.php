@@ -10,7 +10,7 @@ return array(
             'sql'   => 'int(8) unsigned not null auto_increment primary key',
             'type'  => 'Ideal_Hidden'
         ),
-        'structure_path' => array(
+        'prev_structure' => array(
             'label' => 'ID родительских структур',
             'sql'   => 'char(15)',
             'type'  => 'Ideal_Hidden'

@@ -11,19 +11,21 @@ use Ideal\Core\Db;
 class ModelAbstract extends \Ideal\Core\Admin\Model
 {
 
-    public function detectPageByIds($par)
+    public function detectPageByIds($path, $par)
     {
+        $this->path = $path;
         $first = array_shift($par);
         if ($first != null) {
             $first = intval($first);
             $_sql = "SELECT * FROM {$this->_table} WHERE ID={$first}";
             $db = Db::getInstance();
-            $this->path = $db->queryArray($_sql);
-        } else {
-            $par = array();
-            $this->path = array();
+            $localPath = $db->queryArray($_sql);
+            if (!isset($localPath[0]['ID'])) {
+                return 404;
+            }
+            array_push($this->path, $localPath[0]);
         }
-        return $par;
+        return $this;
     }
 
 
@@ -42,7 +44,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             // Если есть сортировка pos, то нужно уменьшить все следующие за удаляемым
             // элементы на единицу
             $_sql = "UPDATE {$this->_table} SET pos = pos - 1
-                        WHERE structure_path = '{$this->structurePath}'
+                        WHERE prev_structure = '{$this->prevStructure}'
                               AND pos > {$this->object['pos']}";
             $db->query($_sql);
         }
@@ -56,7 +58,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         /* @var Db $db */
         $db = Db::getInstance();
 
-        $_sql = "SELECT pos FROM {$this->_table} WHERE structure_path='{$this->structurePath}' ORDER BY pos DESC LIMIT 1";
+        $_sql = "SELECT pos FROM {$this->_table} WHERE prev_structure='{$this->prevStructure}' ORDER BY pos DESC LIMIT 1";
         $posArr = $db->queryArray($_sql);
 
         $pos = 0;

@@ -8,36 +8,40 @@ class FrontController
 {
     /**
      * Формирование заголовков (отдаются браузерам, паукам и проч.)
-     * @param string $httpStatus HTTP status страницы
-     * @param int|string $lastMod Дата последней модификации страницы в формате UNIX TIMESTAMP
+     *
+     * @param array $httpHeaders
      */
-    function sendHttpHeaders($httpStatus = '', $lastMod = 0)
+    function sendHttpHeaders($httpHeaders)
     {
-        // Отображаем дополнительный header, если он нужен
-        if ($httpStatus != '') {
-            header($httpStatus);
+        $isContentType = false;
+        foreach ($httpHeaders as $k => $v) {
+            if ($k == intval($k)) {
+                // Ключ не указан, значит выводим только значение
+                header ($v . "\r\n");
+            } else {
+                // Ключ указан, значит выводим и ключ и значение
+                header ($k . ': ' . $v . "\r\n");
+            }
+            // Проверяем, не переопределён ли Content-Type
+            if (strtolower($k) == 'content-type') {
+                $isContentType = true;
+            }
         }
 
-        header("Content-Type: text/html; charset=utf-8");
-
-        // Дата последней модификации, если она указана
-        if ($lastMod != 0) {
-            @ header("Last-Modified: " . gmdate("D, d M Y H:i:s", $this->lastMod ) . " GMT\r\n");
+        if (!$isContentType) {
+            // Content-Type пользователем не изменён, отображаем стандартный
+            header("Content-Type: text/html; charset=utf-8");
         }
-
-        // Затираем сообщение о том, что это PHP-скрипт
-        header('X-Powered-By: Hello, man!');
-
-        // Тут разные наброски HTTP-статусов, можно раскоменить нужное по желанию
-        //@ header("Expires: " . gmdate("D, d M Y H:i:s")+900 . " GMT\r\n");
-        // HTTP/1.1
-        //@ header("Cache-Control: no-store, no-cache, must-revalidate\r\n");
-        //@ header("Cache-Control: post-check=0, pre-check=0\r\n", false);
-        // HTTP/1.0
-        //header("Pragma: no-cache");
     }
 
-
+    /**
+     * Запуск FrontController'а
+     *
+     * Проводится роутинг, определяется контроллер страницы и отображаемый текст.
+     * Выводятся HTTP-заголовки и отображается текст, сгенерированный с помощью view в controller
+     *
+     * @param string $mode Режим работы admin или site
+     */
     function run($mode)
     {
         // Запускаем роутер, для получения навигационной цепочки
@@ -58,15 +62,14 @@ class FrontController
         $content = $controller->run($router);
 
         if ($router->is404) {
-            $httpStatus = 'HTTP/1.0 404 Not Found';
+            $httpHeaders = 'HTTP/1.0 404 Not Found';
         } else {
-            $httpStatus = $controller->getHttpStatus();
+            $httpHeaders = $controller->getHttpHeaders();
         }
 
-        $lastMod = $controller->getLastMod();
-
-        $this->sendHttpHeaders($httpStatus, $lastMod); // вывод http-заголовков
+        $this->sendHttpHeaders($httpHeaders); // вывод http-заголовков
 
         echo $content; // отображение страницы
     }
+
 }
