@@ -56,13 +56,15 @@ abstract class Model extends Core\Model
         if (count($this->templatesVars) > 0) {
             return $this->templatesVars;
         }
+        $config = Core\Config::getInstance();
         $end = end($this->path);
         $templatesVars = array();
         foreach ($this->fields as $k => $v) {
             // Пропускаем все поля, которые не являются шаблоном
             if (strpos($v['type'], '_Template') === false) continue;
             $className = Util::getClassName($end[$k], 'Template') . '\\Model';
-            $prevStructure = $end['prev_structure'] . '-' . $end['ID'];
+            $structure = $config->getStructureByName($end['structure']);
+            $prevStructure = $structure['ID'] . '-' . $end['ID'];
             $template = new $className($prevStructure);
             $templatesVars[$k] = $template->getObject($this);
         }
