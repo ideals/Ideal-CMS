@@ -39,4 +39,20 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $this->view->text = $text;
     }
 
+    public function __call($name, $arguments) {
+        $item = $this->model->object;
+        $this->view->ID = $item['ID'];
+
+        list($module, $structure) = explode('_', $item['ID']);
+        $module = ($module == 'Ideal') ? '' : $module . '/';
+        $file = $module . 'Structure/Service/' . $structure . '/' . $name . '.php';
+
+        if (@fopen($name, "r")) {
+            throw new \Exception('Файл не существует');
+            return;
+        }
+
+        include($file);
+    }
+
 }
