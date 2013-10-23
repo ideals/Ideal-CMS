@@ -290,8 +290,10 @@ abstract class Model
 
     public function __get($name)
     {
+        /*
         if ($name == 'object') {
             throw new \Exception('Свойство object упразднено.');
         }
+        */
     }
 }
