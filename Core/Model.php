@@ -115,14 +115,9 @@ abstract class Model
         $this->pageData = $pageData;
     }
 
-    public  function initPageData($path = null)
+    public  function initPageData()
     {
-        if (isset($path)){
-        // В случае если был передан массив информации о странице из setPageDataByprevStructure и setPageDataById
-            $this->pageData = $path;
-        } else {
-            $this->pageData = end($this->path);
-        }
+        $this->pageData = end($this->path);
 
         // Получаем переменные шаблона
         $config = Config::getInstance();
