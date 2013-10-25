@@ -8,17 +8,17 @@ use Ideal\Core\Util;
 class Model extends \Ideal\Core\Admin\Model
 {
 
-    public function getObject($parentModel)
+    public function getPageData()
     {
-        $this->setObjectByprevStructure($this->prevStructure);
+        $this->setPageDataByprevStructure($this->prevStructure);
 
         // Считываем из БД все открытые разделы
         $list = $this->getList();
 
         // Строим текстовую переменную с ul-списком разделов
-        $this->object['content'] .=  $this->createSiteMap($list);
+        $this->pageData['content'] .=  $this->createSiteMap($list);
 
-        return $this->object;
+        return $this->pageData;
     }
 
 
@@ -103,12 +103,6 @@ class Model extends \Ideal\Core\Admin\Model
         }
         $str .= "</li>\n</ul>\n";
         return $str;
-    }
-
-
-    public function setObjectNew()
-    {
-
     }
 
 }

@@ -18,10 +18,11 @@ class Controller extends Select\Controller
         $model->setFieldsGroup($this->name);
         // Загрузка данных связанного объекта
         $id = '';
-        if (isset($this->model->object['ID'])) {
-            $prevStructure = $this->model->object['prev_structure'] . '-' . $this->model->object['ID'];
-            $model->setObjectByprevStructure($prevStructure);
-            $id = $this->model->object['ID'];
+        $pageData = $model->getPageData();
+        if (isset($pageData['ID'])) {
+            $prevStructure = $pageData['prev_structure'] . '-' . $pageData['ID'];
+            $model->setPageDataByprevStructure($prevStructure);
+            $id = $pageData['ID'];
         }
         // Получение содержимого таба
         $tabContent = $model->getFieldsList($model->fields, $this->name);

@@ -11,14 +11,14 @@ class ControllerAbstract extends Part\Site\Controller
         $this->templateInit();
 
         $header = '';
-        $templatesVars = $this->model->getTemplatesVars();
+        $pageData = $this->model->getPageData();
 
-        if (isset($templatesVars['template']['content'])) {
-            list($header, $text) = $this->model->extractHeader($templatesVars['template']['content']);
-            $templatesVars['template']['content'] = $text;
+        if (isset($pageData['template']['content'])) {
+            list($header, $text) = $this->model->extractHeader($pageData['template']['content']);
+            $pageData['template']['content'] = $text;
         }
 
-        foreach($templatesVars as $k => $v) {
+        foreach($pageData as $k => $v) {
             $this->view->$k = $v;
         }
 

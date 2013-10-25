@@ -44,16 +44,17 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
     {
         $request = new Request();
 
-        $this->model->setObjectById($request->id);
+        $this->model->setPageDataById($request->id);
+        $pageData = $this->model->getPageData();
 
         $template = $request->template;
         $templateModelName = Util::getClassName($template, 'Template') . '\\Model';
-        $model = new $templateModelName($template, $this->model->object['prev_structure']);
+        $model = new $templateModelName($template, $pageData['prev_structure']);
         $model->setFieldsGroup($request->name);
         // Загрузка данных связанного объекта
-        if (isset($this->model->object['ID'])) {
-            $prevStructure = $this->model->object['prev_structure'] . '-' . $this->model->object['ID'];
-            $model->setObjectByprevStructure($prevStructure);
+        if (isset($pageData['ID'])) {
+            $prevStructure = $pageData['prev_structure'] . '-' . $pageData['ID'];
+            $model->setPageDataByprevStructure($prevStructure);
         }
 
         echo $model->getFieldsList($model->fields, $model);

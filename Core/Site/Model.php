@@ -9,7 +9,6 @@ abstract class Model extends Core\Model
 {
     public $metaTags = array(
         'robots' => 'index, follow');
-    protected $templatesVars = array();
 
     public function getTitle()
     {
@@ -24,12 +23,11 @@ abstract class Model extends Core\Model
 
     public function getHeader()
     {
-        $templatesVars = $this->getTemplatesVars();
 
         $header = '';
-        if (isset($templatesVars['template']['content'])) {
-            list($header, $text) = $this->extractHeader($templatesVars['template']['content']);
-            $templatesVars['template']['content'] = $text;
+        if (isset($this->pageData['template']['content'])) {
+            list($header, $text) = $this->extractHeader($this->pageData['template']['content']);
+            $this->pageData['template']['content'] = $text;
         }
 
         if ($header == '') {
@@ -49,28 +47,6 @@ abstract class Model extends Core\Model
         }
         return array($header, $text);
     }
-
-
-    public function getTemplatesVars()
-    {
-        if (count($this->templatesVars) > 0) {
-            return $this->templatesVars;
-        }
-        $config = Core\Config::getInstance();
-        $end = end($this->path);
-        $templatesVars = array();
-        foreach ($this->fields as $k => $v) {
-            // Пропускаем все поля, которые не являются шаблоном
-            if (strpos($v['type'], '_Template') === false) continue;
-            $className = Util::getClassName($end[$k], 'Template') . '\\Model';
-            $structure = $config->getStructureByName($end['structure']);
-            $prevStructure = $structure['ID'] . '-' . $end['ID'];
-            $template = new $className($prevStructure);
-            $templatesVars[$k] = $template->getObject($this);
-        }
-        return $templatesVars;
-    }
-
 
     public function getMetaTags($xhtml = false)
     {

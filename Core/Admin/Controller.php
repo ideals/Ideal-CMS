@@ -26,6 +26,8 @@ class Controller
     {
         $this->model = $router->getModel()->detectActualModel();
 
+        $this->model->initPageData();
+
         // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
         $actionName = $request->action;
@@ -231,7 +233,7 @@ class Controller
     public function showEditAction()
     {
         $request = new Request();
-        $this->model->setObjectById($request->id);
+        $this->model->setPageDataById($request->id);
         // TODO доработать $this->model->getPath() так, чтобы в пути присутствовала и главная
         $this->showEditTabs();
         exit;
@@ -257,7 +259,7 @@ class Controller
     public function editAction()
     {
         $request = new Request();
-        $this->model->setObjectById($request->id);
+        $this->model->setPageDataById($request->id);
 
         // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
         $result = $this->model->parseInputParams();
@@ -283,7 +285,7 @@ class Controller
         $result = array();
         $result['ID'] = intval($request->id);
 
-        $this->model->setObjectById($result['ID']);
+        $this->model->setPageDataById($result['ID']);
 
         $result['isCorrect'] = $this->model->delete();
 

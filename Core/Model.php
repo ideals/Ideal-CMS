@@ -17,6 +17,7 @@ abstract class Model
     protected $parentUrl;
     protected $module;
     protected $prevModel;
+    protected $pageData;
 
     public function __construct($prevStructure)
     {
@@ -74,29 +75,65 @@ abstract class Model
         return $this->path;
     }
 
-
-    public function setObjectById($id)
+    public function setPageDataById($id)
     {
         $db = Db::getInstance();
 
         $_sql = "SELECT * FROM {$this->_table} WHERE ID='{$id}'";
-        $object = $db->queryArray($_sql);
-        if (isset($object[0]['ID'])) {
+        $this->pageData = $db->queryArray($_sql);
+        if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по ID ничего не нашлось
-            $this->object = $object[0];
+            $this->setPageData($this->pageData[0]);
         }
     }
 
 
-    public function setObjectByprevStructure($prevStructure)
+    public function setPageDataByprevStructure($prevStructure)
     {
         $db = Db::getInstance();
 
         $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure='{$prevStructure}'";
-        $object = $db->queryArray($_sql);
-        if (isset($object[0]['ID'])) {
+        $pageData = $db->queryArray($_sql);
+        if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
-            $this->object = $object[0];
+            $this->setPageData($pageData[0]);
+        }
+    }
+
+    // Получаем информацию о странице
+    public  function getPageData()
+    {
+        if (is_null($this->pageData)) {
+            $this->initPageData();
+        }
+        return $this->pageData;
+    }
+
+    // Устанавливаем информацию о странице
+    public  function setPageData($pageData)
+    {
+        $this->pageData = $pageData;
+    }
+
+    public  function initPageData($path = null)
+    {
+        if (isset($path)){
+        // В случае если был передан массив информации о странице из setPageDataByprevStructure и setPageDataById
+            $this->pageData = $path;
+        } else {
+            $this->pageData = end($this->path);
+        }
+
+        // Получаем переменные шаблона
+        $config = Config::getInstance();
+        foreach ($this->fields as $k => $v) {
+            // Пропускаем все поля, которые не являются шаблоном
+            if (strpos($v['type'], '_Template') === false) continue;
+            $className = Util::getClassName($this->pageData[$k], 'Template') . '\\Model';
+            $structure = $config->getStructureByName($this->pageData['structure']);
+            $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
+            $template = new $className($prevStructure);
+            $this->pageData[$k] = $template->getPageData();
         }
     }
 
@@ -218,14 +255,14 @@ abstract class Model
     }
 
     /**
-     * Определение пути с помощью prev_structure по инициализированному $this->object
-     * @return array Массив, содержащий элементы пути к $this->object
+     * Определение пути с помощью prev_structure по инициализированному $pageData
+     * @return array Массив, содержащий элементы пути к $pageData
      */
     public function detectPath()
     {
         $config = Config::getInstance();
 
-        $prevStructure = explode('-', $this->object['prev_structure']);
+        $this->prevStructure = explode('-', $this->pageData['prev_structure']);
         $sP = array_shift($prevStructure);
         $structure = $config->getStructureById($sP);
         $path = array($structure);
@@ -233,7 +270,7 @@ abstract class Model
             $className = \Ideal\Core\Util::getClassName($structure['structure'], 'Structure') . '\\Site\\Model';
             /* @var $structure \Ideal\Core\Model */
             $structure = new $className($sP);
-            $structure->setObjectById($v);
+            $structure->setPageDataById($v);
             $elements = $structure->getLocalPath();
             $path = array_merge($path, $elements);
             $structure = end($path);
@@ -290,10 +327,8 @@ abstract class Model
 
     public function __get($name)
     {
-        /*
         if ($name == 'object') {
             throw new \Exception('Свойство object упразднено.');
         }
-        */
     }
 }

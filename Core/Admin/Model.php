@@ -267,22 +267,11 @@ abstract class Model extends Core\Model
                 // Записываем данные шаблона в БД и в $result
                 $result = $templateModel->createElement($result, $fieldName);
             } else {
-                $templateModel->setObjectById($groups[$fieldName]['ID']);
+                $templateModel->setPageDataById($groups[$fieldName]['ID']);
                 $result = $templateModel->saveElement($result, $fieldName);
             }
         }
         return $result;
-    }
-
-
-    public function setObjectById($ID)
-    {
-        $db = Db::getInstance();
-
-        $_sql = "SELECT * FROM {$this->_table} WHERE ID={$ID}";
-        $object = $db->queryArray($_sql);
-        $this->object = $object[0];
-        // TODO сделать обработку ошибки, когда по ID ничего не нашлось
     }
 
 

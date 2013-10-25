@@ -27,6 +27,8 @@ class Controller
         /* @var $this->model Model Модель соответствующая этому контроллеру */
         $this->model = $router->getModel()->detectActualModel();
 
+        $this->model->initPageData();
+
         // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
         $actionName = $request->action;
@@ -135,13 +137,13 @@ class Controller
         $this->templateInit();
 
         $header = '';
-        $templatesVars = $this->model->getTemplatesVars();
+        $pageData = $this->model->getPageData();
 
-        foreach ($templatesVars as $k => $v) {
+        foreach ($pageData as $k => $v) {
             $this->view->$k = $v;
         }
 
-        $this->view->header = $this->model->getHeader($header);
+        //$this->view->header = $this->model->getHeader($header);
 
         $request = new Request();
         $page = intval($request->page);
