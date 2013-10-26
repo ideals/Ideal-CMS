@@ -80,7 +80,7 @@ abstract class Model
         $db = Db::getInstance();
 
         $_sql = "SELECT * FROM {$this->_table} WHERE ID='{$id}'";
-        $this->pageData = $db->queryArray($_sql);
+        $pageData = $db->queryArray($_sql);
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по ID ничего не нашлось
             $this->setPageData($this->pageData[0]);
