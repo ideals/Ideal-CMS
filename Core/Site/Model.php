@@ -90,12 +90,9 @@ abstract class Model extends Core\Model
         $breadCrumbs = array();
         $url = new Field\Url\Model();
         foreach ($path as $v) {
-            $link = '';
-            if ($v['is_skip']) continue;
-            if (!isset($v['is_skip']) OR $v['is_skip'] == 0) {
-                $url->setParentUrl($pars);
-                $link = $url->getUrl($v);
-            }
+            if (isset($v['is_skip']) && $v['is_skip']) continue;
+            $url->setParentUrl($pars);
+            $link = $url->getUrl($v);
             $pars[] = $v;
             if ($link == '/') {
                 $breadCrumbs[] = array(
