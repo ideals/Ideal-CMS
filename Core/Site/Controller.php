@@ -136,14 +136,14 @@ class Controller
     {
         $this->templateInit();
 
-        $header = '';
-        $pageData = $this->model->getPageData();
+        // Выдёргиваем заголовок из template['content']
+        $this->view->header = $this->model->getHeader();
 
+        // Перенос данных страницы в шаблон
+        $pageData = $this->model->getPageData();
         foreach ($pageData as $k => $v) {
             $this->view->$k = $v;
         }
-
-        //$this->view->header = $this->model->getHeader($header);
 
         $request = new Request();
         $page = intval($request->page);

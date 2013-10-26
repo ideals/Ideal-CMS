@@ -20,19 +20,18 @@ abstract class Model extends Core\Model
         }
     }
 
-
     public function getHeader()
     {
-
         $header = '';
         if (isset($this->pageData['template']['content'])) {
+            // Если есть шаблон с контентом, пытаемся из него извлечь заголовок H1
             list($header, $text) = $this->extractHeader($this->pageData['template']['content']);
             $this->pageData['template']['content'] = $text;
         }
 
         if ($header == '') {
-            $end = end($this->path);
-            $header = $end['name'];
+            // Если заголовка H1 в тексте нет, берём его из названия name
+            $header = $this->pageData['name'];
         }
         return $header;
     }
