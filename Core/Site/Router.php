@@ -90,7 +90,8 @@ class Router
         $prevStructureId = $path[0]['ID'];
 
         // Вырезаем стартовый URL
-        $url = substr($_GET['url'], strlen($config->startUrl));
+        $url = ltrim($_SERVER['REQUEST_URI'], '/');
+        $url = substr($url, strlen($config->startUrl));
 
         // Если запрошена главная страница
         if ($url == '' || $url == '/') {

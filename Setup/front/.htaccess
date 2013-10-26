@@ -32,6 +32,11 @@ RewriteRule ^(.*)/index.html$ $1.html [R=permanent,L]
 #START redirect
 #END redirect
 
-# TODO добавить правила для переадресации всех НЕСУЩЕСТВУЮЩИХ файлов в скрипт
-RewriteRule ^[[SUBFOLDER_INDEX]]$ /[[SUBFOLDER]]_.php?url= [L,QSA]
-RewriteRule ^(.*)\.html$ /[[SUBFOLDER]]_.php?url=$1 [L,QSA]
+# Если файл есть на диске, с ним ничего не происходит
+RewriteCond %{REQUEST_FILENAME} -s [OR]
+RewriteCond %{REQUEST_FILENAME} -l [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^(.*)$ - [NC,L]
+
+# Если файла на диске нет, вызывается скрипт
+RewriteRule ^.*$ /[[SUBFOLDER]]_.php [NC,L]
