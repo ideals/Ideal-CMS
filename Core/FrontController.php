@@ -62,7 +62,7 @@ class FrontController
         $content = $controller->run($router);
 
         if ($router->is404) {
-            $httpHeaders = 'HTTP/1.0 404 Not Found';
+            $httpHeaders = array('HTTP/1.0 404 Not Found');
         } else {
             $httpHeaders = $controller->getHttpHeaders();
         }
