@@ -83,7 +83,7 @@ abstract class Model
         $pageData = $db->queryArray($_sql);
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по ID ничего не нашлось
-            $this->setPageData($this->pageData[0]);
+            $this->setPageData($pageData[0]);
         }
     }
 
@@ -124,6 +124,7 @@ abstract class Model
         foreach ($this->fields as $k => $v) {
             // Пропускаем все поля, которые не являются шаблоном
             if (strpos($v['type'], '_Template') === false) continue;
+            if (!isset($this->pageData[$k])) continue;
             $className = Util::getClassName($this->pageData[$k], 'Template') . '\\Model';
             $structure = $config->getStructureByName($this->pageData['structure']);
             $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];

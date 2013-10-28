@@ -32,10 +32,10 @@ abstract class AbstractController
         // TODO определение значения по умолчанию из $this->model->params
         // TODO сделать определение значения по умолчанию, если для этого указан геттер и убрать этот функционал из selectField
         $value = '';
-        if (isset($this->model->object)) {
-            $object = $this->model->object;
-            if (isset($object[$this->name])) {
-                $value = $object[$this->name];
+        $pageData = $this->model->getPageData();
+        if (isset($pageData)) {
+            if (isset($pageData[$this->name])) {
+                $value = $pageData[$this->name];
             }
         }
         return $value;

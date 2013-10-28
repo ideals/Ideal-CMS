@@ -85,7 +85,7 @@ class Router
         $structure = new $modelClassName('0-' . $prevStructureId);
 
         // Запускаем определение пути и активной модели по $par
-        $model = $structure->detectPageByIds($path, $par);
+        $model = $structure->detectPageByIds($path, $par, $prevStructureId);
 
         if (!is_object($model) && ($model == 404)) {
             // Если модель сообщила, что такой путь не найден — ставим флаг is404 и выходим
