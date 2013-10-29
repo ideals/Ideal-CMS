@@ -6,13 +6,13 @@ use Ideal\Core\Db;
 class ModelAbstract extends \Ideal\Core\Admin\Model
 {
 
-    public function detectPageByIds($path, $par, $prevStructureId)
+    public function detectPageByIds($path, $par)
     {
-        $this->initPageData();
-        $this->setPageDataById($prevStructureId);
         $this->path = $path;
+        $this->object = end($path);
         return $this;
     }
+
 
 
     public function setObjectNew()

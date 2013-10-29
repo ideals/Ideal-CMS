@@ -91,7 +91,8 @@ class Router
 
         // Вырезаем стартовый URL
         $url = ltrim($_SERVER['REQUEST_URI'], '/');
-        $url=preg_replace('/[\?\#].*/','',$url);
+        // Удаляем параметры из URL (текст после симовлов "?" и "#")
+        $url = preg_replace('/[\?\#].*/', '', $url);
         $url = substr($url, strlen($config->startUrl));
 
         // Если запрошена главная страница
