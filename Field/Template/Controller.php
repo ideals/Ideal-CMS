@@ -18,9 +18,9 @@ class Controller extends Select\Controller
         $model->setFieldsGroup($this->name);
         // Загрузка данных связанного объекта
         $id = '';
-        $pageData = $model->getPageData();
+        $pageData = $this->model->getPageData();
         if (isset($pageData['ID'])) {
-            $prevStructure = $pageData['prev_structure'] . '-' . $pageData['ID'];
+            $prevStructure = end(explode('-', $pageData['prev_structure'])) . '-' . $pageData['ID'];
             $model->setPageDataByprevStructure($prevStructure);
             $id = $pageData['ID'];
         }

@@ -26,6 +26,8 @@ class Controller
     {
         $this->model = $router->getModel()->detectActualModel();
 
+        $this->model->initPageData();
+
         // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
         $actionName = $request->action;
