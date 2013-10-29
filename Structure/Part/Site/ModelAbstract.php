@@ -227,7 +227,7 @@ class ModelAbstract extends Site\Model
      */
     public function getLocalPath()
     {
-        $category = $this->object;
+        $category = $this->pageData;
 
         if ($category['lvl'] == 1) {
             // Если в локальной структуре родителей нет, возвращаем сам объект

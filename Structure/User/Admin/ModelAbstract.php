@@ -9,7 +9,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     public function detectPageByIds($path, $par)
     {
         $this->path = $path;
-        $this->object = end($path);
+        $this->setPageData(end($path));
         return $this;
     }
 
@@ -17,14 +17,14 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
 
     public function setObjectNew()
     {
-        $this->object['last_visit'] = '0';
+        $this->pageData['last_visit'] = '0';
     }
 
 
     public function delete()
     {
         $db = Db::getInstance();
-        $db->delete($this->_table, $this->object['ID']);
+        $db->delete($this->_table, $this->pageData['ID']);
         // TODO сделать проверку успешности удаления
         return 1;
     }

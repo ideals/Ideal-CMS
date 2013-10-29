@@ -290,15 +290,15 @@ abstract class Model extends Core\Model
             if ($this->fields[$realName]['type'] != 'Template') {
                 continue;
             }
-            if ($this->object[$realName] == '') {
+            if ($this->pageData[$realName] == '') {
                 // Если изначально шаблон не был задан - просто сохраняем введённое значение
                 continue;
             }
-            if ($field['value'] != $this->object[$realName]) {
+            if ($field['value'] != $this->pageData[$realName]) {
                 $result['isCorrect'] = 2;
 
-                $oldTemplateName = Util::getClassName($this->object[$realName], 'Template') . '\\Model';
-                $oldTemplate = new $oldTemplateName($this->object[$realName], '');
+                $oldTemplateName = Util::getClassName($this->pageData[$realName], 'Template') . '\\Model';
+                $oldTemplate = new $oldTemplateName($this->pageData[$realName], '');
                 $oldTemplateCap = $oldTemplate->params['name'];
 
                 $newTemplateName = Util::getClassName($field['value'], 'Template') . '_Model';

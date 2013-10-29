@@ -23,7 +23,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $item = reset($menu);
         }
 
-        $this->object = $item;
+        $this->setPageData($item);
         array_push($path, $item);
         $this->path = $path;
 

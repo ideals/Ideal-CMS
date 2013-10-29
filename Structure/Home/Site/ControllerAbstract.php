@@ -9,7 +9,9 @@ class ControllerAbstract extends Part\Site\Controller
     public function error404Action()
     {
         $this->templateInit('Structure/Home/Site/404.twig');
-        $this->model->object['title'] = 'Страница не найдена';
+        $pageData = $this->model->getPageData();
+        $pageData['title'] = 'Страница не найдена';
+        $this->model->setPageData($pageData);
     }
 
 

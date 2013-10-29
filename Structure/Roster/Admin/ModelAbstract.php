@@ -38,14 +38,14 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     public function delete()
     {
         $db = Db::getInstance();
-        $db->delete($this->_table, $this->object['ID']);
+        $db->delete($this->_table, $this->pageData['ID']);
 
-        if(isset($this->object['pos'])) {
+        if(isset($this->pageData['pos'])) {
             // Если есть сортировка pos, то нужно уменьшить все следующие за удаляемым
             // элементы на единицу
             $_sql = "UPDATE {$this->_table} SET pos = pos - 1
                         WHERE prev_structure = '{$this->prevStructure}'
-                              AND pos > {$this->object['pos']}";
+                              AND pos > {$this->pageData['pos']}";
             $db->query($_sql);
         }
         // TODO сделать проверку успешности удаления

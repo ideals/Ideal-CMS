@@ -24,7 +24,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
 
         $this->view->items = $this->model->getMenu();// $structure['items'];
 
-        $item = $this->model->object;
+        $item = $this->model->getPageData();
         $this->view->ID = $item['ID'];
 
         list($module, $structure) = explode('_', $item['ID']);
@@ -40,7 +40,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
     }
 
     public function __call($name, $arguments) {
-        $item = $this->model->object;
+        $item = $this->model->getPageData();
         $this->view->ID = $item['ID'];
 
         list($module, $structure) = explode('_', $item['ID']);

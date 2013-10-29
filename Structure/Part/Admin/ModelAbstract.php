@@ -125,7 +125,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
 
 
     /**
-     * Инициализирует переменную $this->object данными по умолчанию для нового элемента
+     * Инициализирует переменную $pageData данными по умолчанию для нового элемента
      */
     public function setObjectNew()
     {
@@ -140,27 +140,27 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $lvl = $end['lvl'] + 1;
             $prevStructure = $end['prev_structure'];
         }
-
-        $this->object = array(
+        $pageData = array(
             'lvl' => $lvl,
             'prev_structure' => $prevStructure
         );
+        $this->setPageData($pageData);
 
     }
 
 
     public function delete()
     {
-        $lvl = $this->object['lvl'] + 1;
+        $lvl = $this->pageData['lvl'] + 1;
         $cid = new Cid\Model($this->params['levels'], $this->params['digits']);
-        $cid = $cid->getCidByLevel($this->object['cid'], $this->object['lvl'], false);
+        $cid = $cid->getCidByLevel($this->pageData['cid'], $this->pageData['lvl'], false);
         $_sql = "SELECT ID FROM {$this->_table} WHERE lvl={$lvl} AND cid LIKE '{$cid}%'";
         $db = Db::getInstance();
         $res = $db->queryArray($_sql);
         if (count($res) > 0) {
             return 2;
         }
-        $db->delete($this->_table, $this->object['ID']);
+        $db->delete($this->_table, $this->pageData['ID']);
         // TODO сделать проверку успешности удаления
         return 1;
 
