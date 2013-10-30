@@ -2,6 +2,7 @@
 namespace Ideal\Structure\User\Admin;
 
 use Ideal\Structure\User;
+use Ideal\Core\Request;
 
 class ControllerAbstract extends \Ideal\Core\Admin\Controller
 {
@@ -35,7 +36,9 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $this->templateInit();
 
         // Считываем список элементов
-        $page = 0;
+        $request = new Request();
+        $page = intval($request->page);
+
         $listing = $this->model->getList($page);
         $headers = $this->model->getHeaderNames();
 
