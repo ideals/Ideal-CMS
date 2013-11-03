@@ -223,7 +223,7 @@ class Controller
 
     public function showCreateAction()
     {
-        $this->model->setObjectNew();
+        $this->model->setPageDataNew();
         // Отображаем список полей структуры part
         $this->showEditTabs();
         exit;
@@ -242,7 +242,7 @@ class Controller
 
     public function createAction()
     {
-        $this->model->setObjectNew();
+        $this->model->setPageDataNew();
 
         // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
         $result = $this->model->parseInputParams(true);

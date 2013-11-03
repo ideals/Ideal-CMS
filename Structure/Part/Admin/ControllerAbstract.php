@@ -34,7 +34,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         /* @var $model \Ideal\Core\Admin\Model */
         $model = new $templateModelName('не имет значения');
         $model->setFieldsGroup($request->name);
-        $model->setObjectNew();
+        $model->setPageDataNew();
         echo $model->getFieldsList($model->fields, $model);
         exit;
     }

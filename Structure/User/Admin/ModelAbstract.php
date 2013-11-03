@@ -14,9 +14,9 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     }
 
 
-
-    public function setObjectNew()
+    public function setPageDataNew()
     {
+        parent::setPageDataNew();
         $this->pageData['last_visit'] = '0';
     }
 

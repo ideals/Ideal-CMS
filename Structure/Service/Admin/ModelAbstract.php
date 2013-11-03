@@ -90,9 +90,4 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         return $actions;
     }
 
-
-    public function setObjectNew()
-    {
-
-    }
 }

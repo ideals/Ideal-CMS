@@ -10,9 +10,16 @@ abstract class Model extends Core\Model
 {
     protected $fieldsGroup = 'general';
 
-    public function setObjectNew()
+    /**
+     * Заполнение pageData пустыми значениями полей
+     */
+    public function setPageDataNew()
     {
-        throw new \Exception('Попытка вызвать непереопределённый метод setObjectNew в классе ' . get_class($this));
+        $pageData = array();
+        foreach($this->fields as $fieldName => $field) {
+            $pageData[$fieldName] = '';
+        }
+        $this->setPageData($pageData);
     }
 
     public function detectPageByIds($path, $par)

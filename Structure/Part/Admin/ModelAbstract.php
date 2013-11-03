@@ -127,8 +127,9 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     /**
      * Инициализирует переменную $pageData данными по умолчанию для нового элемента
      */
-    public function setObjectNew()
+    public function setPageDataNew()
     {
+        parent::setPageDataNew();
         $path = $this->getPath();
         $c = count($path);
         $end = end($path);
@@ -140,12 +141,9 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $lvl = $end['lvl'] + 1;
             $prevStructure = $end['prev_structure'];
         }
-        $pageData = array(
-            'lvl' => $lvl,
-            'prev_structure' => $prevStructure
-        );
+        $pageData['lvl'] = $lvl;
+        $pageData['prev_structure'] = $prevStructure;
         $this->setPageData($pageData);
-
     }
 
 

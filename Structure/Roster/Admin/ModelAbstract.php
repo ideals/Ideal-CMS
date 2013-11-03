@@ -29,12 +29,6 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     }
 
 
-    public function setObjectNew()
-    {
-
-    }
-
-
     public function delete()
     {
         $db = Db::getInstance();
