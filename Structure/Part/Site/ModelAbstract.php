@@ -70,7 +70,6 @@ class ModelAbstract extends Site\Model
 
     public function detectPageByUrl($path, $url)
     {
-        $this->path = $path;
         $db = Db::getInstance();
 
         // составляем запрос из списка URL
@@ -85,9 +84,11 @@ class ModelAbstract extends Site\Model
 
         $list = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
 
-        // Страницу не нашли, возвращаем 404
+        // Страницу не нашли устанавливаем флаг 404-ошибки
         if (!isset($list[0]['cid'])) {
-            return '404';
+            $this->path = $path;
+            $this->is404 = true;
+            return $this;
         }
 
         $cidModel = new Field\Cid\Model($this->params['levels'], $this->params['digits']);
@@ -138,9 +139,13 @@ class ModelAbstract extends Site\Model
             }
         }
 
-        if (count($newPath) == 0) return '404';
+        if (count($newPath) == 0) {
+            $this->path = $path;
+            $this->is404 = true;
+            return $this;
+        }
 
-        $this->path = array_merge($this->path, $newPath);
+        $this->path = array_merge($path, $newPath);
 
         // Подсчитываем кол-во элементов пути, без учёта пропущенных сегментов
         // и составляем строку найденной части URL
@@ -158,7 +163,8 @@ class ModelAbstract extends Site\Model
         $parsedUrlPart = array_slice($url, 0, $count);
         $parsedUrlPart = implode('/', $parsedUrlPart);
         if ($parsedUrl != $parsedUrlPart) {
-            return '404';
+            $this->is404 = true;
+            return $this;
         }
 
         $url = array_slice($url, $count);
@@ -179,12 +185,6 @@ class ModelAbstract extends Site\Model
             // Неразобранных сегментов не осталось, возвращаем в качестве модели сам объект
             return $this;
         }
-    }
-
-
-    public function setObjectNew()
-    {
-
     }
 
 

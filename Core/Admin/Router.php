@@ -12,8 +12,6 @@ class Router
     protected $model = null;
     /** @var string Название контроллера активной страницы */
     protected $controllerName = '';
-    /** @var bool Флаг 404-ошибки */
-    public $is404 = false;
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -87,12 +85,6 @@ class Router
         // Запускаем определение пути и активной модели по $par
         $model = $structure->detectPageByIds($path, $par);
 
-        if (!is_object($model) && ($model == 404)) {
-            // Если модель сообщила, что такой путь не найден — ставим флаг is404 и выходим
-            $this->is404 = true;
-            return $structure;
-        }
-
         return $model;
     }
 
@@ -118,4 +110,11 @@ class Router
         $this->controllerName = $name;
     }
 
+    /**
+     * Возвращает статус 404-ошибки, есть он или нет
+     */
+    public function is404()
+    {
+        return $this->model->is404;
+    }
 }

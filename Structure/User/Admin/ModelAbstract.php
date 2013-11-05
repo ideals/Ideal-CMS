@@ -9,7 +9,6 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     public function detectPageByIds($path, $par)
     {
         $this->path = $path;
-        $this->setPageData(end($path));
         return $this;
     }
 

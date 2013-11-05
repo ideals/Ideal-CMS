@@ -12,9 +12,6 @@ class Router
     protected $model = null;
     /** @var string Название контроллера активной страницы */
     protected $controllerName = '';
-    /** @var bool Флаг 404-ошибки */
-    public $is404 = false;
-
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -91,26 +88,24 @@ class Router
 
         // Вырезаем стартовый URL
         $url = ltrim($_SERVER['REQUEST_URI'], '/');
-        // Удаляем параметры из URL (текст после симовлов "?" и "#")
+        // Удаляем параметры из URL (текст после символов "?" и "#")
         $url = preg_replace('/[\?\#].*/', '', $url);
         $url = substr($url, strlen($config->startUrl));
 
         // Если запрошена главная страница
         if ($url == '' || $url == '/') {
-            $this->model = new \Ideal\Structure\Home\Site\Model('0-' . $prevStructureId);
-            $url = $this->model->detectPageByUrl($path, '/');
-            if ($url != '404') {
-                return $this->model;
-            }
+            $model = new \Ideal\Structure\Home\Site\Model('0-' . $prevStructureId);
+            $model = $model->detectPageByUrl($path, '/');
+            return $model;
         }
 
         // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
+        $is404 = false;
         $suffix = substr($url, -strlen($config->urlSuffix));
         if ($suffix != $config->urlSuffix) {
-            $this->is404 = true;
-        } else {
-            $url = substr($url, 0, -strlen($config->urlSuffix));
+            $is404 = true;
         }
+        $url = substr($url, 0, -strlen($config->urlSuffix));
 
         // Проверка, не остался ли в конце URL слэш
         if (substr($url, -1) == '/') {
@@ -118,7 +113,7 @@ class Router
             $url = rtrim($url, '/');
             // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
             // то ставим 404-ошибку
-            $this->is404 = true;
+            $is404 = true;
         }
 
         // Разрезаем URL на части
@@ -126,16 +121,14 @@ class Router
 
         // Определяем оставшиеся элементы пути
         $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Site\\Model';
-        /* @var $structure Model */
-        $structure = new $modelClassName('0-' . $prevStructureId);
+        /* @var $model Model */
+        $model = new $modelClassName('0-' . $prevStructureId);
 
         // Запускаем определение пути и активной модели по $par
-        $model = $structure->detectPageByUrl($path, $url);
-
-        if (!is_object($model) && ($model == 404)) {
-            // Если модель сообщила, что такой путь не найден — ставим флаг is404 и выходим
-            $this->is404 = true;
-            return $structure;
+        $model = $model->detectPageByUrl($path, $url);
+        if ($model->is404 == false && $is404) {
+            // Если роутинг нашёл нужную страницу, но суффикс неправильный
+            $model->is404 = true;
         }
 
         return $model;
@@ -161,6 +154,14 @@ class Router
     public function setControllerName($name)
     {
         $this->controllerName = $name;
+    }
+
+    /**
+     * Возвращает статус 404-ошибки, есть он или нет
+     */
+    public function is404()
+    {
+        return $this->model->is404;
     }
 
 }

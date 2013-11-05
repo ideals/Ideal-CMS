@@ -52,7 +52,9 @@ class ModelAbstract extends \Ideal\Core\Site\Model
 
         // Страницу не нашли, возвращаем 404
         if (!isset($news[0]['ID'])) {
-            return '404';
+            $this->path = $path;
+            $this->is404 = true;
+            return $this;
         }
 
         $news[0]['structure'] = 'Ideal_News';

@@ -12,7 +12,7 @@ abstract class Model extends Core\Model
 
     public function getTitle()
     {
-        $end = end($this->path);
+        $end = $this->pageData;
         if (isset($end['title']) AND $end['title'] != '') {
             return $end['title'];
         } else {

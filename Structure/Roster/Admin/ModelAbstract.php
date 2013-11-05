@@ -21,7 +21,8 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $db = Db::getInstance();
             $localPath = $db->queryArray($_sql);
             if (!isset($localPath[0]['ID'])) {
-                return 404;
+                $this->is404 = true;
+                return $this;
             }
             array_push($this->path, $localPath[0]);
         }

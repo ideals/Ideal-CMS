@@ -18,6 +18,8 @@ abstract class Model
     protected $module;
     protected $prevModel;
     protected $pageData;
+    /** @var bool Флаг 404-ошибки */
+    public $is404 = false;
 
     public function __construct($prevStructure)
     {
@@ -124,6 +126,8 @@ abstract class Model
         foreach ($this->fields as $k => $v) {
             // Пропускаем все поля, которые не являются шаблоном
             if (strpos($v['type'], '_Template') === false) continue;
+
+            // В случае, если 404 ошибка, и нужной страницы в БД не найти
             if (!isset($this->pageData[$k])) continue;
             $className = Util::getClassName($this->pageData[$k], 'Template') . '\\Model';
             $structure = $config->getStructureByName($this->pageData['structure']);

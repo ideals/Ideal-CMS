@@ -53,6 +53,8 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
                           WHERE ID IN ({$ids}) AND prev_structure='{$this->prevStructure}' ORDER BY cid";
         $result = $db->queryArray($_sql);
 
+        // TODO обработка случая, когда ничего не нашлось — 404
+
         // Проверка найденных элементов из БД на соответствие последовательности ID в par
         // и последовательности cid адресов
         $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);

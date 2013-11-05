@@ -30,10 +30,14 @@ class Controller
         $this->model->initPageData();
 
         // Определяем и вызываем требуемый action у контроллера
-        $request = new Request();
-        $actionName = $request->action;
-        if ($actionName == '') {
-            $actionName = 'index';
+        if ($router->is404()) {
+            $actionName = 'error404';
+        } else {
+            $request = new Request();
+            $actionName = $request->action;
+            if ($actionName == '') {
+                $actionName = 'index';
+            }
         }
 
         $actionName = $actionName . 'Action';
@@ -158,4 +162,22 @@ class Controller
         }
     }
 
+    /**
+     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
+     */
+    public function error404Action()
+    {
+        $name = $title = 'Страница не найдена';
+        $this->templateInit('404.twig');
+
+        // Добавляем в path пустой элемент
+        $path = $this->model->getPath();
+        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
+        $this->model->setPath($path);
+
+        // Устанавливаем нужный нам title
+        $pageData = $this->model->getPageData();
+        $pageData['title'] = $title;
+        $this->model->setPageData($pageData);
+    }
 }
