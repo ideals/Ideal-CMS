@@ -1,8 +1,6 @@
 <?php
 namespace Ideal\Structure\Home\Site;
 
-use Ideal\Structure\Part;
-
-class ControllerAbstract extends Part\Site\Controller
+class ControllerAbstract extends \Ideal\Core\Site\Controller
 {
 }
