@@ -94,6 +94,7 @@ abstract class Model extends Core\Model
             $url->setParentUrl($pars);
             $link = $url->getUrl($v);
             $pars[] = $v;
+            if($v['is_not_menu'] and $v['ID'] > 1) continue;
             if ($link == '/') {
                 $breadCrumbs[] = array(
                     'link' => $link,
