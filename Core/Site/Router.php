@@ -101,11 +101,15 @@ class Router
 
         // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
         $is404 = false;
-        $suffix = substr($url, -strlen($config->urlSuffix));
-        if ($suffix != $config->urlSuffix) {
-            $is404 = true;
+        $lenghtSuffix = strlen($url);
+        if (strlen($config->urlSuffix) > 0) {
+            $lenghtSuffix = -strlen($config->urlSuffix);
+            $suffix = substr($url, $lenghtSuffix);
+            if ($suffix != $config->urlSuffix) {
+                $is404 = true;
+            }
         }
-        $url = substr($url, 0, -strlen($config->urlSuffix));
+        $url = substr($url, 0, $lenghtSuffix);
 
         // Проверка, не остался ли в конце URL слэш
         if (substr($url, -1) == '/') {
