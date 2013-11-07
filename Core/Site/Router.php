@@ -148,6 +148,11 @@ class Router
         return $this->model;
     }
 
+    public function setModel($model){
+        $this->model = $model;
+    }
+
+
     /**
      * Устанавливает название контроллера для активной страницы
      *
