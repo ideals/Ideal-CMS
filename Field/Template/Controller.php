@@ -1,6 +1,7 @@
 <?php
 namespace Ideal\Field\Template;
 
+use Ideal\Core\Config;
 use Ideal\Field\Select;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
@@ -20,7 +21,9 @@ class Controller extends Select\Controller
         $id = '';
         $pageData = $this->model->getPageData();
         if (isset($pageData['ID'])) {
-            $prevStructure = end(explode('-', $pageData['prev_structure'])) . '-' . $pageData['ID'];
+            $config = Config::getInstance();
+            $prevStructure = $config->getStructureByPrev($pageData['prev_structure']);
+            $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
             $model->setPageDataByprevStructure($prevStructure);
             $id = $pageData['ID'];
         }

@@ -251,13 +251,15 @@ abstract class Model extends Core\Model
      */
     function saveAddData($result, $groups, $groupName, $isCreate = false)
     {
+        $config = Config::getInstance();
+
         // Считываем данные дополнительных табов
         foreach ($this->fields as $fieldName => $field) {
             if (strpos($field['type'], '_Template') === false) continue;
 
             $templateData = $groups[$fieldName];
-            $templateData['prev_structure'] = $groups[$groupName]['prev_structure']
-                . '-' . $groups[$groupName]['ID'];
+            $prevStructure = $config->getStructureByPrev($groups[$groupName]['prev_structure']);
+            $templateData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
             if (empty($templateData['ID'])) {
                 // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
                 $isCreate = true;

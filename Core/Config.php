@@ -120,6 +120,27 @@ class Config
     }
 
     /**
+     * Из списка подключённых структур находит структуру на основе prev_structure
+     *
+     * @param string $prevStructure
+     *
+     * @return array|bool Массив структуры с указанным ID, или FALSE, если структуру не удалось обнаружить
+     */
+    public function getStructureByPrev($prevStructure)
+    {
+        $prev = explode('-', $prevStructure);
+        if ($prev[0] == 0) {
+            $structureId = $prev[1];
+        } else {
+            $structureId = $prev[0];
+        }
+
+        $structure = $this->getStructureById($structureId);
+
+        return $structure;
+    }
+
+    /**
      * Статический метод, возвращающий находящийся в нём динамический объект
      *
      * Этот метод реализует паттерн Singleton.
