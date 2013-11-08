@@ -134,7 +134,6 @@ class Config
         } else {
             $structureId = $prev[0];
         }
-
         $structure = $this->getStructureById($structureId);
 
         return $structure;

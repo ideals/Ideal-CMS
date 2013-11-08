@@ -173,7 +173,7 @@ class ModelAbstract extends Site\Model
             // Определяем оставшиеся элементы пути
             $end = end($this->path);
             $config = Config::getInstance();
-            $rootStructure = $config->getStructureByName($end['structure']);
+            $rootStructure = $config->getStructureByPrev($end['prev_structure']);
             $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
             /* @var $structure Model */
             $structure = new $modelClassName($rootStructure['ID'] . '-' . $end['ID']);

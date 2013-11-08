@@ -22,7 +22,7 @@ class Controller extends Select\Controller
         $pageData = $this->model->getPageData();
         if (isset($pageData['ID'])) {
             $config = Config::getInstance();
-            $prevStructure = $config->getStructureByPrev($pageData['prev_structure']);
+            $prevStructure = $config->getStructureByName($pageData['structure']);
             $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
             $model->setPageDataByprevStructure($prevStructure);
             $id = $pageData['ID'];

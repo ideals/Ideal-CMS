@@ -258,7 +258,8 @@ abstract class Model extends Core\Model
             if (strpos($field['type'], '_Template') === false) continue;
 
             $templateData = $groups[$fieldName];
-            $prevStructure = $config->getStructureByPrev($groups[$groupName]['prev_structure']);
+            $end = end($this->path);
+            $prevStructure = $config->getStructureByName($end['structure']);
             $templateData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
             if (empty($templateData['ID'])) {
                 // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
