@@ -37,6 +37,9 @@ class Router
             $this->model = $this->routeByUrl();
         }
 
+        /* @var $this->model Model Модель соответствующая этому контроллеру */
+        $this->model = $this->model->detectActualModel();
+
         $pluginBroker->makeEvent('onPostDispatch', $this);
     }
 

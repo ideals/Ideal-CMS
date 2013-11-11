@@ -24,8 +24,7 @@ class Controller
      */
     function run(Router $router)
     {
-        /* @var $this->model Model Модель соответствующая этому контроллеру */
-        $this->model = $router->getModel()->detectActualModel();
+        $this->model = $router->getModel();
 
         $this->model->initPageData();
 
