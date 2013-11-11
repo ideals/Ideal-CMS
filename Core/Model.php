@@ -320,6 +320,8 @@ abstract class Model
                 $model = new $modelClassName($prevStructure['ID'] . '-' . $end['ID']);
                 $model->setPath($this->path);
                 $model->setPrevModel($this);
+                // TODO сделать метод передачи всех данных из одной модели в другую
+                $model->is404 = $this->is404;
             }
         }
         return $model;
