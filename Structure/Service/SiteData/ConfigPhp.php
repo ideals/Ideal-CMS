@@ -43,7 +43,7 @@ class ConfigPhp
         foreach ($this->params as $fieldName => $param) {
             $model = new mockModel();
             $model->fields[$fieldName] = array('label' => $param['label']);
-            $model->object[$fieldName] = $param['value'];
+            $model->pageData[$fieldName] = $param['value'];
 
             $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
             /** @var $fieldModel \Ideal\Field\AbstractController */
@@ -75,7 +75,7 @@ DONE;
         foreach ($this->params as $fieldName => $param) {
             $model = new mockModel();
             $model->fields[$fieldName] = array('label' => $param['label']);
-            $model->object[$fieldName] = $param['value'];
+            $model->pageData[$fieldName] = $param['value'];
 
             $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
             $fieldModel = $fieldClass::getInstance();
@@ -89,6 +89,12 @@ DONE;
 
 class mockModel
 {
-    public $object;
+    public $pageData;
     public $fields;
+
+    public function getPageData()
+    {
+        return $this->pageData;
+    }
+
 }
