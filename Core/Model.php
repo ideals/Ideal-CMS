@@ -137,12 +137,14 @@ abstract class Model
         }
     }
 
-
+    /**
+     * Определение сокращённого имени структуры Модуль_Структура по имени этого класса
+     * @return string Сокращённое имя структуры, используемое в БД
+     */
     static function getStructureName()
     {
-        $parts = explode('_', get_called_class());
-
-        return $parts[2];
+        $parts = explode('\\', get_called_class());
+        return $parts[0] . '_' . $parts[2];
     }
 
 

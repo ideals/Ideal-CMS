@@ -112,9 +112,16 @@ class ModelAbstract extends Site\Model
             }
         }
 
-        // Сортируем ветки по количеству элементов (по убыванию)
+        // Сортируем ветки по количеству элементов (по убыванию), а при равном количестве — по is_skip
         usort($branches, function($a, $b){
-            return ($b['count'] - $a['count']);
+            $res = $b['count'] - $a['count'];
+            if ($res == 0) {
+                // Количество элементов одинаковое, сортируем по is_skip (первыми без него)
+                $aEnd = end($a['branch']);
+                $bEnd = end($b['branch']);
+                $res = $aEnd['is_skip'] - $bEnd['is_skip'];
+            }
+            return $res;
         });
 
         // Проходим каждую ветку, начиная с наибольшей, пока не найдём полный путь
@@ -131,7 +138,18 @@ class ModelAbstract extends Site\Model
             if ($isOk) {
                 $end = end($branch['branch']);
                 if ($end['is_skip'] == 1) {
-                    // Последний элемент в цепочке не может быть пропущенным
+                    // Если последний элемент в максимальной цепочке — пропущенный, проверяем не хранится
+                    // ли в нём другая структура
+                    $structureName = $this->getStructureName();
+                    if ($end['structure'] != $structureName) {
+                        // Получаем модель вложенной структуры
+                        $structure = $this->getNestedStructure($end);
+                        // Запускаем определение пути и активной модели по $par
+                        $newPath = array_merge($path, $branch['branch']);
+                        $url = array_slice($url, count($newPath) - 2);
+                        $model = $structure->detectPageByUrl($newPath, $url);
+                        return $model;
+                    }
                     continue;
                 }
                 $newPath = $branch['branch'];
@@ -172,12 +190,8 @@ class ModelAbstract extends Site\Model
             // Остались неразобранные сегменты URL, запускаем вложенную структуру
             // Определяем оставшиеся элементы пути
             $end = end($this->path);
-            $config = Config::getInstance();
-            $rootStructure = $config->getStructureByPrev($end['prev_structure']);
-            $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
-            /* @var $structure Model */
-            $structure = new $modelClassName($rootStructure['ID'] . '-' . $end['ID']);
-
+            // Получаем модель вложенной структуры
+            $structure = $this->getNestedStructure($end);
             // Запускаем определение пути и активной модели по $par
             $model = $structure->detectPageByUrl($this->path, $url);
             return $model;
@@ -187,6 +201,22 @@ class ModelAbstract extends Site\Model
         }
     }
 
+    /**
+     * Определение вложенной структуры по $end['structure']
+     * @param array $end Все параметры родительской структуры
+     * @return Model Инициализированный объект модели вложенной структуры
+     */
+    protected function getNestedStructure($end)
+    {
+        $config = Config::getInstance();
+        $rootStructure = $config->getStructureByPrev($end['prev_structure']);
+        $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
+
+        /* @var $structure Model */
+        $structure = new $modelClassName($rootStructure['ID'] . '-' . $end['ID']);
+
+        return $structure;
+    }
 
     public function getStructureElements()
     {
