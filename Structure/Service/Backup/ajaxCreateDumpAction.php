@@ -32,7 +32,7 @@ if (isset($_POST['createMysqlDump'])) {
     $dumpName = 'dump_' . date('Y.n.d_H.i.s', $time) . '.sql';
 
     //Запускаем процесс выгрузки
-    $tes = $dump->start($_SERVER['DOCUMENT_ROOT'] . $backupPart . $dumpName);
+    $tes = $dump->start($backupPart . $dumpName);
 
     $dumpName .= '.gz';
 
