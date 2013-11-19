@@ -5,10 +5,10 @@
 
 <?php
 use Ideal\Core\Config;
+$config = Config::getInstance();
 
 // Папка для хранения бэкапов
-define('BACKUP_PART', '/tmp/backup/');
-define('BACKUP_DIR', $_SERVER['DOCUMENT_ROOT'] . BACKUP_PART);
+define('BACKUP_DIR', $config->tmpDir . '/backup/');
 
 if (!is_dir(BACKUP_DIR)) {
     $haveDir = mkdir(BACKUP_DIR);
@@ -32,7 +32,7 @@ if ($haveDir) {
             $minute = substr($file,19,2);
             $second = substr($file,22,2);
 
-            echo '<tr id="' . $file . '"><td><a href="' . BACKUP_PART . $file . '"> ' . "$day/$month/$year - $hour:$minute:$second" . '</a></td>';
+            echo '<tr id="' . $file . '"><td><a href="' . BACKUP_DIR . $file . '"> ' . "$day/$month/$year - $hour:$minute:$second" . '</a></td>';
             echo '<td><button class="btn btn-danger btn-mini" title="Удалить" onclick="delDump(\'' . $file . '\'); false;"> <i class="icon-remove icon-white"></i> </button></td>';
             echo '</tr>';
         }
@@ -84,7 +84,7 @@ function createDump() {
         type: 'POST',
         data: {
             createMysqlDump: true,
-            backupPart: '<?php echo BACKUP_PART?>'
+            backupPart: '<?php echo BACKUP_DIR?>'
         },
         success: function(data){
             //Выводим сообщение
