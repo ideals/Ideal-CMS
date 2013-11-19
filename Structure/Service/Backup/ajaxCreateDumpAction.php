@@ -12,7 +12,7 @@ if (isset($_POST['createMysqlDump'])) {
     $config = Config::getInstance();
 
     // Папка сохранения дампов
-    $backupPart = $_POST['backupPart'];
+    $backupPart = stream_resolve_include_path($_POST['backupPart']);
 
     // Задаём параметры для создания бэкапа
     $dumpSettings = array(
@@ -32,7 +32,7 @@ if (isset($_POST['createMysqlDump'])) {
     $dumpName = 'dump_' . date('Y.n.d_H.i.s', $time) . '.sql';
 
     //Запускаем процесс выгрузки
-    $tes = $dump->start($backupPart . $dumpName);
+    $tes = $dump->start($backupPart . DIRECTORY_SEPARATOR . $dumpName);
 
     $dumpName .= '.gz';
 
