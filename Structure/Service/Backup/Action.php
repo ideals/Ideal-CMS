@@ -1,5 +1,7 @@
-<button type="submit" name="createMysqlDump" onclick="createDump();" class="btn btn-primary">Создать backup базы</button>
-<p id='textDumpStatus'></p>
+<form class="form-inline">
+    <button type="submit" name="createMysqlDump" onclick="createDump(); return false;" class="btn btn-primary">Создать backup базы</button>
+    <span id='textDumpStatus' style="padding-left: 10px;"></span>
+</form>
 
 <?php
 use Ideal\Core\Config;
@@ -8,9 +10,15 @@ use Ideal\Core\Config;
 define('BACKUP_PART', '/tmp/backup/');
 define('BACKUP_DIR', $_SERVER['DOCUMENT_ROOT'] . BACKUP_PART);
 
+if (!is_dir(BACKUP_DIR)) {
+    $haveDir = mkdir(BACKUP_DIR);
+} else {
+    $haveDir = true;
+}
+
 // Получение списка файлов
 $dumpFiles = array();
-if (is_dir(BACKUP_DIR)) {
+if ($haveDir) {
     if ($dh = opendir(BACKUP_DIR)) {
         echo '<table id="dumpTable" class="table table-hover">';
         while (($file = readdir($dh)) !== false) {
@@ -40,8 +48,9 @@ dir = '<?php echo BACKUP_DIR ?>';
 function delDump(idFile) {
     var nameFile = dir + idFile;
     if (confirm('Удалить файл дампа базы?')) {
+        var path = window.location.href;
         $.ajax({
-            url: 'index.php?par=3-Ideal_Backup&action=ajaxDelete',
+            url: path + "&action=ajaxDelete",
             type: 'POST',
             data: {
                 name: nameFile
@@ -69,8 +78,9 @@ function delDump(idFile) {
 // Создание дампа базы данных
 function createDump() {
     $('#textDumpStatus').removeClass().addClass('text-info').html('Идёт создание дампа базы');
+    var path = window.location.href;
     $.ajax({
-        url: 'index.php?par=3-Ideal_Backup&action=ajaxCreateDump',
+        url: path + "&action=ajaxCreateDump",
         type: 'POST',
         data: {
             createMysqlDump: true,
