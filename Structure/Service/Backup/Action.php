@@ -7,63 +7,86 @@
 use Ideal\Core\Config;
 $config = Config::getInstance();
 
-$error = '';
-// Папка для хранения бэкапов
-$backup_part =  $config->tmpDir . '/backup/';
-$backup_dir = stream_resolve_include_path($backup_part);
+// Название дирректории
+$tmpDir = $config->tmpDir;
+$backupDir = $config->tmpDir . '/backup/';
 
-// Проверяем существует ли папка для создания бэкапов
-// если нет, то пытаемся её создать
-if ($backup_dir === false) {
-    if (mkdir($backup_part)) {
-        $backup_dir = stream_resolve_include_path($backup_part);
-    }
-}
+// Полный путь к дирректории
+$tmpPart = $tmpDir;
+$backupPart = $backupDir;
 
-if ($backup_dir === false) {
-    $error = 'Не удалось создать папку для сохранения дампа базы';
-    //Проверяем доступнали папка для записи
-} elseif (!is_writable($backup_dir)){
-    $error = 'Папка для сохранения дампа базы недоступна для записи';
-}
+// Сообщение об ошибке
+// Получение полных путей для временной папки и папки для бэкапа
+$error = getDir($tmpPart, $backupPart);
 
-if ($error != ''){
+if (!is_null($error)){
     echo "<script>
             $('#textDumpStatus').removeClass().addClass('text-error').html('" . $error . "');
             $('#createMysqlDump').hide();
         </script>";
-}
+} else {
+    echo '<p>' . 'Раздел для сохранения дампов базы данных: &nbsp;' . $backupPart . '</p>';
+    // Получение списка файлов
+    $dumpFiles = array();
+    if ($error == '') {
+        if ($dh = opendir($backupPart)) {
+            echo '<table id="dumpTable" class="table table-hover">';
+            while (($file = readdir($dh)) !== false) {
+                if (strripos($file, 'dump_') === false) continue;
+                //$dumpFiles[] = $file;
+                //$fn = str_replace('dump_', '',$file);
+                $year = substr($file,5,4);
+                $month = substr($file,10,2);
+                $day = substr($file,13,2);
+                $hour = substr($file,16,2);
+                $minute = substr($file,19,2);
+                $second = substr($file,22,2);
 
-echo '<p>' . 'Раздел для сохранения дампов базы данных: &nbsp;' . $backup_dir . '</p>';
-
-// Получение списка файлов
-$dumpFiles = array();
-if ($error == '') {
-    if ($dh = opendir($backup_dir)) {
-        echo '<table id="dumpTable" class="table table-hover">';
-        while (($file = readdir($dh)) !== false) {
-            if (strripos($file, 'dump_') === false) continue;
-            //$dumpFiles[] = $file;
-            //$fn = str_replace('dump_', '',$file);
-            $year = substr($file,5,4);
-            $month = substr($file,10,2);
-            $day = substr($file,13,2);
-            $hour = substr($file,16,2);
-            $minute = substr($file,19,2);
-            $second = substr($file,22,2);
-
-            echo '<tr id="' . $file . '"><td><a href="' . $backup_dir . $file . '"> ' . "$day/$month/$year - $hour:$minute:$second" . '</a></td>';
-            echo '<td><button class="btn btn-danger btn-mini" title="Удалить" onclick="delDump(\'' . $file . '\'); false;"> <i class="icon-remove icon-white"></i> </button></td>';
-            echo '</tr>';
+                echo '<tr id="' . $file . '"><td><a href="' . $backupDir . $file . '"> ' . "$day/$month/$year - $hour:$minute:$second" . '</a></td>';
+                echo '<td><button class="btn btn-danger btn-mini" title="Удалить" onclick="delDump(\'' . $file . '\'); false;"> <i class="icon-remove icon-white"></i> </button></td>';
+                echo '</tr>';
+            }
+            closedir($dh);
+            echo '</table>';
         }
-        closedir($dh);
-        echo '</table>';
     }
 }
+
+
+// Проверяем временую папку и папку для бэкапов на существование, возможность создания и записи
+// Получаем текст ошибки
+// Задаём полные пути для временной папки и папки для бэкапа
+function getDir(&$tmpPart, &$backupPart) {
+    $tmpDir = $tmpPart;
+    $backupDir = $backupPart;
+    // Временная папка
+    $tmpPart = stream_resolve_include_path($tmpDir);
+    // Проверяем существует ли временная папка и можноли её создать
+    if ($tmpPart === false) {
+        if (mkdir($tmpDir, 0755)) {
+            $tmpPart = stream_resolve_include_path($tmpDir);
+        }
+    }
+    if ($tmpPart === false) return "Не удалось создать папку $tmpDir для сохранения дампа базы";
+    if (!is_writable($tmpDir)) return "Папка $tmpDir недоступна для записи";
+
+    // Проверяем существует ли папка для создания бэкапов
+    // если нет, то пытаемся её создать
+    $backupPart = stream_resolve_include_path($backupDir);
+    if ($backupPart === false) {
+        if (mkdir($backupDir, 0755)) {
+            $backupPart = stream_resolve_include_path($backupDir);
+        }
+    }
+    if ($backupPart === false) return "Не удалось создать папку $tmpDir для сохранения дампа базы";
+    if (!is_writable($backupPart)) return "Папка $tmpDir недоступна для записи";
+    return null;
+}
+
 ?>
 
 <script>
-dir = '<?php echo $backup_part ?>';
+dir = '<?php echo $backupDir ?>';
 // Удаление файла
 function delDump(idFile) {
     var nameFile = dir + idFile;
@@ -104,7 +127,7 @@ function createDump() {
         type: 'POST',
         data: {
             createMysqlDump: true,
-            backupPart: '<?php echo $backup_part?>'
+            backupPart: '<?php echo $backupDir?>'
         },
         success: function(data){
             //Выводим сообщение
