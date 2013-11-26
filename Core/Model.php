@@ -178,7 +178,8 @@ abstract class Model
     public function getList($page)
     {
         $list = array();
-        $where = $this->getWhere("e.prev_structure='{$this->prevStructure}'");
+        $now = time();
+        $where = $this->getWhere("e.prev_structure='{$this->prevStructure}' AND e.date_create < '{$now}'");
         if ($where === false) return $list;
         $db = Db::getInstance();
 
@@ -203,7 +204,8 @@ abstract class Model
     public function getListCount()
     {
         $db = Db::getInstance();
-        $where = $this->getWhere("e.prev_structure='{$this->prevStructure}'");
+        $now = time();
+        $where = $this->getWhere("e.prev_structure = '{$this->prevStructure}' AND e.date_create < '{$now}'");
 
         // Считываем все элементы первого уровня
         $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
