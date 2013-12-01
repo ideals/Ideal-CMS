@@ -6,8 +6,8 @@ return array(
     'phone' => '(495) 123-45-67', // Телефон в шапке сайта | Ideal_Text
     'startUrl' => '', // Начальная папка CMS | Ideal_Text
     'urlSuffix' => '.html', // Стандартный суффикс URL | Ideal_Text
+    'tmpDir' => '/tmp', // Путь к папке с временными файлами | Ideal_Text
     'templateCachePath' => '/tmp/templates', // Путь к папке с кэшем twig-шаблонов | Ideal_Text
-    'tmpDir' => '/tmp', // Путь к временной папке | Ideal_Text
     'isTemplateCache' => '0', // Кэширование twig-шаблонов | Ideal_Checkbox
     'isTemplateAdminCache' => '0', // Кэширование twig-шаблонов админской части | Ideal_Checkbox
 );
