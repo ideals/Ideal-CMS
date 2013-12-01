@@ -7,7 +7,7 @@ use Ideal\Core\Config;
 
 if (isset($_POST['createMysqlDump'])) {
     // Подключаем библиотеку
-    require_once 'Library/MysqldumpPhpMaster/mysqldump.php';
+    require_once 'Library/MySQLDump/mysqldump.php';
 
     $config = Config::getInstance();
 
