@@ -33,9 +33,8 @@ RewriteRule ^(.*)/index.html$ $1.html [R=permanent,L]
 #END redirect
 
 # Если файл есть на диске, с ним ничего не происходит
-RewriteCond %{REQUEST_FILENAME} -s [OR]
-RewriteCond %{REQUEST_FILENAME} -l [OR]
-RewriteCond %{REQUEST_FILENAME} -d
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -l
 RewriteRule ^(.*)$ - [NC,L]
 
 # Если файла на диске нет, вызывается скрипт
