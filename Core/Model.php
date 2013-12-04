@@ -130,7 +130,8 @@ abstract class Model
             // В случае, если 404 ошибка, и нужной страницы в БД не найти
             if (!isset($this->pageData[$k])) continue;
             $className = Util::getClassName($this->pageData[$k], 'Template') . '\\Model';
-            $structure = $config->getStructureByName($this->pageData['structure']);
+            $prev = $this->path[(count($this->path) - 2)];
+            $structure = $config->getStructureByName($prev['structure']);
             $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
             $template = new $className($prevStructure);
             $this->pageData[$k] = $template->getPageData();
