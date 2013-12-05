@@ -3,6 +3,7 @@ namespace Ideal\Core;
 
 use Ideal\Core\Config;
 use Ideal\Core\Db;
+use Ideal\Core\Util;
 use Ideal\Field\Url;
 use Ideal\Core\Pagination;
 
@@ -216,7 +217,7 @@ abstract class Model
 
     /**
      * Добавление к where-запросу фильтра по category_id
-     * @param $where Исходная WHERE-часть
+     * @param string $where Исходная WHERE-часть
      * @return string Модифицированная WHERE-часть, с расширенным запросом, если установлена GET-переменная category
      */
     protected function getWhere($where)
@@ -230,7 +231,7 @@ abstract class Model
 
     /**
      * Получение листалки для шаблона и стрелок вправо/влево
-     * @param $pageName Название get-параметра, содержащего страницу
+     * @param string $pageName Название get-параметра, содержащего страницу
      * @return mixed
      */
     public function getPager($pageName)
@@ -265,21 +266,31 @@ abstract class Model
     {
         $config = Config::getInstance();
 
-        $this->prevStructure = explode('-', $this->pageData['prev_structure']);
-        $sP = array_shift($prevStructure);
-        $structure = $config->getStructureById($sP);
-        $path = array($structure);
-        foreach ($prevStructure as $v) {
-            $className = \Ideal\Core\Util::getClassName($structure['structure'], 'Structure') . '\\Site\\Model';
-            /* @var $structure \Ideal\Core\Model */
-            $structure = new $className($sP);
-            $structure->setPageDataById($v);
-            $elements = $structure->getLocalPath();
-            $path = array_merge($path, $elements);
-            $structure = end($path);
-            $sP .= '-' . $structure['ID'];
+        // Определяем локальный путь в этой структуре
+        $localPath = $this->getLocalPath();
+
+        // По первому элементу в локальном пути, опеределяем, какую структуру нужно вызвать
+        $first = $localPath[0];
+
+        list($prevStructureId, $prevElementId) = explode('-', $first['prev_structure']);
+        $structure = $config->getStructureByPrev($first['prev_structure']);
+
+        if ($prevStructureId == 0) {
+            // Если предыдущая структура стартовая — заканчиваем
+            array_unshift($localPath, $structure);
+            return $localPath;
         }
+
+        // Если предыдущая структура не стартовая —
+        // инициализируем её модель и продолжаем определение пути в ней
+        $className = Util::getClassName($structure['structure'], 'Structure') . '\\Site\\Model';
+
+        $structure = new $className('');
+        $structure->setPageDataById($prevElementId);
+
+        $path = $structure->detectPath();
         $path = array_merge($path, $this->getLocalPath());
+
         return $path;
     }
 
@@ -313,7 +324,11 @@ abstract class Model
         if ($count > 1) {
             $end = $this->path[($count - 1)];
             $prev = $this->path[($count - 2)];
-            if ($prev['structure'] != $end['structure']) {
+
+            $endClass = ltrim(Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model', '\\');
+            $thisClass = get_class($this);
+
+            if ($endClass != $thisClass) {
                 // Если структура активного элемента не равна структуре предыдущего элемента,
                 // то нужно инициализировать модель структуры активного элемента
                 $name = explode('\\', get_class($this));
