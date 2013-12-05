@@ -325,10 +325,11 @@ abstract class Model
             $end = $this->path[($count - 1)];
             $prev = $this->path[($count - 2)];
 
-            $endClass = ltrim(Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model', '\\');
+            $endClass = ltrim(Util::getClassName($end['structure'], 'Structure'), '\\');
             $thisClass = get_class($this);
 
-            if ($endClass != $thisClass) {
+            // Проверяем, соответствует ли класс объекта вложенной структуре
+            if (strpos($thisClass, $endClass) === false) {
                 // Если структура активного элемента не равна структуре предыдущего элемента,
                 // то нужно инициализировать модель структуры активного элемента
                 $name = explode('\\', get_class($this));
