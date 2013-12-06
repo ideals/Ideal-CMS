@@ -26,6 +26,6 @@ header('Content-Length: ' . filesize($_GET['file']));
 
 ob_clean();
 flush();
-readfile($result);
+readfile($_GET['file']);
 
 exit;

@@ -14,7 +14,7 @@ try {
 <form class="form-inline">
     <button type="submit" name="createMysqlDump" id="createMysqlDump" onclick="createDump(); return false;"
             class="btn btn-primary pull-right">
-        Создать backup базы
+        Создать резервную копию БД
     </button>
     <span id='textDumpStatus'></span>
 </form>
@@ -39,8 +39,10 @@ if ($dh = opendir($backupPart)) {
         $minute = substr($file,19,2);
         $second = substr($file,22,2);
 
+        $file = addslashes($backupPart . '/' . $file);
+
         echo '<tr id="' . $file . '"><td>';
-        echo '<a href="" onClick="return downloadDump(\'' . addslashes($backupPart . '/' . $file) . '\')"> ';
+        echo '<a href="" onClick="return downloadDump(\'' . $file . '\')"> ';
         echo "$day/$month/$year - $hour:$minute:$second" . '</a></td>';
         echo '<td>';
         echo '<button class="btn btn-danger btn-mini" title="Удалить" onclick="delDump(\'' . $file . '\'); false;">';
@@ -104,9 +106,8 @@ function getDir($tmpDir, $backupDir)
 <script type="text/javascript">
 
 // Удаление файла
-function delDump(idFile) {
-    var nameFile = dir + idFile;
-    if (confirm('Удалить файл дампа базы?')) {
+function delDump(nameFile) {
+    if (confirm('Удалить файл копии БД:\n\n' + nameFile.split(/[\\/]/).pop() + '\n\n?')) {
         var path = window.location.href;
         $.ajax({
             url: path + "&action=ajaxDelete",
@@ -136,7 +137,7 @@ function delDump(idFile) {
 
 // Создание дампа базы данных
 function createDump() {
-    $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт создание дампа базы');
+    $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт создание копии БД');
     var path = window.location.href;
     $.ajax({
         url: path + "&action=ajaxCreateDump",
@@ -149,14 +150,14 @@ function createDump() {
             //Выводим сообщение
             var message = data;
             if (message.length > 1) {
-                $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Дамп базы создан');
+                $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Копия БД создана');
                 $('#dumpTable').append(data);
             } else {
-                $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при создании дампа базы');
+                $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при создании копии БД');
             }
         },
         error: function() {
-            $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Не удалось создать дамп базы');
+            $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Не удалось создать копию БД');
         }
     })
 }
