@@ -25,7 +25,7 @@ class Controller extends Select\Controller
             $end = end($this->model->getPath());
             $prevStructure = $config->getStructureByName($end['structure']);
             $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
-            $model->setPageDataByprevStructure($prevStructure);
+            $model->setPageDataByPrevStructure($prevStructure);
             $id = $pageData['ID'];
         }
         // Получение содержимого таба

@@ -91,7 +91,7 @@ abstract class Model
     }
 
 
-    public function setPageDataByprevStructure($prevStructure)
+    public function setPageDataByPrevStructure($prevStructure)
     {
         $db = Db::getInstance();
 

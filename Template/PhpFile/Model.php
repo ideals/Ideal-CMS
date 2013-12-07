@@ -6,7 +6,7 @@ class Model extends \Ideal\Core\Admin\Model
 
     public function getPageData()
     {
-        $this->setPageDataByprevStructure($this->prevStructure);
+        $this->setPageDataByPrevStructure($this->prevStructure);
         if ($this->pageData['php_file'] != '') {
             require DOCUMENT_ROOT . $this->pageData['php_file'];
         }

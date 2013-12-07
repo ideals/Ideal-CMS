@@ -54,7 +54,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         // Загрузка данных связанного объекта
         if (isset($pageData['ID'])) {
             $prevStructure = $pageData['prev_structure'] . '-' . $pageData['ID'];
-            $model->setPageDataByprevStructure($prevStructure);
+            $model->setPageDataByPrevStructure($prevStructure);
         }
 
         echo $model->getFieldsList($model->fields, $model);

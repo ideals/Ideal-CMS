@@ -6,7 +6,7 @@ class Model extends \Ideal\Core\Admin\Model
 
     public function getPageData()
     {
-        $this->setPageDataByprevStructure($this->prevStructure);
+        $this->setPageDataByPrevStructure($this->prevStructure);
         return $this->pageData;
     }
 
