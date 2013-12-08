@@ -152,6 +152,11 @@ abstract class Model
 
     public function setPath($path)
     {
+        $config = Config::getInstance();
+        $prev = $path[count($path) - 2];
+        $end = end($path);
+        $structure = $config->getStructureByName($prev['structure']);
+        $this->prevStructure = $structure['ID'] . '-' . $end['ID'];
         $this->path = $path;
     }
 
