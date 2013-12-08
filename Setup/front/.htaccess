@@ -4,7 +4,6 @@ php_value magic_quotes_gpc Off
 Options +Includes +FollowSymLinks -Indexes
 AddDefaultCharset utf-8
 
-DirectoryIndex index.html
 ErrorDocument 404 /404.html
 
 RewriteEngine on
