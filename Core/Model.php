@@ -172,7 +172,7 @@ abstract class Model
     }
 
 
-    public function getprevStructure()
+    public function getPrevStructure()
     {
         return $this->prevStructure;
     }

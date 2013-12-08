@@ -63,7 +63,7 @@ HTML;
             $this->newValue = $model->getNewPos();
         } elseif ($oldPos != $newPos) {
             $posModel = new Model();
-            $this->sqlAdd = $posModel->movePos($oldPos, $newPos, $model->getprevStructure());
+            $this->sqlAdd = $posModel->movePos($oldPos, $newPos, $model->getPrevStructure());
             $this->newValue = $oldPos; // возвращаем старое значение, т.к. все перестановки идут в movePos
         }
 
