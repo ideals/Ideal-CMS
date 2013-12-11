@@ -67,7 +67,7 @@ abstract class Model
     }
 
 
-    public function setprevStructure($prevStructure)
+    public function setPrevStructure($prevStructure)
     {
         $this->prevStructure = $prevStructure;
     }
