@@ -111,5 +111,5 @@ abstract class Model extends Core\Model
     }
 
 
-    abstract function detectPageByUrl($url, $path);
+    abstract function detectPageByUrl($path, $url);
 }
