@@ -7,6 +7,37 @@ class RewriteRile
     protected $fileName; // файл с редиректами
     protected $params; // правила для редиректов где ключ 1 - откуда, 2 - куда перенаправлять
     protected $htaccess = true; // Сохранять в htaccess или нет
+    protected $msg = '';
+
+    public function newLoadFile(){
+        $htaccess = DOCUMENT_ROOT.'/.htaccess';
+        if (!file_exists($htaccess) && !is_writable($htaccess)) {
+            $this->msg .= "Файл не существует или не доступен на запись\n";
+            exit;
+        }
+        $htaccess = file_get_contents($htaccess);
+        $check = array();
+        preg_match_all('/(\#START redirect)|(\#END redirect)/', '', $check);
+        if (count($check) != 0) {
+            if (count($check[0]) != 2) {
+                if (strlen($check[1][0]) > 0) {
+                    // Нету #END redirect
+                    $this->msg .= "В htaccess отсутсвует #END redirect\n";
+
+                } elseif (strlen($check[2][0]) > 0) {
+                    // #START redirect
+                    $this->msg .= "В htaccess отсутсвует #START redirect\n";
+                }
+            }
+        } else {
+            // Нету #START redirect и #END redirect
+            $this->msg .= "В htaccess отсутсвует #START redirect и #END redirect\n";
+        }
+
+        $redirectFromHt = array();
+        preg_match_all('/RewriteRule (.*) \[R=301(.*)L\]/', $htaccess, $redirectFromHt);
+    }
+
 
     public function loadFile($fileName)
     {
@@ -124,9 +155,9 @@ class RewriteRile
         fwrite($fp, $file);
         // Записсь в htaccess
         if($this->htaccess){
-            $t = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/.htaccess');
-            $file = preg_replace('/(#START redirect)(\r\n|\r|\n)([^}]*)(#END redirect)/', "$1$2".$file."$2$4", $t);
-            file_put_contents($_SERVER['DOCUMENT_ROOT'].'/.htaccess', $file);
+            $t = file_get_contents(DOCUMENT_ROOT.'/.htaccess');
+            $file = preg_replace('/\#START redirect(.*)\#END redirect/s', "$1$2".$file."$2$4", $t);
+            file_put_contents(DOCUMENT_ROOT.'/.htaccess', $file);
         }
     }
 
