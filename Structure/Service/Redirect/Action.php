@@ -1,23 +1,39 @@
 <?php
-$config = \Ideal\Core\Config::getInstance();
-$file = new \Ideal\Structure\Service\Redirect\RewriteRile();
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2013 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
 
-$file->loadFile($config->cmsFolder . '/redirect.txt');
+/**
+ * Экшэн отображения списка редиректов из файлов redirect.txt и .htaccess
+ */
 
-#$t = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/.htaccess');
-#$file = 'h=h=h='."\n";
-#$file = preg_replace('/(#START redirect)(\r\n|\r|\n)([^}]*)(#END redirect)/', "$1$2".$file."$2$4", $t);
-#file_put_contents($_SERVER['DOCUMENT_ROOT'].'/.htaccess', $file);
+$file = new \Ideal\Structure\Service\Redirect\RewriteRule();
+$file->loadRedirects();
+
+// todo Переделать в ajax-вызовы
+
+if (isset($_POST['add'])) {
+    $file->addLine($_POST['from'], $_POST['to']);
+    exit;
+}
 if (isset($_POST['edit'])) {
-    $file->addLine();
-    $file->saveFile();
+    $file->editLine($_POST['from'], $_POST['to'], $_POST['oldFrom'], $_POST['oldTo']);
     exit;
 }
 if (isset($_POST['delete'])) {
-    $file->deleteLine();
-    $file->saveFile();
+    $file->deleteLine($_POST['from'], $_POST['to']);
     exit;
 }
+
+$table = $file->getTable();
+
+echo $file->getMsg();
+
+// Если уровень ошибки больше 1, то список редиректов не отображается
+if ($file->getError() > 1) return;
 ?>
 <table id="redirect" class="table table-hover table-striped">
     <tr>
@@ -26,7 +42,7 @@ if (isset($_POST['delete'])) {
         <th style="text-align: right"></th>
     </tr>
     <?php
-    echo $file->showEdit();
+    echo $table;
     ?>
 </table>
 
@@ -55,16 +71,17 @@ if (isset($_POST['delete'])) {
 </style>
 
 
-<script>
-    function addLine(e) {
+<script type="text/javascript">
+    function addLine(e)
+    {
         $(e).attr("disabled", "disabled");
         var i = parseInt($(e).val()) + 1;
         var from = $('#line' + (i - 1) + ' > .from').children().val();
-        var on = $('#line' + (i - 1) + ' > .on').children().val();
-        if (from !== '' && on !== '') {
+        var to = $('#line' + (i - 1) + ' > .to').children().val();
+        if (from !== '' && to !== '') {
             $('#redirect > tbody:last').append('<tr id="line' + i + '">'
                 + '<td class="from"><input type="text" name="from"></td>'
-                + '<td class="on"><input type="text" name="on"></td>'
+                + '<td class="to"><input type="text" name="to"></td>'
                 + '<td><div class="hide editGroup"> '
                 + '<span class="input-prepend">'
                 + '<button type="button" style="width: 47px;" onclick="saveLine(' + i + ')" title="Сохранить" class="btn btn-success btn-mini">'
@@ -77,79 +94,132 @@ if (isset($_POST['delete'])) {
         $(e).removeAttr('disabled');
     }
 
-    function delLine(e) {
+    function delLine(e)
+    {
         var line = $('#line' + e);
         var from = line.find('.from');
-        var on = line.find('.on');
-        var fromVal = from.children().val();
-        if(fromVal === undefined){
-            fromVal = from.html();
-        }
-        var onVal = on.children().val();
-        if(onVal === undefined){
-            onVal = on.html();
-        }
+        var to = line.find('.to');
+        var oldFrom = from.attr('data-from') || false;
+        var oldTo = to.attr('data-to') || false;
 
-        if (fromVal === '' && onVal === '') {
+        if (oldFrom === false && oldTo === false) {
+            // Если удаление вызвано для свежесозданного редиректа, ещё не записанного в файл
             $('#line' + e).remove();
             return true;
         }
-        if (!confirm('Удалить?')) {
+
+        if (!confirm('Удалить редирект ' + oldFrom + ' >> ' + oldTo + ' ?')) {
             return false;
         }
+
         $.ajax({
             type: "POST",
-            data: "delete=1&from=" + fromVal + "&on=" + onVal
+            data: "delete=1&from=" + oldFrom + "&to=" + oldTo,
+            success: function (data) {
+                if (data.error) {
+
+                } else {
+                    $('#line' + e).remove();
+                }
+            }
+
         });
-        $('#line' + e).remove();
     }
 
-    function editLine(e) {
+    function editLine(e)
+    {
         var line = $('#line' + e);
         line.addClass('editLine');
-        var butedit = line.find('.btn-info').removeClass('btn-info').addClass('btn-success');
-        butedit.attr('onclick', 'saveLine(' + e + ')');
-        butedit.attr('title', 'Сохранить');
-        butedit.children().removeClass('icon-pencil').addClass('icon-ok');
-        line.find('.btn-danger').val(line.children('.from').text());
+        // Заменяем кнопку «Редактировать» на кнопку «Сохранить»
+        var editBtn = line.find('.btn-info').removeClass('btn-info').addClass('btn-success');
+        editBtn.attr('onclick', 'saveLine(' + e + ')');
+        editBtn.attr('title', 'Сохранить');
+        editBtn.children().removeClass('icon-pencil').addClass('icon-ok');
+        // Заменяем кнопку «Удалить» на кнопку «Отмена»
+        var cancelBtn = line.find('.btn-danger');
+        cancelBtn.attr('onclick', 'cancelLine(' + e + ')');
+        cancelBtn.attr('title', 'Отменить');
+        // Создаём поля ввода
         var from = line.find('.from');
-        from.attr('prevVal', from.html());
-        var on = line.find('.on');
-        on.attr('prevVal', on.html());
+        var to = line.find('.to');
         from.html('<input type="text" name="from" value="' + from.html() + '">');
-        on.html('<input type="text" name="on" value="' + on.html() + '">');
-        console.log(line);
+        to.html('<input type="text" name="to" value="' + to.html() + '">');
     }
 
-    function saveLine(e) {
+    function cancelLine(e)
+    {
         var line = $('#line' + e);
         var from = line.find('.from');
-        var on = line.find('.on');
+        var to = line.find('.to');
+        var oldFrom = from.attr('data-from') || false;
+        var oldTo = to.attr('data-to') || false;
+
+        line.removeClass('editLine');
+        from.html(oldFrom);
+        to.html(oldTo);
+
+        var editBtn = line.find('.btn-success').removeClass('btn-success').addClass('btn-info');
+        editBtn.attr('onclick', 'editLine(' + e + ')');
+        editBtn.attr('title', 'Изменить');
+        editBtn.children().removeClass('icon-ok').addClass('icon-pencil');
+
+        var cancelBtn = line.find('.btn-danger');
+        cancelBtn.attr('onclick', 'delLine(' + e + ')');
+        cancelBtn.attr('title', 'Удалить');
+        cancelBtn.val(oldFrom);
+
+        return true;
+
+    }
+
+    function saveLine(e)
+    {
+        var type = 'add';
+        var line = $('#line' + e);
+        var from = line.find('.from');
+        var to = line.find('.to');
         var fromVal = from.children().val();
-        var onVal = on.children().val();
-        if (onVal == '' || fromVal == '') {
+        var toVal = to.children().val();
+        var oldFrom, oldTo;
+        var data;
+        oldFrom = from.attr('data-from') || false;
+        oldTo = to.attr('data-to') || false;
+        if (toVal == '' || fromVal == '') {
             alert('Заполнены не все поля!');
             return false;
         }
-        if (fromVal == onVal) {
+        if (fromVal == toVal) {
             alert('Бесконечный редирект самого на себя!');
             return false;
         }
-        if (fromVal == from.attr('prevVal') && onVal === on.attr('prevVal')) {
+        if (oldFrom && oldTo) {
+            type = 'edit';
+            data = type + '=1&from=' + fromVal + '&to=' + toVal + '&oldFrom=' + oldFrom + '&oldTo=' + oldTo
+        } else {
+            data = type + "=1&from=" + fromVal + "&to=" + toVal;
+
+        }
+        if (fromVal == from.attr('data-from') && toVal == to.attr('data-to')) {
             line.removeClass('editLine');
             from.html(fromVal);
-            on.html(onVal);
+            to.html(toVal);
 
             var butedit = line.find('.btn-success').removeClass('btn-success').addClass('btn-info');
             butedit.attr('onclick', 'editLine(' + e + ')');
             butedit.attr('title', 'Изменить');
             butedit.children().removeClass('icon-ok').addClass('icon-pencil');
+
+            var cancelBtn = line.find('.btn-danger');
+            cancelBtn.attr('onclick', 'delLine(' + e + ')');
+            cancelBtn.attr('title', 'Удалить');
+            cancelBtn.val(oldFrom);
+
             return true;
         }
         $.ajax({
             dataType: 'json',
             type: "POST",
-            data: "edit=1&from=" + fromVal + "&on=" + onVal,
+            data: data,
             success: function (data) {
                 if (data.error) {
                     $('#line' + data.line).css('background', 'lightcyan');
@@ -158,19 +228,17 @@ if (isset($_POST['delete'])) {
                 } else {
                     line.removeClass('editLine');
                     from.html(fromVal);
-                    on.html(onVal);
+                    from.attr('data-from', fromVal);
+                    to.html(toVal);
+                    to.attr('data-to', toVal);
 
                     var butedit = line.find('.btn-success').removeClass('btn-success').addClass('btn-info');
                     butedit.attr('onclick', 'editLine(' + e + ')');
                     butedit.attr('title', 'Изменить');
                     butedit.children().removeClass('icon-ok').addClass('icon-pencil');
+                    line.removeClass();
                 }
             }
         });
     }
-
-    function ckeck(data) {
-    }
-
 </script>
-
