@@ -2,40 +2,106 @@
 
 namespace Ideal\Structure\Service\Redirect;
 
+use Ideal\Core\Config;
+
 class RewriteRile
 {
     protected $fileName; // файл с редиректами
     protected $params; // правила для редиректов где ключ 1 - откуда, 2 - куда перенаправлять
     protected $htaccess = true; // Сохранять в htaccess или нет
-    protected $msg = '';
+    protected $msg = ''; // Сообщение для вывода ошибок и предупреждений
+    protected $error = 0; // 0 - отсутвие ошибок, 1 - присутсвуют не критичные ошибки, 2 - критические ошибки, прерывание работы скрипта
 
-    public function newLoadFile(){
-        $htaccess = DOCUMENT_ROOT.'/.htaccess';
+    /**
+     * Происходит загрузка редиректов из .htaccess и redirect.txt
+     * @return bool Успешность выполнения
+     */
+    public function newLoadFile()
+    {
+        // Сегмент обработки файла redirect.txt
+        $config = Config::getInstance();
+        $redirect = $config->cmsFolder . '/redirect.txt'; // Путь к redirect.txt
+        if (!file_exists($redirect)) {
+            $fp = fopen($this->fileName, "w"); // создаем файл
+            fclose($fp);
+            $this->msg .= "<div class='alert alert-info'>Создан файл redirect.txt</div>";
+        }
+        if (!is_writable($redirect)) {
+            $this->msg .= "<div class='alert alert-block'>Файл redirect.txt не доступен на запись</div>";
+            $this->error = 1;
+        }
+        $redirect = file_get_contents($redirect); // Загружаем файл redirect.txt в память
+        $redirectFromRe = array();
+        preg_match_all('/RewriteRule(.*)\[/U', $redirect, $redirectFromRe);
+        if (isset($redirectFromRe[1]) && count($redirectFromRe[1]) > 0) {
+            foreach ($redirectFromRe[1] as $key => $val) {
+                // Убираем пробелы по краям
+                $val = trim($val);
+                // Между откуда и куда присутсвует единсвенный пробел, больше их быть не может, смело по нему разбиваем
+                $val = explode(' ', $val, 2);
+                $this->params[$val[0]] = $val[1];
+            }
+        }
+        // Сегмент обработки файла .htaccess
+        $htaccess = DOCUMENT_ROOT . '/.htaccess'; // Путь к .htaccess
         if (!file_exists($htaccess) && !is_writable($htaccess)) {
             $this->msg .= "Файл не существует или не доступен на запись\n";
-            exit;
+            $this->error = 2;
+            return false;
         }
-        $htaccess = file_get_contents($htaccess);
+        $htaccess = file_get_contents($htaccess); // Загружаем файл htaccess в память
         $check = array();
-        preg_match_all('/(\#START redirect)|(\#END redirect)/', '', $check);
-        if (count($check) != 0) {
-            if (count($check[0]) != 2) {
-                if (strlen($check[1][0]) > 0) {
-                    // Нету #END redirect
-                    $this->msg .= "В htaccess отсутсвует #END redirect\n";
-
-                } elseif (strlen($check[2][0]) > 0) {
-                    // #START redirect
-                    $this->msg .= "В htaccess отсутсвует #START redirect\n";
+        preg_match_all('/\#redirect/', $htaccess, $check); // Ищем в htaccess теги #redirect возвращаем содержимое тегов
+        if (!isset($check[0]) || count($check[0]) < 2) {
+            // В случае не нахождения или отсутвие второго тега, прекращаем обработку и выходим записав ошибку
+            $this->error = 2;
+            $this->msg .= "<div class='alert alert-error'>В .htaccess отсутсвует теги #redirect</div>";
+            return false;
+        } else {
+            $redirectFromHt = array();
+            preg_match_all('/\#redirect(.*)\#redirect/s', $htaccess, $redirectFromHt);
+            preg_match_all('/RewriteRule(.*)\[/U', $redirectFromHt[1][0], $redirectFromHt);
+            if (count($check[0]) > 2) {
+                $this->msg .= "<div class='alert alert-block'>В htaccess перебор с тегом #redirect</div>";
+                $this->error = 1;
+            }
+            foreach ($redirectFromHt[1] as $key => $val) {
+                if (strlen($val) < 4 || strpos($val, 'RewriteRule') !== false || strpos($val, '#redirect') !== false) {
+                    continue;
+                }
+                // Убераем из строки лишнии слова, оставляем только правило откуда куда редирект
+                $val = preg_replace('/RewriteRule(.*)\[(.*)/s', '$1', $val);
+                // Убираем пробелы по краям
+                $val = trim($val);
+                // Между "откуда" и "куда" присутсвует единсвенный пробел, больше их быть не может, смело по нему разбиваем
+                $val = explode(' ', $val, 2);
+                if(isset($this->params[$val[0]]) && $this->params[$val[0]] != $val[1]){
+                    $tmp = $this->params[$val[0]];
+                    unset($this->params[$val[0]]);
+                    $this->params[$val[0]]['to1'] = $tmp;
+                    $this->params[$val[0]]['to2'] = $val[1];
+                    $this->params[$val[0]]['error'] = 1;
+                    $this->msg .= '<div class="alert alert-error">Ошибка в редиректах. Устранить нужно все и сразу иначе затрутся</div>';
+                }else{
+                    if(!isset($this->params[$val[0]])){
+                        $this->params[$val[0]]['to'] = $val[1];
+                        $this->params[$val[0]]['error'] = 2;
+                    }
                 }
             }
-        } else {
-            // Нету #START redirect и #END redirect
-            $this->msg .= "В htaccess отсутсвует #START redirect и #END redirect\n";
         }
 
-        $redirectFromHt = array();
-        preg_match_all('/RewriteRule (.*) \[R=301(.*)L\]/', $htaccess, $redirectFromHt);
+        return true;
+    }
+
+    public function getMsg()
+    {
+        return $this->msg;
+    }
+
+    public function getError()
+    {
+        return $this->error;
     }
 
 
@@ -154,23 +220,10 @@ class RewriteRile
         }
         fwrite($fp, $file);
         // Записсь в htaccess
-        if($this->htaccess){
-            $t = file_get_contents(DOCUMENT_ROOT.'/.htaccess');
-            $file = preg_replace('/\#START redirect(.*)\#END redirect/s', "$1$2".$file."$2$4", $t);
-            file_put_contents(DOCUMENT_ROOT.'/.htaccess', $file);
-        }
-    }
-
-    /**
-     * TODO реализиция редиректов посредствам PHP
-     */
-    public function checkUrl($url = null)
-    {
-        $url = ($url == null) ? $_GET['url'] : $url;
-        foreach ($this->params as $v) {
-            if (strnatcasecmp($v[1], $url) === 0) {
-                // TODO перенаправить по редиректу
-            }
+        if ($this->htaccess) {
+            $t = file_get_contents(DOCUMENT_ROOT . '/.htaccess');
+            $file = preg_replace('/\#START redirect(.*)\#END redirect/s', "$1$2" . $file . "$2$4", $t);
+            file_put_contents(DOCUMENT_ROOT . '/.htaccess', $file);
         }
     }
 
@@ -178,14 +231,35 @@ class RewriteRile
      * Выводит уже существующие редиректы в виде строки таблицы
      * @return string
      */
-    public function showEdit()
+    public function getTable()
     {
         $str = '';
         $i = 1;
         foreach ($this->params as $k => $v) {
+            $class = '';
+            $defaultFrom = $k;
+            $defaultTo = $v;
+            if(is_array($v)){
+                if ($v['error'] == 1) {
+                    $class = "class='error'";
+                    $defaultTo = $v['to1'];
+                    $v = 'REDIRECT.txt: '. $v['to1'].' HTACCESS: '.$v['to2'];
+                    $this->msg .= "<div class='alert alert-error'>".
+                        "<button type='button' class='close' data-dismiss='alert'>&times;</button>" .
+                        "Разница в редиректах. Необходимо исправить. <a href='#line{$i}'>Подробнее</a></div>";
+                } elseif ($v['error'] == 2) {
+                    $defaultTo = $v['to'];
+                    $class = "class='warning'";
+                    $this->msg .= "<div class='alert alert-block'>".
+                        "<button type='button' class='close' data-dismiss='alert'>&times;</button>" .
+                        "Удаленный редирект. Необходимо исправить. "."
+                        <a href='#' onclick=\"scrollToElement('line{$i}'); return false;\">Подробнее</a></div>";
+                    $v = $v['to'];
+                }
+            }
             $str .= <<<RULE
-            <tr id="line{$i}">
-<td class="from">{$v[1]}</td><td class="on">{$v[2]}</td>
+            <tr id="line{$i}" {$class}>
+<td class="from" data-from="{$defaultFrom}">{$k}</td><td class="on" data-to="{$defaultTo}">{$v}</td>
 <td><div class="hide editGroup">
     <span class="input-prepend">
     <button style="width: 47px;" onclick="editLine({$i})" title="Изменить" class="btn btn-info btn-mini">
@@ -197,7 +271,6 @@ class RewriteRile
 RULE;
             $i++;
         }
-        $str .= '';
         return $str;
     }
 
