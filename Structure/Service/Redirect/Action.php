@@ -1,22 +1,18 @@
 <?php
-//$config = \Ideal\Core\Config::getInstance();
-$file = new \Ideal\Structure\Service\Redirect\RewriteRile();
+namespace Ideal\Structure\Service\Redirect;
+$file = new RewriteRile();
+$file->LoadFile();
 
-//$file->loadFile($config->cmsFolder . '/redirect.txt');
-$file->newLoadFile();
-
-#$t = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/.htaccess');
-#$file = 'h=h=h='."\n";
-#$file = preg_replace('/(#START redirect)(\r\n|\r|\n)([^}]*)(#END redirect)/', "$1$2".$file."$2$4", $t);
-#file_put_contents($_SERVER['DOCUMENT_ROOT'].'/.htaccess', $file);
-if (isset($_POST['edit'])) {
+if (isset($_POST['add'])) {
     $file->addLine();
-    $file->saveFile();
+    exit;
+}
+if (isset($_POST['edit'])) {
+    $file->editLine();
     exit;
 }
 if (isset($_POST['delete'])) {
     $file->deleteLine();
-    $file->saveFile();
     exit;
 }
 $table = $file->getTable();
@@ -103,9 +99,16 @@ if ($file->getError() < 1) {
             }
             $.ajax({
                 type: "POST",
-                data: "delete=1&from=" + fromVal + "&on=" + onVal
+                data: "delete=1&from=" + fromVal + "&on=" + onVal,
+                success: function (data) {
+                    if (data.error) {
+
+                    } else {
+                        $('#line' + e).remove();
+                    }
+                }
+
             });
-            $('#line' + e).remove();
         }
 
         function editLine(e) {
@@ -117,20 +120,22 @@ if ($file->getError() < 1) {
             butedit.children().removeClass('icon-pencil').addClass('icon-ok');
             line.find('.btn-danger').val(line.children('.from').text());
             var from = line.find('.from');
-            from.attr('prevVal', from.html());
             var on = line.find('.on');
-            on.attr('prevVal', on.html());
             from.html('<input type="text" name="from" value="' + from.html() + '">');
             on.html('<input type="text" name="on" value="' + on.html() + '">');
-            console.log(line);
         }
 
         function saveLine(e) {
+            var type = 'add';
             var line = $('#line' + e);
             var from = line.find('.from');
             var on = line.find('.on');
             var fromVal = from.children().val();
             var onVal = on.children().val();
+            var oldFrom, oldOn;
+            var data;
+            oldFrom = from.attr('data-from') || false;
+            oldOn = on.attr('data-on') || false;
             if (onVal == '' || fromVal == '') {
                 alert('Заполнены не все поля!');
                 return false;
@@ -139,7 +144,14 @@ if ($file->getError() < 1) {
                 alert('Бесконечный редирект самого на себя!');
                 return false;
             }
-            if (fromVal == from.attr('prevVal') && onVal === on.attr('prevVal')) {
+            if (oldFrom && oldOn) {
+                type = 'edit';
+                data = type + '=1&from=' + fromVal + '&on=' + onVal + '&oldFrom=' + oldFrom + '&oldOn=' + onVal
+            } else {
+                data = type + "=1&from=" + fromVal + "&on=" + onVal;
+
+            }
+            if (fromVal == from.attr('data-from') && onVal == on.attr('data-on')) {
                 line.removeClass('editLine');
                 from.html(fromVal);
                 on.html(onVal);
@@ -153,7 +165,7 @@ if ($file->getError() < 1) {
             $.ajax({
                 dataType: 'json',
                 type: "POST",
-                data: "edit=1&from=" + fromVal + "&on=" + onVal,
+                data: data,
                 success: function (data) {
                     if (data.error) {
                         $('#line' + data.line).css('background', 'lightcyan');
@@ -162,12 +174,15 @@ if ($file->getError() < 1) {
                     } else {
                         line.removeClass('editLine');
                         from.html(fromVal);
+                        from.attr('data-from', fromVal);
                         on.html(onVal);
+                        on.attr('data-on', fromVal);
 
                         var butedit = line.find('.btn-success').removeClass('btn-success').addClass('btn-info');
                         butedit.attr('onclick', 'editLine(' + e + ')');
                         butedit.attr('title', 'Изменить');
                         butedit.children().removeClass('icon-ok').addClass('icon-pencil');
+                        line.removeClass();
                     }
                 }
             });
@@ -175,6 +190,7 @@ if ($file->getError() < 1) {
 
         function ckeck(data) {
         }
+
         function scrollToElement(theElement) {
             if (typeof theElement === "string") theElement = document.getElementById(theElement);
 
