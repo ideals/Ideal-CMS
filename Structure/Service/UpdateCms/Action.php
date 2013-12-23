@@ -1,9 +1,11 @@
 <?php
-/*
-  * Сервис обновления IdealCMS
-  * Должен присутствовать на каждом сайте, отвечает за представление информации об обновлении
-  * */
+/**
+ * Сервис обновления IdealCMS
+ * Должен присутствовать на каждом сайте, отвечает за представление информации об обновлении
+ */
+
 use Ideal\Core\Config;
+
 ?>
 
 <p id="message">
@@ -20,8 +22,6 @@ $getVersionScript = 'http://idealcms/update/version.php';
 
 $config = \Ideal\Core\Config::getInstance();
 
-// todo Хранение версий
-
 // Установленные версии CMS и модулей
 $nowVersions = getVersions();
 
@@ -32,25 +32,25 @@ $url = $getVersionScript . '?domain=' . $domain . '&ver=' .  urlencode(serialize
 $nowVersions = json_encode($nowVersions);
 
 // Подключаем библиотеку для использования jsonp
-echo <<<SCREPT
+echo <<<SCRIPT
     <script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/jquery.jsonp-2.4.0.min.js"> </script>
-SCREPT;
+SCRIPT;
 
-function getVersions() {
-    $ds = DIRECTORY_SEPARATOR;
+function getVersions()
+{
     // Получаем файл README.md для cms
     $config = Config::getInstance();
     $mdFile = 'README.md';
     // Путь к файлу README.md для cms
-    $cmsMdFileName = DOCUMENT_ROOT . $ds . $config->cmsFolder . $ds . "Ideal" . $ds . $mdFile;
+    $cmsMdFileName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/' . $mdFile;
     // Получаем версию cms
     $ver = getVersionFromFile($cmsMdFileName);
+
     // Ищем файлы README.md в модулях
-    $modDirName = DOCUMENT_ROOT . $ds . $config->cmsFolder . $ds . "Mods";
-    // Получаем массив папок модулей
-    $modDirs = scandir($modDirName);
+    $modDirName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Mods';
     // Получаем версии модулей
     $modsVer = array();
+    $modDirs = scandir($modDirName); // получаем массив папок модулей
     foreach ($modDirs as $k => $dir) {
         // Удаляем лишние элементы
         if ($dir == '.' || $dir == '..') {
@@ -58,7 +58,7 @@ function getVersions() {
             continue;
         }
         //
-        $modDir  = $modDirName . $ds . $dir  . $ds . $mdFile;
+        $modDir  = $modDirName . '/' . $dir  . '/' . $mdFile;
         $modsVerOne = getVersionFromFile($modDir);
         if ($modsVerOne) {
             $modsVer = array_merge($modsVer, $modsVerOne);
@@ -67,36 +67,29 @@ function getVersions() {
     return $ver = array_merge($ver, $modsVer);
 }
 
-function getVersionFromFile($cmsMdFileName) {
-    if (file_exists($cmsMdFileName)) {
-        $file = fopen($cmsMdFileName, "r");
-        // Получаем первую строку файла с наименованием и версией
-        $ver = fgets($file, 85);
-        fclose($file);
-        // Удаляем спецсимволы из строки
-        $ver = btw($ver);
-        // Разбиваем строку получая версию и наименование
-        $ver = explode('v.', $ver);
-        // Получаем элемент массива, где ключ название модуля или cms, значение версия
-        $ver[trim($ver[0])] = trim($ver[1]);
-        // Удаляем из массива лишние элементы
-        unset($ver[0]);
-        unset($ver[1]);
-    } else {
-        return false;
-    }
+function getVersionFromFile($cmsMdFileName)
+{
+    if (!file_exists($cmsMdFileName)) return false;
+
+    $file = fopen($cmsMdFileName, "r");
+    // Получаем первую строку файла с наименованием и версией
+    $ver = trim(fgets($file));
+    fclose($file);
+    // Разбиваем строку получая версию и наименование
+    $ver = explode('v.', $ver, 2);
+    // Получаем элемент массива, где ключ название модуля или cms, значение версия
+    $ver[trim($ver[0])] = trim($ver[1]);
+    // Удаляем из массива лишние элементы
+    unset($ver[0]);
+    unset($ver[1]);
+
     if (count($ver) !== 1) {
         return false;
     }
+
     return $ver;
 }
 
-// Функция удаляет пробелы и спецсимволы
-function btw($b1) {
-    $b1 = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $b1);
-    $b1 = str_replace(array("\r\n", "\r", "\n", "\t", '  ', '    ', '    '), '', $b1);
-    return $b1;
-}
 ?>
 
 

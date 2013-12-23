@@ -1,9 +1,9 @@
 <?php
-/*
+/**
  * Сервис обновления IdealCMS
  * Должен присутствовать на каждом сайте, отвечает за получение новых версий cms и модулей,
  * их применение
- * */
+ */
 
 ini_set('display_errors', 'Off');
 
@@ -113,7 +113,7 @@ if ($archive === true){
     }
     sort($updates);
 
-    //Получаем список файлов выполненных ранее апдейтов
+    // Получаем список файлов выполненных ранее апдейтов
     $applied = $dbAdapter->queryArray('SELECT `filename`  FROM `i_w8_changelog`');
     foreach($applied as $key => $value){
         $applied[$key] = $value['filename'];
