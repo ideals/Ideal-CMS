@@ -37,7 +37,10 @@ if ($error) {
  * @param int $height Высота нового изображения
  * @param string $resizedImgPath Путь к новому изображению
  * @param string $imgName Имя нового изображения
- * @param array $color Цвет фона изображения
+ * @param array $color Цвет фона изображения,
+ * необходимо указывать чтобы ширина и высота нового изображения являлись максимальными его значениями
+ * и не обрезали изображение,
+ * а также пространство добавляемое для изображения, окрашивалось указанным цветом
  * @return void
  */
 function resizeImg($imgPath, $width, $height, $resizedImgPath, $imgName, $color)
