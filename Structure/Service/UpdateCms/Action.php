@@ -16,7 +16,7 @@ use Ideal\Core\Config;
 
 <?php
 // Сервер обновлений
-$getVersionScript = 'http://idealcms/update/version.php';
+$getVersionScript = 'http://idealcms.ru/update/version.php';
 
 $config = \Ideal\Core\Config::getInstance();
 
@@ -32,21 +32,18 @@ $url = $getVersionScript . '?domain=' . $domain . '&ver=' .  urlencode(serialize
 $nowVersions = json_encode($nowVersions);
 
 // Подключаем библиотеку для использования jsonp
-echo <<<SCREPT
-    <script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/jquery.jsonp-2.4.0.min.js"> </script>
-SCREPT;
+echo '<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/jquery.jsonp-2.4.0.min.js"> </script>';
 
 function getVersions() {
-    $ds = DIRECTORY_SEPARATOR;
     // Получаем файл README.md для cms
     $config = Config::getInstance();
     $mdFile = 'README.md';
     // Путь к файлу README.md для cms
-    $cmsMdFileName = DOCUMENT_ROOT . $ds . $config->cmsFolder . $ds . "Ideal" . $ds . $mdFile;
+    $cmsMdFileName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Ideal" . '/' . $mdFile;
     // Получаем версию cms
     $ver = getVersionFromFile($cmsMdFileName);
     // Ищем файлы README.md в модулях
-    $modDirName = DOCUMENT_ROOT . $ds . $config->cmsFolder . $ds . "Mods";
+    $modDirName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Mods";
     // Получаем массив папок модулей
     $modDirs = scandir($modDirName);
     // Получаем версии модулей
@@ -58,7 +55,7 @@ function getVersions() {
             continue;
         }
         //
-        $modDir  = $modDirName . $ds . $dir  . $ds . $mdFile;
+        $modDir  = $modDirName . '/' . $dir  . '/' . $mdFile;
         $modsVerOne = getVersionFromFile($modDir);
         if ($modsVerOne) {
             $modsVer = array_merge($modsVer, $modsVerOne);
@@ -161,7 +158,7 @@ function btw($b1) {
                 config: '<?php echo $config->cmsFolder; ?>'
             },
             success: function(data){
-                //Выводим сообщение и обновляем страницу
+                // Выводим сообщение и обновляем страницу
                 var message = $.parseJSON(data);
                 alert(message['message']);
                 location.reload();
