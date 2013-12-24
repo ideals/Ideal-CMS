@@ -326,6 +326,13 @@ abstract class Model
         $model = $this;
         $count = count($this->path);
 
+        $class = get_class($this);
+        if($class == "Ideal\\Structure\\Home\\Site\\Model"){
+            $model->setPath($this->path);
+            $model->setPrevModel($this);
+            return $model;
+
+        }
         if ($count > 1) {
             $end = $this->path[($count - 1)];
             $prev = $this->path[($count - 2)];
