@@ -17,10 +17,10 @@ define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DO
 set_include_path(
     get_include_path()
     . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder
-    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/IdealCustom/'
+    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal.c/'
     . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal/'
-    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/ModulesCustom/'
-    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Modules/'
+    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Mods.c/'
+    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Mods/'
 );
 
 // Подключаем автозагрузчик классов
@@ -47,18 +47,21 @@ $getFileScript = $srv . '/get.php';
 $uploadDir = '/tmp/update/';
 
 // Папка для разархивации файлов новой CMS
-define('UPDATES_DIR', DOCUMENT_ROOT . $cmsFolder . '/Ideal/Setup/Update');
+// Пример C:\www\idealcms\tmp\Setup\Update
+define('UPDATES_DIR', DOCUMENT_ROOT . '/tmp/Setup/Update');
 
 $dbAdapter = Ideal\Core\Db::getInstance();
 
 
 // Загрузка файла
 if (isset($_POST['version']) && (isset($_POST['name']))) {
-    $file = file_get_contents($getFileScript . '?name=' . urlencode(serialize($_POST['name'])) . '&ver=' . $_POST['version']);
+    $udName  = $_POST['name'];
+    $a =  $getFileScript . '?name=' . urlencode(serialize($udName )) . '&ver=' . $_POST['version'];
+    $file = file_get_contents($getFileScript . '?name=' . urlencode(serialize($udName )) . '&ver=' . $_POST['version']);
 
     // Если вместо файла найдено сообщение, выводим его
-    $msg = substr($file, 0, 5);
-    if ($msg === "(msg)"){
+    $prefix = substr($file, 0, 5);
+    if ($prefix === "(msg)"){
         $msg = substr($file, 5, strlen($file));
         $msg = json_decode($msg);
     }
@@ -73,19 +76,43 @@ if (isset($_POST['version']) && (isset($_POST['name']))) {
         exit(json_encode($message));
     }
 
-    file_put_contents($_SERVER['DOCUMENT_ROOT'] . $uploadDir . 'tempFile', $file);
-    $archive = $_SERVER['DOCUMENT_ROOT'] . $uploadDir . 'tempFile';
+    // Если получили md5
+    if ($prefix === "(md5)"){
+        $fileGet['md5'] = substr($file, 5, strpos($file, 'md5end') - 5);
+        $fileGet['file'] = substr($file, strpos($file, 'md5end') + 6);
+    }
+
+    if (!isset($fileGet['md5'])) {
+        $message = array(
+            'message' => 'Не удалось получить хеш получаемого файла'
+        );
+        exit(json_encode($message));
+    }
+
+
+    // Путь к файлу архива
+    // Пример C:\www\idealcms\tmp\update
+    $archive = $_SERVER['DOCUMENT_ROOT'] . $uploadDir . $udName ;
+    file_put_contents($archive, $fileGet['file']);
+
+    if (md5_file($archive) != $fileGet['md5']) {
+        $message = array(
+            'message' => 'Полученный файл повреждён (хеш не совпадает)'
+        );
+        exit(json_encode($message));
+    }
 }
 
-
+// После успешной загрузки архива, распаковываем его
 if (isset($archive)) {
     $zip = new ZipArchive;
     $res = $zip->open($archive);
-    // todo Стирать файлы перед распаковкой
+    // Очищаем папку перед распаковкой в неё фалов
+    removeDirectory(UPDATES_DIR, true);
     if ($res === true) {
         $zip->extractTo(UPDATES_DIR);
         $zip->close();
-        unlink($_SERVER['DOCUMENT_ROOT'] . $uploadDir.'tempFile');
+        unlink($_SERVER['DOCUMENT_ROOT'] . $uploadDir . $udName );
         $archive = true;
     } else {
         $message = array(
@@ -97,48 +124,36 @@ if (isset($archive)) {
 
 // todo Установка апдейтов из папки Ideal/Setup/Update
 
-
+// Если разархивирование вышло успешно
 if ($archive === true){
-    // Получаем список файлов апдейтов
-    $updates = array();
-    if (is_dir(UPDATES_DIR)) {
-        if ($dh = opendir(UPDATES_DIR)) {
-            while (($file = readdir($dh)) !== false) {
-                if (is_file(UPDATES_DIR . '/' . $file)) {
-                    $updates[] = $file;
-                }
-            }
-            closedir($dh);
-        }
+    $ds = DIRECTORY_SEPARATOR;
+    // Определяем путь к тому что мы обновляем, cms или модули
+    if ($udName  == "Ideal CMS") {
+        // Путь к cms
+        $updateCore = DOCUMENT_ROOT . $ds . $config->cmsFolder . $ds . "Ideal";
+    } else {
+        // Путь к модулям
+        $updateCore = DOCUMENT_ROOT . $ds . $config->cmsFolder. $ds . "Mods". $ds . $udName;
     }
-    sort($updates);
+    // Переименовывем папку, которую собираемся заменить
+    if (!rename($updateCore , $updateCore . '_old')) {
+        $message = array(
+            'message' => 'Не удалось обновить'
+        );
+        exit(json_encode($message));
+    }
+    // Перемещаем новую папку на место старой
+    if (!rename(UPDATES_DIR,  $updateCore)) {
+        $message = array(
+            'message' => 'Не удалось обновить'
+        );
+        exit(json_encode($message));
+    }
+    // Удаляем старую директорию
+    removeDirectory($updateCore . '_old');
 
-    //Получаем список файлов выполненных ранее апдейтов
-    $applied = $dbAdapter->queryArray('SELECT `filename`  FROM `i_w8_changelog`');
-    foreach($applied as $key => $value){
-        $applied[$key] = $value['filename'];
-    }
-
-    // Применяем все новые апдейты
-    $newApplied = array();
-    foreach ($updates as $update) {
-        if (!in_array($update, $applied)) {
-            switch (getExtension($update)) {
-                case 'sql':
-                    processSql($update);
-                    $newApplied[] = $update;
-                    break;
-                case 'php':
-                    processPhp($update);
-                    $newApplied[] = $update;
-                    break;
-                default:
-                    // Все остальные расширения пропускаем
-            }
-        }
-    }
     $message = array(
-        'message' => "New applied updates:\n" . implode("\n", $newApplied) . "\n \nTotal applied: " . count($newApplied)
+        'message' => 'Обновление прошло успешно'
     );
     exit(json_encode($message));
 }
@@ -179,4 +194,20 @@ function processPhp($filename) {
 function updateChangelog($filename) {
     global $dbAdapter;
     $dbAdapter->query('INSERT INTO `i_w8_changelog` (`filename`) VALUES ("' . $filename . '")');
+}
+
+/*
+ * Удаление директории или её очистка
+ * @param string $dir Папка которую необходимо удалить или очистить
+ * @param bool $clear Если значение лож, то удаляем папку, если истина, очищаем
+ *  */
+function removeDirectory($dir, $clear = false) {
+    if ($objs = glob($dir."/*")) {
+        foreach($objs as $obj) {
+            is_dir($obj) ? removeDirectory($obj) : unlink($obj);
+        }
+    }
+    if (!$clear) {
+        rmdir($dir);
+    }
 }
