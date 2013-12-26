@@ -1,4 +1,17 @@
 <?php
+/*
+ * Библиотека изменения размера изображений
+ *
+ * Для работы скрипта необходимо в файл .htaccess добавить
+ * RewriteRule ^images/resized/(.*) /electro/Ideal/Library/Resize/image.php?img=$1 [L,QSA]
+ * images/resized/ - часть ссылки, указываемой для изображений;
+ * /electro/Ideal/Library/Resize/image.php - путь к библиотеке.
+ *
+ * Пример ссылки для изображения:
+ * /images/resized/150x150xFFFFFF/images/1c/big/b8/b8d1a5aa-7fab-11e1-9984-002354786c00.jpeg
+ * 150x150xFFFFFF - 150 ширина, 150 высота, FFFFFF цвет фона нового изображения;
+ * /images/1c/big/b8/b8d1a5aa-7fab-11e1-9984-002354786c00.jpeg - путь к исходному изображению.
+ * */
 
 $error = true;
 if ($_GET['img'] != '') {
