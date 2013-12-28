@@ -28,8 +28,8 @@ RewriteRule ^(.*)/$ $1.html [R=permanent,L]
 [[COMMENT_FOR_SUBFOLDER]]RewriteRule ^index.html$ $1 [R=permanent,L]
 RewriteRule ^(.*)/index.html$ $1.html [R=permanent,L]
 
-#START redirect
-#END redirect
+#redirect#
+#redirect#
 
 # Если файл есть на диске, с ним ничего не происходит
 RewriteCond %{REQUEST_FILENAME} -f [OR]
