@@ -26,12 +26,12 @@ echo '<p>Папка с архивами: &nbsp;' . $backupPart . '</p>';
 // Получение списка файлов
 $dumpFiles = array();
 
-if ($dh = opendir($backupPart)) {
+if (is_dir($backupPart)) {
     echo '<table id="dumpTable" class="table table-hover">';
-    while (($file = readdir($dh)) !== false) {
-        if (strripos($file, 'dump_') === false) continue;
-        //$dumpFiles[] = $file;
-        //$fn = str_replace('dump_', '',$file);
+    $files = glob($backupPart . '/dump*.gz');
+    rsort($files);
+    foreach ($files as $file) {
+        $file = basename($file);
         $year = substr($file,5,4);
         $month = substr($file,10,2);
         $day = substr($file,13,2);
@@ -43,7 +43,7 @@ if ($dh = opendir($backupPart)) {
 
         echo '<tr id="' . $file . '"><td>';
         echo '<a href="" onClick="return downloadDump(\'' . $file . '\')"> ';
-        echo "$day/$month/$year - $hour:$minute:$second" . '</a></td>';
+        echo "$day.$month.$year - $hour:$minute:$second" . '</a></td>';
         echo '<td>';
         echo '<button class="btn btn-danger btn-mini" title="Удалить" onclick="delDump(\'' . $file . '\'); false;">';
         echo ' <i class="icon-remove icon-white"></i> ';
@@ -119,7 +119,7 @@ function delDump(nameFile) {
                 //Выводим сообщение
                 var message = data;
                 if (message == true) {
-                    var el = document.getElementById(idFile);
+                    var el = document.getElementById(nameFile);
                     el.parentNode.removeChild(el);
                     $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Файл успешно удалён');
                 } else {
@@ -151,7 +151,7 @@ function createDump() {
             var message = data;
             if (message.length > 1) {
                 $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Копия БД создана');
-                $('#dumpTable').append(data);
+                $('#dumpTable').prepend(data);
             } else {
                 $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при создании копии БД');
             }
