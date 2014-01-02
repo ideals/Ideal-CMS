@@ -29,16 +29,16 @@ if (isset($_POST['createMysqlDump'])) {
     $time = time();
 
     // Имя файла дампа
-    $dumpName = 'dump_' . date('Y.n.d_H.i.s', $time) . '.sql';
+    $dumpName = 'dump_' . date('Y.m.d_H.i.s', $time) . '.sql';
 
-    //Запускаем процесс выгрузки
+    // Запускаем процесс выгрузки
     $tes = $dump->start($backupPart . DIRECTORY_SEPARATOR . $dumpName);
 
-    $dumpName .= '.gz';
+    $dumpName = $backupPart . '/' . $dumpName . '.gz';
 
     // Формируем строку с новым файлом
-    echo '<tr id="' . $dumpName . '"><td><a href="' . $backupPart . $dumpName . '"> ' .
-            date('d', $time) . '/' . date('n', $time) . '/' . date('Y', $time) . ' - ' . date('H', $time) . ':' . date('i', $time) . ':' . date('s', $time)
+    echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' . $dumpName . '\')"> ' .
+            date('d.m.Y - H:i:s', $time)
         . '</a></td>';
     echo '<td><button class="btn btn-danger btn-mini" title="Удалить" onclick="delDump(\'' . $dumpName . '\'); false;"> <i class="icon-remove icon-white"></i> </button></td>';
     echo '</tr>';
