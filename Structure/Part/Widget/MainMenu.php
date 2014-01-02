@@ -27,7 +27,7 @@ class MainMenu extends \Ideal\Core\Widget
         $menu = $db->select($table, $par, 'cid');
 
         $path = $this->model->getPath();
-        $object = $this->model->object;
+        $end = end($path);
 
         foreach ($menu as $k => $v) {
             $menu[$k]['link'] = 'href="' . $url->getUrl($v) . '"';
@@ -35,8 +35,8 @@ class MainMenu extends \Ideal\Core\Widget
             // Определяем активен ли данный пункт меню
             $menu[$k]['isActivePage'] = 0;
             if (isset($path[1]['ID']) and ($v['ID'] == $path[1]['ID'])) {
-                if (($object['ID'] == $v['ID']) AND isset($object['lvl']) AND ($object['lvl'] == 1)
-                        AND ($object['structure_path'] == $path[1]['structure_path'])) {
+                if (($end['ID'] == $v['ID']) AND isset($end['lvl']) AND ($end['lvl'] == 1)
+                        AND ($end['prev_structure'] == $path[1]['prev_structure'])) {
                     $menu[$k]['link'] = '';
                 }
                 $menu[$k]['isActivePage'] = 1;

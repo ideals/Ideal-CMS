@@ -12,18 +12,26 @@ abstract class Model extends Core\Model
 
     public function getTitle()
     {
-        if (isset($this->object['title']) AND $this->object['title'] != '') {
-            return $this->object['title'];
+        $end = $this->pageData;
+        if (isset($end['title']) AND $end['title'] != '') {
+            return $end['title'];
         } else {
-            return $this->object['name'];
+            return $end['name'];
         }
     }
 
-
-    public function getHeader($header = '')
+    public function getHeader()
     {
+        $header = '';
+        if (isset($this->pageData['template']['content'])) {
+            // Если есть шаблон с контентом, пытаемся из него извлечь заголовок H1
+            list($header, $text) = $this->extractHeader($this->pageData['template']['content']);
+            $this->pageData['template']['content'] = $text;
+        }
+
         if ($header == '') {
-            $header = $this->object['name'];
+            // Если заголовка H1 в тексте нет, берём его из названия name
+            $header = $this->pageData['name'];
         }
         return $header;
     }
@@ -39,36 +47,21 @@ abstract class Model extends Core\Model
         return array($header, $text);
     }
 
-
-    public function getTemplatesVars()
-    {
-        $templatesVars = array();
-        foreach ($this->fields as $k => $v) {
-            // Пропускаем все поля, которые не являются шаблоном
-            if (strpos($v['type'], '_Template') === false) continue;
-            $className = Util::getClassName($this->object[$k], 'Template') . '\\Model';
-            $structurePath = $this->object['structure_path'] . '-' . $this->object['ID'];
-            $template = new $className($structurePath);
-            $templatesVars[$k] = $template->getObject($this);
-        }
-        return $templatesVars;
-    }
-
-
     public function getMetaTags($xhtml = false)
     {
         $meta = '';
         $xhtml = ($xhtml) ? '/' : '';
+        $end = end($this->path);
 
-        if (isset($this->object['description']) AND $this->object['description'] != '') {
+        if (isset($end['description']) AND $end['description'] != '') {
             $meta .= '<meta name="description" content="'
-                   . str_replace('"', '&quot;', $this->object['description'])
+                   . str_replace('"', '&quot;', $end['description'])
                    . '" ' . $xhtml . '>';
         }
 
-        if (isset($this->object['keywords']) AND $this->object['keywords'] != '') {
+        if (isset($end['keywords']) AND $end['keywords'] != '') {
             $meta .= '<meta name="keywords" content="'
-                   . str_replace('"', '&quot;', $this->object['keywords'])
+                   . str_replace('"', '&quot;', $end['keywords'])
                    . '" ' . $xhtml . '>';
         }
 
@@ -97,12 +90,9 @@ abstract class Model extends Core\Model
         $breadCrumbs = array();
         $url = new Field\Url\Model();
         foreach ($path as $v) {
-            $link = '';
-            if ($v['is_skip']) continue;
-            if (!isset($v['is_skip']) OR $v['is_skip'] == 0) {
-                $url->setParentUrl($pars);
-                $link = $url->getUrl($v);
-            }
+            if (isset($v['is_skip']) && $v['is_skip']) continue;
+            $url->setParentUrl($pars);
+            $link = $url->getUrl($v);
             $pars[] = $v;
             if ($link == '/') {
                 $breadCrumbs[] = array(
@@ -121,5 +111,5 @@ abstract class Model extends Core\Model
     }
 
 
-    abstract function detectPageByUrl($url, $path);
+    abstract function detectPageByUrl($path, $url);
 }

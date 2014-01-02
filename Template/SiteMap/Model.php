@@ -1,27 +1,46 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2013 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Template\SiteMap;
 
 use Ideal\Core\Config;
-use Ideal\Core\Db;
 use Ideal\Core\Util;
 
+/**
+ * Класс построения html-карты сайта на основании структуры БД
+ *
+ */
 class Model extends \Ideal\Core\Admin\Model
 {
-
-    public function getObject($parentModel)
+    /**
+     * Извлечение настроек карты сайта из своей таблицы,
+     * построение карты сайта и преобразование её в html-формат
+     *
+     * @return array
+     */
+    public function getPageData()
     {
-        $this->setObjectByStructurePath($this->structurePath);
+        $this->setPageDataByPrevStructure($this->prevStructure);
 
         // Считываем из БД все открытые разделы
         $list = $this->getList();
 
         // Строим текстовую переменную с ul-списком разделов
-        $this->object['content'] .=  $this->createSiteMap($list);
+        $this->pageData['content'] .=  $this->createSiteMap($list);
 
-        return $this->object;
+        return $this->pageData;
     }
 
-
+    /**
+     * Построение карты сайта в виде дерева
+     *
+     * @return array
+     */
     public function getList()
     {
         $config = Config::getInstance();
@@ -39,9 +58,16 @@ class Model extends \Ideal\Core\Admin\Model
         return $elements;
     }
 
-
+    /**
+     * Рекурсивный метод построения дерева карты сайта
+     *
+     * @param $path
+     * @param $elements
+     * @return array
+     */
     protected function recursive($path, $elements)
     {
+        $config = Config::getInstance();
         $end = end($path);
         $newElements = array();
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
@@ -50,10 +76,12 @@ class Model extends \Ideal\Core\Admin\Model
             if (!isset($element['structure']) OR ($element['structure'] == $end['structure'])) {
                 continue;
             }
-            // Если структуры не совпадают, считываем элементы вложенной структуры
+            // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
+            // считываем элементы вложенной структуры
+            $structure = $config->getStructureByName($end['structure']);
             $className = Util::getClassName($element['structure'], 'Structure') . '\\Site\\Model';
-            $structurePath = $element['structure_path'] . '-' . $element['ID'];
-            $nextStructure = new $className($structurePath);
+            $prevStructure = $structure['ID'] . '-' . $element['ID'];
+            $nextStructure = new $className($prevStructure);
             $fullPath = array_merge($path, array($element));
             $nextStructure->setPath($fullPath);
             // Считываем элементы из вложенной структуры
@@ -103,12 +131,6 @@ class Model extends \Ideal\Core\Admin\Model
         }
         $str .= "</li>\n</ul>\n";
         return $str;
-    }
-
-
-    public function setObjectNew()
-    {
-
     }
 
 }

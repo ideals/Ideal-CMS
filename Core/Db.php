@@ -86,7 +86,7 @@ class Db
     function query($_sql)
     {
         $config = Config::getInstance();
-        if (isset($config->debug)) {
+        if ($config->debug != '') {
             \FB::log($_sql);
         }
 

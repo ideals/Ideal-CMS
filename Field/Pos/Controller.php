@@ -53,7 +53,8 @@ HTML;
         $model = $this->model;
 
         $newPos = $this->newValue;
-        $oldPos = (isset($model->object['pos'])) ? $model->object['pos'] : 0;
+        $pageData = $this->model->getPageData();
+        $oldPos = (isset($pageData['pos'])) ? $pageData['pos'] : 0;
 
         // Если был указан и не изменился, то оставляем как есть
         // Если был указан и изменился, перенумеровываем список
@@ -62,7 +63,7 @@ HTML;
             $this->newValue = $model->getNewPos();
         } elseif ($oldPos != $newPos) {
             $posModel = new Model();
-            $this->sqlAdd = $posModel->movePos($oldPos, $newPos, $model->getStructurePath());
+            $this->sqlAdd = $posModel->movePos($oldPos, $newPos, $model->getPrevStructure());
             $this->newValue = $oldPos; // возвращаем старое значение, т.к. все перестановки идут в movePos
         }
 

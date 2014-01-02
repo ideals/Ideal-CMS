@@ -5,45 +5,38 @@ use Ideal\Core;
 use Ideal\Core\Config;
 use Ideal\Core\View;
 use Ideal\Core\Request;
-use Ideal\Core\Pagination;
 
-class Controller extends Core\Controller
+class Controller
 {
-    /** @var $model Model */
+    /* @var $model Model Модель соответствующая этому контроллеру */
     protected $model;
-
+    /* @var $path array Путь к этой странице, включая и её саму */
+    protected $path;
+    /* @var $view View Объект вида — twig-шаблонизатор */
+    protected $view;
     /** @var bool Включение листалки (пагинации) */
     protected $isPager = true;
 
     /**
      * Отображение структуры в браузере
      * @param Router $router
-     * @return
-     * @internal param $structure
-     * @internal param $actionName
-     * @internal param $path
+     * @return string Содержимое отображаемой страницы
      */
     function run(Router $router)
     {
-        $this->path  = $router->getPath();
         $this->model = $router->getModel();
 
-        $controllerModelClass = str_replace('Controller', 'Model', get_called_class());
-        $modelClass = get_class($this->model);
-        if ($controllerModelClass != $modelClass) {
-            // Если определенная роутером модель не совпадает с моделью контроллера,
-            // то нужно определить модель контроллера, передав ей path и structurePath
-            $end = end($this->path);
-            $structurePath = $this->model->getStructurePath() . '-' . $end['ID'];
-            $this->model = new $controllerModelClass($structurePath);
-            $this->model->setPath($this->path);
-        }
-        $this->model->object = end($this->path);
+        $this->model->initPageData();
 
-        $request = new Request();
-        $actionName = $request->action;
-        if ($actionName == '') {
-            $actionName = 'index';
+        // Определяем и вызываем требуемый action у контроллера
+        if ($router->is404()) {
+            $actionName = 'error404';
+        } else {
+            $request = new Request();
+            $actionName = $request->action;
+            if ($actionName == '') {
+                $actionName = 'index';
+            }
         }
 
         $actionName = $actionName . 'Action';
@@ -66,10 +59,15 @@ class Controller extends Core\Controller
         $this->view->title = $this->model->getTitle();
         $this->view->metaTags = $this->model->getMetaTags($helper->xhtml);
 
+        $this->finishMod($actionName);
+
         return $this->view->render();
     }
 
-
+    /**
+     * Инициализация twig-шаблона сайта
+     * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     */
     public function templateInit($tplName = '')
     {
         // Инициализация общего шаблона страницы
@@ -101,18 +99,36 @@ class Controller extends Core\Controller
         $this->view->loadTemplate($tplName);
     }
 
-
-    public function getHttpStatus()
+    /**
+     * Получение дополнительных HTTP-заголовков
+     * По умолчанию система ставит только заголовок Content-Type, но и его можно
+     * переопределить в этом методе.
+     *
+     * @return array Массив где ключи - названия заголовков, а значения - содержание заголовков
+     */
+    public function getHttpHeaders()
     {
-        return '';
+        return array(
+            // Дата последней модификации страницы
+            // 'Last-Modified' => gmdate('D, d M Y H:i:s', $lastMod ) . ' GMT',
+            // Затирание информации о языке, на котором написан сайт
+            // 'X-Powered-By' => 'Hello, man!',
+            // Дата завершения срока годности странички :)
+            // 'Expires' => gmdate('D, d M Y H:i:s')+900 . ' GMT\r\n',
+            // Варианты управления кэшем. Можно выбрать только один из вариантов.
+            // 'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            // 'Cache-Control' => 'post-check=0, pre-check=0',
+            // 'Cache-Control' => 'Pragma: no-cache',
+        );
     }
 
-
-    public function getLastMod()
+    /**
+     * Внесение финальных изменений в шаблон, после всех-всех-всех
+     * @param string $actionName
+     */
+    public function finishMod($actionName)
     {
-        return '';
     }
-
 
     /**
      * Действие по умолчанию для большинства контроллеров внешней части сайта.
@@ -123,19 +139,14 @@ class Controller extends Core\Controller
     {
         $this->templateInit();
 
-        $header = '';
-        $templatesVars = $this->model->getTemplatesVars();
+        // Выдёргиваем заголовок из template['content']
+        $this->view->header = $this->model->getHeader();
 
-        if (isset($templatesVars['template']['content'])) {
-            list($header, $text) = $this->model->extractHeader($templatesVars['template']['content']);
-            $templatesVars['template']['content'] = $text;
-        }
-
-        foreach ($templatesVars as $k => $v) {
+        // Перенос данных страницы в шаблон
+        $pageData = $this->model->getPageData();
+        foreach ($pageData as $k => $v) {
             $this->view->$k = $v;
         }
-
-        $this->view->header = $this->model->getHeader($header);
 
         $request = new Request();
         $page = intval($request->page);
@@ -150,4 +161,22 @@ class Controller extends Core\Controller
         }
     }
 
+    /**
+     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
+     */
+    public function error404Action()
+    {
+        $name = $title = 'Страница не найдена';
+        $this->templateInit('404.twig');
+
+        // Добавляем в path пустой элемент
+        $path = $this->model->getPath();
+        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
+        $this->model->setPath($path);
+
+        // Устанавливаем нужный нам title
+        $pageData = $this->model->getPageData();
+        $pageData['title'] = $title;
+        $this->model->setPageData($pageData);
+    }
 }

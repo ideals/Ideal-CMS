@@ -13,6 +13,12 @@ class Controller extends AbstractController
     {
         parent::setModel($model, $fieldName, $groupName);
 
+        if (isset($this->field['values'])) {
+            // Если значения селекта заданы с помощью массива в поле values
+            $this->list = $this->field['values'];
+            return;
+        }
+
         // Загоняем в $this->list список значений select
         $className = $this->field['class'];
         $getter = new $className();

@@ -18,6 +18,7 @@ table.table-hover tbody tr.inactive:hover td, table.table-hover tbody tr.not-men
     background-color: #BED1DB!important;
 }
 table.table tr.not-menu td a {
+	/*test*/
     color: slategray;
     font-weight: bold;
 }

@@ -8,114 +8,113 @@ use Ideal\Core\Request;
 
 class Router
 {
-    protected $path = array();
+    /** @var Model Модель активной страницы */
+    protected $model = null;
+    /** @var string Название контроллера активной страницы */
     protected $controllerName = '';
-    public $is404 = false;
-    protected $par;
 
-
+    /**
+     * Производит роутинг исходя из запрошенного URL-адреса
+     *
+     * Конструктор генерирует событие onPreDispatch, затем определяет модель активной страницы
+     * и генерирует событие onPostDispatch.
+     * В результате работы конструктора инициализируются переменные $this->model и $this->ControllerName
+     */
     public function __construct()
     {
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
 
-        if (count($this->path) == 0) {
-            $this->path = $this->routeByPar();
+        if (is_null($this->model)) {
+            $this->model = $this->routeByPar();
         }
 
         $pluginBroker->makeEvent('onPostDispatch', $this);
     }
 
-
-    public function getPath()
-    {
-        return $this->path;
-    }
-
-
-    public function setControllerName($name)
-    {
-        $this->controllerName = $name;
-    }
-
-
+    /**
+     * Возвращает название контроллера для активной страницы
+     *
+     * @return string Название контроллера
+     */
     public function getControllerName()
     {
         if ($this->controllerName != '') {
             return $this->controllerName;
         }
 
-        // TODO тут вообще то надо брать не последний элемент, а предпоследний
-        $end = end($this->path);
+        $path = $this->model->getPath();
+        $end = end($path);
 
         $controllerName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Controller';
 
         return $controllerName;
     }
 
-
+    /**
+     * Определение модели активной страницы и пути к ней на основе переменной $_GET['par']
+     *
+     * @return Model Модель активной страницы
+     */
     protected function routeByPar()
     {
-        // Определяем стартовую структуру
-        $nextStructure = $this->getStartStructure();
+        $config = Config::getInstance();
 
-        $par = explode('-', $this->par);
-
-        unset($par[0]); // убираем первый элемент - ID начальной структуры
-        $path = array($nextStructure);
-        $structurePath = $nextStructure['ID'];
-
-        // Определяем оставшиеся элементы пути
-        do {
-            $modelClassName = Util::getClassName($nextStructure['structure'], 'Structure') . '\\Admin\\Model';
-            $structure = new $modelClassName($structurePath);
-            $par = $structure->detectPageByIds($par);
-            if ($par == 404) {
-                $this->is404 = true;
-                return $structure;
-            }
-            $newPath = $structure->getPath();
-            $path = array_merge($path, $newPath);
-            $nextStructure = end($path);
-            $structurePath .= '-' . $nextStructure['ID'];
-        } while (count($par) != 0);
-
-        return $path;
-    }
-
-
-    protected function getStartStructure()
-    {
-        // Инициализируем объект запроса
+        // Инициализируем $par — массив ID к активному объекту
         $request = new Request();
         $par = $request->par;
 
-        $config = Config::getInstance();
-        $structures = $config->structures;
-
-        // Определяем стартовую структуру
-        $nextStructure = '';
         if ($par == '') {
-            $nextStructure = reset($structures);
-            $par = array($nextStructure['ID']);
-            $this->par = $nextStructure['ID'];
-            $request->par = $this->par;
+            // par не задан, берём стартовую структуру из списка структур
+            $path = array($config->getStartStructure());
+            $prevStructureId = $path[0]['ID'];
+            $par = array();
         } else {
-            $this->par = $par;
+            // par задан, нужно его разложить в массив
             $par = explode('-', $par);
-            foreach ($structures as $v) {
-                if ($v['ID'] == $par[0]) {
-                    $nextStructure = $v;
-                    break;
-                }
-            }
+            // Определяем первую структуру
+            $prevStructureId = $par[0];
+            $path = array($config->getStructureById($prevStructureId));
+            unset($par[0]); // убираем первый элемент - ID начальной структуры
         }
 
-        if ($nextStructure == '') {
-            echo 'Неправильный ID первой структуры: ' . $par;
-            exit;
-        }
+        $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Admin\\Model';
+        /* @var $structure Model */
+        $structure = new $modelClassName('0-' . $prevStructureId);
 
-        return $nextStructure;
+        // Запускаем определение пути и активной модели по $par
+        $model = $structure->detectPageByIds($path, $par);
+
+        return $model;
+    }
+
+    /**
+     * Возвращает объект модели активной страницы
+     *
+     * @return Model Инициализированный объект модели активной страницы
+     */
+    public function getModel()
+    {
+        return $this->model;
+    }
+
+    /**
+     * Устанавливает название контроллера для активной страницы
+     *
+     * Обычно используется в обработчиках событий onPreDispatch, onPostDispatch
+     *
+     * @param $name string Название контроллера
+     */
+    public function setControllerName($name)
+    {
+        $this->controllerName = $name;
+    }
+
+    /**
+     * Возвращает статус 404-ошибки, есть он или нет
+     */
+    public function is404()
+    {
+        return $this->model->is404;
     }
 }

@@ -3,6 +3,7 @@ namespace Ideal\Core;
 
 use Ideal\Core\Config;
 use Ideal\Core\Db;
+use Ideal\Core\Util;
 use Ideal\Field\Url;
 use Ideal\Core\Pagination;
 
@@ -11,16 +12,19 @@ abstract class Model
 {
     public $params;
     public $fields;
-    public $object;
     protected $_table;
-    protected $structurePath;
+    protected $prevStructure;
     protected $path = array();
     protected $parentUrl;
     protected $module;
+    protected $prevModel;
+    protected $pageData;
+    /** @var bool Флаг 404-ошибки */
+    public $is404 = false;
 
-    public function __construct($structurePath)
+    public function __construct($prevStructure)
     {
-        $this->structurePath = $structurePath;
+        $this->prevStructure = $prevStructure;
 
         $config = Config::getInstance();
 
@@ -63,9 +67,9 @@ abstract class Model
     }
 
 
-    public function setStructurePath($structurePath)
+    public function setPrevStructure($prevStructure)
     {
-        $this->structurePath = $structurePath;
+        $this->prevStructure = $prevStructure;
     }
 
 
@@ -74,30 +78,85 @@ abstract class Model
         return $this->path;
     }
 
-
-    public function setObjectByStructurePath($structurePath)
+    public function setPageDataById($id)
     {
         $db = Db::getInstance();
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE structure_path='{$structurePath}'";
-        $object = $db->queryArray($_sql);
-        if (isset($object[0]['ID'])) {
+        $_sql = "SELECT * FROM {$this->_table} WHERE ID='{$id}'";
+        $pageData = $db->queryArray($_sql);
+        if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по ID ничего не нашлось
-            $this->object = $object[0];
+            $this->setPageData($pageData[0]);
         }
     }
 
 
+    public function setPageDataByPrevStructure($prevStructure)
+    {
+        $db = Db::getInstance();
+
+        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure='{$prevStructure}'";
+        $pageData = $db->queryArray($_sql);
+        if (isset($pageData[0]['ID'])) {
+            // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
+            $this->setPageData($pageData[0]);
+        }
+    }
+
+    // Получаем информацию о странице
+    public  function getPageData()
+    {
+        if (is_null($this->pageData)) {
+            $this->initPageData();
+        }
+        return $this->pageData;
+    }
+
+    // Устанавливаем информацию о странице
+    public  function setPageData($pageData)
+    {
+        $this->pageData = $pageData;
+    }
+
+    public  function initPageData()
+    {
+        $this->pageData = end($this->path);
+
+        // Получаем переменные шаблона
+        $config = Config::getInstance();
+        foreach ($this->fields as $k => $v) {
+            // Пропускаем все поля, которые не являются шаблоном
+            if (strpos($v['type'], '_Template') === false) continue;
+
+            // В случае, если 404 ошибка, и нужной страницы в БД не найти
+            if (!isset($this->pageData[$k])) continue;
+            $className = Util::getClassName($this->pageData[$k], 'Template') . '\\Model';
+            $prev = $this->path[(count($this->path) - 2)];
+            $structure = $config->getStructureByName($prev['structure']);
+            $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
+            $template = new $className($prevStructure);
+            $this->pageData[$k] = $template->getPageData();
+        }
+    }
+
+    /**
+     * Определение сокращённого имени структуры Модуль_Структура по имени этого класса
+     * @return string Сокращённое имя структуры, используемое в БД
+     */
     static function getStructureName()
     {
-        $parts = explode('_', get_called_class());
-
-        return $parts[2];
+        $parts = explode('\\', get_called_class());
+        return $parts[0] . '_' . $parts[2];
     }
 
 
     public function setPath($path)
     {
+        $config = Config::getInstance();
+        $prev = $path[count($path) - 2];
+        $end = end($path);
+        $structure = $config->getStructureByName($prev['structure']);
+        $this->prevStructure = $structure['ID'] . '-' . $end['ID'];
         $this->path = $path;
     }
 
@@ -113,9 +172,9 @@ abstract class Model
     }
 
 
-    public function getStructurePath()
+    public function getPrevStructure()
     {
-        return $this->structurePath;
+        return $this->prevStructure;
     }
 
 
@@ -126,7 +185,7 @@ abstract class Model
     public function getList($page)
     {
         $list = array();
-        $where = $this->getWhere("e.structure_path='{$this->structurePath}'");
+        $where = $this->getWhere("e.prev_structure='{$this->prevStructure}'");
         if ($where === false) return $list;
         $db = Db::getInstance();
 
@@ -151,7 +210,7 @@ abstract class Model
     public function getListCount()
     {
         $db = Db::getInstance();
-        $where = $this->getWhere("e.structure_path='{$this->structurePath}'");
+        $where = $this->getWhere("e.prev_structure='{$this->prevStructure}'");
 
         // Считываем все элементы первого уровня
         $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
@@ -163,7 +222,7 @@ abstract class Model
 
     /**
      * Добавление к where-запросу фильтра по category_id
-     * @param $where Исходная WHERE-часть
+     * @param string $where Исходная WHERE-часть
      * @return string Модифицированная WHERE-часть, с расширенным запросом, если установлена GET-переменная category
      */
     protected function getWhere($where)
@@ -177,15 +236,18 @@ abstract class Model
 
     /**
      * Получение листалки для шаблона и стрелок вправо/влево
-     * @param $pageName Название get-параметра, содержащего страницу
+     * @param string $pageName Название get-параметра, содержащего страницу
      * @return mixed
      */
     public function getPager($pageName)
     {
+        // По заданному названию параметра страницы определяем номер активной страницы
         $request = new Request();
-        $query = $request->getQueryWithout($pageName);
         $page = intval($request->{$pageName});
         $page = ($page == 0) ? 1 : $page;
+
+        // Строка запроса без нашего параметра номера страницы
+        $query = $request->getQueryWithout($pageName);
 
         // todo сделать определение elements_site | elements_admin на основании имени класса
         $onPage = $this->params['elements_site'];
@@ -193,13 +255,106 @@ abstract class Model
         $countList = $this->getListCount();
 
         $pagination = new Pagination();
+        // Номера и ссылки на доступные страницы
         $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, 'page');
-        $pager['prev'] = $pagination->getPrev();
-        $pager['next'] = $pagination->getNext();
+        $pager['prev'] = $pagination->getPrev(); // ссылка на предыдущю страницу
+        $pager['next'] = $pagination->getNext(); // cсылка на следующую страницу
 
         return $pager;
     }
 
+    /**
+     * Определение пути с помощью prev_structure по инициализированному $pageData
+     * @return array Массив, содержащий элементы пути к $pageData
+     */
+    public function detectPath()
+    {
+        $config = Config::getInstance();
 
+        // Определяем локальный путь в этой структуре
+        $localPath = $this->getLocalPath();
 
+        // По первому элементу в локальном пути, опеределяем, какую структуру нужно вызвать
+        $first = $localPath[0];
+
+        list($prevStructureId, $prevElementId) = explode('-', $first['prev_structure']);
+        $structure = $config->getStructureByPrev($first['prev_structure']);
+
+        if ($prevStructureId == 0) {
+            // Если предыдущая структура стартовая — заканчиваем
+            array_unshift($localPath, $structure);
+            return $localPath;
+        }
+
+        // Если предыдущая структура не стартовая —
+        // инициализируем её модель и продолжаем определение пути в ней
+        $className = Util::getClassName($structure['structure'], 'Structure') . '\\Site\\Model';
+
+        $structure = new $className('');
+        $structure->setPageDataById($prevElementId);
+
+        $path = $structure->detectPath();
+        $path = array_merge($path, $this->getLocalPath());
+
+        return $path;
+    }
+
+    /**
+     * Построение пути в рамках одной структуры.
+     * Этот метод обязательно должен быть переопределён перед использованием.
+     * Если он не будет переопределён, то будет вызвано исключение.
+     * @throws \Exception
+     */
+    protected function getLocalPath()
+    {
+        throw new \Exception('Вызов не переопределённого метода getLocalPath');
+    }
+
+    public function setPrevModel($prevModel)
+    {
+        $this->prevModel = $prevModel;
+    }
+
+    public function getPrevModel()
+    {
+        return $this->prevModel;
+    }
+
+    public function detectActualModel()
+    {
+        $config = Config::getInstance();
+        $model = $this;
+        $count = count($this->path);
+
+        if ($count > 1) {
+            $end = $this->path[($count - 1)];
+            $prev = $this->path[($count - 2)];
+
+            $endClass = ltrim(Util::getClassName($end['structure'], 'Structure'), '\\');
+            $thisClass = get_class($this);
+
+            // Проверяем, соответствует ли класс объекта вложенной структуре
+            if (strpos($thisClass, $endClass) === false) {
+                // Если структура активного элемента не равна структуре предыдущего элемента,
+                // то нужно инициализировать модель структуры активного элемента
+                $name = explode('\\', get_class($this));
+                $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\' . $name[3] . '\\Model';
+                $prevStructure = $config->getStructureByName($prev['structure']);
+                /* @var $model Model */
+                $model = new $modelClassName($prevStructure['ID'] . '-' . $end['ID']);
+                $model->setPath($this->path);
+                $model->setPrevModel($this);
+                // TODO сделать метод передачи всех данных из одной модели в другую
+                $model->is404 = $this->is404;
+            }
+        }
+        return $model;
+    }
+
+    public function __get($name)
+    {
+        if ($name == 'object') {
+            throw new \Exception('Свойство object упразднено.');
+        }
+    }
 }

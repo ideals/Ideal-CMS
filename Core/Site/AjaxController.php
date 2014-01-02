@@ -3,7 +3,7 @@ namespace Ideal\Core\Site;
 
 use Ideal\Core\Request;
 
-class AjaxController extends \Ideal\Core\Controller
+class AjaxController extends \Ideal\Core\Site\Controller
 {
     public function run($router)
     {

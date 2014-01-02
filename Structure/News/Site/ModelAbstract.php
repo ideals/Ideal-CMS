@@ -41,7 +41,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     }
 
 
-    public function detectPageByUrl($url, $path)
+    public function detectPageByUrl($path, $url)
     {
         $db = Db::getInstance();
 
@@ -52,7 +52,9 @@ class ModelAbstract extends \Ideal\Core\Site\Model
 
         // Страницу не нашли, возвращаем 404
         if (!isset($news[0]['ID'])) {
-            return '404';
+            $this->path = $path;
+            $this->is404 = true;
+            return $this;
         }
 
         $news[0]['structure'] = 'Ideal_News';
@@ -63,7 +65,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $request = new Request();
         $request->action = 'detail';
 
-        return array();
+        return $this;
     }
 
 
@@ -71,14 +73,15 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
+        $end = end($this->path);
 
-        if (isset($this->object['content'])) {
-            $text = $this->object['content'];
+        if (isset($end['content'])) {
+            $text = $end['content'];
         } else {
             // TODO проработать ситуацию, когда текст в шаблоне (сейчас нет определения модуля)
-            $table = $config->db['prefix'] . 'Template_' . $this->object['template'];
-            $structurePath = $this->object['structure_path'] . '-' . $this->object['ID'];
-            $text = $db->select($table, $structurePath, '', 'structure_path');
+            $table = $config->db['prefix'] . 'Template_' . $end['template'];
+            $prevStructure = $end['prev_structure'] . '-' . $end['ID'];
+            $text = $db->select($table, $prevStructure, '', 'prev_structure');
             $text = $text[0]['content'];
         }
 

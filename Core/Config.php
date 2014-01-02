@@ -1,12 +1,21 @@
 <?php
 namespace Ideal\Core;
 
+use Ideal\Core\Util;
+
 class Config
 {
+    /** @var array Список всех подключённых к проекту структур */
+    public $structures = array();
+    /** @var object Необходима для реализации паттерна Singleton */
     private static $instance;
+    /** @var array Содержит все конфигурационные переменные проекта */
     private $array = array();
 
-
+    /**
+     * Загружает все конфигурационные переменные из файлов config.php и site_data.php
+     * В дальнейшем доступ к ним осуществляется через __get этого класса
+     */
     public function loadSettings()
     {
         // Подключаем описание данных для БД
@@ -15,13 +24,16 @@ class Config
         // Подключаем файл с переменными изменяемыми в админке
         $this->import(require_once($this->cmsFolder . '/site_data.php'));
 
+        // Загрузка данных из конфигурационных файлов подключённых структур
         $this->loadStructures();
     }
 
-
-    public function loadStructures()
+    /**
+     * Загрузка в конфиг данных из конфигурационных файлов подключённых структур
+     */
+    protected function loadStructures()
     {
-        // Проходимся по всем конфигам подключенных структур и добавляем их в общий конфиг
+        // Проходимся по всем конфигам подключённых структур и добавляем их в общий конфиг
         $structures = $this->structures;
         foreach($structures as $k => $structure) {
             list($module, $struct) = explode('_', $structure['structure'], 2);
@@ -36,7 +48,7 @@ class Config
         foreach ($structures as $num => $structure) {
             $structureName = $structure['structure'];
             if (isset($structuresNum[$structureName])) {
-                Core_Util::addError('Повторяющееся наименование структуры; ' . $structureName);
+                Util::addError('Повторяющееся наименование структуры; ' . $structureName);
             }
             $structuresNum[$structureName] = $num;
         }
@@ -55,7 +67,85 @@ class Config
         $this->structures = $structures;
     }
 
+    /**
+     * Из списка подключённых структур находит стартовую по наличию заполненного параметра startName
+     *
+     * @return array|bool Массив стартовой структуры, или FALSE, если структуру не удалось обнаружить
+     */
+    public function getStartStructure()
+    {
+        // TODO сделать уведомление об ошибке, если нет структуры с startName
+        foreach($this->structures as $structure) {
+            if (isset($structure['startName']) && ('' != $structure['startName'])) {
+                return $structure;
+            }
+        }
+        return false;
+    }
 
+    /**
+     * Из списка подключённых структур находит структуру с нужным кратким наименованием
+     *
+     * @param string $name Краткое наименование структуры, например, Ideal_Part или Ideal_News
+     *
+     * @return array|bool Массив структуры с указанным названием, или FALSE, если структуру не удалось обнаружить
+     */
+    public function getStructureByName($name)
+    {
+        // TODO сделать уведомление об ошибке, если такой структуры нет
+        foreach($this->structures as $structure) {
+            if ($structure['structure'] == $name) {
+                return $structure;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Из списка подключённых структур находит структуру с нужным идентификатором ID
+     *
+     * @param int $structureId ID искомой структуры
+     *
+     * @return array|bool Массив структуры с указанным ID, или FALSE, если структуру не удалось обнаружить
+     */
+    public function getStructureById($structureId)
+    {
+        // TODO сделать уведомление об ошибке, если такой структуры нет
+        foreach($this->structures as $structure) {
+            if ($structure['ID'] == $structureId) {
+                return $structure;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Из списка подключённых структур находит структуру на основе prev_structure
+     *
+     * @param string $prevStructure
+     *
+     * @return array|bool Массив структуры с указанным ID, или FALSE, если структуру не удалось обнаружить
+     */
+    public function getStructureByPrev($prevStructure)
+    {
+        $prev = explode('-', $prevStructure);
+        if ($prev[0] == 0) {
+            $structureId = $prev[1];
+        } else {
+            $structureId = $prev[0];
+        }
+        $structure = $this->getStructureById($structureId);
+
+        return $structure;
+    }
+
+    /**
+     * Статический метод, возвращающий находящийся в нём динамический объект
+     *
+     * Этот метод реализует паттерн Singleton.
+     *
+     * @return Config
+     */
     public static function getInstance()
     {
         if (empty(self::$instance)) {
@@ -64,7 +154,12 @@ class Config
         return self::$instance;
     }
 
-
+    /**
+     * Магический метод, возвращающий по запросу $config->varName переменную varName из массива $this->array
+     *
+     * @param string $name Название запрашиваемой переменной
+     * @return string Значение запрашиваемой переменной
+     */
     public function __get($name)
     {
         if (isset($this->array[$name])) {
@@ -73,28 +168,33 @@ class Config
         return '';
     }
 
+    /**
+     * Магический метод, по запросу $config->varName устанавливающий в $this->array переменную varName в указанное значение
 
+     * @param string $name Название переменной
+     * @param mixed $value Значение переменной
+     */
     public function __set($name, $value)
     {
         $this->array[$name] = $value;
     }
 
-
-    public function import($arr)
+    /**
+     * Импортирует все значения массива $arr в массив $this->array
+     *
+     * @param array $arr Массив значений для импорта
+     */
+    protected function import($arr)
     {
-        $this->array = array_merge($this->array, $arr);
-    }
-
-
-    public function getStructureByName($name)
-    {
-        // TODO сделать уведомление об ошибке, если такого модуля нет
-        foreach($this->structures as $structure) {
-            if ($structure['structure'] == $name) {
-                return $structure;
+        // Проверяем, не объявлены ли переменные из импортируемого массива в этом классе
+        foreach ($arr as $k => $v) {
+            if (isset($this->$k)) {
+                $this->$k = $v;
+                unset($arr[$k]);
             }
         }
-        return false;
+        // Объединяем импортируемый массив с основным массивом переменных конфига
+        $this->array = array_merge($this->array, $arr);
     }
 
 }

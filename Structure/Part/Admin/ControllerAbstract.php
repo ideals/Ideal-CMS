@@ -34,7 +34,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         /* @var $model \Ideal\Core\Admin\Model */
         $model = new $templateModelName('не имет значения');
         $model->setFieldsGroup($request->name);
-        $model->setObjectNew();
+        $model->setPageDataNew();
         echo $model->getFieldsList($model->fields, $model);
         exit;
     }
@@ -44,16 +44,17 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
     {
         $request = new Request();
 
-        $this->model->setObjectById($request->id);
+        $this->model->setPageDataById($request->id);
+        $pageData = $this->model->getPageData();
 
         $template = $request->template;
         $templateModelName = Util::getClassName($template, 'Template') . '\\Model';
-        $model = new $templateModelName($template, $this->model->object['structure_path']);
+        $model = new $templateModelName($template, $pageData['prev_structure']);
         $model->setFieldsGroup($request->name);
         // Загрузка данных связанного объекта
-        if (isset($this->model->object['ID'])) {
-            $structurePath = $this->model->object['structure_path'] . '-' . $this->model->object['ID'];
-            $model->setObjectByStructurePath($structurePath);
+        if (isset($pageData['ID'])) {
+            $prevStructure = $pageData['prev_structure'] . '-' . $pageData['ID'];
+            $model->setPageDataByPrevStructure($prevStructure);
         }
 
         echo $model->getFieldsList($model->fields, $model);

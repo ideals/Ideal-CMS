@@ -8,7 +8,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
 {
     protected $menu = array();
 
-    public function detectPageByIds($par)
+    public function detectPageByIds($path, $par)
     {
         $menu = $this->getMenu();
         $first = reset($par);
@@ -23,10 +23,11 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $item = reset($menu);
         }
 
+        $this->setPageData($item);
+        array_push($path, $item);
+        $this->path = $path;
 
-        $this->path[] = $item;
-
-        return array();
+        return $this;
     }
 
 
@@ -89,9 +90,4 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         return $actions;
     }
 
-
-    public function setObjectNew()
-    {
-
-    }
 }

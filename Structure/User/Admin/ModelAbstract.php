@@ -6,23 +6,24 @@ use Ideal\Core\Db;
 class ModelAbstract extends \Ideal\Core\Admin\Model
 {
 
-    public function detectPageByIds($par)
+    public function detectPageByIds($path, $par)
     {
-        $this->path = array();
-        return array();
+        $this->path = $path;
+        return $this;
     }
 
 
-    public function setObjectNew()
+    public function setPageDataNew()
     {
-        $this->object['last_visit'] = '0';
+        parent::setPageDataNew();
+        $this->pageData['last_visit'] = '0';
     }
 
 
     public function delete()
     {
         $db = Db::getInstance();
-        $db->delete($this->_table, $this->object['ID']);
+        $db->delete($this->_table, $this->pageData['ID']);
         // TODO сделать проверку успешности удаления
         return 1;
     }

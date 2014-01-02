@@ -55,7 +55,7 @@
                     {% if loop.last %}
                         {{ item.name }}
                     {% else %}
-                        <a {% if item.url %}href="{{ item.link }}"{% endif %}>{{ item.name }}</a> <span class="divider">→</span>
+                        <a {% if item.link %}href="{{ item.link }}"{% endif %}>{{ item.name }}</a> <span class="divider">→</span>
                     {% endif %}
                 </li>
             {% endfor %}

@@ -1,6 +1,7 @@
 <?php
 namespace Ideal\Field\Template;
 
+use Ideal\Core\Config;
 use Ideal\Field\Select;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
@@ -18,10 +19,14 @@ class Controller extends Select\Controller
         $model->setFieldsGroup($this->name);
         // Загрузка данных связанного объекта
         $id = '';
-        if (isset($this->model->object['ID'])) {
-            $structurePath = $this->model->object['structure_path'] . '-' . $this->model->object['ID'];
-            $model->setObjectByStructurePath($structurePath);
-            $id = $this->model->object['ID'];
+        $pageData = $this->model->getPageData();
+        if (isset($pageData['ID'])) {
+            $config = Config::getInstance();
+            $end = end($this->model->getPath());
+            $prevStructure = $config->getStructureByName($end['structure']);
+            $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
+            $model->setPageDataByPrevStructure($prevStructure);
+            $id = $pageData['ID'];
         }
         // Получение содержимого таба
         $tabContent = $model->getFieldsList($model->fields, $this->name);

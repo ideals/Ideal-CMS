@@ -4,19 +4,13 @@ namespace Ideal\Template\PhpFile;
 class Model extends \Ideal\Core\Admin\Model
 {
 
-    public function getObject($parentModel)
+    public function getPageData()
     {
-        $this->setObjectByStructurePath($this->structurePath);
-        if ($this->object['php_file'] != '') {
-            require DOCUMENT_ROOT . $this->object['php_file'];
+        $this->setPageDataByPrevStructure($this->prevStructure);
+        if ($this->pageData['php_file'] != '') {
+            require DOCUMENT_ROOT . $this->pageData['php_file'];
         }
-        return $this->object;
-    }
-
-
-    public function setObjectNew()
-    {
-
+        return $this->pageData;
     }
 
 }

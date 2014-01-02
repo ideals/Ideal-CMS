@@ -10,7 +10,22 @@ abstract class Model extends Core\Model
 {
     protected $fieldsGroup = 'general';
 
-    abstract function setObjectNew();
+    /**
+     * Заполнение pageData пустыми значениями полей
+     */
+    public function setPageDataNew()
+    {
+        $pageData = array();
+        foreach($this->fields as $fieldName => $field) {
+            $pageData[$fieldName] = '';
+        }
+        $this->setPageData($pageData);
+    }
+
+    public function detectPageByIds($path, $par)
+    {
+        throw new \Exception('Попытка вызвать непереопределённый метод detectPageByIds в классе ' . get_class($this));
+    }
 
     public function getHeaders()
     {
@@ -20,7 +35,7 @@ abstract class Model extends Core\Model
         foreach ($this->params['field_list'] as $v) {
             $column = explode('!', $v);
             $headers[] = $column[0];
-        }
+            }
 
         return $headers;
     }
@@ -144,9 +159,9 @@ abstract class Model extends Core\Model
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName
-                AND $field == 'structure_path' AND $v['value'] == '') {
-                $result['items'][$v['fieldName']]['value'] = $this->structurePath;
-                $v['value'] = $this->structurePath;
+                AND $field == 'prev_structure' AND $v['value'] == '') {
+                $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
+                $v['value'] = $this->prevStructure;
             }
 
             // Если в значении NULL, то сохранять это поле не надо
@@ -193,9 +208,9 @@ abstract class Model extends Core\Model
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName
-                AND $field == 'structure_path' AND $v['value'] == '') {
-                $result['items'][$v['fieldName']]['value'] = $this->structurePath;
-                $v['value'] = $this->structurePath;
+                AND $field == 'prev_structure' AND $v['value'] == '') {
+                $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
+                $v['value'] = $this->prevStructure;
             }
 
             // Если в значении NULL, то сохранять это поле не надо
@@ -236,13 +251,16 @@ abstract class Model extends Core\Model
      */
     function saveAddData($result, $groups, $groupName, $isCreate = false)
     {
+        $config = Config::getInstance();
+
         // Считываем данные дополнительных табов
         foreach ($this->fields as $fieldName => $field) {
             if (strpos($field['type'], '_Template') === false) continue;
 
             $templateData = $groups[$fieldName];
-            $templateData['structure_path'] = $groups[$groupName]['structure_path']
-                . '-' . $groups[$groupName]['ID'];
+            $end = end($this->path);
+            $prevStructure = $config->getStructureByName($end['structure']);
+            $templateData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
             if (empty($templateData['ID'])) {
                 // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
                 $isCreate = true;
@@ -254,27 +272,16 @@ abstract class Model extends Core\Model
             $templateModelName = Util::getClassName($groups[$groupName][$fieldName], 'Template') . '\\Model';
 
             /* @var $templateModel \Ideal\Core\Admin\Model */
-            $templateModel = new $templateModelName($templateData['structure_path']);
+            $templateModel = new $templateModelName($templateData['prev_structure']);
             if ($isCreate) {
                 // Записываем данные шаблона в БД и в $result
                 $result = $templateModel->createElement($result, $fieldName);
             } else {
-                $templateModel->setObjectById($groups[$fieldName]['ID']);
+                $templateModel->setPageDataById($groups[$fieldName]['ID']);
                 $result = $templateModel->saveElement($result, $fieldName);
             }
         }
         return $result;
-    }
-
-
-    public function setObjectById($ID)
-    {
-        $db = Db::getInstance();
-
-        $_sql = "SELECT * FROM {$this->_table} WHERE ID={$ID}";
-        $object = $db->queryArray($_sql);
-        $this->object = $object[0];
-        // TODO сделать обработку ошибки, когда по ID ничего не нашлось
     }
 
 
@@ -293,15 +300,15 @@ abstract class Model extends Core\Model
             if ($this->fields[$realName]['type'] != 'Template') {
                 continue;
             }
-            if ($this->object[$realName] == '') {
+            if ($this->pageData[$realName] == '') {
                 // Если изначально шаблон не был задан - просто сохраняем введённое значение
                 continue;
             }
-            if ($field['value'] != $this->object[$realName]) {
+            if ($field['value'] != $this->pageData[$realName]) {
                 $result['isCorrect'] = 2;
 
-                $oldTemplateName = Util::getClassName($this->object[$realName], 'Template') . '\\Model';
-                $oldTemplate = new $oldTemplateName($this->object[$realName], '');
+                $oldTemplateName = Util::getClassName($this->pageData[$realName], 'Template') . '\\Model';
+                $oldTemplate = new $oldTemplateName($this->pageData[$realName], '');
                 $oldTemplateCap = $oldTemplate->params['name'];
 
                 $newTemplateName = Util::getClassName($field['value'], 'Template') . '_Model';

@@ -4,16 +4,10 @@ namespace Ideal\Template\Page;
 class Model extends \Ideal\Core\Admin\Model
 {
 
-    public function getObject($model)
+    public function getPageData()
     {
-        $this->setObjectByStructurePath($this->structurePath);
-        return $this->object;
-    }
-
-
-    public function setObjectNew()
-    {
-
+        $this->setPageDataByPrevStructure($this->prevStructure);
+        return $this->pageData;
     }
 
 }

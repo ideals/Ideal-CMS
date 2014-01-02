@@ -8,9 +8,9 @@ use Ideal\Core\Db;
 class ModelAbstract extends Part\Site\Model
 {
 
-    public function construct($structurePath)
+    public function construct($prevStructure)
     {
-        $this->structurePath = $structurePath;
+        $this->prevStructure = $prevStructure;
 
         $config = Config::getInstance();
 
@@ -25,7 +25,7 @@ class ModelAbstract extends Part\Site\Model
     }
 
 
-    public function detectPageByUrl($url, $path)
+    public function detectPageByUrl($path, $url)
     {
         $db = Db::getInstance();
 
@@ -35,14 +35,14 @@ class ModelAbstract extends Part\Site\Model
 
         // Страницу не нашли, возвращаем 404
         if (!isset($list[0]['cid'])) {
-            return '404';
+            $this->path = $path;
+            $this->is404 = true;
+            return $this;
         }
 
         $this->path = array_merge($path, $list);
-        $this->object = end($list);
 
-        return array();
+        return $this;
     }
-
 
 }

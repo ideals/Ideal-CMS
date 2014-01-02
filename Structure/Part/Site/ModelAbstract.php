@@ -4,6 +4,7 @@ namespace Ideal\Structure\Part\Site;
 use Ideal\Core\Db;
 use Ideal\Core\Site;
 use Ideal\Core\Config;
+use Ideal\Core\Util;
 use Ideal\Field;
 use Ideal\Field\Url;
 
@@ -67,9 +68,8 @@ class ModelAbstract extends Site\Model
     }
 
 
-    public function detectPageByUrl($url, $path)
+    public function detectPageByUrl($path, $url)
     {
-        $this->path = $path;
         $db = Db::getInstance();
 
         // составляем запрос из списка URL
@@ -80,13 +80,15 @@ class ModelAbstract extends Site\Model
         }
 
         $_sql = "SELECT * FROM {$this->_table} WHERE ({$_sql})
-                    AND structure_path='{$this->structurePath}' AND is_active=1 ORDER BY lvl, cid";
+                    AND prev_structure='{$this->prevStructure}' AND is_active=1 ORDER BY lvl, cid";
 
         $list = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
 
-        // Страницу не нашли, возвращаем 404
+        // Страницу не нашли устанавливаем флаг 404-ошибки
         if (!isset($list[0]['cid'])) {
-            return '404';
+            $this->path = $path;
+            $this->is404 = true;
+            return $this;
         }
 
         $cidModel = new Field\Cid\Model($this->params['levels'], $this->params['digits']);
@@ -110,9 +112,16 @@ class ModelAbstract extends Site\Model
             }
         }
 
-        // Сортируем ветки по количеству элементов (по убыванию)
+        // Сортируем ветки по количеству элементов (по убыванию), а при равном количестве — по is_skip
         usort($branches, function($a, $b){
-            return ($b['count'] - $a['count']);
+            $res = $b['count'] - $a['count'];
+            if ($res == 0) {
+                // Количество элементов одинаковое, сортируем по is_skip (первыми без него)
+                $aEnd = end($a['branch']);
+                $bEnd = end($b['branch']);
+                $res = $aEnd['is_skip'] - $bEnd['is_skip'];
+            }
+            return $res;
         });
 
         // Проходим каждую ветку, начиная с наибольшей, пока не найдём полный путь
@@ -126,26 +135,79 @@ class ModelAbstract extends Site\Model
                     break;
                 }
             }
-            if ($isOk) {
-                $end = end($branch['branch']);
-                if ($end['is_skip'] == 1) {
-                    // Последний элемент в цепочке не может быть пропущенным
-                    continue;
+            // Если в анализируемой ветке найден разрыв — пропускаем её
+            if (!$isOk) continue;
+
+            // Проверяем, собирается ли нужный url из найденного пути
+            $count = $this->checkDetectedUrlCount($url, $branch['branch']);
+            if ($count == 0) continue;
+
+            $end = end($branch['branch']);
+            if ($end['is_skip'] == 1) {
+                // Если последний элемент в максимальной цепочке — пропущенный, проверяем не хранится
+                // ли в нём другая структура
+                $structureName = $this->getStructureName();
+                if ($end['structure'] != $structureName) {
+                    // Получаем модель вложенной структуры
+                    $structure = $this->getNestedStructure($end);
+                    // Запускаем определение пути и активной модели по $par
+                    $newPath = array_merge($path, $branch['branch']);
+                    $url = array_slice($url, count($newPath) - 2);
+                    $model = $structure->detectPageByUrl($newPath, $url);
+                    return $model;
                 }
-                $newPath = $branch['branch'];
-                break;
+                continue;
             }
+            $newPath = $branch['branch'];
+            break;
         }
 
-        if (count($newPath) == 0) return '404';
+        if (count($newPath) == 0) {
+            $this->path = $path;
+            $this->is404 = true;
+            return $this;
+        }
 
-        $this->path = array_merge($this->path, $newPath);
+        $this->path = array_merge($path, $newPath);
 
+        // Определяем количество совпадений сегментов найденного пути и запрошенного url
+        $count = $this->checkDetectedUrlCount($url, $newPath);
+
+        if ($count == 0) {
+            // Не нашлось никаких совпадений запрашиваемого url с наиболее подходящей найденной веткой
+            $this->is404 = true;
+            return $this;
+        }
+
+        $url = array_slice($url, $count);
+        if (count($url) > 0) {
+            // Остались неразобранные сегменты URL, запускаем вложенную структуру
+            // Определяем оставшиеся элементы пути
+            $end = end($this->path);
+            // Получаем модель вложенной структуры
+            $structure = $this->getNestedStructure($end);
+            // Запускаем определение пути и активной модели по $par
+            $model = $structure->detectPageByUrl($this->path, $url);
+            return $model;
+        } else {
+            // Неразобранных сегментов не осталось, возвращаем в качестве модели сам объект
+            return $this;
+        }
+    }
+
+    /**
+     * Определяет количество совпадающих сегментов найденного пути и запрошенного url
+     * @param array $url Массив сегментов url для определения пути
+     * @param array $newPath Массив найденных элементов пути из БД
+     * @return int Количество совпадающих сегментов найденного пути и запрошенного url
+     */
+    protected function checkDetectedUrlCount($url, $newPath)
+    {
         // Подсчитываем кол-во элементов пути, без учёта пропущенных сегментов
         // и составляем строку найденной части URL
         $count = 0;
         $parsedUrl = $sep = '';
-        foreach($newPath as $v) {
+        foreach ($newPath as $v) {
             if ($v['is_skip'] == 0) {
                 $parsedUrl .= $sep . $v['url'];
                 $sep = '/';
@@ -157,21 +219,28 @@ class ModelAbstract extends Site\Model
         $parsedUrlPart = array_slice($url, 0, $count);
         $parsedUrlPart = implode('/', $parsedUrlPart);
         if ($parsedUrl != $parsedUrlPart) {
-            return '404';
+            $count = 0;
         }
 
-        $this->object = end($newPath);
-
-        return array_slice($url, $count);
-
+        return $count;
     }
 
-
-    public function setObjectNew()
+    /**
+     * Определение вложенной структуры по $end['structure']
+     * @param array $end Все параметры родительской структуры
+     * @return Model Инициализированный объект модели вложенной структуры
+     */
+    protected function getNestedStructure($end)
     {
+        $config = Config::getInstance();
+        $rootStructure = $config->getStructureByPrev($end['prev_structure']);
+        $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
 
+        /* @var $structure Model */
+        $structure = new $modelClassName($rootStructure['ID'] . '-' . $end['ID']);
+
+        return $structure;
     }
-
 
     public function getStructureElements()
     {
@@ -205,6 +274,42 @@ class ModelAbstract extends Site\Model
             $list[$k]['link'] = $urlModel->getUrl($v);
         }
         return $list;
+    }
+
+    /**
+     * Построение пути в рамках одной структуры.
+     */
+    public function getLocalPath()
+    {
+        $category = $this->pageData;
+
+        if ($category['lvl'] == 1) {
+            // Если в локальной структуре родителей нет, возвращаем сам объект
+            return array($category);
+        }
+
+        // По cid определяем cid'ы всех родителей
+        $cid = new \Ideal\Field\Cid\Model($this->params['levels'], $this->params['digits']);
+        $cids = $cid->getParents($category['cid']);
+
+        $path = array();
+        if (count($cids) > 0) {
+            // Выстраиваем строку cid'ов для запроса в БД
+            $strCids = $separator = '';
+            foreach ($cids as $v) {
+                $strCids .= $separator . "'" . $v . "'";
+                $separator = ', ';
+            }
+
+            // Считываем все элементы с указанными cid'ами
+            $db = Db::getInstance();
+            $_sql = "SELECT * FROM {$this->_table} WHERE cid IN ({$strCids}) ORDER BY cid";
+            $path = $db->queryArray($_sql);
+        }
+
+        $path = array_merge($path, array($category)); // добавляем наш элемент к родительским
+
+        return $path;
     }
 
 }

@@ -20,7 +20,8 @@ class Controller extends AbstractController
                    . '" value="' . $value . '">';
         } else {
             $cid = new Model($this->model->params['levels'], $this->model->params['digits']);
-            $value = $cid->getBlock($value, $this->model->object['lvl']);
+            $pageData = $this->model->getPageData();
+            $value = $cid->getBlock($value, $pageData['lvl']);
 
             $input = '<input type="text" class="input ' . $this->widthEditField
                 . '" name="' . $this->htmlName
@@ -74,7 +75,8 @@ HTML;
             $this->newValue = $model->getNewCid($end['cid'], $end['lvl'] + 1);
         } else {
             $cid = new Model($model->params['levels'], $model->params['digits']);
-            $obj = $model->object;
+            $pageData = $this->model->getPageData();
+            $obj = $pageData;
             if ($obj['cid'] != $request->$fieldName) {
                 // Инициируем изменение cid, только если он действительно изменился
                 $this->sqlAdd = $cid->moveCid($obj['cid'], $request->$fieldName, $obj['lvl']);

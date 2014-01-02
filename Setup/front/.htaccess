@@ -4,7 +4,6 @@ php_value magic_quotes_gpc Off
 Options +Includes +FollowSymLinks -Indexes
 AddDefaultCharset utf-8
 
-DirectoryIndex index.html
 ErrorDocument 404 /404.html
 
 RewriteEngine on
@@ -29,6 +28,13 @@ RewriteRule ^(.*)/$ $1.html [R=permanent,L]
 [[COMMENT_FOR_SUBFOLDER]]RewriteRule ^index.html$ $1 [R=permanent,L]
 RewriteRule ^(.*)/index.html$ $1.html [R=permanent,L]
 
-# TODO добавить правила для переадресации всех НЕСУЩЕСТВУЮЩИХ файлов в скрипт
-RewriteRule ^[[SUBFOLDER_INDEX]]$ /[[SUBFOLDER]]_.php?url= [L,QSA]
-RewriteRule ^(.*)\.html$ /[[SUBFOLDER]]_.php?url=$1 [L,QSA]
+#redirect#
+#redirect#
+
+# Если файл есть на диске, с ним ничего не происходит
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -l
+RewriteRule ^(.*)$ - [NC,L]
+
+# Если файла на диске нет, вызывается скрипт
+RewriteRule ^.*$ /[[SUBFOLDER]]_.php [NC,L]
