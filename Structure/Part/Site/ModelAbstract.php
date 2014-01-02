@@ -135,26 +135,31 @@ class ModelAbstract extends Site\Model
                     break;
                 }
             }
-            if ($isOk) {
-                $end = end($branch['branch']);
-                if ($end['is_skip'] == 1) {
-                    // Если последний элемент в максимальной цепочке — пропущенный, проверяем не хранится
-                    // ли в нём другая структура
-                    $structureName = $this->getStructureName();
-                    if ($end['structure'] != $structureName) {
-                        // Получаем модель вложенной структуры
-                        $structure = $this->getNestedStructure($end);
-                        // Запускаем определение пути и активной модели по $par
-                        $newPath = array_merge($path, $branch['branch']);
-                        $url = array_slice($url, count($newPath) - 2);
-                        $model = $structure->detectPageByUrl($newPath, $url);
-                        return $model;
-                    }
-                    continue;
+            // Если в анализируемой ветке найден разрыв — пропускаем её
+            if (!$isOk) continue;
+
+            // Проверяем, собирается ли нужный url из найденного пути
+            $count = $this->checkDetectedUrlCount($url, $branch['branch']);
+            if ($count == 0) continue;
+
+            $end = end($branch['branch']);
+            if ($end['is_skip'] == 1) {
+                // Если последний элемент в максимальной цепочке — пропущенный, проверяем не хранится
+                // ли в нём другая структура
+                $structureName = $this->getStructureName();
+                if ($end['structure'] != $structureName) {
+                    // Получаем модель вложенной структуры
+                    $structure = $this->getNestedStructure($end);
+                    // Запускаем определение пути и активной модели по $par
+                    $newPath = array_merge($path, $branch['branch']);
+                    $url = array_slice($url, count($newPath) - 2);
+                    $model = $structure->detectPageByUrl($newPath, $url);
+                    return $model;
                 }
-                $newPath = $branch['branch'];
-                break;
+                continue;
             }
+            $newPath = $branch['branch'];
+            break;
         }
 
         if (count($newPath) == 0) {
@@ -165,22 +170,11 @@ class ModelAbstract extends Site\Model
 
         $this->path = array_merge($path, $newPath);
 
-        // Подсчитываем кол-во элементов пути, без учёта пропущенных сегментов
-        // и составляем строку найденной части URL
-        $count = 0;
-        $parsedUrl = $sep = '';
-        foreach($newPath as $v) {
-            if ($v['is_skip'] == 0) {
-                $parsedUrl .= $sep . $v['url'];
-                $sep = '/';
-                $count++;
-            }
-        }
+        // Определяем количество совпадений сегментов найденного пути и запрошенного url
+        $count = $this->checkDetectedUrlCount($url, $newPath);
 
-        // Вырезаем из переданного URL найденное количество сегментов и склеиваем их в строку
-        $parsedUrlPart = array_slice($url, 0, $count);
-        $parsedUrlPart = implode('/', $parsedUrlPart);
-        if ($parsedUrl != $parsedUrlPart) {
+        if ($count == 0) {
+            // Не нашлось никаких совпадений запрашиваемого url с наиболее подходящей найденной веткой
             $this->is404 = true;
             return $this;
         }
@@ -199,6 +193,36 @@ class ModelAbstract extends Site\Model
             // Неразобранных сегментов не осталось, возвращаем в качестве модели сам объект
             return $this;
         }
+    }
+
+    /**
+     * Определяет количество совпадающих сегментов найденного пути и запрошенного url
+     * @param array $url Массив сегментов url для определения пути
+     * @param array $newPath Массив найденных элементов пути из БД
+     * @return int Количество совпадающих сегментов найденного пути и запрошенного url
+     */
+    protected function checkDetectedUrlCount($url, $newPath)
+    {
+        // Подсчитываем кол-во элементов пути, без учёта пропущенных сегментов
+        // и составляем строку найденной части URL
+        $count = 0;
+        $parsedUrl = $sep = '';
+        foreach ($newPath as $v) {
+            if ($v['is_skip'] == 0) {
+                $parsedUrl .= $sep . $v['url'];
+                $sep = '/';
+                $count++;
+            }
+        }
+
+        // Вырезаем из переданного URL найденное количество сегментов и склеиваем их в строку
+        $parsedUrlPart = array_slice($url, 0, $count);
+        $parsedUrlPart = implode('/', $parsedUrlPart);
+        if ($parsedUrl != $parsedUrlPart) {
+            $count = 0;
+        }
+
+        return $count;
     }
 
     /**

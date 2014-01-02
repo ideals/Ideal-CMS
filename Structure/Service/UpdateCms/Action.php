@@ -116,10 +116,13 @@ function getVersionFromFile($cmsMdFileName)
                         $('<form>').appendTo('#form-input').attr('class','update-form form-inline').attr('action','javascript:void(0)').attr('method','post');
 
                         $.each(update, function(keyLine, line){
-                                buf = 'updateModule("' + key + '","' + line['version'] + '")';
-                                $('<button>').appendTo('form:last').attr('onClick', buf).attr('class','btn').text('Обновить на версию ' + line['version'] + ' (' + line['date'] + ')');
-                                $('button:last').after('&nbsp; &nbsp;');
-                            });
+                            buf = 'updateModule("' + key + '","' + line['version'] + '")';
+                            $('<button>').appendTo('form:last').attr('class','btn').attr('onClick', buf).attr('class','btn').text('Обновить на версию ' + line['version'] + ' (' + line['date'] + ')');
+                            if (line['danger']) {
+                                $('button:last').attr('class','btn btn-danger')
+                            }
+                            $('button:last').after('&nbsp; &nbsp;');
+                        });
                     });
         },
         error: function(){
