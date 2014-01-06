@@ -129,9 +129,13 @@ class Model
     {
         $nm = Model::translit($nm);
         $nm = strtolower($nm);
-        $arr = array('*' => '',
+        $arr = array(
+            '*' => '',
             '(' => '',
             ')' => '',
+            '!' => '',
+            '#' => 'N',
+            '—' => '',
             '/' => '-',
             '«' => '',
             '»' => '',
@@ -164,9 +168,13 @@ class Model
         }
         $nm = Model::translit($name);
         $nm = strtolower($nm);
-        $arr = array('*' => '',
+        $arr = array(
+            '*' => '',
             '(' => '',
             ')' => '',
+            '!' => '',
+            '#' => 'N',
+            '—' => '',
             '/' => '-',
             '«' => '',
             '»' => '',
@@ -191,7 +199,8 @@ class Model
      */
     static function translit($nm)
     {
-        $arr = array('а' => 'a',
+        $arr = array(
+            'а' => 'a',
             'б' => 'b',
             'в' => 'v',
             'г' => 'g',
