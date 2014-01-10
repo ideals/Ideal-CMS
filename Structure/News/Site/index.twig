@@ -2,7 +2,7 @@
 
 {% block content %}
 
-    <h1>{{ header }}</h1>
+    <h1>{{ header|raw }}</h1>
 
     {{ template.content |raw }}
 
@@ -21,7 +21,7 @@
     {% endfor %}
     {% endif %}
 
-    {%if pager.pages|length > 0 %}
+    {%if pager.pages|length > 1 %}
         <div class="pagination pagination-left">
             <ul>
                 {% for page in pager.pages %}
