@@ -326,6 +326,13 @@ abstract class Model
         $model = $this;
         $count = count($this->path);
 
+        $class = get_class($this);
+        if ($class == 'Ideal\\Structure\\Home\\Site\\Model') {
+            // В случае если у нас открыта главная страница, не нужно переопределять модель как обычной страницы
+            return $model;
+        }
+
+
         if ($count > 1) {
             $end = $this->path[($count - 1)];
             $prev = $this->path[($count - 2)];
