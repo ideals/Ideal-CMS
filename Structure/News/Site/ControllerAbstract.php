@@ -15,7 +15,13 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
     {
         parent::indexAction();
 
-        $this->view->parts = $this->model->getList('page');
+        $request = new Request();
+        $page = intval($request->{'page'});
+        $page = ($page == 0) ? 1 : $page;
+
+        $this->view->parts = $this->model->getList($page);
+        $this->view->pager = $this->model->getPager('page');
+
     }
 
 
