@@ -7,13 +7,10 @@ class Controller extends AbstractController
 {
     protected static $instance;
 
-
     public function getInputText()
     {
-        return '<textarea class="' . $this->widthEditField
-             . '" name="' . $this->htmlName
+        return '<textarea class="form-control" name="' . $this->htmlName
              . '" id="' . $this->htmlName
              .'">' . htmlspecialchars($this->getValue()) . '</textarea>';
     }
-
 }

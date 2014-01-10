@@ -11,28 +11,38 @@
     <link href="Ideal/Library/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="Ideal/style.css" rel="stylesheet">
 
-    <script type="text/javascript" src="Ideal/Library/jquery/jquery-1.8.3.min.js"></script>
-    <script type="text/javascript" src="Ideal/Library/bootstrap/js/bootstrap.min.js"></script>
-
-    <script src="Ideal/Library/ckeditor/ckeditor.js"></script>
-    <script type="text/javascript" src="Ideal/Library/ckfinder/ckfinder.js"></script>
-
     <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
     <![endif]-->
-    {% block jsAdmin %}
-    {% endblock %}
 </head>
 
 <body>
 
+<script type="text/javascript" src="Ideal/Library/jquery/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="Ideal/Library/bootstrap/js/bootstrap.min.js"></script>
+
+<script type="text/javascript" src="Ideal/Library/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="Ideal/Library/ckfinder/ckfinder.js"></script>
+
+{% block jsAdmin %}
+{% endblock %}
+
 <div class="container">
 
-    <div class="navbar">
-        <div class="navbar-inner">
-            <a class="brand" href="{{ cmsFolder }}/index.php">{{ domain }}</a>
+    <div class="navbar navbar-default" role="navigation">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-main-navbar-collapse-1">
+                <span class="sr-only">Меню</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{{ cmsFolder }}/index.php">{{ domain }}</a>
+        </div>
+        <div class="navbar-collapse collapse" id="bs-main-navbar-collapse-1">
             {% if user.ID %}
-                <ul class="nav">
+                <ul class="nav navbar-nav">
                     {% for item in structures if item.isShow %}
                         <li {% if activeStructureId == item.ID %} class="active" {% endif %}>
                             <a href="index.php?par={{ item.ID }}">{{ item.name }}</a>
@@ -40,9 +50,9 @@
                     {% endfor %}
                 </ul>
 
-                <ul class="nav pull-right">
+                <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-user"></i> <strong>{{ user.email }}</strong><b class="caret"></b></a>
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="glyphicon glyphicon-user"></i> <strong>{{ user.email }}</strong><b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             <li><a onClick="showModal('{{ user.prev_structure }}', {{ user.ID }}, 'showEdit'); return false;" href="#">Профиль</a></li>
                             <li><a href="index.php?action=logout">Выход</a></li>
@@ -60,7 +70,7 @@
             {% if loop.last %}
                 {{ item.name }}
             {% else %}
-                <a href="index.php?par={{ item.link }}">{{ item.name }}</a> <span class="divider">→</span>
+                <a href="index.php?par={{ item.link }}">{{ item.name }}</a>
             {% endif %}
         </li>
         {% endfor %}
@@ -69,7 +79,7 @@
 
     {% if toolbar != '' %}
         <a href="" class="pull-right" style="margin: -53px 28px 0 0; padding: 5px;" onClick="$('#toolbar-form').toggle(); return false;">
-            <i class="icon-cog"></i>
+            <i class="glyphicon glyphicon-cog"></i>
         </a>
         <form class="form-inline well {% if hideToolbarForm %}hide{% endif %}" action="" method="get" id="toolbar-form">
             <input type="hidden" name="par" value="{{ par }}">
@@ -91,11 +101,11 @@
             {% for header in headers %}
                 <th>{{ header }}</th>
             {% endfor %}
-            <td style="width: 73px; text-align: right;">
-                <a onClick="showModal('{{ par }}', 0, 'showCreate'); return false;s" href="#myModal" class="btn btn-mini button-edit">
-                    <i class="icon-plus"></i> Создать
+            <th style="width: 93px; text-align: right;">
+                <a onClick="showModal('{{ par }}', 0, 'showCreate'); return false;" href="#myModal" class="btn btn-default btn-xs">
+                    <i class="glyphicon glyphicon-plus"></i>&nbsp;Создать
                 </a>
-            </td>
+            </th>
         </tr>
         </thead>
 
@@ -108,17 +118,13 @@
                 </td>
                 {{ item.row | raw }}
                 <td style="vertical-align: middle;">
-                <div class="button-edit" style="position: absolute; margin-top: -11px;">
-                    <span class="input-prepend">
-                    <button class="btn btn-info btn-mini" title="Изменить" onClick="showModal('{{ par }}', {{ item.ID }}, 'showEdit');" style="width: 47px;">
-                        <i class="icon-pencil icon-white"></i>
+                <div class="btn-group btn-group-xs button-edit" style="position: absolute; margin-top: -11px;">
+                    <button class="btn btn-info" title="Изменить" onClick="showModal('{{ par }}', {{ item.ID }}, 'showEdit');" style="width: 47px;">
+                        <span class="glyphicon glyphicon-pencil"></span>
                     </button>
-                    </span>
-                    <span class="input-append">
-                    <button class="btn btn-danger btn-mini" title="Удалить" onclick="showDeleteConfirm('{{ par }}', {{ item.ID }});">
-                        <i class="icon-remove icon-white"></i>
+                    <button class="btn btn-danger" title="Удалить" onclick="showDeleteConfirm('{{ par }}', {{ item.ID }});">
+                        <span class="glyphicon glyphicon-remove"></span>
                     </button>
-                    </span>
                 </div>
                 </td>
             </tr>
@@ -127,26 +133,31 @@
 
     </table>
 
-    <div id="myModal" class="modal hide fade" style="width: 773px; top: 5%;">
-        <div class="modal-header">
-            <a class="close" data-dismiss="modal">×</a>
-            <h3 id="modal-header">Редактирование</h3>
-        </div>
-        <div class="modal-body">
-            <form class="form-horizontal" id="editForm">
-                <div id="modalContent"></div>
-            </form>
-        </div>
-        <div class="modal-footer" style="height: 30px;">
-            <span class="hide alert" style="margin-right: 10px; padding-top: 4px; padding-bottom: 4px;" id="message"></span>
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 80%;">
+            <div class="modal-content">
+                <div class="modal-header" id="myModal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Редактирование</h4>
+                </div>
+                <div class="modal-body" style="overflow: auto;">
+                    <form class="form-horizontal" id="editForm">
+                        <div id="modalContent"></div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="margin-top: 0;">
+                    <span class="hide alert" style="margin-right: 10px; padding-top: 4px; padding-bottom: 4px;" id="message"></span>
 
-            <div id="sendButtons" style="float: right">
-                <a href="" onclick="onSubmit(true); return false;" class="btn btn-primary">Сохранить</a>
-                <a href="" onclick="onSubmit(false); return false;" class="btn btn-info">Применить</a>
-                <a href="" class="btn" data-dismiss="modal">Отменить</a>
-            </div>
-        </div>
-    </div>
+                    <div id="sendButtons">
+                        <a href="" onclick="onSubmit(true); return false;" class="btn btn-primary">Сохранить</a>
+                        <a href="" onclick="onSubmit(false); return false;" class="btn btn-info">Применить</a>
+                        <a href="" class="btn btn-default" data-dismiss="modal">Отменить</a>
+                    </div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 
     {%if pager.pages|length > 1 %}
     <div class="pagination pagination-centered">
@@ -203,22 +214,25 @@
         function onShowModalSuccess(data)
         {
             if (window.idObject['action'] == 'showCreate') {
-                $('#modal-header').html('Создание');
+                $('#myModalLabel').html('Создание');
+            } else {
+                $('#myModalLabel').html('Редактирование');
             }
-            $('#modalContent').html(data);
-            $('#modalContent').trigger('windowOpen');
-            $('#myModal').modal({
-                backdrop: 'static'
-            }).css({
-                        'margin-left': function () {
-                            return -($(this).width() / 2);
-                        }
-                    });
-            $('#myModal').modal('show');
-            // TODO разобраться почему не работают тут $('.modal-header').outerHeight() и $('.modal-footer').outerHeight()
-            // Формула: Высота страницы - 10% отступы сверху-снизу, - 30px отступы modal-body, - 49px высота modal-header, -60px высота modal-footer
-            mh = $(window).height() * 0.9 - 30 - 49 - 60;
-            $('.modal-body').css('max-height', mh);
+            $('#modalContent').html(data).trigger('windowOpen');
+            $('#myModal')
+                .modal({
+                    backdrop: 'static',
+                    keyboard: false
+                })
+                .on('shown.bs.modal', function (e) {
+                    // Навешиваем событие на показ окна — выставляем высоту прокручиваемой части — контента редактирования
+                    // Формула: Высота страницы - 10% отступы сверху-снизу, - 30px отступы modal-body, - высота modal-header, - высота modal-footer
+                    mh = $(window).height() * 0.95 - 40
+                            - $('.modal-header').outerHeight()
+                            - $('.modal-footer').outerHeight();
+                    $('.modal-body').css('max-height', mh);
+                })
+                .modal('show');
         }
 
 

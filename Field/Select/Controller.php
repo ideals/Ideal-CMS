@@ -28,7 +28,7 @@ class Controller extends AbstractController
 
     public function getInputText()
     {
-        $html = '<select class="' . $this->widthEditField . '" name="' . $this->htmlName .'" id="' . $this->htmlName .'">';
+        $html = '<select class="form-control" name="' . $this->htmlName .'" id="' . $this->htmlName .'">';
         $value = $this->getValue();
         foreach ($this->list as $k => $v) {
             $selected = '';
@@ -46,7 +46,7 @@ class Controller extends AbstractController
     {
         $value = parent::getValue();
         if ($value == '') {
-            // TODO если указано значение по умолчанию, возвращать его, а не первый элемент
+            // Если значение не указано, то будет выбран первый элемент из списка
             $keys = array_keys($this->list);
             $value = $keys[0];
         }

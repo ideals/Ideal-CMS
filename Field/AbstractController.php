@@ -1,21 +1,59 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Field;
 
 use Ideal\Core\Request;
 
+/**
+ * Абстрактный класс, реализующий большинство необходимых методов для
+ * отображения полей редактирования и сохранения данных из них
+ */
 abstract class AbstractController
 {
-    protected $name;
-    protected $label;
-    protected $widthEditField = 'span7';
-    protected $groupName;
-    protected $model;
-    protected $sqlAdd = '';
+    /** @var  string Новое значение поля, полученное от пользователя (при редактировании в браузере) */
     public $newValue;
+
+    /** @var  string Название поля, используемое для полей ввода в html-коде */
     public $htmlName;
+
+    /** @var string CSS-класс для определения ширины поля для подписи к полю ввода */
+    public $labelClass = 'col-xs-3';
+
+    /** @var string CSS-класс для определения ширины поля ввода */
+    public $inputClass = 'col-xs-9';
+
+    /** @var  string Название поля */
+    protected $name;
+
+    /** @var  array Параметры поля, взятые из конфига структуры */
+    protected $field;
+
+    /** @var  string Название таба, в котором находится поле в окне редактирования */
+    protected $groupName;
+
+    /** @var  \Ideal\Core\Admin\Model Модель данных, в которой находится редактируемое поле */
+    protected $model;
+
+    /** @var  string Дополнительный sql-код, генерируемый полем для сохранения всех своих данных */
+    protected $sqlAdd = '';
+
+    /** @var  mixed Хранит в себе копию соответствующего объекта поля (паттерн singleton) */
     protected static $instance;
 
-
+    /**
+     * Обеспечение паттерна singleton
+     *
+     * Особенность - во всех потомках нужно обязательно определять свойство
+     * protected static $instance
+     *
+     * @return mixed
+     */
     public static function getInstance()
     {
         // PHP53 Late static binding
@@ -26,30 +64,44 @@ abstract class AbstractController
         return static::$instance;
     }
 
-
+    /**
+     * Определение значения этого поля на основании данных из модели
+     *
+     * В случае, если в модели ещё нет данных, то значение берётся из поля default
+     * в настройках структуры (fields) для соответствующего поля
+     *
+     * @return string
+     */
     public function getValue()
     {
-        // TODO определение значения по умолчанию из $this->model->params
-        // TODO сделать определение значения по умолчанию, если для этого указан геттер и убрать этот функционал из selectField
+        // TODO сделать определение значения по умолчанию, если для этого указан геттер
+        //      и убрать этот функционал из selectField
         $value = '';
         $pageData = $this->model->getPageData();
         if (isset($pageData)) {
             if (isset($pageData[$this->name])) {
                 $value = $pageData[$this->name];
             }
+        } elseif (isset($this->field['default'])) {
+            // Если поле ещё не заполнено, берём его значение по дефолту из описания полей структуры
+            $value = $this->field['default'];
         }
         return $value;
     }
 
-
+    /**
+     * Отображение html-элементов для редактирования этого поля
+     *
+     * @return string HTML-код группы редактирования для этого поля
+     */
     public function showEdit()
     {
         $label = $this->getLabelText();
         $input = $this->getInputText();
         $html = <<<HTML
-        <div id="{$this->htmlName}-control-group" class="control-group">
-            <label class="control-label" for="{$this->htmlName}">{$label}</label>
-            <div class="controls {$this->htmlName}-controls">
+        <div id="{$this->htmlName}-control-group" class="form-group">
+            <label class="{$this->labelClass} control-label" for="{$this->htmlName}">{$label}</label>
+            <div class="{$this->inputClass} {$this->htmlName}-controls">
                 {$input}
                 <div id="{$this->htmlName}-help"></div>
             </div>
@@ -59,27 +111,50 @@ HTML;
         return $html;
     }
 
-
+    /**
+     * Получение текста, подписывающего это поле ввода (тег label)
+     *
+     * @return string Строка содержащая текст подписи
+     */
     public function getLabelText()
     {
-        return $this->label . ':';
+        return $this->field['label'] . ':';
     }
 
-
+    /**
+     * Установка модели редактируемого объекта, частью которого является редактируемое поле
+     *
+     * Полю необходимо получать сведения о состоянии объекта и о других полях, т.к.
+     * его значения и поведение может зависеть от значений других полей
+     *
+     * @param \Ideal\Core\Admin\Model $model Модель редактируемого объекта
+     * @param string $fieldName Редактируемое поле
+     * @param string $groupName Вкладка, к которой принадлежит редактируемое поле
+     */
     public function setModel($model, $fieldName, $groupName = 'general')
     {
         $this->name = $fieldName;
         $this->model = $model;
         $this->field = $model->fields[$fieldName];
-        $this->label = $this->field['label'];
         $this->groupName = $groupName;
         $this->htmlName = $this->groupName . '_' . $this->name;
     }
 
-
+    /**
+     * Возвращает строку, содержащую html-код элементов ввода для редактирования поля
+     *
+     * @return string html-код элементов ввода
+     */
     abstract public function getInputText();
 
-
+    /**
+     * Форматирование значения поля для отображения значения в списке элементов
+     *
+     * @param array $values Массив значений объекта
+     * @param string $fieldName Название поля, из которого надо взять значение
+     *
+     * @return string Строка со значением для отображения в списке
+     */
     public function getValueForList($values, $fieldName)
     {
         return $values[$fieldName];
@@ -98,22 +173,22 @@ HTML;
          );
 
         // В первой версии только на правильность данных и их наличие, если в описании бд указано not null
-        if (($this->name == 'ID') AND $isCreate) {
+        if (($this->name == 'ID') && $isCreate) {
             if (!empty($this->newValue)) {
                 $item['message'] = 'При создании элемента поле ID не может быть заполнено';
             }
             return $item;
         }
 
-        if (($this->name == 'ID') AND empty($this->newValue)) {
+        if (($this->name == 'ID') && empty($this->newValue)) {
             // Если это поле ID и оно пустое, значит элемент создаётся - не нужно на нём ошибку отображать
             return $item;
         }
 
         $sql = strtolower($this->field['sql']);
         if (empty($this->newValue)
-                AND (strpos($sql, 'not null') !== false)
-                AND (strpos($sql, 'default') === false)) {
+                && (strpos($sql, 'not null') !== false)
+                && (strpos($sql, 'default') === false)) {
             // Установлен NOT NULL и нет DEFAULT и $value пустое
             $item['message'] = 'необходимо заполнить это поле';
         }
@@ -131,5 +206,4 @@ HTML;
         $this->newValue = $request->$fieldName;
         return $this->newValue;
     }
-
 }

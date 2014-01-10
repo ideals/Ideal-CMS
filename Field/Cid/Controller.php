@@ -11,41 +11,32 @@ class Controller extends AbstractController
 
     public function showEdit()
     {
-        $this->htmlName = $this->groupName . '_' . $this->name;
         $value = $this->getValue();
 
         if ($value == '') {
-            $input = '<input type="hidden" id="' . $this->htmlName
-                   . '" name="' . $this->htmlName
-                   . '" value="' . $value . '">';
+            $html = '<input type="hidden" id="' . $this->htmlName
+                  . '" name="' . $this->htmlName
+                  . '" value="' . $value . '">';
         } else {
-            $cid = new Model($this->model->params['levels'], $this->model->params['digits']);
-            $pageData = $this->model->getPageData();
-            $value = $cid->getBlock($value, $pageData['lvl']);
-
-            $input = '<input type="text" class="input ' . $this->widthEditField
-                . '" name="' . $this->htmlName
-                . '" id="' . $this->htmlName
-                .'" value="' . $value .'">';
-            $label = $this->getLabelText();
-
-            $input = <<<HTML
-        <div id="{$this->htmlName}-control-group" class="control-group">
-            <label class="control-label" for="{$this->htmlName}">{$label}</label>
-            <div class="controls {$this->htmlName}-controls">
-                {$input}
-                <div id="{$this->htmlName}-help"></div>
-            </div>
-        </div>
-HTML;
+            $html = parent::showEdit();
         }
-        return $input;
+        return $html;
     }
 
 
     public function getInputText()
     {
-        // Заглушка для абстрактного метода
+        $value = $this->getValue();
+
+        $cid = new Model($this->model->params['levels'], $this->model->params['digits']);
+        $pageData = $this->model->getPageData();
+        $value = $cid->getBlock($value, $pageData['lvl']);
+
+        $input = '<input type="text" class="form-control" name="' . $this->htmlName
+            . '" id="' . $this->htmlName
+            .'" value="' . $value .'">';
+
+        return $input;
     }
 
 
@@ -61,6 +52,7 @@ HTML;
         $request = new Request();
         $fieldName = $this->groupName . '_' . $this->name;
         $this->newValue = $request->$fieldName;
+        /** @var \Ideal\Structure\Part\Admin\Model $model */
         $model = $this->model;
 
         if ($this->newValue == '') {
@@ -86,5 +78,4 @@ HTML;
 
         return $this->newValue;
     }
-
 }

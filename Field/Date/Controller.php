@@ -12,18 +12,29 @@ class Controller extends AbstractController
     public function getInputText()
     {
         $value = $this->getValue();
-        $date = getdate($value);
-        $dayName   = $this->htmlName . '_day';
-        $monthName = $this->htmlName . '_month';
-        $yearName  = $this->htmlName . '_year';
-        $hourName  = $this->htmlName . '_hour';
-        $minName   = $this->htmlName . '_min';
+        $date = date('d.m.Y H:i:s', $value);
+        $htmlName = $this->htmlName;
         $html = <<<HTML
-        <input type="text" class="inline" name="{$dayName}" value="{$date['mday']}" style="width:20px;" maxlength="2">.
-        <input type="text" class="inline" name="{$monthName}" value="{$date['mon']}" style="width:20px;" maxlength="2">.
-        <input type="text" class="inline" name="{$yearName}" value="{$date['year']}" style="width:40px;" maxlength=4> [дд.мм.гггг]&nbsp;&nbsp;&nbsp;
-        <input type="text" class="inline" name="{$hourName}" value="{$date['hours']}" style="width:20px;" maxlength="2">:
-        <input type="text" class="inline" name="{$minName}" value="{$date['minutes']}" style="width:20px;" maxlength="2"> [чч:мм]
+<link href="Ideal/Library/datetimepicker/build/css/bootstrap-datetimepicker.min.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="Ideal/Library/moment/moment.js"></script>
+<script type="text/javascript" src="Ideal/Library/moment/lang/ru.js"></script>
+<script type="text/javascript" src="Ideal/Library/datetimepicker/src/js/bootstrap-datetimepicker.js"></script>
+
+<div id="picker_{$htmlName}" class="input-group date">
+    <span class="input-group-addon">
+        <span class="glyphicon glyphicon-calendar" ></span>
+    </span>
+    <input type="text" class="form-control" name="{$htmlName}" value="{$date}" >
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        $('#picker_{$htmlName}').datetimepicker({
+            useSeconds: true,
+            language: 'ru'
+        });
+    });
+</script>
 HTML;
 
         return $html;
@@ -40,31 +51,16 @@ HTML;
     {
         $request = new Request();
 
-        // Считываем все части даты из request, если хотя бы одна не указана - выходим
+        $fieldName = $this->htmlName;
+        $newValue = $request->$fieldName;
 
-        $fieldName = $this->htmlName . '_day';
-        $day = $request->$fieldName;
-        if ($day < 1) return '';
+        $dateTime = date_create_from_format('d.m.Y H:i:s', $newValue);
+        if ($dateTime === false) {
+            // Ошибка в формате введённой даты
+            return '';
+        }
 
-        $fieldName = $this->htmlName . '_month';
-        $month = $request->$fieldName;
-        if ($month < 1) return '';
-
-        $fieldName = $this->htmlName . '_year';
-        $year = $request->$fieldName;
-        if ($year < 1970) return '';
-
-        $fieldName = $this->htmlName . '_hour';
-        $hour = $request->$fieldName;
-        if ($hour == '') return '';
-
-        $fieldName = $this->htmlName . '_min';
-        $min = $request->$fieldName;
-        if ($min == '') return '';
-
-        $this->newValue = mktime($hour, $min, 0, $month, $day, $year);
-
+        $this->newValue = $dateTime->getTimestamp();
         return $this->newValue;
     }
-
 }
