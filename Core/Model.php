@@ -254,6 +254,11 @@ abstract class Model
 
         $countList = $this->getListCount();
 
+        if(ceil($countList / $onPage) < $page){
+            $this->is404 = true;
+            return false;
+        }
+
         $pagination = new Pagination();
         // Номера и ссылки на доступные страницы
         $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, 'page');
