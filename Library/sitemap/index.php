@@ -11,6 +11,7 @@ class myCrawler
     public $config; // конфигурация, считываемая из .ini-файла
     public $status = 'cron'; // статус запуска скрипта
     private $code; // код состояния после завершения работы паука
+    private $textError = ''; // Страница на которой возникает ошибка
     public $url = array(); // список файлов(ссылок)
 
     /**
@@ -144,6 +145,8 @@ class myCrawler
         $rcs = $crawler->start();
         if ($rcs === false) {
             $this->code = $crawler->errType;
+            if ($this->code == 404)
+                $this->textError = "Ошибка 404. Ссылка с {$crawler->urlError[1]} на {$crawler->urlError[0]}";
             return false;
         }
         if (!$crawler->hasFinished()) {
