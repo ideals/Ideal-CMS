@@ -365,10 +365,7 @@ class Crawler
             }
         }
         if(is_array($this->forbiddenPage) && count($this->forbiddenPage) > 0){
-            foreach($this->forbiddenPage as $k => $v){
-                if($v == '') continue;
-                if(strcasecmp($filename,$v) == 0) return true;
-            }
+            if (in_array($filename, $this->forbiddenPage)) return true;
         }
         return false;
     }
