@@ -318,14 +318,7 @@ class myCrawler
                 $text .= "Ничего не удалено\n";
             }
         }
-        $url = parse_url($this->config['website']);
-        if (substr($url['host'], 0, 4) == 'www.') $url['host'] = substr($url['host'], 4);
-        $from = 'From: sitemap@' . $url['host'];
-
-        // Отправляем письма об изменениях
-        foreach ($this->config['email'] as $mail) {
-            mail($mail, $this->config['website'], $text, $from);
-        }
+        $this->sendEmail($text);
     }
 
 
@@ -470,10 +463,8 @@ class myCrawler
                 case 'done':
                     break;
                 case 'onePage':
-                    $from = "From: sitemap@".$this->config['website'];
                     $this->info('', 'В sitemap доступна только одна ссылка на запись');
-                    mail('help1@neox.ru, top@neox.ru', $this->config['website'],
-                        'Попытка записи только одной страницы в sitemap', $from);
+                    $this->sendEmail('Попытка записи только одной страницы в sitemap');
                     break;
                 case '404':
                     $this->info('', 'Страница не найдена');
@@ -482,6 +473,7 @@ class myCrawler
                     unlink($sitemap_file);
                     file_put_contents($sitemap_file, $file);
                 default:
+                    $this->sendEmail($this->textError);
                     $this->info('', 'Webserver has an error. Shutting down');
                     break;
             }
@@ -544,6 +536,26 @@ class myCrawler
     function getDateTimeISO_short($timestamp)
     {
         return date("Y-m-d", $timestamp);
+    }
+
+    /**
+     * Функция отправки сообщение с отчетом о создании карты сайта
+     * @param string $text Сообщение(отчет)
+     */
+    private function sendEmail($text)
+    {
+        $url = parse_url($this->config['website']);
+        if (substr($url['host'], 0, 4) == 'www.') $url['host'] = substr($url['host'], 4);
+        $header  = 'MIME-Version: 1.0' . "\r\n";
+        $header .= 'Content-type: text/plain; charset=utf-8' . "\r\n";
+        $header .= 'From: sitemap@' . $url['host'];
+
+        // Отправляем письма об изменениях
+        $to = '';
+        foreach ($this->config['email'] as $mail) {
+            $to .= $mail.' , ';
+        }
+        mail($to, $this->config['website'], $text, $header);
     }
 
 }
