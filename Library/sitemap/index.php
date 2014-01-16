@@ -276,7 +276,7 @@ class myCrawler
 
     function info($param, $msg = '')
     {
-        echo "\n{$param}\n{$msg}";
+        echo "\n{$param}\n{$msg}\n";
     }
 
     function compare()
