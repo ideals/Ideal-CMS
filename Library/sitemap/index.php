@@ -11,6 +11,7 @@ class myCrawler
     public $config; // конфигурация, считываемая из .ini-файла
     public $status = 'cron'; // статус запуска скрипта
     private $code; // код состояния после завершения работы паука
+    private $textError = ''; // Страница на которой возникает ошибка
     public $url = array(); // список файлов(ссылок)
 
     /**
@@ -144,6 +145,8 @@ class myCrawler
         $rcs = $crawler->start();
         if ($rcs === false) {
             $this->code = $crawler->errType;
+            if ($this->code == 404)
+                $this->textError = "Ошибка 404. Ссылка с {$crawler->urlError[1]} на {$crawler->urlError[0]}";
             return false;
         }
         if (!$crawler->hasFinished()) {
@@ -273,7 +276,7 @@ class myCrawler
 
     function info($param, $msg = '')
     {
-        echo "\n{$param}\n{$msg}";
+        echo "\n{$param}\n{$msg}\n";
     }
 
     function compare()
@@ -318,14 +321,7 @@ class myCrawler
                 $text .= "Ничего не удалено\n";
             }
         }
-        $url = parse_url($this->config['website']);
-        if (substr($url['host'], 0, 4) == 'www.') $url['host'] = substr($url['host'], 4);
-        $from = 'From: sitemap@' . $url['host'];
-
-        // Отправляем письма об изменениях
-        foreach ($this->config['email'] as $mail) {
-            mail($mail, $this->config['website'], $text, $from);
-        }
+        $this->sendEmail($text);
     }
 
 
@@ -470,10 +466,8 @@ class myCrawler
                 case 'done':
                     break;
                 case 'onePage':
-                    $from = "From: sitemap@".$this->config['website'];
                     $this->info('', 'В sitemap доступна только одна ссылка на запись');
-                    mail('help1@neox.ru, top@neox.ru', $this->config['website'],
-                        'Попытка записи только одной страницы в sitemap', $from);
+                    $this->sendEmail('Попытка записи только одной страницы в sitemap');
                     break;
                 case '404':
                     $this->info('', 'Страница не найдена');
@@ -482,6 +476,7 @@ class myCrawler
                     unlink($sitemap_file);
                     file_put_contents($sitemap_file, $file);
                 default:
+                    $this->sendEmail($this->textError);
                     $this->info('', 'Webserver has an error. Shutting down');
                     break;
             }
@@ -544,6 +539,26 @@ class myCrawler
     function getDateTimeISO_short($timestamp)
     {
         return date("Y-m-d", $timestamp);
+    }
+
+    /**
+     * Функция отправки сообщение с отчетом о создании карты сайта
+     * @param string $text Сообщение(отчет)
+     */
+    private function sendEmail($text)
+    {
+        $url = parse_url($this->config['website']);
+        if (substr($url['host'], 0, 4) == 'www.') $url['host'] = substr($url['host'], 4);
+        $header  = 'MIME-Version: 1.0' . "\r\n";
+        $header .= 'Content-type: text/plain; charset=utf-8' . "\r\n";
+        $header .= 'From: sitemap@' . $url['host'];
+
+        // Отправляем письма об изменениях
+        $to = '';
+        foreach ($this->config['email'] as $mail) {
+            $to .= $mail.' , ';
+        }
+        mail($to, $this->config['website'], $text, $header);
     }
 
 }

@@ -16,6 +16,7 @@ define("PSNG_CRAWLER_MAX_GETFILE_TIME", 10); //timeout in seconds as a float val
 
 class Crawler
 {
+    public $urlError = '';
     var $host = '';
     var $protocol = '';
     var $forbiddenKeys = array();
@@ -85,10 +86,14 @@ class Crawler
             if (is_null($url) || $url == '')
                 break;
             $res = $this->_getFilesForURL($url);
+            if($res === false){
+                $this->urlError = $url;
+            }
             // Пауза
             sleep($this->delay);
 
             if ($this->error) {
+                $this->urlError = $url;
                 return false;
             }
         }
