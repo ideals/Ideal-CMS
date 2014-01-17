@@ -254,7 +254,7 @@ abstract class Model
 
         $countList = $this->getListCount();
 
-        if(ceil($countList / $onPage) < $page){
+        if($countList > 0 && ceil($countList / $onPage) < $page){
             $this->is404 = true;
             return false;
         }
