@@ -13,7 +13,6 @@ class ModelAbstract extends Site\Model
 
     /**
      * @param int $page Номер отображаемой страницы
-     * @param int $onPage Кол-во элементов на странице
      * @return array Полученный список элементов
      */
     public function getList($page)
