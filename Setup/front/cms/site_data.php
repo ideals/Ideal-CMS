@@ -4,7 +4,7 @@ return array(
     'robotEmail' => 'robot@[[SITENAME]]', // Почтовый ящик, с которого будут приходить письма с сайта | Ideal_Text
     'mailForm' => 'info@[[SITENAME]]', // Почтовый ящик менеджера сайта | Ideal_Text
     'phone' => '(495) 123-45-67', // Телефон в шапке сайта | Ideal_Text
-    'startUrl' => '', // Начальная папка CMS | Ideal_Text
+    'startUrl' => '[[SUBFOLDER_START_SLASH]]', // Начальная папка CMS | Ideal_Text
     'urlSuffix' => '.html', // Стандартный суффикс URL | Ideal_Text
     'tmpDir' => '/tmp', // Путь к папке с временными файлами | Ideal_Text
     'templateCachePath' => '/tmp/templates', // Путь к папке с кэшем twig-шаблонов | Ideal_Text
