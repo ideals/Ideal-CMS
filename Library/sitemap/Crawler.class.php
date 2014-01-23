@@ -16,6 +16,8 @@ define("PSNG_CRAWLER_MAX_GETFILE_TIME", 10); //timeout in seconds as a float val
 
 class Crawler
 {
+    public $urlError = '';
+    public $textError = '';
     var $host = '';
     var $protocol = '';
     var $forbiddenKeys = array();
@@ -85,10 +87,14 @@ class Crawler
             if (is_null($url) || $url == '')
                 break;
             $res = $this->_getFilesForURL($url);
+            if ($res === false) {
+                $this->urlError = $url;
+            }
             // Пауза
             sleep($this->delay);
 
             if ($this->error) {
+                $this->urlError = $url;
                 return false;
             }
         }
@@ -224,7 +230,8 @@ class Crawler
         $res = $res['content'];
 
         if ($info['http_status'] >= '400' && $info['http_status'] < '599') {
-            $this->info("webpage " . $url . " is not accessible. error #" . $info['http_status'] . ' from ' . $url_from);
+            $this->textError = "webpage {$url} is not accessible. error # {$info['http_status']} from {$url_from}";
+            $this->info($this->textError);
             if ($info['http_status'] == '503') {
                 $this->error = true;
             }
@@ -364,10 +371,10 @@ class Crawler
                 return true;
             }
         }
-        if(is_array($this->forbiddenPage) && count($this->forbiddenPage) > 0){
-            foreach($this->forbiddenPage as $k => $v){
-                if($v == '') continue;
-                if(strcasecmp($filename,$v) == 0) return true;
+        if (is_array($this->forbiddenPage) && count($this->forbiddenPage) > 0) {
+            foreach ($this->forbiddenPage as $k => $v) {
+                if ($v == '') continue;
+                if (strcasecmp($filename, $v) == 0) return true;
             }
         }
         return false;
@@ -878,7 +885,7 @@ class Crawler
         //    	if(!in_array($key, $this->forbiddenKeys)) $this->forbiddenKeys[] = $key;
     }
 
-    function debug($param, $msg='')
+    function debug($param, $msg = '')
     {
         return;
         echo "\n{$param}\n{$msg}";

@@ -7,26 +7,15 @@ AddDefaultCharset utf-8
 ErrorDocument 404 /404.html
 
 RewriteEngine on
-RewriteBase /[[SUBFOLDER_WITHOUT_END_SLASH]]
+RewriteBase /[[SUBFOLDER]]
 
 # Редирект с domain.ru на www.domain.ru
 RewriteCond %{HTTP_HOST} ^[[DOMAIN_ESC]]
 RewriteRule ^(.*)$ http://www.[[SITENAME]]/$1 [R=permanent,L]
 
-# Обработка обращения к админке
-# TODO Эти правила можно перенести в папку админки
-RewriteRule ^[[CMS]]/$ /[[SUBFOLDER]]_.php [L,QSA]
-RewriteRule ^[[CMS]]/index.php /[[SUBFOLDER]]_.php [L,QSA]
-RewriteRule ^[[CMS]]/install.php - [L,QSA]
-
 # Captcha
 RewriteRule ^images/captcha.jpeg$ /[[CMS]]/Ideal/Library/captcha/cheak.php?code=1 [L]
 RewriteRule ^images/captcha.jpg$ /[[CMS]]/Ideal/Library/captcha/image.php [L]
-
-
-RewriteRule ^(.*)/$ $1.html [R=permanent,L]
-[[COMMENT_FOR_SUBFOLDER]]RewriteRule ^index.html$ $1 [R=permanent,L]
-RewriteRule ^(.*)/index.html$ $1.html [R=permanent,L]
 
 #redirect#
 #redirect#
@@ -37,4 +26,4 @@ RewriteCond %{REQUEST_FILENAME} -l
 RewriteRule ^(.*)$ - [NC,L]
 
 # Если файла на диске нет, вызывается скрипт
-RewriteRule ^.*$ /[[SUBFOLDER]]_.php [NC,L]
+RewriteRule ^.*$ [[SUBFOLDER_START_SLASH]]/_.php [NC,L]

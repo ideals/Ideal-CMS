@@ -93,10 +93,11 @@ class Router
         $url = ltrim($_SERVER['REQUEST_URI'], '/');
         // Удаляем параметры из URL (текст после символов "?" и "#")
         $url = preg_replace('/[\?\#].*/', '', $url);
-        $url = substr($url, strlen($config->startUrl));
+        // Убираем начальные слэши и начальный сегмент, если cms не в корне сайта
+        $url = ltrim(substr($url, strlen($config->startUrl)), '/');
 
         // Если запрошена главная страница
-        if ($url == '' || $url == '/') {
+        if ($url == '') {
             $model = new \Ideal\Structure\Home\Site\Model('0-' . $prevStructureId);
             $model = $model->detectPageByUrl($path, '/');
             return $model;

@@ -2,15 +2,16 @@
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING); //| E_STRICT
 ini_set('display_errors', 'On');
 
-require_once(getcwd().'/Ontology.php');
-require_once(getcwd().'/Crawler.class.php');
-require_once(getcwd().'/GsgXml.class.php');
+require_once(dirname(__FILE__) . '/Ontology.php');
+require_once(dirname(__FILE__) . '/Crawler.class.php');
+require_once(dirname(__FILE__) . '/GsgXml.class.php');
 
 class myCrawler
 {
     public $config; // конфигурация, считываемая из .ini-файла
     public $status = 'cron'; // статус запуска скрипта
     private $code; // код состояния после завершения работы паука
+    private $textError = ''; // страница на которой возникает ошибка
     public $url = array(); // список файлов(ссылок)
 
     /**
@@ -144,6 +145,9 @@ class myCrawler
         $rcs = $crawler->start();
         if ($rcs === false) {
             $this->code = $crawler->errType;
+            if ($this->code == 404)
+                // Записываем описание ошибки для отправки их на почту
+                $this->textError = $crawler->textError;
             return false;
         }
         if (!$crawler->hasFinished()) {
@@ -189,7 +193,7 @@ class myCrawler
                 array_push($this->url, $fileinfo['file_url']);
             }
             $SETTINGS[PSNG_TIMEOUT_ACTION] = '';
-            if(count($this->url) == 1){
+            if (count($this->url) == 1) {
                 $this->code = 'onePage';
                 return false;
             }
@@ -273,7 +277,7 @@ class myCrawler
 
     function info($param, $msg = '')
     {
-        echo "\n{$param}\n{$msg}";
+        echo "\n{$param}\n{$msg}\n";
     }
 
     function compare()
@@ -318,14 +322,7 @@ class myCrawler
                 $text .= "Ничего не удалено\n";
             }
         }
-        $url = parse_url($this->config['website']);
-        if (substr($url['host'], 0, 4) == 'www.') $url['host'] = substr($url['host'], 4);
-        $from = 'From: sitemap@' . $url['host'];
-
-        // Отправляем письма об изменениях
-        foreach ($this->config['email'] as $mail) {
-            mail($mail, $this->config['website'], $text, $from);
-        }
+        $this->sendEmail($text);
     }
 
 
@@ -470,10 +467,8 @@ class myCrawler
                 case 'done':
                     break;
                 case 'onePage':
-                    $from = "From: sitemap@".$this->config['website'];
                     $this->info('', 'В sitemap доступна только одна ссылка на запись');
-                    mail('help1@neox.ru, top@neox.ru', $this->config['website'],
-                        'Попытка записи только одной страницы в sitemap', $from);
+                    $this->sendEmail('Попытка записи только одной страницы в sitemap');
                     break;
                 case '404':
                     $this->info('', 'Страница не найдена');
@@ -482,6 +477,7 @@ class myCrawler
                     unlink($sitemap_file);
                     file_put_contents($sitemap_file, $file);
                 default:
+                    $this->sendEmail($this->textError);
                     $this->info('', 'Webserver has an error. Shutting down');
                     break;
             }
@@ -544,6 +540,25 @@ class myCrawler
     function getDateTimeISO_short($timestamp)
     {
         return date("Y-m-d", $timestamp);
+    }
+
+    /**
+     * Функция отправки сообщение с отчетом о создании карты сайта
+     * @param string $text Сообщение(отчет)
+     */
+    private function sendEmail($text)
+    {
+        $host = parse_url($this->config['website'], PHP_URL_HOST);
+        if (substr($host, 0, 4) == 'www.') {
+            $host = substr($host, 4);
+        }
+        $header = 'MIME-Version: 1.0' . "\r\n";
+        $header .= 'Content-type: text/plain; charset=utf-8' . "\r\n";
+        $header .= 'From: sitemap@' . $host;
+
+        // Отправляем письма об изменениях
+        $to = implode(',', $this->config['email']);
+        mail($to, $this->config['website'], $text, $header);
     }
 
 }

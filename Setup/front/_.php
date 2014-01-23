@@ -4,7 +4,7 @@ namespace Ideal;
 ini_set('display_errors', 'Off');
 
 $cmsFolder = '[[CMS]]';
-$subFolder = '[[SUBFOLDER]]';
+$subFolder = '[[SUBFOLDER_START_SLASH]]';
 
 // Абсолютный адрес корня сервера, не должен оканчиваться на слэш.
 define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT']);
@@ -12,7 +12,7 @@ define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DO
 // В пути поиска по умолчанию включаем корень сайта, путь к Ideal и папке кастомизации CMS
 set_include_path(
     get_include_path()
-        . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder 
+        . PATH_SEPARATOR . DOCUMENT_ROOT 
         . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal.c/'
         . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal/'
         . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Mods.c/'
@@ -27,7 +27,7 @@ require_once 'Core/AutoLoader.php';
 $config = Core\Config::getInstance();
 
 // Каталог, в котором находятся модифицированные скрипты CMS
-$config->cmsFolder = $subFolder . $cmsFolder;
+$config->cmsFolder = trim($subFolder . '/' . $cmsFolder, '/');
 
 // Куда будет вестись лог ошибок. Варианты file|display|comment|firebug|email
 $config->errorLog = 'firebug';
@@ -38,7 +38,7 @@ $config->loadSettings();
 // Инициализируем фронт контроллер
 $page = new Core\FrontController();
 
-if (strpos($_SERVER['REQUEST_URI'], $subFolder . $cmsFolder . '/') === 1) {
+if (strpos($_SERVER['REQUEST_URI'], $config->cmsFolder) === 1) {
     // Обращение к административной части
 
     // Регистрируем плагин авторизации
