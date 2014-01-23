@@ -275,7 +275,11 @@ abstract class Model
         $localPath = $this->getLocalPath();
 
         // По первому элементу в локальном пути, опеределяем, какую структуру нужно вызвать
-        $first = $localPath[0];
+        if (isset($localPath[0])) {
+            $first = $localPath[0];
+        } else {
+            $first['prev_structure'] = $this->prevStructure;
+        }
 
         list($prevStructureId, $prevElementId) = explode('-', $first['prev_structure']);
         $structure = $config->getStructureByPrev($first['prev_structure']);
@@ -294,7 +298,7 @@ abstract class Model
         $structure->setPageDataById($prevElementId);
 
         $path = $structure->detectPath();
-        $path = array_merge($path, $this->getLocalPath());
+        $path = array_merge($path, $localPath);
 
         return $path;
     }
