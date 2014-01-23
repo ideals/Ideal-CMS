@@ -47,9 +47,14 @@ if ($file->getError() > 1) return;
 </table>
 
 <br/>
-<button type="button" class="btn btn-primary" value="<?php echo $file->getCountParam(); ?>" onclick="addLine(this)">
+
+<button type="button" class="btn btn-primary pull-left" value="<?php echo $file->getCountParam(); ?>" onclick="addLine(this)">
     Добавить редирект
 </button>
+
+<div class="alert" style="margin-left: 190px;">
+    <strong>Не забывайте</strong> экранировать специмволы в первой колонке в соответствии с правилами регулярных выражений!
+</div>
 
 <style>
     tr:hover .editGroup {
