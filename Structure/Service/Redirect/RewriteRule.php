@@ -324,6 +324,8 @@ class RewriteRule
 
         // Запись в htaccess
         $t = file_get_contents(DOCUMENT_ROOT . '/.htaccess');
+        $file = str_replace('\\', '\\\\', $file); // заменяем один слэш на два (экранируем)
+        $file = str_replace('$', '\$', $file); // экранируем символ $
         $file = preg_replace('/\#redirect\#(.*)\#redirect\#/s', $file, $t);
         file_put_contents($this->htFile, $file);
 
