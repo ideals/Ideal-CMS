@@ -92,6 +92,7 @@ class Config
      */
     public function getStructureByName($name)
     {
+        // TODO что делать, если с таким именем определено несколько структур
         // TODO сделать уведомление об ошибке, если такой структуры нет
         foreach($this->structures as $structure) {
             if ($structure['structure'] == $name) {

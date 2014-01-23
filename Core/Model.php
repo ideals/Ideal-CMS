@@ -39,7 +39,7 @@ abstract class Model
             $type = 'Home';
         }
 
-        switch($type):
+        switch ($type):
             case 'Home':
                 // Находим начальную структуру
                 $structures = $config->structures;
@@ -104,7 +104,7 @@ abstract class Model
     }
 
     // Получаем информацию о странице
-    public  function getPageData()
+    public function getPageData()
     {
         if (is_null($this->pageData)) {
             $this->initPageData();
@@ -113,12 +113,12 @@ abstract class Model
     }
 
     // Устанавливаем информацию о странице
-    public  function setPageData($pageData)
+    public function setPageData($pageData)
     {
         $this->pageData = $pageData;
     }
 
-    public  function initPageData()
+    public function initPageData()
     {
         $this->pageData = end($this->path);
 
@@ -254,6 +254,12 @@ abstract class Model
 
         $countList = $this->getListCount();
 
+        if (($countList > 0) && (ceil($countList / $onPage) < $page)) {
+            // Если для запрошенного номера страницы нет элементов - выдать 404
+            $this->is404 = true;
+            return false;
+        }
+
         $pagination = new Pagination();
         // Номера и ссылки на доступные страницы
         $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, 'page');
@@ -275,7 +281,11 @@ abstract class Model
         $localPath = $this->getLocalPath();
 
         // По первому элементу в локальном пути, опеределяем, какую структуру нужно вызвать
-        $first = $localPath[0];
+        if (isset($localPath[0])) {
+            $first = $localPath[0];
+        } else {
+            $first['prev_structure'] = $this->prevStructure;
+        }
 
         list($prevStructureId, $prevElementId) = explode('-', $first['prev_structure']);
         $structure = $config->getStructureByPrev($first['prev_structure']);
@@ -294,7 +304,7 @@ abstract class Model
         $structure->setPageDataById($prevElementId);
 
         $path = $structure->detectPath();
-        $path = array_merge($path, $this->getLocalPath());
+        $path = array_merge($path, $localPath);
 
         return $path;
     }

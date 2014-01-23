@@ -76,7 +76,13 @@ class RewriteRule
         // Основным считается список редиректов из redirect.txt
         $this->redirects = $redirectTxt;
 
-        // todo уведомление о том, когда есть в redirect.txt и нет в htaccess
+        // Уведомление о том, когда есть в redirect.txt и нет в htaccess
+        foreach ($redirectTxt as $from => $v) {
+            if (!isset($redirectHtaccess[$from])) {
+                $v['error'] .= 'Редирект есть в redirect.txt и нет в .htaccess<br />';
+                $this->redirects[$from] = $v;
+            }
+        }
 
         // Проходимся по редиректам из .htaccess и добавляем недостающие в основной список
         foreach ($redirectHtaccess as $from => $v) {
@@ -324,6 +330,8 @@ class RewriteRule
 
         // Запись в htaccess
         $t = file_get_contents(DOCUMENT_ROOT . '/.htaccess');
+        $file = str_replace('\\', '\\\\', $file); // заменяем один слэш на два (экранируем)
+        $file = str_replace('$', '\$', $file); // экранируем символ $
         $file = preg_replace('/\#redirect\#(.*)\#redirect\#/s', $file, $t);
         file_put_contents($this->htFile, $file);
 

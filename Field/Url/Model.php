@@ -72,18 +72,12 @@ class Model
         }
 
         $config = Config::getInstance();
-
-        $structures = $config->structures;
-        $startStructure = reset($structures);
-
-        if ($lastUrlPart == '/' OR $lastUrlPart == $startStructure['url']) {
+        if ($lastUrlPart == '/') {
             // Ссылка на главную обрабатывается особым образом
-            $parentUrl = $startStructure['url'];
-            if ($parentUrl == '') {
-                return '/';
-            } else {
-                return $parentUrl . '/index' . $config->urlSuffix;
+            if ($config->startUrl != '') {
+                $lastUrlPart = $config->startUrl . '/';
             }
+            return $lastUrlPart;
         }
 
         $pluginBroker = PluginBroker::getInstance();
@@ -97,8 +91,8 @@ class Model
             return $lastUrlPart;
         }
 
-        if ($parentUrl == '' OR $parentUrl == '/') {
-            $parentUrl = $startStructure['url'];
+        if ($parentUrl == '' || $parentUrl == '/') {
+            $parentUrl = $config->startUrl;
         } elseif (is_array($parentUrl)) {
             $parentUrl = implode('/', $parentUrl);
         }

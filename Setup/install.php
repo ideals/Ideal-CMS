@@ -5,22 +5,25 @@ ini_set('display_errors', 'On');
 
 set_error_handler('installErrorHandler');
 
-//Проверяем правильность Url
-//Если Url неправильный (путь к скрипту содержит символы в неправильном регистре), делаем редирект с указанием правильного пути
+// Проверяем правильность Url
+// Если Url неправильный (путь к скрипту содержит символы в неправильном регистре), делаем редирект с указанием правильного пути
 $scriptDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', $_SERVER['SCRIPT_FILENAME']);
 if ($scriptDir !== $_SERVER['REQUEST_URI']) {
     header("Location: $scriptDir");
 }
 
+// Абсолютный адрес корня сервера, не должен оканчиваться на слэш.
+define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT']);
 
+// Абсолютный адрес размещения админки
 define('CMS_ROOT', $_SERVER['DOCUMENT_ROOT']
     . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/Setup')));
 
+// Абсолютный адрес папки, в которой находится папка админки
 define('ROOT', substr(CMS_ROOT, 0, strrpos(CMS_ROOT, '/')));
 
 $fields = array(
     'siteName',
-    'sitePath',
     'cmsLogin',
     'cmsPass',
     'cmsPassRepeated',
@@ -98,12 +101,6 @@ if ($errorText == 'Ok') {
             <label class="control-label" for="siteName">Доменное имя сайта:</label>
             <div class="controls">
                 <input type="text" class="input-xlarge" id="siteName" name="siteName" value="<?php echo $formValue['siteName']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="sitePath">Путь к корню сайта:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="sitePath" name="sitePath" value="<?php echo $formValue['sitePath']; ?>" />
             </div>
         </div>
         <div class="control-group">
@@ -266,9 +263,6 @@ function initFormValue($post, $fields)
     if ($values['dbHost'] == '') {
         $values['dbHost'] = 'localhost';
     }
-    if ($values['sitePath'] == '') {
-        $values['sitePath'] = ROOT;
-    }
     if ($values['dbCharset'] != '') {
         $charsets = array(0 => 'UTF-8', 1 => 'WINDOWS-1251');
         $values['dbCharset'] = $charsets[$values['dbCharset']];
@@ -299,27 +293,12 @@ function fillPlaceholders($text)
     $search[]  = '[[DOMAIN_ESC]]';
     $replace[] =  str_replace('.', '\.', $formValue['siteName']);
 
-    $subFolderWoEndSlash = '';
-    $commentForSubFolder = '';
-    $subFolderIndex = '';
-    $subFolder = substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/Setup'));
-    $subFolder = substr($subFolder, 0, strrpos($subFolder, '/'));
-    $search[] = '[[SUBFOLDER]]';
+    $subFolder = substr(ROOT, strlen(DOCUMENT_ROOT) + 1);
+    $search[]  = '[[SUBFOLDER]]';
     $replace[] = $subFolder;
-    if ($subFolder != '') {
-        $subFolderWoEndSlash = $subFolder;
-        $commentForSubFolder = '#';
-        // TODO доработать для разных суффиксов
-        $subFolderIndex = 'index.html';
-    }
 
-    $search[]  = '[[SUBFOLDER_WITHOUT_END_SLASH]]';
-    $replace[] = $subFolderWoEndSlash;
-    $search[]  = '[[COMMENT_FOR_SUBFOLDER]]';
-    $replace[] = $commentForSubFolder;
-    $search[]  = '[[SUBFOLDER_INDEX]]';
-    $replace[] = $subFolderIndex;
-
+    $search[]  = '[[SUBFOLDER_START_SLASH]]';
+    $replace[] = ($subFolder == '') ? '' : '/' . $subFolder;
 
     $text = str_replace($search, $replace, $text);
 

@@ -43,7 +43,7 @@ return array(
             'type' => 'Ideal_UrlAuto'
         ),
         'parent_url' => array(
-            'label' => 'URL статей',
+            'label' => 'URL списка элементов',
             'sql'   => 'varchar(255) not null',
             'type' => 'Ideal_Text'
         ),
