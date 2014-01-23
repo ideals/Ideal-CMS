@@ -39,7 +39,7 @@ abstract class Model
             $type = 'Home';
         }
 
-        switch($type):
+        switch ($type):
             case 'Home':
                 // Находим начальную структуру
                 $structures = $config->structures;
@@ -104,7 +104,7 @@ abstract class Model
     }
 
     // Получаем информацию о странице
-    public  function getPageData()
+    public function getPageData()
     {
         if (is_null($this->pageData)) {
             $this->initPageData();
@@ -113,12 +113,12 @@ abstract class Model
     }
 
     // Устанавливаем информацию о странице
-    public  function setPageData($pageData)
+    public function setPageData($pageData)
     {
         $this->pageData = $pageData;
     }
 
-    public  function initPageData()
+    public function initPageData()
     {
         $this->pageData = end($this->path);
 
