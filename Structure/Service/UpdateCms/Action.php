@@ -94,7 +94,7 @@ function getVersionFromFile($cmsMdFileName)
                     nowVersions = $.parseJSON(nowVersions);
 
                     if (versions['message'] !== undefined) {
-                        $('<h4>').appendTo('#form-input').text(versions['message']);
+                        $('<h4>').appendTo('#form-input').html(versions['message']);
                         nowVersions = null;
                     };
 
