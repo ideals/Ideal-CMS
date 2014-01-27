@@ -262,7 +262,7 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
 
             foreach ($this->urls as $url) {
                 $ret[] = '<url>';
-                $ret[] = sprintf('<loc>%s</loc>', $this->xmlEscape($url['url']));
+                $ret[] = sprintf('<loc>%s</loc>', htmlspecialchars_decode($this->xmlEscape($url['url'])));
                 if (isset($url['lastmod'])) {
                 	if (is_numeric($url['lastmod'])) {
                     $ret[] = sprintf('<lastmod>%s</lastmod>',
