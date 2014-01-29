@@ -124,7 +124,6 @@ class myCrawler
         if (file_exists($tmpFile)) {
             $this->info('', 'Продолжаем сканирование с точки');
             $SETTINGS = unserialize(file_get_contents($tmpFile));
-            unlink($tmpFile);
             $crawler->setDone($SETTINGS[timeout_done]);
             $crawler->setFiles($SETTINGS[timeout_file]);
             $crawler->setTodo($SETTINGS[timeout_todo]);
@@ -160,6 +159,7 @@ class myCrawler
             $this->code = 'timeout';
             // Записываем текущие результаты в файл
             $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+            unlink($tmpFile);
             $result = file_put_contents($tmpFile, serialize($SETTINGS));
             if (!$result) {
                 $this->info('', 'TMP file not found: ' . $tmpFile);
