@@ -91,7 +91,7 @@ class Crawler
                 $this->urlError = $url;
             }
             // Пауза
-            sleep($this->delay);
+            usleep(intval($this->delay * 1000000));
 
             if ($this->error) {
                 $this->urlError = $url;
