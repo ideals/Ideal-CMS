@@ -124,14 +124,14 @@ class myCrawler
         if (file_exists($tmpFile)) {
             $this->info('', 'Продолжаем сканирование с точки');
             $SETTINGS = unserialize(file_get_contents($tmpFile));
-            $crawler->setDone($SETTINGS[timeout_done]);
-            $crawler->setFiles($SETTINGS[timeout_file]);
-            $crawler->setTodo($SETTINGS[timeout_todo]);
+            $crawler->setDone($SETTINGS[PSNG_TIMEOUT_DONE]);
+            $crawler->setFiles($SETTINGS[PSNG_TIMEOUT_FILE]);
+            $crawler->setTodo($SETTINGS[PSNG_TIMEOUT_TODO]);
             $crawler->beforeTimeout = $SETTINGS['beforeTimeout'];
         } else {
             $crawler->beforeTimeout = 1;
-            $crawler->setDone($SETTINGS[PSNG_TIMEOUT_DONE]);
-            $crawler->setFiles($SETTINGS[PSNG_TIMEOUT_FILE]);
+            // $crawler->setDone($SETTINGS[PSNG_TIMEOUT_DONE]);
+            // $crawler->setFiles($SETTINGS[PSNG_TIMEOUT_FILE]);
         }
         $crawler->setForbiddenKeys($this->config['disallow_key']);
         $crawler->setForbiddenDirectories($this->config['disallow_dir']);
@@ -159,7 +159,6 @@ class myCrawler
             $this->code = 'timeout';
             // Записываем текущие результаты в файл
             $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
-            unlink($tmpFile);
             $result = file_put_contents($tmpFile, serialize($SETTINGS));
             if (!$result) {
                 $this->info('', 'TMP file not found: ' . $tmpFile);
@@ -192,6 +191,10 @@ class myCrawler
                 // Создаем список ссылок
                 array_push($this->url, $fileinfo['file_url']);
             }
+
+            // Сканирование завершено, удаляем временный файл
+            unlink($tmpFile);
+
             $SETTINGS[PSNG_TIMEOUT_ACTION] = '';
             if (count($this->url) == 1) {
                 $this->code = 'onePage';
@@ -385,9 +388,19 @@ class myCrawler
                 $this->info('', "File {$xmlFile} is not readable");
                 return false;
             }
-            if ($writable && !is_writable($xmlFile)) {
+            if (!is_writable($xmlFile)) {
                 $this->info('', "File {$xmlFile} is not writable");
                 return false;
+            }
+        } else {
+            // Файла нет, пытаемся создать
+            if (file_put_contents($xmlFile, '') === false) {
+                // Создать файл не получилось
+                $this->info('', "Couldn't create {$xmlFile}");
+                return false;
+            } else {
+                // Удаляем пустой файл, т.к. пустого файла не должно быть
+                unlink($xmlFile);
             }
         }
 
