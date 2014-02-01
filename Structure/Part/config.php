@@ -50,7 +50,7 @@ return array(
             'sql'       => "varchar(20) not null default 'Page'",
             'type'      => 'Ideal_Template',
             'class'     => '\\Ideal\\Structure\\Part\\Getters\\TemplateList',
-            'templates' =>  array('Ideal_Page', 'Ideal_PhpFile'),
+            'templates' =>  array('Ideal_Page', 'Ideal_PhpFile', 'Ideal_SiteMap'),
         ),
         'name' => array(
             'label' => 'Название',
