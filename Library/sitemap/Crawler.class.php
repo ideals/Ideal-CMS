@@ -90,9 +90,9 @@ class Crawler
             if ($res === false) {
                 $this->urlError = $url;
             }
-            // Пауза
-            sleep($this->delay);
-
+            if (strval($res) != 'skipMe') {
+                usleep(intval($this->delay * 1000000));
+            }
             if ($this->error) {
                 $this->urlError = $url;
                 return false;
@@ -145,7 +145,6 @@ class Crawler
     {
         $this->path = $dir;
     }
-
 
     /**
      * returns number of files
@@ -209,15 +208,18 @@ class Crawler
         // if allready in list of files, return
         if (array_key_exists($url, $this->files)) {
 //			debug($url, "File already in list of files");
-            return;
+            return 'skipMe';
         }
 
         // check for non local file links that refers to another host
 
         if (!($this->_isLocal($url))) {
 //			debug($url, 'The url does not match the current host '.$this->host.', only relative links are allowed at the moment!');
-            return;
+            return 'skipMe';
         }
+
+        // Отображаем сообщение о url, который собираемся сканировать
+        $this->info($this->beforeTimeout . '. ' . $url);
 
         // fetch content for given url
         $res = $this->_getURL($url);
@@ -262,7 +264,8 @@ class Crawler
         if ($info['location'] != '') {
             $res = '<a href="' . $info['location'] . '"> </a>';
         } else {
-            $this->info(($this->beforeTimeout++) . '. ' . $url . " Status: " . $info['http_status']);
+            $this->beforeTimeout++;
+            $this->info(" Status: " . $info['http_status']);
         }
         // remove html comments
         $a_begin = 0;

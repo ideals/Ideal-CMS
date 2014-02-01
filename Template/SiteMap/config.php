@@ -17,7 +17,7 @@ return array(
         ),
         'level' => array(
             'label' => 'Кол-во отображаемых уровней',
-            'sql'   => 'int default 0',
+            'sql'   => 'int not null default 0',
             'type'  => 'Ideal_Text'
         ),
         'content' => array(

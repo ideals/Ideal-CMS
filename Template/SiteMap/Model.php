@@ -27,11 +27,12 @@ class Model extends \Ideal\Core\Admin\Model
     {
         $this->setPageDataByPrevStructure($this->prevStructure);
 
-        // Считываем из БД все открытые разделы
-        $list = $this->getList();
-
-        // Строим текстовую переменную с ul-списком разделов
-        $this->pageData['content'] .=  $this->createSiteMap($list);
+        $mode = explode('\\', get_class($this->parentModel));
+        if ($mode[3] == 'Site') {
+            // Для фронтенда к контенту добавляется карта сайта в виде ul-списка разделов
+            $list = $this->getList(1); // считываем из БД все открытые разделы
+            $this->pageData['content'] .=  $this->createSiteMap($list); // строим html-код карты сайта
+        }
 
         return $this->pageData;
     }
@@ -39,9 +40,10 @@ class Model extends \Ideal\Core\Admin\Model
     /**
      * Построение карты сайта в виде дерева
      *
+     * @param int $page Не используется
      * @return array
      */
-    public function getList()
+    public function getList($page)
     {
         $config = Config::getInstance();
 

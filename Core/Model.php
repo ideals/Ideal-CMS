@@ -135,8 +135,18 @@ abstract class Model
             $structure = $config->getStructureByName($prev['structure']);
             $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
             $template = new $className($prevStructure);
+            $template->setParentModel($this);
             $this->pageData[$k] = $template->getPageData();
         }
+    }
+
+    /**
+     * Метод используется только в моделях Template для установки модели владельца этого шаблона
+     * @param $model
+     */
+    public function setParentModel($model)
+    {
+        $this->parentModel = $model;
     }
 
     /**
