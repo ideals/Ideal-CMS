@@ -335,7 +335,7 @@ class Crawler
 
     function _isLocal($givenURL)
     {
-        if (preg_match(',^(ftp://|mailto:|news:|javascript:|telnet:|callto:),i', $givenURL)) return false;
+        if (preg_match(',^(ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:),i', $givenURL)) return false;
 
         $url = parse_url($givenURL);
 
@@ -782,7 +782,7 @@ class Crawler
     function _absolute($relative, $absolute)
     {
         // Link ist schon absolut
-        if (preg_match(',^(https?://|ftp://|mailto:|news:|javascript:|telnet:|callto:),i', $relative)) {
+        if (preg_match(',^(https?://|ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:),i', $relative)) {
             // hostname is not the same (with/without www) than the one used in the link
             if (substr($relative, 0, 4) == 'http') {
                 $url = parse_url($relative);
