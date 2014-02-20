@@ -154,6 +154,8 @@ class ModelAbstract extends Site\Model
                     $url = array_slice($url, count($newPath) - 2);
                     $model = $structure->detectPageByUrl($newPath, $url);
                     return $model;
+                } else {
+                    // todo обработку когда сегмент URL пропускается внутри структуры
                 }
                 continue;
             }
@@ -185,13 +187,17 @@ class ModelAbstract extends Site\Model
             $end = end($this->path);
             // Получаем модель вложенной структуры
             $structure = $this->getNestedStructure($end);
-            // Запускаем определение пути и активной модели по $par
-            $model = $structure->detectPageByUrl($this->path, $url);
-            return $model;
-        } else {
-            // Неразобранных сегментов не осталось, возвращаем в качестве модели сам объект
-            return $this;
+            if (is_null($structure)) {
+                // Ксли вложенная структура такая же, то это значит что 404 ошибка
+                $this->is404 = true;
+            } else {
+                // Запускаем определение пути и активной модели по $par
+                $model = $structure->detectPageByUrl($this->path, $url);
+                return $model;
+            }
         }
+        // Неразобранных сегментов не осталось, возвращаем в качестве модели сам объект
+        return $this;
     }
 
     /**
@@ -202,6 +208,9 @@ class ModelAbstract extends Site\Model
      */
     protected function checkDetectedUrlCount($url, $newPath)
     {
+        // В случае, если новый путь состоит из одного элемента, который пропускается
+        if (count($newPath) == 1 && $newPath[0]['is_skip'] == 1) return 1;
+
         // Подсчитываем кол-во элементов пути, без учёта пропущенных сегментов
         // и составляем строку найденной части URL
         $count = 0;
@@ -234,6 +243,11 @@ class ModelAbstract extends Site\Model
         $config = Config::getInstance();
         $rootStructure = $config->getStructureByPrev($end['prev_structure']);
         $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
+
+        if (get_class($this) == trim($modelClassName, '\\')) {
+            // todo Если вложена такая же структура, то надо продолжать разбор url, но не здесь
+            return null;
+        }
 
         /* @var $structure Model */
         $structure = new $modelClassName($rootStructure['ID'] . '-' . $end['ID']);
