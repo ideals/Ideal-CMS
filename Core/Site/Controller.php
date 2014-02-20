@@ -16,6 +16,17 @@ class Controller
     protected $view;
     /** @var bool Включение листалки (пагинации) */
     protected $isPager = true;
+    /** @var string Имя файла с нестандартным шаблоном view */
+    protected $tplName = '';
+
+    /**
+     * Установка нестандартного шаблона View
+     * @param string $tplName Путь к файлу шаблона от Ideal или от Mods (не включая эти папки)
+     */
+    public function setTemplate($tplName)
+    {
+        $this->tplName = $tplName;
+    }
 
     /**
      * Отображение структуры в браузере
@@ -86,7 +97,11 @@ class Controller
 
         // Инициализация шаблона страницы
         if ($tplName == '') {
-            $tplName = $moduleName . 'Structure/' . $structureName . '/Site/index.twig';
+            if ($this->tplName == '') {
+                $tplName = $moduleName . 'Structure/' . $structureName . '/Site/index.twig';
+            } else {
+                $tplName = $this->tplName;
+            }
         }
         if (!stream_resolve_include_path($tplName)) {
             echo 'Нет файла шаблона ' . $tplName;
