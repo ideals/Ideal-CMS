@@ -238,6 +238,9 @@ abstract class Model
     protected function getWhere($where)
     {
         if ($where != '') {
+            // Убираем из строки начальные команды AND или OR
+            $where = trim($where);
+            $where = preg_replace('/(^AND)|(^OR)/i', '', $where);
             $where = 'WHERE ' . $where;
         }
         return $where;
