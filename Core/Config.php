@@ -141,6 +141,24 @@ class Config
     }
 
     /**
+     * Из списка подключённых структур находит структуру на основании имени её класса
+     *
+     * @param string $className
+     *
+     * @return array|bool Массив структуры с указанным ID, или FALSE, если структуру не удалось обнаружить
+     */
+    public function getStructureByClass($className)
+    {
+        $className = trim($className, '\\');
+        $className = explode('\\', $className);
+        $className = $className[0] . '_' . $className[2];
+
+        $structure = $this->getStructureByName($className);
+
+        return $structure;
+    }
+
+    /**
      * Статический метод, возвращающий находящийся в нём динамический объект
      *
      * Этот метод реализует паттерн Singleton.
