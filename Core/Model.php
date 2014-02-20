@@ -17,7 +17,6 @@ abstract class Model
     protected $path = array();
     protected $parentUrl;
     protected $module;
-    protected $prevModel;
     protected $pageData;
     /** @var bool Флаг 404-ошибки */
     public $is404 = false;
@@ -118,9 +117,13 @@ abstract class Model
         $this->pageData = $pageData;
     }
 
-    public function initPageData()
+    public function initPageData($pageData = null)
     {
-        $this->pageData = end($this->path);
+        if (is_null($pageData)) {
+            $this->pageData = end($this->path);
+        } else {
+            $this->pageData = $pageData;
+        }
 
         // Получаем переменные шаблона
         $config = Config::getInstance();
@@ -130,9 +133,24 @@ abstract class Model
 
             // В случае, если 404 ошибка, и нужной страницы в БД не найти
             if (!isset($this->pageData[$k])) continue;
+
+            // Определяем структуру на основании названия класса
+            $structure = $config->getStructureByClass(get_class($this));
+
+            if ($structure === false) {
+                // Не удалось определить структуру из конфига (Home)
+                // Определяем структуру, к которой принадлежит последний элемент пути
+                $prev = count($this->path) - 2;
+                if ($prev >= 0) {
+                    $prev = $this->path[$prev];
+                    $structure = $config->getStructureByName($prev['structure']);
+                } else {
+                    throw new \Exception('Не могу определить структуру для шаблона');
+                }
+            }
+
+            // Инициализируем модель шаблона
             $className = Util::getClassName($this->pageData[$k], 'Template') . '\\Model';
-            $prev = $this->path[(count($this->path) - 2)];
-            $structure = $config->getStructureByName($prev['structure']);
             $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
             $template = new $className($prevStructure);
             $template->setParentModel($this);
@@ -333,16 +351,6 @@ abstract class Model
         throw new \Exception('Вызов не переопределённого метода getLocalPath');
     }
 
-    public function setPrevModel($prevModel)
-    {
-        $this->prevModel = $prevModel;
-    }
-
-    public function getPrevModel()
-    {
-        return $this->prevModel;
-    }
-
     public function detectActualModel()
     {
         $config = Config::getInstance();
@@ -372,13 +380,28 @@ abstract class Model
                 $prevStructure = $config->getStructureByName($prev['structure']);
                 /* @var $model Model */
                 $model = new $modelClassName($prevStructure['ID'] . '-' . $end['ID']);
-                $model->setPath($this->path);
-                $model->setPrevModel($this);
-                // TODO сделать метод передачи всех данных из одной модели в другую
-                $model->is404 = $this->is404;
+                // Передача всех данных из одной модели в другую
+                $model = $model->setVars($this);
             }
         }
         return $model;
+    }
+
+    /**
+     * Установка свойств объекта по данным из массива $vars
+     *
+     * Вызывается при копировании данных из одной модели в другую
+     * @param array $model Массив переменных объекта
+     * @return $this Либо ссылка на самого себя, либо новый объект модели
+     */
+    public function setVars($model)
+    {
+        $vars = get_object_vars($model);
+        foreach ($vars as $k => $v) {
+            if (in_array($k, array('_table', 'module', 'params', 'fields', 'prevStructure'))) continue;
+            $this->$k = $v;
+        }
+        return $this;
     }
 
     public function __get($name)

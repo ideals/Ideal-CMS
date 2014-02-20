@@ -37,10 +37,13 @@ class Router
             $this->model = $this->routeByUrl();
         }
 
-        /* @var $this->model Model Модель соответствующая этому контроллеру */
-        $this->model = $this->model->detectActualModel();
-
         $pluginBroker->makeEvent('onPostDispatch', $this);
+
+        // Инициализируем данные модели
+        $this->model->initPageData();
+
+        // Определяем корректную модель на основании поля structure
+        $this->model = $this->model->detectActualModel();
     }
 
     /**
@@ -151,10 +154,12 @@ class Router
         return $this->model;
     }
 
+    /**
+     * @param $model Model Устанавливает модель, найденную роутером (обычно использется в плагинах)
+     */
     public function setModel($model){
         $this->model = $model;
     }
-
 
     /**
      * Устанавливает название контроллера для активной страницы
@@ -175,5 +180,4 @@ class Router
     {
         return $this->model->is404;
     }
-
 }

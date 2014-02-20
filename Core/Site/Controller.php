@@ -37,8 +37,6 @@ class Controller
     {
         $this->model = $router->getModel();
 
-        $this->model->initPageData();
-
         // Определяем и вызываем требуемый action у контроллера
         if ($router->is404()) {
             $actionName = 'error404';

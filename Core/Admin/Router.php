@@ -30,6 +30,12 @@ class Router
         }
 
         $pluginBroker->makeEvent('onPostDispatch', $this);
+
+        // Инициализируем данные модели
+        $this->model->initPageData();
+
+        // Определяем корректную модель на основании поля structure
+        $this->model = $this->model->detectActualModel();
     }
 
     /**

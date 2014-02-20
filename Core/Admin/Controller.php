@@ -24,9 +24,7 @@ class Controller
      */
     public function run(Router $router)
     {
-        $this->model = $router->getModel()->detectActualModel();
-
-        $this->model->initPageData();
+        $this->model = $router->getModel();
 
         // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
