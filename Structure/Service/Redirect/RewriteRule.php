@@ -110,7 +110,7 @@ class RewriteRule
         $fileName = basename($file);
 
         // Проверяем, доступен ли файл для записи
-        if (!file_exists($this->htFile) && !is_writable($file)) {
+        if (!is_writable($file)) {
             $this->msg .= "<div class='alert alert-block'>Файл {$file} недоступен для записи</div>";
             $this->error = 2;
             return false;
