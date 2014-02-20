@@ -72,7 +72,8 @@ class Model
         }
 
         $config = Config::getInstance();
-        if ($lastUrlPart == '/') {
+        if ($lastUrlPart == '/' || $lastUrlPart == '') {
+            $lastUrlPart = '/';
             // Ссылка на главную обрабатывается особым образом
             if ($config->startUrl != '') {
                 $lastUrlPart = $config->startUrl . '/';
