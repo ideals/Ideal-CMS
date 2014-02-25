@@ -127,8 +127,12 @@ class Model extends \Ideal\Core\Admin\Model
                 $str .= str_repeat("</li>\n</ul>\n</li>\n", $c);
             }
 
-            $str .= '<li><a href="' . $v['link'] . '">'
-                  . $v['name'] . '</a>';
+            if ($v['is_skip'] == 0) {
+                $str .= '<li><a href="' . $v['link'] . '">'
+                    . $v['name'] . '</a>';
+            } else {
+                $str .= '<li>' . $v['name'];
+            }
             $lvl = $v['lvl'];
         }
         $str .= "</li>\n</ul>\n";
