@@ -3,27 +3,32 @@ error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ER
 
 ini_set('display_errors', 'On');
 
+if (isset($_POST['checkMysql'])) {
+    ini_set('display_errors', 'Off');
+    $answer = checkMysql();
+    print $answer;
+    exit; //ajax запрос, дальнейшее выполнение кода не требуеться
+}
+
 set_error_handler('installErrorHandler');
 
-// Проверяем правильность Url
-// Если Url неправильный (путь к скрипту содержит символы в неправильном регистре), делаем редирект с указанием правильного пути
+//Проверяем правильность Url
+//Если Url неправильный (путь к скрипту содержит символы в неправильном регистре), делаем редирект с указанием правильного пути
 $scriptDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', $_SERVER['SCRIPT_FILENAME']);
 if ($scriptDir !== $_SERVER['REQUEST_URI']) {
     header("Location: $scriptDir");
 }
 
-// Абсолютный адрес корня сервера, не должен оканчиваться на слэш.
-define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT']);
 
-// Абсолютный адрес размещения админки
 define('CMS_ROOT', $_SERVER['DOCUMENT_ROOT']
     . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/Setup')));
 
-// Абсолютный адрес папки, в которой находится папка админки
 define('ROOT', substr(CMS_ROOT, 0, strrpos(CMS_ROOT, '/')));
 
 $fields = array(
     'siteName',
+    'redirect',
+    'sitePath',
     'cmsLogin',
     'cmsPass',
     'cmsPassRepeated',
@@ -49,127 +54,57 @@ if ($errorText == 'Ok') {
 }
 
 @ header('Content-Type: text/html; charset=utf-8');
-?>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Установка Ideal CMS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+require_once('index.html'); // Подключение шаблона диалога установки CMS
 
-    <link href="../Library/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style type="text/css">
-        body {
-            padding-top: 60px;
-            padding-bottom: 40px;
+
+function checkMysql()
+{
+    $answer = array('error' => false, 'text' => '');
+    $server = $_POST['dbHost'];
+    $user = $_POST['dbLogin'];
+    $password = $_POST['dbPass'];
+    $database = $_POST['dbName'];
+    $prefix = $_POST['dbPrefix'];
+    $tablesClose = array(
+        'ideal_structure_datalist' => true,
+        'ideal_structure_news' => true,
+        'ideal_structure_part' => true,
+        'ideal_structure_user' => true,
+        'ideal_template_page' => true,
+        'ideal_template_phpfile' => true,
+        'ideal_template_sitemap' => true,
+    );
+    foreach ($tablesClose as $k => $v) {
+        unset($tablesClose[$k]);
+        $tablesClose[$prefix . $k] = $v;
+    }
+
+    $dbLink = mysql_connect($server, $user, $password);
+
+    if ($dbLink) {
+        $answer['text'] = "Соединение установлено.\n";
+
+        $selected = mysql_select_db($database, $dbLink);
+        if ($selected) {
+            $answer['text'] .= "Подключение к базе данных прошло успешно.\n";
+            $tables = mysql_list_tables($database, $dbLink);
+            while ($row = mysql_fetch_row($tables)) {
+                if (isset($tablesClose[$row[0]]) && $tablesClose[$row[0]]) {
+                    $answer['error'] = true;
+                    $answer['text'] = 'База не пуста! Таблицы с данным префиксом уже существуют в базе.';
+                    break;
+                }
+            }
+        } else {
+            $answer['error'] = true;
+            $answer['text'] .= 'База данных не найдена или отсутствует доступ.';
         }
-    </style>
-    <link href="../Library/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-
-
-    <script type="text/javascript" src="../Library/jquery/jquery-1.8.3.min.js"></script>
-    <script type="text/javascript" src="../Library/bootstrap/js/bootstrap.min.js"></script>
-
-    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <!-- <link rel="shortcut icon" href="../assets/ico/favicon.ico"> -->
-</head>
-
-<body>
-
-<div class="navbar navbar-fixed-top">
-    <div class="navbar-inner">
-        <div class="container">
-            <a class="brand" href="#">Установка Ideal CMS в папку <?php echo CMS_ROOT; ?></a>
-        </div>
-    </div>
-</div>
-
-<div class="container">
-
-    <?php
-        if ($errorText != '') {
-            echo '<div class="alert">' . $errorText . '</div>';
-        }
-    ?>
-
-    <form method="post" action="" class="form-horizontal">
-        <div class="control-group">
-            <label class="control-label" for="siteName">Доменное имя сайта:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="siteName" name="siteName" value="<?php echo $formValue['siteName']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="cmsLogin">Логин к админке:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="cmsLogin" name="cmsLogin" value="<?php echo $formValue['cmsLogin']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="cmsPass">Пароль к админке:</label>
-            <div class="controls">
-                <input type="password" class="input-xlarge" id="cmsPass" name="cmsPass" value="<?php echo $formValue['cmsPass']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbPass">Повторите пароль:</label>
-            <div class="controls">
-                <input type="password" class="input-xlarge" id="cmsPassRepeated" name="cmsPassRepeated" value="<?php echo $formValue['cmsPassRepeated']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbHost">Хост БД:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="dbHost" name="dbHost" value="<?php echo $formValue['dbHost']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbLogin">Логин к БД:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="dbLogin" name="dbLogin" value="<?php echo $formValue['dbLogin']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbPass">Пароль к БД:</label>
-            <div class="controls">
-                <input type="password" class="input-xlarge" id="dbPass" name="dbPass" value="<?php echo $formValue['dbPass']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbName">Имя БД:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="dbName" name="dbName" value="<?php echo $formValue['dbName']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbCharset">Кодировка БД:</label>
-            <div class="controls">
-                <select class="input-xlarge" id="dbCharset" name="dbCharset">
-                    <option value='0'>UTF-8</option>
-                    <option value='1' <?php echo ($formValue['dbCharset'] == 1)?'selected':'';?>>WINDOWS-1251</option>
-                </select>
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbPrefix">Префикс таблиц:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="dbPrefix" name="dbPrefix" value="<?php echo $formValue['dbPrefix']; ?>" />
-            </div>
-        </div>
-        <div class="form-actions">
-            <input class="btn btn-primary" name="install" value="Установить" type="submit" />
-        </div>
-    </form>
-
-</div>
-</body>
-</html>
-
-<?php
+    } else {
+        $answer['error'] = true;
+        $answer['text'] = 'Ошибка подключения к серверу баз данных.';
+    }
+    return json_encode($answer);
+}
 
 function checkPost($post)
 {
@@ -226,7 +161,7 @@ function checkPost($post)
     }
 
     // Проверяем возможность подключиться к БД
-    if (mysql_connect($post['dbHost'], $post['dbLogin'], $post['dbPass']) === false ) {
+    if (mysql_connect($post['dbHost'], $post['dbLogin'], $post['dbPass']) === false) {
         $errorText = '<strong>Ошибка</strong>. Не могу подключиться к БД с параметрами: '
             . htmlspecialchars($post['dbHost']) . ', ' . htmlspecialchars($post['dbLogin']) . '.';
         return $errorText;
@@ -254,7 +189,7 @@ function checkPost($post)
 function initFormValue($post, $fields)
 {
     $values = array();
-    foreach($fields as $v) {
+    foreach ($fields as $v) {
         $values[$v] = isset($post[$v]) ? htmlspecialchars($post[$v]) : '';
     }
     if ($values['dbPrefix'] == '') {
@@ -263,9 +198,15 @@ function initFormValue($post, $fields)
     if ($values['dbHost'] == '') {
         $values['dbHost'] = 'localhost';
     }
+    if ($values['sitePath'] == '') {
+        $values['sitePath'] = ROOT;
+    }
     if ($values['dbCharset'] != '') {
         $charsets = array(0 => 'UTF-8', 1 => 'WINDOWS-1251');
         $values['dbCharset'] = $charsets[$values['dbCharset']];
+    }
+    if ($values['siteName'] == '') {
+        $values['siteName'] = $_SERVER['SERVER_NAME'];
     }
     return $values;
 }
@@ -286,19 +227,52 @@ function fillPlaceholders($text)
     $replace[] = substr(CMS_ROOT, strrpos(CMS_ROOT, '/') + 1);
 
     foreach ($fields as $v) {
-        $search[]  = '[[' . strtoupper($v) . ']]';
+        $search[] = '[[' . strtoupper($v) . ']]';
         $replace[] = $formValue[$v];
     }
 
-    $search[]  = '[[DOMAIN_ESC]]';
-    $replace[] =  str_replace('.', '\.', $formValue['siteName']);
+    $search[] = '[[DOMAIN_ESC]]';
+    if(substr($formValue['siteName'],0,4) == 'www.'){
+        $formValue['siteName'] = substr($formValue['siteName'], 4);
+    }
+    // 1 - редирект без www
+    // 2 - редирект на www
+    $www = '';
+    if ($formValue['redirect'] == 2) {
+        $www = 'www.';
+    }
+    $replace[] = str_replace('.', '\.', $www . $formValue['siteName']);
 
-    $subFolder = substr(ROOT, strlen(DOCUMENT_ROOT) + 1);
-    $search[]  = '[[SUBFOLDER]]';
+    $search[] = '[[URLSITE]]';
+    // 1 - редирект без www
+    // 2 - редирект на www
+    $www = '';
+    if ($formValue['redirect'] == 1) {
+        $www = 'www.';
+    }
+    $replace[] = $www . $formValue['siteName'];
+
+    $subFolderWoEndSlash = '';
+    $commentForSubFolder = '';
+    $subFolderIndex = '';
+    $subFolder = substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/Setup'));
+    $subFolder = substr($subFolder, 0, strrpos($subFolder, '/'));
+    $search[] = '[[SUBFOLDER]]';
     $replace[] = $subFolder;
+    if ($subFolder != '') {
+        $subFolderWoEndSlash = $subFolder;
+        $commentForSubFolder = '#';
+        // TODO доработать для разных суффиксов
+        $subFolderIndex = 'index.html';
+    }
 
-    $search[]  = '[[SUBFOLDER_START_SLASH]]';
-    $replace[] = ($subFolder == '') ? '' : '/' . $subFolder;
+    $search[] = '[[SUBFOLDER_WITHOUT_END_SLASH]]';
+    $replace[] = $subFolderWoEndSlash;
+    $search[] = '[[COMMENT_FOR_SUBFOLDER]]';
+    $replace[] = $commentForSubFolder;
+    $search[] = '[[SUBFOLDER_INDEX]]';
+    $replace[] = $subFolderIndex;
+
 
     $text = str_replace($search, $replace, $text);
 
@@ -312,12 +286,11 @@ function copyDir($src, $dst)
     if (!file_exists($dst)) {
         mkdir($dst);
     }
-    while(false !== ( $file = readdir($dir)) ) {
-        if (( $file != '.' ) && ( $file != '..' )) {
-            if ( is_dir($src . '/' . $file) ) {
+    while (false !== ($file = readdir($dir))) {
+        if (($file != '.') && ($file != '..')) {
+            if (is_dir($src . '/' . $file)) {
                 copyDir($src . '/' . $file, $dst . '/' . $file);
-            }
-            else {
+            } else {
                 copy($src . '/' . $file, $dst . '/' . $file);
             }
         }
@@ -424,7 +397,7 @@ function createTables()
 
     // Каталог, в котором находятся модифицированные скрипты CMS
     $config->cmsFolder = CMS_ROOT;
-	
+
     // Загружаем список структур из конфигурационных файлов структур
     $config->loadSettings();
 
