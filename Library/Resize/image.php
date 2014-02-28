@@ -3,6 +3,20 @@
 $error = true;
 if ($_GET['img'] != '') {
     $imgInfo = explode('/', $_GET['img']);
+    // Находим путь к конфигурационному файлу админки
+    $self = trim($_SERVER['PHP_SELF'], '/');
+    $cmsFolder = '/' . substr($self, 0, strpos($self, '/'));
+    $path = $_SERVER['DOCUMENT_ROOT'] . $cmsFolder . '/site_data.php';
+    $config = include_once($path);
+    if (isset($config['allowResize'])) {
+        // Если есть поле allowResize то проверяем, есть ли в нём затребованное правило изменения изображения
+        $allowResize = explode('\n', $config['allowResize']);
+        if (!in_array($imgInfo[0], $allowResize)) {
+            // Правила нет - шлём 404 ошибку
+            header("HTTP/1.x 404 Not Found");
+            exit;
+        }
+    }
     $imgSize = explode('x', $imgInfo[0]);
     $imgName = end($imgInfo);
     $countImgSize = count($imgSize);
