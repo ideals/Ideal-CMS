@@ -9,9 +9,9 @@ ErrorDocument 404 /404.html
 RewriteEngine on
 RewriteBase /[[SUBFOLDER]]
 
-# Редирект с domain.ru на www.domain.ru
-RewriteCond %{HTTP_HOST} ^[[DOMAIN_ESC]]
-RewriteRule ^(.*)$ http://www.[[SITENAME]]/$1 [R=permanent,L]
+# Редирект с [[DOMAIN_FROM]] на [[DOMAIN_TO]]
+RewriteCond %{HTTP_HOST} ^[[DOMAIN_FROM_ESC]]
+RewriteRule ^(.*)$ http://[[DOMAIN_TO]]/$1 [R=permanent,L]
 
 # Captcha
 RewriteRule ^images/captcha.jpeg$ /[[CMS]]/Ideal/Library/captcha/cheak.php?code=1 [L]

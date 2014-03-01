@@ -24,6 +24,7 @@ define('ROOT', substr(CMS_ROOT, 0, strrpos(CMS_ROOT, '/')));
 
 $fields = array(
     'siteName',
+    'redirect',
     'cmsLogin',
     'cmsPass',
     'cmsPassRepeated',
@@ -31,14 +32,14 @@ $fields = array(
     'dbLogin',
     'dbPass',
     'dbName',
-    'dbCharset',
     'dbPrefix'
 );
 
 $formValue = initFormValue($_POST, $fields);
+$error = '';
 $errorText = checkPost($_POST);
 
-if ($errorText == 'Ok') {
+if ($error == '' && $errorText == 'Ok') {
     installCopyRoot();
     installCopyFront();
     createConfig();
@@ -69,13 +70,26 @@ if ($errorText == 'Ok') {
 
     <script type="text/javascript" src="../Library/jquery/jquery-1.8.3.min.js"></script>
     <script type="text/javascript" src="../Library/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#siteName').on('change keyup', function (e) {
+                var val = e.target.value;
+                val = val.toLowerCase();
+                if (val.substr(0, 4) == 'www.') {
+                    val = val.substr(4);
+                }
+                $(".domain").each(function (indx, element) {
+                    $(element).html(val);
+                });
+
+            });
+        });
+    </script>
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-
-    <!-- <link rel="shortcut icon" href="../assets/ico/favicon.ico"> -->
 </head>
 
 <body>
@@ -90,17 +104,36 @@ if ($errorText == 'Ok') {
 
 <div class="container">
 
-    <?php
-        if ($errorText != '') {
-            echo '<div class="alert">' . $errorText . '</div>';
-        }
-    ?>
+<?php
+    if ($error != '') {
+        echo $error;
+    }
+    if ($errorText != '') {
+        echo '<div class="alert">' . $errorText . '</div>';
+    }
+?>
 
     <form method="post" action="" class="form-horizontal">
         <div class="control-group">
             <label class="control-label" for="siteName">Доменное имя сайта:</label>
             <div class="controls">
                 <input type="text" class="input-xlarge" id="siteName" name="siteName" value="<?php echo $formValue['siteName']; ?>" />
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Редирект:</label>
+            <div class="controls">
+                <label class="radio">
+                    <input type="radio" name="redirect" id="options1" value="1" checked/>
+                    www.<span class="domain"><?php echo $formValue['siteName']; ?></span> →
+                    <span class="domain"><?php echo $formValue['siteName']; ?></span>
+                </label>
+                <label class="radio">
+                    <input type="radio" name="redirect" id="options2" value="2"/>
+            <span class="domain">
+            <?php echo $formValue['siteName']; ?></span> → www.<span class="domain">
+            <?php echo $formValue['siteName']; ?></span>
+                </label>
             </div>
         </div>
         <div class="control-group">
@@ -143,15 +176,6 @@ if ($errorText == 'Ok') {
             <label class="control-label" for="dbName">Имя БД:</label>
             <div class="controls">
                 <input type="text" class="input-xlarge" id="dbName" name="dbName" value="<?php echo $formValue['dbName']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbCharset">Кодировка БД:</label>
-            <div class="controls">
-                <select class="input-xlarge" id="dbCharset" name="dbCharset">
-                    <option value='0'>UTF-8</option>
-                    <option value='1' <?php echo ($formValue['dbCharset'] == 1)?'selected':'';?>>WINDOWS-1251</option>
-                </select>
             </div>
         </div>
         <div class="control-group">
@@ -219,14 +243,14 @@ function checkPost($post)
         }
     }
 
-    //Сравниваем указанные пароли от админки
+    // Сравниваем указанные пароли от админки
     if ($post['cmsPass'] !== $post['cmsPassRepeated']) {
         $errorText = '<strong>Ошибка</strong>. Пароль к админке не соответсвует повторно введённому паролю.';
         return $errorText;
     }
 
     // Проверяем возможность подключиться к БД
-    if (mysql_connect($post['dbHost'], $post['dbLogin'], $post['dbPass']) === false ) {
+    if (mysql_connect($post['dbHost'], $post['dbLogin'], $post['dbPass']) === false) {
         $errorText = '<strong>Ошибка</strong>. Не могу подключиться к БД с параметрами: '
             . htmlspecialchars($post['dbHost']) . ', ' . htmlspecialchars($post['dbLogin']) . '.';
         return $errorText;
@@ -254,7 +278,7 @@ function checkPost($post)
 function initFormValue($post, $fields)
 {
     $values = array();
-    foreach($fields as $v) {
+    foreach ($fields as $v) {
         $values[$v] = isset($post[$v]) ? htmlspecialchars($post[$v]) : '';
     }
     if ($values['dbPrefix'] == '') {
@@ -263,18 +287,18 @@ function initFormValue($post, $fields)
     if ($values['dbHost'] == '') {
         $values['dbHost'] = 'localhost';
     }
-    if ($values['dbCharset'] != '') {
-        $charsets = array(0 => 'UTF-8', 1 => 'WINDOWS-1251');
-        $values['dbCharset'] = $charsets[$values['dbCharset']];
-    }
     return $values;
 }
 
 
 function installErrorHandler($errno, $errstr, $errfile, $errline)
 {
-    $_err = 'Ошибка [' . $errno . '] ' . $errstr . ', в строке ' . $errline . ' файла ' . $errfile;
-    print $_err;
+    global $error;
+    if (in_array($errno, array(E_ERROR, E_WARNING, E_NOTICE))) {
+        $error .= '<div class="alert">Ошибка [' . $errno . '] ' . $errstr
+                . ', в строке ' . $errline . ' файла ' . $errfile . '</div>';
+        return true;
+    }
 }
 
 
@@ -286,12 +310,28 @@ function fillPlaceholders($text)
     $replace[] = substr(CMS_ROOT, strrpos(CMS_ROOT, '/') + 1);
 
     foreach ($fields as $v) {
-        $search[]  = '[[' . strtoupper($v) . ']]';
+        $search[] = '[[' . strtoupper($v) . ']]';
         $replace[] = $formValue[$v];
     }
 
-    $search[]  = '[[DOMAIN_ESC]]';
-    $replace[] =  str_replace('.', '\.', $formValue['siteName']);
+    if ($formValue['redirect'] == 1) {
+        // 1 - редирект на без www
+       $from = 'www.' . $formValue['siteName'];
+       $to = $formValue['siteName'];
+    } else {
+        // 2 - редирект на www
+        $from = $formValue['siteName'];
+        $to = 'www.' . $formValue['siteName'];
+    }
+
+    $search[]  = '[[DOMAIN_FROM_ESC]]';
+    $replace[] =  str_replace('.', '\.', $from);
+
+    $search[]  = '[[DOMAIN_FROM]]';
+    $replace[] =  $from;
+
+    $search[]  = '[[DOMAIN_TO]]';
+    $replace[] =  $to;
 
     $subFolder = substr(ROOT, strlen(DOCUMENT_ROOT) + 1);
     $search[]  = '[[SUBFOLDER]]';
@@ -312,12 +352,11 @@ function copyDir($src, $dst)
     if (!file_exists($dst)) {
         mkdir($dst);
     }
-    while(false !== ( $file = readdir($dir)) ) {
-        if (( $file != '.' ) && ( $file != '..' )) {
-            if ( is_dir($src . '/' . $file) ) {
+    while (false !== ($file = readdir($dir))) {
+        if (($file != '.') && ($file != '..')) {
+            if (is_dir($src . '/' . $file)) {
                 copyDir($src . '/' . $file, $dst . '/' . $file);
-            }
-            else {
+            } else {
                 copy($src . '/' . $file, $dst . '/' . $file);
             }
         }

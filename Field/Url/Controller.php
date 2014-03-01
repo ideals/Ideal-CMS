@@ -13,6 +13,7 @@ class Controller extends AbstractController
         $url = new Model();
         $value = array('url' => htmlspecialchars($this->getValue()));
         $link = $url->getUrlWithPrefix($value, $this->model->getParentUrl());
+        $link = $url->cutSuffix($link);
         // Проверяем, является ли url этого объекта частью пути
         $addOn = '';
         if (($link{0} == '/') AND ($value != $link)) {
