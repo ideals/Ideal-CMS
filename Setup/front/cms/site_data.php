@@ -7,6 +7,7 @@ return array(
     'startUrl' => '[[SUBFOLDER_START_SLASH]]', // Начальная папка CMS | Ideal_Text
     'urlSuffix' => '.html', // Стандартный суффикс URL | Ideal_Text
     'tmpDir' => '/tmp', // Путь к папке с временными файлами | Ideal_Text
+    'allowResize' => '', // Разрешённые размеры изображений (по одному на строку) | Ideal_Area
     'templateCachePath' => '/tmp/templates', // Путь к папке с кэшем twig-шаблонов | Ideal_Text
     'isTemplateCache' => '0', // Кэширование twig-шаблонов | Ideal_Checkbox
     'isTemplateAdminCache' => '0', // Кэширование twig-шаблонов админской части | Ideal_Checkbox

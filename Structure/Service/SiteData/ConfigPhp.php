@@ -28,7 +28,7 @@ class ConfigPhp
             $fieldName = trim(substr($name, 5), '\'');
             $this->params[$fieldName] = array(
                 'label' => $label,
-                'value' => $value,
+                'value' => ($type == 'Ideal_Area') ? str_replace('\n', "\n", $value) : $value,
                 'type' => $type
             );
         }
@@ -51,6 +51,10 @@ class ConfigPhp
             $fieldModel->setModel($model, $fieldName, 'general');
 
             $value = $fieldModel->pickupNewValue();
+            if ($param['type'] == 'Ideal_Area') {
+                $value = str_replace("\r", '', $value);
+                $value = str_replace("\n", '\n', $value);
+            }
 
             $file .= "    '" . $fieldName . "' => '" . $value
                 . "', // " . $param['label'] . ' | ' . $param['type'] . "\n";

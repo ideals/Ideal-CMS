@@ -7,7 +7,7 @@ return array(
         'login'    => '[[DBLOGIN]]',
         'password' => '[[DBPASS]]',
         'name'     => '[[DBNAME]]',
-        'charset'  => '[[DBCHARSET]]', // WINDOWS-1251 или UTF-8
+        'charset'  => 'UTF-8',
         'prefix'   => '[[DBPREFIX]]'
     ),
 

@@ -144,9 +144,12 @@ class myCrawler
         $rcs = $crawler->start();
         if ($rcs === false) {
             $this->code = $crawler->errType;
-            if ($this->code == 404)
+            if ($this->code == 404) {
                 // Записываем описание ошибки для отправки их на почту
                 $this->textError = $crawler->textError;
+                // Удаляем временный файл
+                unlink($tmpFile);
+            }
             return false;
         }
         if (!$crawler->hasFinished()) {

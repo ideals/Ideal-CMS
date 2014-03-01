@@ -266,4 +266,16 @@ class Model
         return $nm;
     }
 
+    /**
+     * Отрезает стандартный суффикс от ссылки
+     * @param $link
+     * @return string
+     */
+    public function cutSuffix($link)
+    {
+        $config = Config::getInstance();
+        $link = substr($link, 0, -count($config->urlSuffix));
+        return $link;
+    }
+
 }
