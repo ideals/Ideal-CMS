@@ -19,10 +19,10 @@ class Controller extends AbstractController
         if (($link{0} == '/') AND ($value != $link)) {
             // Выделяем из ссылки путь до этого объекта и выводим его перед полем input
             $path = substr($link, 0, strrpos($link, '/'));
-            $addOn = '<span class="add-on">' . $path . '/</span>';
+            $addOn = '<span class="input-group-addon">' . $path . '/</span>';
         }
-        return '<div class="input-prepend">' . $addOn
-             . '<input type="text" class="input span3" name="' . $this->htmlName . '" id="' . $this->htmlName
+        return '<div class="input-group">' . $addOn
+             . '<input type="text" class="form-control" name="' . $this->htmlName . '" id="' . $this->htmlName
              . '" value="' . $value['url'] . '">'
              . '</div>';
     }

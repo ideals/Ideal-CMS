@@ -13,14 +13,16 @@ class Controller extends AbstractController
 
     public function getInputText()
     {
-        return '<script type="text/javascript" src="Ideal/Field/Password/admin.js" />'
-            .'<input type="password" id="' . $this->htmlName
+        return '<script type="text/javascript" src="Ideal/Field/Password/admin.js" /><div class="row">'
+            .'<div class="col-xs-3"><input type="password" class="form-control" id="' . $this->htmlName
             . '" name="' . $this->htmlName
-            . '" >'
-            .'&nbsp;'. '<i id="'.$this->htmlName.'-ico'.'">'.'</i>'
-            .'&nbsp; <input type="password" id="' . $this->htmlName.'-check'
+            . '" ></div>'
+            .'<div class="col-xs-1" style="width: 23px; padding: 2px 0 0 0; font-size: 24px;">'
+            .'<i id="'.$this->htmlName.'-ico'.'" class="glyphicon">'.'</i></div>'
+            .'<div class="col-xs-3">'
+            . '<input type="password" class="form-control" id="' . $this->htmlName.'-check'
             . '" name="' . $this->htmlName.'-check'
-            . '" >';
+            . '" ></div></div>';
     }
 
 
@@ -30,11 +32,9 @@ class Controller extends AbstractController
     {
         $this->newValue = $this->pickupNewValue();
 
-
         $request = new Request();
         $fieldName = $this->groupName . '_' . $this->name.'-check';
         $this->newCheckValue = $request->$fieldName;
-
 
         $item = array();
         $item['fieldName'] = $this->htmlName;

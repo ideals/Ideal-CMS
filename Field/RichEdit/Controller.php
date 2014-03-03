@@ -14,7 +14,7 @@ class Controller extends AbstractController
         $config = Config::getInstance();
         $value = htmlspecialchars($this->getValue());
         $html = <<<HTML
-            <textarea class="{$this->widthEditField}" name="{$this->htmlName}"
+            <textarea name="{$this->htmlName}"
                 id="{$this->htmlName}">{$value}</textarea>
             <script>
                 CKFinder.setupCKEditor( null, "/{$config->cmsFolder}/Ideal/Library/ckfinder/" );
@@ -47,7 +47,7 @@ HTML;
 
     public function showEdit()
     {
-        $html = '<div id="' . $this->htmlName . '-control-group" class="control-group">'
+        $html = '<div id="' . $this->htmlName . '-control-group">'
             . $this->getLabelText() . '<br />' . $this->getInputText() . '</div>';
         return $html;
     }

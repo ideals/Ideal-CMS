@@ -15,33 +15,25 @@ class Controller extends AbstractController
         $value = $this->getValue();
 
         if ($value == '') {
-            $input = '<input type="hidden" id="' . $this->htmlName
+            $html = '<input type="hidden" id="' . $this->htmlName
                    . '" name="' . $this->htmlName
                    . '" value="' . $value . '">';
         } else {
-            $input = '<input type="text" class="input ' . $this->widthEditField
-                . '" name="' . $this->htmlName
-                . '" id="' . $this->htmlName
-                .'" value="' . $value .'">';
-            $label = $this->getLabelText();
-
-            $input = <<<HTML
-        <div id="{$this->htmlName}-control-group" class="control-group">
-            <label class="control-label" for="{$this->htmlName}">{$label}</label>
-            <div class="controls {$this->htmlName}-controls">
-                {$input}
-                <div id="{$this->htmlName}-help"></div>
-            </div>
-        </div>
-HTML;
+            $html = parent::showEdit();
         }
-        return $input;
+        return $html;
     }
 
 
     public function getInputText()
     {
-        // Заглушка для абстрактного метода
+        $value = $this->getValue();
+
+        $input = '<input type="text" class="form-control" name="' . $this->htmlName
+            . '" id="' . $this->htmlName
+            .'" value="' . $value .'">';
+
+        return $input;
     }
 
 

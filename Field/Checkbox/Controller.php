@@ -20,7 +20,7 @@ class Controller extends AbstractController
         $checked = ($this->getValue() == 1) ? 'checked="checked"' : '';
         return '<label class="checkbox"><input type="checkbox" name="' . $this->htmlName
             . '" id="' . $this->htmlName . '" '
-            . $checked .'> '. $this->label . '</label>';
+            . $checked .'> '. $this->field['label'] . '</label>';
     }
 
 

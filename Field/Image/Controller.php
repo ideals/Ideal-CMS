@@ -14,14 +14,12 @@ class Controller extends AbstractController
     {
         $value = htmlspecialchars($this->getValue());
         // TODO сделать возможность посмотреть картинку по щелчку на ссылке (не закрывая окна)
-        $this->widthEditField = 'span4';
-        return '<div class="input-append">'
-            . '<input type="text" class="' . $this->widthEditField
-            . '" name="' . $this->htmlName
+        return '<div class="input-group">'
+            . '<input type="text" class="form-control" name="' . $this->htmlName
             . '" id="' . $this->htmlName
-            . '" value="' . $value .'"> '
+            . '" value="' . $value .'"><span class="input-group-btn">'
             . '<button class="btn" onclick="showFinder(\'' . $this->htmlName . '\'); return false;" >Выбрать</button>'
-            . '</div>';
+            . '</span></div>';
     }
 
     public function parseInputValue($isCreate)
