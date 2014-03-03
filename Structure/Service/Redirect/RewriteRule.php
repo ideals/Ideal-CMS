@@ -353,7 +353,7 @@ class RewriteRule
 
             if (isset($v['htaccess'])) {
                 // Если редиректы в htaccess отличаются от redirect.txt
-                $class = "class='error'";
+                $class = "error";
                 if ($v['to'] != $v['htaccess']['to']) {
                     $v['error'] .= ".htaccess: указан редирект на {$v['htaccess']['to']}<br />";
                 }
@@ -364,7 +364,7 @@ class RewriteRule
 
             if ($v['error']) {
                 // Если есть ошибки, оформляем их список
-                $class = ($class == '') ? "class='warning'" : $class;
+                $class = ($class == '') ? "warning" : $class;
                 $info = '<small>' . $v['error'] . '</small>';
             }
 
@@ -392,15 +392,14 @@ class RewriteRule
             endswitch;
             */
             $str .= <<<RULE
-            <tr id="line{$i}" {$class}>
+            <tr id="line{$i}" class="element {$class}">
 <td class="from" {$defaultFrom}>{$from}</td><td><div class="to" {$defaultTo}>{$v['to']}</div>{$info}</td>
-<td><div class="hide editGroup">
-    <span class="input-prepend">
-    <button style="width: 47px;" onclick="editLine({$i})" title="Изменить" class="btn btn-info btn-mini">
-    <i class="icon-pencil icon-white"></i></button></span>
-    <span class="input-append"><button onclick="delLine({$i})" title="Удалить" class="btn btn-danger btn-mini">
-    <i class="icon-remove icon-white"></i></button></span></div>
-</td>
+<td><div class="button-edit btn-group btn-group-xs">
+    <button style="width: 47px;" onclick="editLine({$i})" title="Изменить" class="btn btn-info">
+    <span class="glyphicon glyphicon-pencil"></span></button>
+    <button onclick="delLine({$i})" title="Удалить" class="btn btn-danger">
+    <span class="glyphicon glyphicon-remove"></span></button>
+</div></td>
 </tr>
 RULE;
             $i++;
