@@ -20,7 +20,9 @@ class ConfigPhp
             }
             list ($other, $label) = explode("', // ", $v);
             $label = chop($label);
-            list($label, $type) = explode(' | ', $label);
+            $fields = explode(' | ', $label);
+            $label = $fields[0];
+            $type = $fields[1];
             if ($type == '') {
                 $type = 'Ideal_Text';
             }
@@ -31,6 +33,9 @@ class ConfigPhp
                 'value' => ($type == 'Ideal_Area') ? str_replace('\n', "\n", $value) : $value,
                 'type' => $type
             );
+            if ($type == 'Ideal_Select') {
+                $this->params[$fieldName]['values'] = json_decode($fields[2]);
+            }
         }
     }
 
@@ -38,11 +43,10 @@ class ConfigPhp
     public function saveFile()
     {
         // Изменяем постоянные настройки сайта
-        $fp = fopen($this->fileName, 'w');
         $file = "<?php\nreturn array(\n";
         foreach ($this->params as $fieldName => $param) {
             $model = new mockModel();
-            $model->fields[$fieldName] = array('label' => $param['label']);
+            $model->fields[$fieldName] = $param;
             $model->pageData[$fieldName] = $param['value'];
 
             $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
@@ -56,10 +60,14 @@ class ConfigPhp
                 $value = str_replace("\n", '\n', $value);
             }
 
+            $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;
+            $values = ($param['type'] == 'Ideal_Select') ? ' | ' . json_encode($param['values'], $options) : '';
+
             $file .= "    '" . $fieldName . "' => '" . $value
-                . "', // " . $param['label'] . ' | ' . $param['type'] . "\n";
+                . "', // " . $param['label'] . ' | ' . $param['type'] . $values . "\n";
         }
         $file .= ");\n";
+        $fp = fopen($this->fileName, 'w');
         if (fwrite($fp, $file)) {
             $this->loadFile($this->fileName);
             print <<<DONE
@@ -78,7 +86,7 @@ DONE;
         $str = '';
         foreach ($this->params as $fieldName => $param) {
             $model = new mockModel();
-            $model->fields[$fieldName] = array('label' => $param['label']);
+            $model->fields[$fieldName] = $param;
             $model->pageData[$fieldName] = $param['value'];
 
             $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
