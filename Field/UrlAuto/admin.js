@@ -74,7 +74,7 @@ function translit(str) {
  * @param e
  */
 function setTranslit(e) {
-    var input = $(e).parent().find('input');
+    var input = $(e).parent().parent().find('input');
     var butt = $(e);
 
     if (input.attr("readonly")) {
@@ -97,8 +97,8 @@ function setTranslit(e) {
  * @param e
  */
 function loadUrlAuto(e) {
-    var input = $(e).parent().find('input');
-    var butt = $(e).parent().find('button');
+    var input = $(e).parent().parent().parent().find('input');
+    var butt = $(e).parent().parent().find('button');
     var name = $("#general_name").val();
     name = translit(name);
     var url = $("#general_url").val();
