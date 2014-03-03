@@ -7,7 +7,7 @@ $file = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 $file->loadFile($config->cmsFolder . '/site_data.php');
 
 if (isset($_POST['edit'])) {
-    $file->saveFile();
+    $file->saveFile($config->cmsFolder . '/site_data.php');
 }
 
 echo $file->showEdit();
