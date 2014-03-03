@@ -34,13 +34,14 @@ if (isset($_POST['createMysqlDump'])) {
     // Запускаем процесс выгрузки
     $tes = $dump->start($backupPart . DIRECTORY_SEPARATOR . $dumpName);
 
-    $dumpName = $backupPart . '/' . $dumpName . '.gz';
+    $dumpName = $backupPart . DIRECTORY_SEPARATOR . $dumpName . '.gz';
 
     // Формируем строку с новым файлом
-    echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' . $dumpName . '\')"> ' .
+    echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' . addslashes($dumpName) . '\')"> ' .
             date('d.m.Y - H:i:s', $time)
         . '</a></td>';
-    echo '<td><button class="btn btn-danger btn-mini" title="Удалить" onclick="delDump(\'' . $dumpName . '\'); false;"> <i class="icon-remove icon-white"></i> </button></td>';
+    echo '<td><button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' . addslashes($dumpName) . '\'); false;">'
+       . '<span class="glyphicon glyphicon-remove"></span></button></td>';
     echo '</tr>';
 
 }

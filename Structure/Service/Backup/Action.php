@@ -39,18 +39,17 @@ if (is_dir($backupPart)) {
         $minute = substr($file,19,2);
         $second = substr($file,22,2);
 
-        $file = addslashes($backupPart . '/' . $file);
+        $file = $backupPart . DIRECTORY_SEPARATOR . $file;
 
         echo '<tr id="' . $file . '"><td>';
-        echo '<a href="" onClick="return downloadDump(\'' . $file . '\')"> ';
+        echo '<a href="" onClick="return downloadDump(\'' . addslashes($file) . '\')"> ';
         echo "$day.$month.$year - $hour:$minute:$second" . '</a></td>';
         echo '<td>';
-        echo '<button class="btn btn-danger btn-mini" title="Удалить" onclick="delDump(\'' . $file . '\'); false;">';
-        echo ' <i class="icon-remove icon-white"></i> ';
+        echo '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' . addslashes($file) . '\'); false;">';
+        echo ' <span class="glyphicon glyphicon-remove"></span> ';
         echo '</button></td>';
         echo '</tr>';
     }
-    closedir($dh);
     echo '</table>';
 }
 
