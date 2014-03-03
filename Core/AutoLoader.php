@@ -38,6 +38,7 @@ function shutDownFunction() {
         $_err = 'Ошибка ' . $error['message'] . ', в строке ' . $error['line'] . ' файла ' . $error['file'];
         \Ideal\Core\Util::addError($_err);
     }
+    \Ideal\Core\Util::shutDown();
 }
 
 register_shutdown_function('shutdownFunction');

@@ -22,7 +22,7 @@ class Util
         {
             case 'file':
                 // Вывод сообщения в текстовый файл
-                $ff = DOCUMENT_ROOT. $config->cmsFolder . '/config/notice.log';
+                $ff = DOCUMENT_ROOT. $config->cmsFolder . '/error.log';
                 $fp = fopen($ff, 'a');
                 $msg = Date('d.m.y H:i', time()) . '  ' . $_SERVER['REQUEST_URI'] . "\r\n";
                 $msg .= $txt . "\r\n\r\n";
@@ -46,11 +46,8 @@ class Util
                 break;
 
             case 'email':
-                // @TODO сделать отправку ошибки почтой на email np@neox.ru
-                break;
-			
-			case 'var':
-				$errorArray[] = $txt;
+            case 'var':
+				self::$errorArray[] = $txt;
 				break;
 
             default:
@@ -58,6 +55,19 @@ class Util
         }
     }
 
+    public static function shutDown()
+    {
+        $config = Config::getInstance();
+        if ($config->errorLog == 'email' && count(self::$errorArray) > 0) {
+            $text = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
+                  . "произошли следующие ошибки.\n\n"
+                  . implode("\n", self::$errorArray);
+            $mail = new \Mail\Sender();
+            $mail->setSubj("Сообщение об ошибке на сайте " . $config->domain);
+            $mail->setBody($text, '');
+            $mail->sent($config->robotEmail, $config->mailForm);
+        }
+    }
 
     /**
      * Обработка адрес e-mail, переданного из браузера
