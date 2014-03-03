@@ -29,9 +29,6 @@ $config = Core\Config::getInstance();
 // Каталог, в котором находятся модифицированные скрипты CMS
 $config->cmsFolder = trim($subFolder . '/' . $cmsFolder, '/');
 
-// Куда будет вестись лог ошибок. Варианты file|display|comment|firebug|email
-$config->errorLog = 'firebug';
-
 // Загружаем список структур из конфигурационных файлов структур
 $config->loadSettings();
 

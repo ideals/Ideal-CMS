@@ -168,13 +168,10 @@ class Sender
             $this->body_plain = strip_tags($this->body_html);
         }
 
-        $this->body_plain = stripslashes($this->body_plain);
         $this->body .= $this->body_plain . "\n\n";
 
         // Если html-версия текста письма есть!
         if (strlen($this->body_html) > 0) {
-            $this->body_html = stripslashes($this->body_html);
-
             $this->body .= '--' . $this->boundary . "\n";
             $this->body .= "Content-Type: text/html; charset=utf-8\n";
             $this->body .= "Content-Transfer-Encoding: quoted-printable\n\n";
