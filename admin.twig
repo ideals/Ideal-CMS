@@ -160,8 +160,8 @@
     </div><!-- /.modal -->
 
     {%if pager.pages|length > 1 %}
-    <div class="pagination pagination-centered">
-        <ul>
+    <div style="text-align:center;">
+        <ul class="pagination pagination-lg">
         {% if pager.pagePrev != '' %}
             <li><a href="{{ pagePrev }}">← назад</a></li>
         {% endif %}
