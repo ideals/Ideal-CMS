@@ -233,6 +233,13 @@
                     $('.modal-body').css('max-height', mh);
                 })
                 .modal('show');
+            // Если меняется размера окна браузера то модальное окно тоже меняет свой размер
+            $(window).on('resize', function(){
+                mh = $(window).height() * 0.95 - 40
+                    - $('.modal-header').outerHeight()
+                    - $('.modal-footer').outerHeight();
+                $('.modal-body').css('max-height', mh);
+            })
         }
 
 
