@@ -78,10 +78,8 @@ abstract class AbstractController
         //      и убрать этот функционал из selectField
         $value = '';
         $pageData = $this->model->getPageData();
-        if (isset($pageData)) {
-            if (isset($pageData[$this->name])) {
+        if (isset($pageData[$this->name]) && !empty($pageData['ID'])) {
                 $value = $pageData[$this->name];
-            }
         } elseif (isset($this->field['default'])) {
             // Если поле ещё не заполнено, берём его значение по дефолту из описания полей структуры
             $value = $this->field['default'];
@@ -160,7 +158,13 @@ HTML;
         return $values[$fieldName];
     }
 
-
+    /**
+     * Получение данных, введённых пользователем, их обработка с уведомлением об ошибках ввода
+     *
+     * @param bool $isCreate Флаг создания или редактирования элемента
+     *
+     * @return array
+     */
     public function parseInputValue($isCreate)
     {
         $this->newValue = $this->pickupNewValue();
@@ -198,7 +202,11 @@ HTML;
         return $item;
     }
 
-
+    /**
+     * Получение нового значения поля из данных, введённых пользователем
+     *
+     * @return string
+     */
     public function pickupNewValue()
     {
         $request = new Request();

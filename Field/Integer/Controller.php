@@ -37,11 +37,22 @@ class Controller extends AbstractController
      * В случае, если в модели ещё нет данных, то значение берётся из поля default
      * в настройках структуры (fields) для соответствующего поля
      *
-     * @return string
+     * @return int
      */
     public function getValue()
     {
         $value = intval(parent::getValue());
+        return $value;
+    }
+
+    /**
+     * Получение нового значения поля из данных, введённых пользователем
+     *
+     * @return int
+     */
+    public function pickupNewValue()
+    {
+        $value = intval(parent::pickupNewValue());
         return $value;
     }
 }
