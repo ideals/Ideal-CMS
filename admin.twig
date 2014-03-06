@@ -78,13 +78,13 @@
     {% endif %}
 
     {% if toolbar != '' %}
-        <a href="" class="pull-right" style="margin: -53px 28px 0 0; padding: 5px;" onClick="$('#toolbar-form').toggle(); return false;">
+        <a href="" class="pull-right" style="margin: -53px 28px 0 0; padding: 5px;" onClick="$('#toolbar-form').toggleClass('hide'); return false;">
             <i class="glyphicon glyphicon-cog"></i>
         </a>
         <form class="form-inline well {% if hideToolbarForm %}hide{% endif %}" action="" method="get" id="toolbar-form">
             <input type="hidden" name="par" value="{{ par }}">
             {{ toolbar|raw }}
-            <button type="submit" class="btn">Фильтр</button>
+            <button type="submit" class="btn btn-primary">Фильтр</button>
         </form>
     {% endif %}
 
