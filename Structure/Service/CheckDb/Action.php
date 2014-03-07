@@ -28,34 +28,32 @@ foreach($config->structures as $v) {
     list($module, $structure) = explode('_', $v['structure'], 2);
     $table = strtolower($config->db['prefix'] . $module . '_structure_' . $structure);
     $cfgTables[] = $table;
+
+    // Обработка папки с кастомными шаблонами
+    $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
+    $dir = stream_resolve_include_path($dir . $module . '/Template');
+    checkTemplateFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
+    // Обработка папки с шаблонами
+    $dir = ($module == 'Ideal') ? $config->cmsFolder . '/' : $config->cmsFolder . '/' . 'Mods/';
+    $dir = stream_resolve_include_path($dir . $module . '/Template');
+    checkTemplateFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
+
     $module = ($module == 'Ideal') ? '' : $module . '/';
     $cfgTablesFull[$table] = $module . 'Structure/' . $structure;
 }
 
-// Обработка системной папки с шаблонами
-// TODO сделать проверку папок с шаблонами в модулях
-$dir = stream_resolve_include_path($config->cmsFolder . '/Ideal/Template');
-if ($handle = opendir($dir)) {
-    while (false !== ($file = readdir($handle))) {
-        if ($file != '.' && $file != '..') {
-            if (is_dir($dir . '/' . $file)) {
-                $table = $config->db['prefix'] . 'ideal_template_' . strtolower($file);
-                $cfgTables[] = $table;
-                $cfgTablesFull[$table] = 'Template/' . $file;
-            }
-        }
-    }
-}
-
-// Обработка кастомной папки с шаблонами
-$dir = stream_resolve_include_path($config->cmsFolder.'/Custom/Template');
-if ($handle = opendir($dir)) {
-    while (false !== ($file = readdir($handle))) {
-        if ($file != '.' && $file != '..') {
-            if (is_dir($dir . '/' . $file)) {
-                $table = $config->db['prefix'] . 'ideal_template_' . strtolower($file);
-                $cfgTables[] = $table;
-                $cfgTablesFull[$table] = 'Template/' . $file;
+function checkTemplateFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config)
+{
+    if ($handle = opendir($dir)) {
+        while (false !== ($file = readdir($handle))) {
+            if ($file != '.' && $file != '..') {
+                if (is_dir($dir . '/' . $file)) {
+                    $t = strtolower($config->db['prefix'] . $module . '_template_' . $file);
+                    if (array_search($t, $cfgTables) === false) {
+                        $cfgTables[] = $t;
+                        $cfgTablesFull[$t] = ($module == 'Ideal') ? 'Template/' . $file : $module . '/' . 'Template/' . $file;
+                    }
+                }
             }
         }
     }
