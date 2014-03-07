@@ -78,7 +78,7 @@ abstract class AbstractController
         //      и убрать этот функционал из selectField
         $value = '';
         $pageData = $this->model->getPageData();
-        if (isset($pageData[$this->name]) && !empty($pageData['ID'])) {
+        if (isset($pageData[$this->name]) && !is_null($pageData[$this->name])) {
                 $value = $pageData[$this->name];
         } elseif (isset($this->field['default'])) {
             // Если поле ещё не заполнено, берём его значение по дефолту из описания полей структуры
