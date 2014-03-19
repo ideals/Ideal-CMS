@@ -9,7 +9,16 @@ class Controller extends AbstractController
     protected $list; // Опции списка
     protected static $instance;
 
-
+    /**
+     * Установка модели редактируемого объекта, частью которого является редактируемое поле
+     *
+     * Полю необходимо получать сведения о состоянии объекта и о других полях, т.к.
+     * его значения и поведение может зависеть от значений других полей
+     *
+     * @param \Ideal\Core\Admin\Model $model Модель редактируемого объекта
+     * @param string $fieldName Редактируемое поле
+     * @param string $groupName Вкладка, к которой принадлежит редактируемое поле
+     */
     public function setModel($model, $fieldName, $groupName = 'general')
     {
         parent::setModel($model, $fieldName, $groupName);
@@ -26,11 +35,15 @@ class Controller extends AbstractController
         $this->list = $getter->getList($this->model, $fieldName);
     }
 
-
+    /**
+     * Возвращает строку, содержащую html-код элементов ввода для редактирования поля
+     *
+     * @return string html-код элементов ввода
+     */
     public function getInputText()
     {
         $html = '<div class="col-xs-12" style="max-height:120px; overflow-y: scroll; border: 1px solid #C0C0C0;border-radius: 5px;"'
-                .' name="' . $this->htmlName .'" id="' . $this->htmlName .'">';
+            . ' name="' . $this->htmlName . '" id="' . $this->htmlName . '">';
         $value = $this->getValue();
         foreach ($this->list as $v) {
             $checked = '';
@@ -44,7 +57,14 @@ class Controller extends AbstractController
         return $html;
     }
 
-
+    /**
+     * Определение значения этого поля на основании данных из модели
+     *
+     * В случае, если в модели ещё нет данных, то значение берётся из поля default
+     * в настройках структуры (fields) для соответствующего поля
+     *
+     * @return string
+     */
     function getValue()
     {
         $value = parent::getValue();
@@ -52,7 +72,11 @@ class Controller extends AbstractController
         return $value;
     }
 
-
+    /**
+     * Получение нового значения поля из данных, введённых пользователем
+     *
+     * @return string
+     */
     public function pickupNewValue()
     {
         $request = new Request();
