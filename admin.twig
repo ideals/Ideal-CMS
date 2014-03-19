@@ -409,6 +409,7 @@
         {
             text = window.idObject['fieldName'];
             $(text).prop('value', fileUrl);
+            $(text).trigger('change'); // запуск события изменения
         }
 
         function showDeleteConfirm(par, id)
