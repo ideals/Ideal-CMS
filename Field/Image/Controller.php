@@ -2,26 +2,39 @@
 namespace Ideal\Field\Image;
 
 use Ideal\Core\Config;
-use Ideal\Core\Request;
 use Ideal\Field\AbstractController;
 
 class Controller extends AbstractController
 {
     protected static $instance;
 
-
+    /**
+     * Возвращает строку, содержащую html-код элементов ввода для редактирования поля
+     *
+     * @return string html-код элементов ввода
+     */
     public function getInputText()
     {
         $value = htmlspecialchars($this->getValue());
-        // TODO сделать возможность посмотреть картинку по щелчку на ссылке (не закрывая окна)
         return '<div class="input-group">'
+            . '<span class="input-group-addon" style="padding: 0px 5px">'
+            . '<img id="' . $this->htmlName . 'Img" src="' . $value . '" style="max-height:32px"></span>' // миниатюра картинки
             . '<input type="text" class="form-control" name="' . $this->htmlName
             . '" id="' . $this->htmlName
-            . '" value="' . $value .'"><span class="input-group-btn">'
+            . '" value="' . $value
+            . '" onchange="$(\'#'.$this->htmlName.'Img\').attr(\'src\', $(this).val());">' // замена миниатюры картинки
+            . '<span class="input-group-btn">'
             . '<button class="btn" onclick="showFinder(\'' . $this->htmlName . '\'); return false;" >Выбрать</button>'
             . '</span></div>';
     }
 
+    /**
+     * Получение данных, введённых пользователем, их обработка с уведомлением об ошибках ввода
+     *
+     * @param bool $isCreate Флаг создания или редактирования элемента
+     *
+     * @return array
+     */
     public function parseInputValue($isCreate)
     {
         $item = parent::parseInputValue($isCreate);
