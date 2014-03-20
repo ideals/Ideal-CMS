@@ -267,20 +267,8 @@ class Crawler
             $this->beforeTimeout++;
             $this->info(" Status: " . $info['http_status']);
         }
-        $res = preg_replace('/(\n\r|\n|\r)/i', ' ', $res);
-        $res = preg_replace('/<\!--.*-->/iU', '', $res);
-        // remove html comments
-        $a_begin = 0;
-        while (true) {
-            $a_begin = strpos($res, '<!--', $a_begin);
-            if ($a_begin === false) break; // no comment tag found, break
-
-            $a_end = strpos($res, '-->', $a_begin + 3);
-            if ($a_end === false) break; // no comment end tag found, break
-
-            $a_end += 3;
-            $res = substr_replace($res, '', $a_begin, ($a_end - $a_begin));
-        }
+        // Удаление комментариев html
+        $res = preg_replace('/<\!--.*-->/imsU', '', $res);
 
         // contribution by vvkov
 //		preg_match_all("/<[Aa][ \r\n\t]{1}[^>]*[Hh][Rr][Ee][Ff][^=]*=[ '\"\n\r\t]*([^ \"'>]+)[^>]*>/",$res ,$urls);
