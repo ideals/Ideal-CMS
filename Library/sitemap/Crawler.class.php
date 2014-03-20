@@ -267,6 +267,8 @@ class Crawler
             $this->beforeTimeout++;
             $this->info(" Status: " . $info['http_status']);
         }
+        $res = preg_replace('/(\n\r|\n|\r)/i', ' ', $res);
+        $res = preg_replace('/<\!--.*-->/iU', '', $res);
         // remove html comments
         $a_begin = 0;
         while (true) {
