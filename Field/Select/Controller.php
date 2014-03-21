@@ -1,34 +1,52 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru/)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Field\Select;
 
 use Ideal\Field\AbstractController;
 
+/**
+ * Class Controller
+ *
+ * @package Ideal\Field\Select
+ */
 class Controller extends AbstractController
 {
     protected $list; // Опции списка
     protected static $instance;
 
-
+    /**
+     * {@inheritdoc}
+     */
     public function setModel($model, $fieldName, $groupName = 'general')
     {
         parent::setModel($model, $fieldName, $groupName);
 
         if (isset($this->field['values'])) {
-            // Если значения селекта заданы с помощью массива в поле values
+            // Если значения select заданы с помощью массива в поле values
             $this->list = $this->field['values'];
             return;
         }
 
         // Загоняем в $this->list список значений select
-        $className = $this->field['class'];
-        $getter = new $className();
-        $this->list = $getter->getList($this->model, $fieldName);
+        $className = $this->field['medium'];
+        /** @var \Ideal\Medium\AbstractModel $medium */
+        $medium = new $className($this->model, $fieldName);
+        $this->list = $medium->getList();
     }
 
-
+    /**
+     * {@inheritdoc}
+     */
     public function getInputText()
     {
-        $html = '<select class="form-control" name="' . $this->htmlName .'" id="' . $this->htmlName .'">';
+        $html = '<select class="form-control" name="' . $this->htmlName . '" id="' . $this->htmlName . '">';
         $value = $this->getValue();
         foreach ($this->list as $k => $v) {
             $selected = '';
@@ -41,8 +59,10 @@ class Controller extends AbstractController
         return $html;
     }
 
-
-    function getValue()
+    /**
+     * {@inheritdoc}
+     */
+    public function getValue()
     {
         $value = parent::getValue();
         if ($value == '') {
@@ -52,5 +72,4 @@ class Controller extends AbstractController
         }
         return $value;
     }
-
 }

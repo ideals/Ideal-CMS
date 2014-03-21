@@ -57,6 +57,9 @@ abstract class Model
                     throw new \Exception('Не удалось подключить файл: ' . $includeFile);
                 }
                 break;
+            default:
+                throw new \Exception('Неизвестный тип: ' . $type);
+                break;
         endswitch;
 
         $this->params = $structure['params'];
