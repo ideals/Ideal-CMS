@@ -1,12 +1,24 @@
 <?php
-namespace Ideal\Field\SelectMulti;
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+namespace Ideal\Field\Set;
 
 use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
 
+/**
+ * Визуальный вывод и сохранение данных MySQL типа SET
+ * Class Controller
+ * @package Ideal\Field\Set
+ */
 class Controller extends AbstractController
 {
     protected $list; // Опции списка
+
     protected static $instance;
 
     /**
