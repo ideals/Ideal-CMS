@@ -29,7 +29,7 @@ class Controller extends Select\Controller
             $id = $pageData['ID'];
         }
         // Получение содержимого таба
-        $tabContent = $model->getFieldsList($model->fields, $this->name);
+        $tabContent = $model->getFieldsList($model->fields);
         // Убираем переводы строки, иначе текст не обрабатывается в JS
         $tabContent = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tabContent);
         $tabContent = str_replace(array('<script>', '</script>', "'"), array('\<script>', '<\/script>', "\\'"), $tabContent);

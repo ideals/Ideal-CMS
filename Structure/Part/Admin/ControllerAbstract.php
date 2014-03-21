@@ -35,7 +35,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $model = new $templateModelName('не имет значения');
         $model->setFieldsGroup($request->name);
         $model->setPageDataNew();
-        echo $model->getFieldsList($model->fields, $model);
+        echo $model->getFieldsList($model->fields);
         exit;
     }
 
@@ -57,7 +57,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
             $model->setPageDataByPrevStructure($prevStructure);
         }
 
-        echo $model->getFieldsList($model->fields, $model);
+        echo $model->getFieldsList($model->fields);
         exit;
     }
 
