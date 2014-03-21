@@ -51,11 +51,15 @@ abstract class Model
                 $structure = $config->getStructureByName($structureFullName);
                 break;
             case 'Template':
-                $includeFile = $module . 'Template/' . $structureName . '/config.php';
+            case 'Medium':
+                $includeFile = $module . $type . '/' . $structureName . '/config.php';
                 $structure = include($includeFile);
                 if (!is_array($structure)) {
                     throw new \Exception('Не удалось подключить файл: ' . $includeFile);
                 }
+                break;
+            default:
+                throw new \Exception('Неизвестный тип: ' . $type);
                 break;
         endswitch;
 
