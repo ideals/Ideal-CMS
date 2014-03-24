@@ -11,4 +11,4 @@ use Ideal\Medium\AbstractModel;
 
 class Model extends AbstractModel {
 
-} 
+}

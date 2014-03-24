@@ -8,16 +8,12 @@
 
 namespace Ideal\Medium;
 
-use Ideal\Core\Config;
 use Ideal\Core\Db;
 
 class AbstractModel extends \Ideal\Core\Model
 {
-
-    public function __construct($prevStructure = '')
-    {
-        parent::__construct($prevStructure);
-    }
+    protected $filedName;
+    protected $obj;
 
     /**
      * Удаление всех значений для определенного потомка
@@ -82,6 +78,16 @@ class AbstractModel extends \Ideal\Core\Model
     }
 
     /**
+     * Функция для
+     * @return array|void
+     * @throws \Exception
+     */
+    public function getList()
+    {
+        throw new \Exception('Вызов не переопределённого метода getList');
+    }
+
+    /**
      * Сохранение связи предка с потомком
      * @param int $idParent индефикатор предка
      * @param int $idChild индефикатор потомка
@@ -92,6 +98,24 @@ class AbstractModel extends \Ideal\Core\Model
         $this->deleteRow($idParent, $idChild);
         $_sql = "INSERT INTO {$this->_table} (id_parent, id_child) VALUE ({$idParent}, {$idChild})";
         $db->query($_sql);
+    }
+
+    /**
+     * Установка названия поля
+     * @param $filedName
+     */
+    public function setFieldName($filedName)
+    {
+        $this->filedName = $filedName;
+    }
+
+    /**
+     * Установка объекта с которым работаем
+     * @param $obj
+     */
+    public function setObj($obj)
+    {
+        $this->obj = $obj;
     }
 
 }
