@@ -20,11 +20,8 @@ class Controller extends AbstractController
         }
 
         // Загоняем в $this->list список значений select
-        $medium = $this->field['medium'];
-        $mod = get_class($model);
-        $mod = substr($mod, 0, strpos($mod, '\\'));
-        $medium = $mod . '\\Medium\\' . $medium . '\\Model';
-        $medium = new $medium();
+        $className = $this->field['medium'] . '\\Model';
+        $medium = new $className();
         $medium->setObj($this->model);
         $medium->setFieldName($fieldName);
         $this->list = $medium->getList();

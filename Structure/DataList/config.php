@@ -25,7 +25,7 @@ return array(
             'label' => 'Тип раздела',
             'sql'   => 'varchar(20) not null',
             'type'  => 'Ideal_Select',
-            'medium'=> 'StructureList'
+            'medium'=> 'Ideal\\Medium\\StructureList'
         ),
         'pos' => array(
             'label' => 'Сортировка',
