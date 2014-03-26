@@ -118,4 +118,8 @@ class AbstractModel extends \Ideal\Core\Model
         $this->obj = $obj;
     }
 
+    public function getTable(){
+        return $this->_table;
+    }
+
 }
