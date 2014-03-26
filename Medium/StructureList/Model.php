@@ -1,14 +1,21 @@
 <?php
-namespace Ideal\Structure\Part\Getters;
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+namespace Ideal\Medium\StructureList;
 
+use Ideal\Medium\AbstractModel;
 use Ideal\Core\Config;
 
-class StructureList
+class Model extends AbstractModel
 {
-    function getList($obj, $fieldName)
+    public function getList()
     {
         // Получаем список структур, которые можно создавать в этой структуре
-        $modelStructures = $obj->params['structures'];
+        $modelStructures = $this->obj->params['structures'];
         $config = Config::getInstance();
         foreach ($config->structures as $structure) {
             if (in_array($structure['structure'], $modelStructures)) {
@@ -21,4 +28,5 @@ class StructureList
 
         return $list;
     }
+
 }

@@ -20,15 +20,17 @@ class Controller extends AbstractController
         }
 
         // Загоняем в $this->list список значений select
-        $className = $this->field['class'];
-        $getter = new $className();
-        $this->list = $getter->getList($this->model, $fieldName);
+        $className = $this->field['medium'] . '\\Model';
+        $medium = new $className();
+        $medium->setObj($this->model);
+        $medium->setFieldName($fieldName);
+        $this->list = $medium->getList();
     }
 
 
     public function getInputText()
     {
-        $html = '<select class="form-control" name="' . $this->htmlName .'" id="' . $this->htmlName .'">';
+        $html = '<select class="form-control" name="' . $this->htmlName . '" id="' . $this->htmlName . '">';
         $value = $this->getValue();
         foreach ($this->list as $k => $v) {
             $selected = '';
