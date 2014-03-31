@@ -59,14 +59,6 @@ if ($error == '' && $errorText == 'Ok') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="../Library/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style type="text/css">
-        body {
-            padding-top: 60px;
-            padding-bottom: 40px;
-        }
-    </style>
-    <link href="../Library/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-
 
     <script type="text/javascript" src="../Library/jquery/jquery-1.8.3.min.js"></script>
     <script type="text/javascript" src="../Library/bootstrap/js/bootstrap.min.js"></script>
@@ -94,15 +86,15 @@ if ($error == '' && $errorText == 'Ok') {
 
 <body>
 
-<div class="navbar navbar-fixed-top">
-    <div class="navbar-inner">
-        <div class="container">
-            <a class="brand" href="#">Установка Ideal CMS в папку <?php echo CMS_ROOT; ?></a>
+<div class="container">
+
+    <div class="navbar navbar-default">
+        <div class="navbar-header">
+            <span class="navbar-brand">Установка Ideal CMS в папку <?php echo CMS_ROOT; ?></span>
         </div>
     </div>
-</div>
 
-<div class="container">
+
 
 <?php
     if ($error != '') {
@@ -113,79 +105,75 @@ if ($error == '' && $errorText == 'Ok') {
     }
 ?>
 
-    <form method="post" action="" class="form-horizontal">
-        <div class="control-group">
-            <label class="control-label" for="siteName">Доменное имя сайта:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="siteName" name="siteName" value="<?php echo $formValue['siteName']; ?>" />
+    <form method="post" action="">
+        <div class="col-lg-5">
+            <div class="form-group">
+                <label for="siteName">Доменное имя сайта:</label>
+                <input type="text" class="form-control input-lg" id="siteName" name="siteName"
+                       value="<?php echo $formValue['siteName']; ?>" />
+            </div>
+            <div class="form-group">
+                <label>Редирект:</label>
+                <div style="margin-top:-11px; margin-bottom:17px;">
+                    <label class="radio">
+                        <input type="radio" name="redirect" id="options1" value="1" checked/>
+                        www.<span class="domain"><?php echo $formValue['siteName']; ?></span> →
+                        <span class="domain"><?php echo $formValue['siteName']; ?></span>
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="redirect" id="options2" value="2"/>
+                <span class="domain">
+                <?php echo $formValue['siteName']; ?></span> → www.<span class="domain">
+                <?php echo $formValue['siteName']; ?></span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="cmsLogin">Логин к админке:</label>
+                <input type="text" class="form-control input-lg" id="cmsLogin" name="cmsLogin"
+                       value="<?php echo $formValue['cmsLogin']; ?>" />
+            </div>
+            <div class="form-group">
+                <label for="cmsPass">Пароль к админке:</label>
+                <input type="password" class="form-control input-lg" id="cmsPass" name="cmsPass"
+                       value="<?php echo $formValue['cmsPass']; ?>" />
+            </div>
+            <div class="form-group">
+                <label for="cmsPassRepeated">Повторите пароль:</label>
+                <input type="password" class="form-control input-lg" id="cmsPassRepeated" name="cmsPassRepeated"
+                       value="<?php echo $formValue['cmsPassRepeated']; ?>" />
             </div>
         </div>
-        <div class="control-group">
-            <label class="control-label">Редирект:</label>
-            <div class="controls">
-                <label class="radio">
-                    <input type="radio" name="redirect" id="options1" value="1" checked/>
-                    www.<span class="domain"><?php echo $formValue['siteName']; ?></span> →
-                    <span class="domain"><?php echo $formValue['siteName']; ?></span>
-                </label>
-                <label class="radio">
-                    <input type="radio" name="redirect" id="options2" value="2"/>
-            <span class="domain">
-            <?php echo $formValue['siteName']; ?></span> → www.<span class="domain">
-            <?php echo $formValue['siteName']; ?></span>
-                </label>
+        <div class="col-lg-1"></div>
+        <div class="col-lg-5">
+            <div class="form-group">
+                <label for="dbHost">Хост БД:</label>
+                <input type="text" class="form-control input-lg" id="dbHost" name="dbHost"
+                       value="<?php echo $formValue['dbHost']; ?>" />
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="dbLogin">Логин к БД:</label>
+                <input type="text" class="form-control input-lg" id="dbLogin" name="dbLogin"
+                       value="<?php echo $formValue['dbLogin']; ?>" />
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="dbPass">Пароль к БД:</label>
+                <input type="password" class="form-control input-lg" id="dbPass" name="dbPass"
+                       value="<?php echo $formValue['dbPass']; ?>" />
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="dbName">Имя БД:</label>
+                <input type="text" class="form-control input-lg" id="dbName" name="dbName"
+                       value="<?php echo $formValue['dbName']; ?>" />
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="dbPrefix">Префикс таблиц:</label>
+                <input type="text" class="form-control input-lg" id="dbPrefix" name="dbPrefix"
+                       value="<?php echo $formValue['dbPrefix']; ?>" />
             </div>
         </div>
-        <div class="control-group">
-            <label class="control-label" for="cmsLogin">Логин к админке:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="cmsLogin" name="cmsLogin" value="<?php echo $formValue['cmsLogin']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="cmsPass">Пароль к админке:</label>
-            <div class="controls">
-                <input type="password" class="input-xlarge" id="cmsPass" name="cmsPass" value="<?php echo $formValue['cmsPass']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbPass">Повторите пароль:</label>
-            <div class="controls">
-                <input type="password" class="input-xlarge" id="cmsPassRepeated" name="cmsPassRepeated" value="<?php echo $formValue['cmsPassRepeated']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbHost">Хост БД:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="dbHost" name="dbHost" value="<?php echo $formValue['dbHost']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbLogin">Логин к БД:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="dbLogin" name="dbLogin" value="<?php echo $formValue['dbLogin']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbPass">Пароль к БД:</label>
-            <div class="controls">
-                <input type="password" class="input-xlarge" id="dbPass" name="dbPass" value="<?php echo $formValue['dbPass']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbName">Имя БД:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="dbName" name="dbName" value="<?php echo $formValue['dbName']; ?>" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="dbPrefix">Префикс таблиц:</label>
-            <div class="controls">
-                <input type="text" class="input-xlarge" id="dbPrefix" name="dbPrefix" value="<?php echo $formValue['dbPrefix']; ?>" />
-            </div>
-        </div>
-        <div class="form-actions">
-            <input class="btn btn-primary" name="install" value="Установить" type="submit" />
+        <div class="form-actions text-center col-lg-11" style="margin-top:10px">
+            <input class="btn btn-primary btn-lg" name="install" value="Установить" type="submit" />
         </div>
     </form>
 
