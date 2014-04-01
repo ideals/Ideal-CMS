@@ -92,8 +92,10 @@ class Router
         $path = array($config->getStartStructure());
         $prevStructureId = $path[0]['ID'];
 
+        // Получаем адрес после корневой директории
+        $url = empty($_SERVER['REDIRECT_URL']) ? $_SERVER['REQUEST_URI'] : $_SERVER['REDIRECT_URL'];
         // Вырезаем стартовый URL
-        $url = ltrim($_SERVER['REQUEST_URI'], '/');
+        $url = ltrim($url, '/');
         // Удаляем параметры из URL (текст после символов "?" и "#")
         $url = preg_replace('/[\?\#].*/', '', $url);
         // Убираем начальные слэши и начальный сегмент, если cms не в корне сайта
