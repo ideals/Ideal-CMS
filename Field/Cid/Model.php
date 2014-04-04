@@ -1,6 +1,8 @@
 <?php
 namespace Ideal\Field\Cid;
 
+use \Ideal\Field;
+
 class Model
 {
     private $levels;
@@ -197,5 +199,37 @@ class Model
         }
         array_pop($parents); // убираем последний элемент
         return $parents;
+    }
+
+    public function buildTree(&$menu, $path)
+    {
+        $url = new Field\Url\Model();
+        $url->setParentUrl($path);
+
+        // Записываем в массив первый элемент
+        $categoryList = array(
+            array_shift($menu)
+        );
+        $categoryList[0]['link'] = $url->getUrl($categoryList[0]);
+
+        $prev = $categoryList[0]['lvl'];
+
+        while (count($menu) != 0) {
+            $m = reset($menu);
+            if ($m['lvl'] == $prev) {
+                $m['link'] =  $url->getUrl($m);
+                $categoryList[] = $m;
+                $prev = $m['lvl'];
+                array_shift($menu);
+            } elseif ($m['lvl'] > $prev) {
+                $end = end($categoryList);
+                $key = key($categoryList);
+                $inPath = array_merge($path, array($end));
+                $categoryList[$key]['subCategoryList'] = $this->buildTree($menu, $inPath);
+            } else {
+                return $categoryList;
+            }
+        }
+        return $categoryList;
     }
 }
