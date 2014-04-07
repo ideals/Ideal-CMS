@@ -76,9 +76,11 @@ class Controller
 
     /**
      * Инициализация twig-шаблона сайта
+     *
      * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     * @param array  $tplFolders Список дополнительных папок с файлами шаблонов
      */
-    public function templateInit($tplName = '')
+    public function templateInit($tplName = '', $tplFolders = array())
     {
         // Инициализация общего шаблона страницы
         $gblName = 'site.twig';
@@ -108,8 +110,16 @@ class Controller
         $tplRoot = dirname(stream_resolve_include_path($tplName));
         $tplName = basename($tplName);
 
+        // Построение полных путей для дополнительных папок шаблонов
+        if (count($tplFolders) > 0) {
+            foreach ($tplFolders as $k => $v) {
+                $tplFolders[$k] = stream_resolve_include_path($v);
+            }
+        }
+
         $config = Config::getInstance();
-        $this->view = new View(array($gblRoot, $tplRoot), $config->isTemplateCache);
+        $folders = array_merge(array($gblRoot, $tplRoot), $tplFolders);
+        $this->view = new View($folders, $config->isTemplateCache);
         $this->view->loadTemplate($tplName);
     }
 
