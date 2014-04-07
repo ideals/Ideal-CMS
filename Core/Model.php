@@ -213,24 +213,28 @@ abstract class Model
      * @param int $page Номер отображаемой страницы
      * @return array Полученный список элементов
      */
-    public function getList($page)
+    public function getList($page = null)
     {
-        $list = array();
-        $where = $this->getWhere("e.prev_structure='{$this->prevStructure}'");
-        if ($where === false) return $list;
+        $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
+        $where = $this->getWhere($where);
+
         $db = Db::getInstance();
 
-        // Определяем кол-во отображаемых элементов на основании названия класса
-        $class = strtolower(get_class($this));
-        $class = explode('\\', trim($class, '\\'));
-        $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
-        $onPage = $this->params[$nameParam];
+        $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} ORDER BY e.{$this->params['field_sort']}";
 
-        if ($page == 0) $page = 1;
-        $start = ($page - 1) * $onPage;
+        if (!is_null($page)) {
+            // Определяем кол-во отображаемых элементов на основании названия класса
+            $class = strtolower(get_class($this));
+            $class = explode('\\', trim($class, '\\'));
+            $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
+            $onPage = $this->params[$nameParam];
 
-        $_sql = "SELECT e.* FROM {$this->_table} AS e {$where}
-                          ORDER BY e.{$this->params['field_sort']} LIMIT {$start}, {$onPage}";
+            if ($page == 0) $page = 1;
+            $start = ($page - 1) * $onPage;
+
+            $_sql .= " LIMIT {$start}, {$onPage}";
+        }
+
         $list = $db->queryArray($_sql);
 
         return $list;
@@ -244,7 +248,9 @@ abstract class Model
     public function getListCount()
     {
         $db = Db::getInstance();
-        $where = $this->getWhere("e.prev_structure='{$this->prevStructure}'");
+
+        $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
+        $where = $this->getWhere($where);
 
         // Считываем все элементы первого уровня
         $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
@@ -305,6 +311,7 @@ abstract class Model
         $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, 'page');
         $pager['prev'] = $pagination->getPrev(); // ссылка на предыдущю страницу
         $pager['next'] = $pagination->getNext(); // cсылка на следующую страницу
+        $pager['total'] = $countList; // общее количество элементов в списке
 
         return $pager;
     }

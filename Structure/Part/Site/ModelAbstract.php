@@ -15,7 +15,7 @@ class ModelAbstract extends Site\Model
      * @param int $page Номер отображаемой страницы
      * @return array Полученный список элементов
      */
-    public function getList($page)
+    public function getList($page = null)
     {
         $list = parent::getList($page);
 
