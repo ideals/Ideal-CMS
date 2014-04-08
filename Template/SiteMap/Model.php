@@ -17,6 +17,9 @@ use Ideal\Core\Util;
  */
 class Model extends \Ideal\Core\Admin\Model
 {
+    /** @var array Массив правил для запрещения отображения ссылок в карте сайта */
+    protected $disallow = array();
+
     /**
      * Извлечение настроек карты сайта из своей таблицы,
      * построение карты сайта и преобразование её в html-формат
@@ -26,6 +29,8 @@ class Model extends \Ideal\Core\Admin\Model
     public function getPageData()
     {
         $this->setPageDataByPrevStructure($this->prevStructure);
+
+        $this->disallow = explode('\n', $this->pageData['disallow']);
 
         $mode = explode('\\', get_class($this->parentModel));
         if ($mode[3] == 'Site') {
@@ -41,9 +46,10 @@ class Model extends \Ideal\Core\Admin\Model
      * Построение карты сайта в виде дерева
      *
      * @param int $page Не используется
+     * @throws \Exception
      * @return array
      */
-    public function getList($page)
+    public function getList($page = null)
     {
         $config = Config::getInstance();
 
@@ -109,7 +115,7 @@ class Model extends \Ideal\Core\Admin\Model
 
     /**
      * Построение html-карты сайта на основе древовидного списка
-     * @param $list Древовидный список
+     * @param array $list Древовидный список
      * @return string html-код списка ссылок карты сайта
      */
     public function createSiteMap($list)
@@ -127,16 +133,30 @@ class Model extends \Ideal\Core\Admin\Model
                 $str .= str_repeat("</li>\n</ul>\n</li>\n", $c);
             }
 
-            if (isset($v['is_skip']) && $v['is_skip'] == 1) {
+            if ((!isset($v['link'])) || (isset($v['is_skip']) && $v['is_skip'] == 1)) {
                 $str .= '<li>' . $v['name'];
             } else {
-                $str .= '<li><a href="' . $v['link'] . '">'
-                      . $v['name'] . '</a>';
+                // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
+                // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
+                $tmp = $this->disallow;
+                if ($v['link'] !== array_reduce(
+                        $tmp,
+                        function(&$res, $rule) {
+                            if ($res == 1 || preg_match($rule, $res)) {
+                                return 1;
+                            }
+                            return $res;
+                        },
+                        $v['link']
+                    )) {
+                    // Сработало одно из регулярных выражений, значит ссылку нужно исключить
+                    continue;
+                }
+                $str .= '<li><a href="' . $v['link'] . '">' . $v['name'] . '</a>';
             }
             $lvl = $v['lvl'];
         }
         $str .= "</li>\n</ul>\n";
         return $str;
     }
-
 }

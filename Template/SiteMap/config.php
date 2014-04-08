@@ -20,6 +20,13 @@ return array(
             'sql'   => 'int not null default 0',
             'type'  => 'Ideal_Text'
         ),
+        'disallow' => array(
+            'label' => 'Регулярные выражения для отсеивания URL',
+            'sql'   => 'text',
+            'type'  => 'Ideal_Area',
+            'help'  => 'Регулярные выражения записываются по одному на каждую строку и обязательно '
+                     . 'с открывающими и закрывающими слэшами'
+        ),
         'content' => array(
             'label' => 'Текст',
             'sql'   => 'mediumtext',
