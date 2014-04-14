@@ -143,13 +143,11 @@ class myCrawler
 
         $rcs = $crawler->start();
         if ($rcs === false) {
-            $this->code = $crawler->errType;
-            if ($this->code == 404) {
-                // Записываем описание ошибки для отправки их на почту
-                $this->textError = $crawler->textError;
-                // Удаляем временный файл
-                unlink($tmpFile);
-            }
+            $this->code = 'error';
+            // Записываем описание ошибки для отправки их на почту
+            $this->textError = $crawler->textError;
+            // Удаляем временный файл
+            unlink($tmpFile);
             return false;
         }
         if (!$crawler->hasFinished()) {
@@ -486,15 +484,13 @@ class myCrawler
                     $this->info('', 'В sitemap доступна только одна ссылка на запись');
                     $this->sendEmail('Попытка записи только одной страницы в sitemap');
                     break;
-                case '404':
-                    $this->info('', 'Страница не найдена');
+                default:
                     $sitemap_file = $this->config['pageroot'] . $this->config['sitemap_file'];
                     $file = file_get_contents($sitemap_file);
                     unlink($sitemap_file);
                     file_put_contents($sitemap_file, $file);
-                default:
                     $this->sendEmail($this->textError);
-                    $this->info('', 'Webserver has an error. Shutting down');
+                    $this->info('', 'Webserver has an error. Scanner shutdown.');
                     break;
             }
         }

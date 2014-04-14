@@ -38,7 +38,6 @@ class Crawler
     var $base = '';
     var $cookies = array();
     var $error = false;
-    var $errType;
 
     function __construct($host, $deadline, $timeout, $delay)
     {
@@ -234,16 +233,9 @@ class Crawler
         if ($info['http_status'] >= '400' && $info['http_status'] < '599') {
             $this->textError = "webpage {$url} is not accessible. error # {$info['http_status']} from {$url_from}";
             $this->info($this->textError);
-            if ($info['http_status'] == '503') {
-                $this->error = true;
-            }
-            if ($info['http_status'] == '404') {
-                $this->errType = '404';
-                $this->error = true;
-                return false;
-            }
-            // we have an error - webpage is not accessible, just leave it
-            return;
+            $this->error = true;
+            // Обнаружена ошибка на запрошенной странице — прерываем выполнение скрипта
+            return false;
         }
 
         // if not allready in list of files, add it
@@ -267,18 +259,8 @@ class Crawler
             $this->beforeTimeout++;
             $this->info(" Status: " . $info['http_status']);
         }
-        // remove html comments
-        $a_begin = 0;
-        while (true) {
-            $a_begin = strpos($res, '<!--', $a_begin);
-            if ($a_begin === false) break; // no comment tag found, break
-
-            $a_end = strpos($res, '-->', $a_begin + 3);
-            if ($a_end === false) break; // no comment end tag found, break
-
-            $a_end += 3;
-            $res = substr_replace($res, '', $a_begin, ($a_end - $a_begin));
-        }
+        // Удаление комментариев html
+        $res = preg_replace('/<\!--.*-->/imsU', '', $res);
 
         // contribution by vvkov
 //		preg_match_all("/<[Aa][ \r\n\t]{1}[^>]*[Hh][Rr][Ee][Ff][^=]*=[ '\"\n\r\t]*([^ \"'>]+)[^>]*>/",$res ,$urls);
