@@ -38,7 +38,6 @@ class Crawler
     var $base = '';
     var $cookies = array();
     var $error = false;
-    var $errType;
 
     function __construct($host, $deadline, $timeout, $delay)
     {
@@ -234,16 +233,9 @@ class Crawler
         if ($info['http_status'] >= '400' && $info['http_status'] < '599') {
             $this->textError = "webpage {$url} is not accessible. error # {$info['http_status']} from {$url_from}";
             $this->info($this->textError);
-            if ($info['http_status'] == '503') {
-                $this->error = true;
-            }
-            if ($info['http_status'] == '404') {
-                $this->errType = '404';
-                $this->error = true;
-                return false;
-            }
-            // we have an error - webpage is not accessible, just leave it
-            return;
+            $this->error = true;
+            // Обнаружена ошибка на запрошенной странице — прерываем выполнение скрипта
+            return false;
         }
 
         // if not allready in list of files, add it

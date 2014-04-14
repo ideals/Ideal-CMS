@@ -37,9 +37,9 @@ class myCrawler
         $message = 'Working with ini-file from local directory';
 
         if (!file_exists($iniFile)) {
-            // Проверяем, есть ли ini-файл в директории cms/config
-            $iniFile = substr($home, 0, strpos($home, '/ns/_gpl/sitemap'))
-                . '/config/sitemap.ini';
+            // Проверяем, есть ли ini-файл в корневой папке Ideal CMS
+            $iniFile = substr($home, 0, stripos($home, '/Ideal/Library/sitemap'))
+                . '/sitemap.ini';
             $message = 'Working with ini-file from config directory';
             if (!file_exists($iniFile)) {
                 // Ini-файла нигде не нашли :(
@@ -143,13 +143,11 @@ class myCrawler
 
         $rcs = $crawler->start();
         if ($rcs === false) {
-            $this->code = $crawler->errType;
-            if ($this->code == 404) {
-                // Записываем описание ошибки для отправки их на почту
-                $this->textError = $crawler->textError;
-                // Удаляем временный файл
-                unlink($tmpFile);
-            }
+            $this->code = 'error';
+            // Записываем описание ошибки для отправки их на почту
+            $this->textError = $crawler->textError;
+            // Удаляем временный файл
+            unlink($tmpFile);
             return false;
         }
         if (!$crawler->hasFinished()) {
@@ -486,15 +484,13 @@ class myCrawler
                     $this->info('', 'В sitemap доступна только одна ссылка на запись');
                     $this->sendEmail('Попытка записи только одной страницы в sitemap');
                     break;
-                case '404':
-                    $this->info('', 'Страница не найдена');
+                default:
                     $sitemap_file = $this->config['pageroot'] . $this->config['sitemap_file'];
                     $file = file_get_contents($sitemap_file);
                     unlink($sitemap_file);
                     file_put_contents($sitemap_file, $file);
-                default:
                     $this->sendEmail($this->textError);
-                    $this->info('', 'Webserver has an error. Shutting down');
+                    $this->info('', 'Webserver has an error. Scanner shutdown.');
                     break;
             }
         }
