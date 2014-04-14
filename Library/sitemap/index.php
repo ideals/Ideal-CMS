@@ -37,9 +37,9 @@ class myCrawler
         $message = 'Working with ini-file from local directory';
 
         if (!file_exists($iniFile)) {
-            // Проверяем, есть ли ini-файл в директории cms/config
-            $iniFile = substr($home, 0, strpos($home, '/ns/_gpl/sitemap'))
-                . '/config/sitemap.ini';
+            // Проверяем, есть ли ini-файл в корневой папке Ideal CMS
+            $iniFile = substr($home, 0, stripos($home, '/Ideal/Library/sitemap'))
+                . '/sitemap.ini';
             $message = 'Working with ini-file from config directory';
             if (!file_exists($iniFile)) {
                 // Ini-файла нигде не нашли :(
