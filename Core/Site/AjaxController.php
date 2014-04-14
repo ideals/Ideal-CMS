@@ -5,7 +5,7 @@ use Ideal\Core\Request;
 
 class AjaxController extends \Ideal\Core\Site\Controller
 {
-    public function run($router)
+    public function run(Router $router)
     {
         $request = new Request();
         $actionName = $request->action;

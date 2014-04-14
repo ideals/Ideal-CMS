@@ -199,8 +199,11 @@ abstract class Model
         if ($where === false) return $list;
         $db = Db::getInstance();
 
-        // todo сделать определение elements_site | elements_admin на основании имени класса
-        $onPage = $this->params['elements_site'];
+        // Определяем кол-во отображаемых элементов на основании названия класса
+        $class = strtolower(get_class($this));
+        $class = explode('\\', trim($class, '\\'));
+        $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
+        $onPage = $this->params[$nameParam];
 
         if ($page == 0) $page = 1;
         $start = ($page - 1) * $onPage;
@@ -259,8 +262,11 @@ abstract class Model
         // Строка запроса без нашего параметра номера страницы
         $query = $request->getQueryWithout($pageName);
 
-        // todo сделать определение elements_site | elements_admin на основании имени класса
-        $onPage = $this->params['elements_site'];
+        // Определяем кол-во отображаемых элементов на основании названия класса
+        $class = strtolower(get_class($this));
+        $class = explode('\\', trim($class, '\\'));
+        $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
+        $onPage = $this->params[$nameParam];
 
         $countList = $this->getListCount();
 
