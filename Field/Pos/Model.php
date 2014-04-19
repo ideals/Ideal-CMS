@@ -1,14 +1,26 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Field\Pos;
 
+/**
+ * Модель для работы с полем сортировки
+ */
 class Model
 {
     /**
      * Изменение позиции $oldPos на новую $newPos
-     * @param $oldPos старое значение позиции
-     * @param $newPos новое значение позиции
-     * @param $prevStructure путь к структуре в которой меняются позиции
-     * @return string sql-запрос изменения позиции
+     *
+     * @param int $oldPos Старое значение позиции
+     * @param int $newPos Новое значение позиции
+     * @param string $prevStructure Путь к структуре в которой меняются позиции
+     * @return string Sql-запрос изменения позиции
      */
     public function movePos($oldPos, $newPos, $prevStructure)
     {

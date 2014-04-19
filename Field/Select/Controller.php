@@ -12,14 +12,32 @@ namespace Ideal\Field\Select;
 use Ideal\Field\AbstractController;
 
 /**
- * Class Controller
+ * Поле для выбора значения из списка вариантов
  *
- * @package Ideal\Field\Select
+ * Варианты значений можно либо задать непосредственно при описании поля
+ * в конфигурационном файле, присвоив полю values массив со списком значений:
+ *     'currency' => array(
+ *         'label'  => 'Валюта',
+ *         'sql'    => 'tinyint',
+ *         'type'   => 'Ideal_Select',
+ *         'values' => array('руб', 'usd')
+ *     ),
+ *
+ * Либо присвоить полю medium название медиума для получения списка значений
+ *     'structure' => array(
+ *         'label' => 'Тип раздела',
+ *         'sql'   => 'varchar(30) not null',
+ *         'type'  => 'Ideal_Select',
+ *         'medium'=> '\\Ideal\\Medium\\StructureList\\Model'
+ *     ),
  */
 class Controller extends AbstractController
 {
-    protected $list; // Опции списка
+    /** @inheritdoc */
     protected static $instance;
+
+    /** @var array Список вариантов выбора для select  */
+    protected $list;
 
     /**
      * {@inheritdoc}

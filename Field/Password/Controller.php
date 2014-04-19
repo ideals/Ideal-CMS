@@ -1,16 +1,37 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Field\Password;
 
 use Ideal\Field\AbstractController;
-
 use Ideal\Core\Request;
 
+/**
+ * Поле для хранения и редактирования пароля
+ *
+ * Пароль хранится в зашифрованном с помощью функции crypt() виде.
+ *
+ * Пример объявления в конфигурационном файле структуры:
+ *     'password' => array(
+ *         'label' => 'Пароль',
+ *         'sql'   => 'varchar(255) NOT NULL',
+ *         'type'  => 'Ideal_Password'
+ *      ),
+ */
 class Controller extends AbstractController
 {
+    /** {@inheritdoc} */
     protected static $instance;
-    public $newCheckValue;
 
-
+    /**
+     * {@inheritdoc}
+     */
     public function getInputText()
     {
         return '<script type="text/javascript" src="Ideal/Field/Password/admin.js" /><div class="row">'
@@ -25,38 +46,37 @@ class Controller extends AbstractController
             . '" ></div></div>';
     }
 
-
-
-
+    /**
+     * {@inheritdoc}
+     */
     public function parseInputValue($isCreate)
     {
         $this->newValue = $this->pickupNewValue();
 
         $request = new Request();
         $fieldName = $this->groupName . '_' . $this->name.'-check';
-        $this->newCheckValue = $request->$fieldName;
+        $newCheckValue = $request->$fieldName;
 
         $item = array();
         $item['fieldName'] = $this->htmlName;
 
         if ($this->newValue == '') {
-            $item['value'] = NULL;
+            $item['value'] = null;
         } else {
             $item['value'] = crypt($this->newValue);
         }
 
         $item['message'] = '';
 
-       if ($this->newValue !== $this->newCheckValue) {
+        if ($this->newValue !== $newCheckValue) {
             $item['message'] = 'пароли не совпадают';
         }
 
-        if (empty($this->newValue) AND $isCreate) {
+        if (empty($this->newValue) && $isCreate) {
             // При создании элемента поле с паролем всегда должно быть заполнено
             $item['message'] = 'необходимо заполнить это поле';
         }
 
         return $item;
     }
-
 }

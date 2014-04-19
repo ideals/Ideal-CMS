@@ -1,8 +1,9 @@
 <?php
 /**
  * Ideal CMS (http://idealcms.ru/)
+ *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
- * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru/)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
@@ -31,10 +32,10 @@ abstract class AbstractController
     /** @var  string Название поля */
     protected $name;
 
-    /** @var  array Параметры поля, взятые из конфига структуры */
+    /** @var  array Параметры поля, взятые из конфигурационного файла структуры */
     protected $field;
 
-    /** @var  string Название таба, в котором находится поле в окне редактирования */
+    /** @var  string Название вкладки, в которой находится поле в окне редактирования */
     protected $groupName;
 
     /** @var  \Ideal\Core\Admin\Model Модель данных, в которой находится редактируемое поле */
@@ -49,7 +50,7 @@ abstract class AbstractController
     /**
      * Обеспечение паттерна singleton
      *
-     * Особенность - во всех потомках нужно обязательно определять свойство
+     * Особенность — во всех потомках нужно обязательно определять свойство
      * protected static $instance
      *
      * @return mixed
@@ -79,9 +80,9 @@ abstract class AbstractController
         $value = '';
         $pageData = $this->model->getPageData();
         if (isset($pageData[$this->name]) && !is_null($pageData[$this->name])) {
-                $value = $pageData[$this->name];
+            $value = $pageData[$this->name];
         } elseif (isset($this->field['default'])) {
-            // Если поле ещё не заполнено, берём его значение по дефолту из описания полей структуры
+            // Если поле ещё не заполнено, берём его значение по умолчанию из описания полей структуры
             $value = $this->field['default'];
         }
         return $value;
@@ -125,9 +126,9 @@ HTML;
      * Полю необходимо получать сведения о состоянии объекта и о других полях, т.к.
      * его значения и поведение может зависеть от значений других полей
      *
-     * @param \Ideal\Core\Admin\Model $model Модель редактируемого объекта
-     * @param string $fieldName Редактируемое поле
-     * @param string $groupName Вкладка, к которой принадлежит редактируемое поле
+     * @param \Ideal\Core\Admin\Model $model     Модель редактируемого объекта
+     * @param string                  $fieldName Редактируемое поле
+     * @param string                  $groupName Вкладка, к которой принадлежит редактируемое поле
      */
     public function setModel($model, $fieldName, $groupName = 'general')
     {
@@ -148,9 +149,8 @@ HTML;
     /**
      * Форматирование значения поля для отображения значения в списке элементов
      *
-     * @param array $values Массив значений объекта
+     * @param array  $values    Массив значений объекта
      * @param string $fieldName Название поля, из которого надо взять значение
-     *
      * @return string Строка со значением для отображения в списке
      */
     public function getValueForList($values, $fieldName)
@@ -162,7 +162,6 @@ HTML;
      * Получение данных, введённых пользователем, их обработка с уведомлением об ошибках ввода
      *
      * @param bool $isCreate Флаг создания или редактирования элемента
-     *
      * @return array
      */
     public function parseInputValue($isCreate)
@@ -174,7 +173,7 @@ HTML;
             'value' => $this->newValue,
             'message' => '',
             'sqlAdd' => ''
-         );
+        );
 
         // В первой версии только на правильность данных и их наличие, если в описании бд указано not null
         if (($this->name == 'ID') && $isCreate) {
@@ -185,14 +184,15 @@ HTML;
         }
 
         if (($this->name == 'ID') && empty($this->newValue)) {
-            // Если это поле ID и оно пустое, значит элемент создаётся - не нужно на нём ошибку отображать
+            // Если это поле ID и оно пустое, значит элемент создаётся — не нужно на нём ошибку отображать
             return $item;
         }
 
         $sql = strtolower($this->field['sql']);
         if (empty($this->newValue)
-                && (strpos($sql, 'not null') !== false)
-                && (strpos($sql, 'default') === false)) {
+            && (strpos($sql, 'not null') !== false)
+            && (strpos($sql, 'default') === false)
+        ) {
             // Установлен NOT NULL и нет DEFAULT и $value пустое
             $item['message'] = 'необходимо заполнить это поле';
         }

@@ -1,13 +1,34 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Field\Cid;
 
 use \Ideal\Field;
 
+/**
+ * Модель для работы с cid'ами — основным элементом построения древовидной структуры Materialized Path.
+ *
+ */
 class Model
 {
+    /** @var int Количество уровней вложенности в cid  */
     private $levels;
+
+    /** @var int Количество цифр (разрядов) на одном уровне вложенности  */
     private $digits;
 
+    /**
+     * Устанавливает количество уровней вложенности и количество разрядов на одном уровне вложенности
+     *
+     * @param int $levels Количество уровней вложенности в cid
+     * @param int $digits Количество цифр (разрядов) на одном уровне вложенности
+     */
     public function __construct($levels, $digits)
     {
         $this->levels = $levels;
@@ -16,9 +37,10 @@ class Model
 
     /**
      * Возвращает родительский cid для указанного уровня $lvl
-     * @param string $cid Cid из которого надо извлечь родителя
-     * @param int $lvl Уровень для которого надо извлечь родителя
-     * @param bool $fullCid Нужно возвращать полный cid или только начальную часть (для поиска)
+     *
+     * @param string $cid     Cid из которого надо извлечь родителя
+     * @param int    $lvl     Уровень для которого надо извлечь родителя
+     * @param bool   $fullCid Нужно возвращать полный cid или только начальную часть (для поиска)
      * @return string Родительский cid
      */
     public function getCidByLevel($cid, $lvl, $fullCid = true)
@@ -27,23 +49,20 @@ class Model
         if ($fullCid) {
             $parentCid = $this->reconstruct($parentCid);
         }
-        return$parentCid;
+        return $parentCid;
     }
 
-
     /**
-     * Добивает $cid нулями в конце, до превращения его в cid
+     * Добивает $cid нулями в конце, до превращения его в полный cid
      *
      * @param string $cid Строка с cid адресом, у которого не хватает нулей
-     *
      * @return string Сформированный полноценный cid-адрес
      */
-    function reconstruct($cid)
+    public function reconstruct($cid)
     {
         // Вставляем нужное количество нулей после строки $num
         return str_pad($cid, $this->levels * $this->digits, '0');
     }
-
 
     /**
      * Определение cid-блока на уровне $lvl и прибавление к нему $n
@@ -51,10 +70,9 @@ class Model
      * @param string $cid Исходный cid-адрес
      * @param int    $lvl Уровень, на котором надо поменять число
      * @param int    $n   Число, которое надо прибавить, к тому, что есть
-     *
      * @return string Возвращает только блок из cid на указанном уровне
      */
-    function getBlock($cid, $lvl, $n = 0)
+    public function getBlock($cid, $lvl, $n = 0)
     {
         $current = ($lvl - 1) * $this->digits; // граница до несущей части адреса
         $num = substr($cid, $current, $this->digits); // выцепляем номер
@@ -73,7 +91,6 @@ class Model
         return $c_block;
     }
 
-
     /**
      * Конвертация числа в блок cid адреса
      *
@@ -81,17 +98,15 @@ class Model
      * строка соответствовала длине cid-блока
      *
      * @param int $num Число, которое нужно превратить в блок cid-адреса
-     *
      * @return string Сформированный полноценный cid-адрес
      */
-    function numToCid($num)
+    public function numToCid($num)
     {
         // TODO сделать сообщение об ошибке, если число больше допустимого
 
         // Вставляем перед числом нужное кол-во нулей
         return str_pad($num, $this->digits, '0', STR_PAD_LEFT);
     }
-
 
     /**
      * Изменение значения cid-блока на уровне $lvl на указанное значение $n
@@ -103,10 +118,9 @@ class Model
      * @param int    $lvl Уровень, на котором нужно поменять значение
      * @param int    $n   Число, которое надо прибавить, к тому, что есть
      * @param bool   $new Флаг обнуления значений после указанного уровня
-     *
      * @return string Изменённый cid
      */
-    function setBlock($cid, $lvl, $n, $new = false)
+    public function setBlock($cid, $lvl, $n, $new = false)
     {
         // Определение неизменяемых границ
         $start = ($lvl - 1) * $this->digits;
@@ -126,18 +140,18 @@ class Model
             $endBlock = str_repeat('0', strlen($endBlock));
         }
 
-        // Составление измененого cid адреса
+        // Составление изменённого cid адреса
         $cid = $startBlock . $block . $endBlock;
 
         return $cid;
     }
 
-
     /**
      * Изменение позиции $oldCid на указанном уровне $lvl на указанное значение $newSegment
-     * @param $oldCid полный cid, который нужно переместить
-     * @param $newCidSegment новое значение позиции
-     * @param $lvl уровень на котором меняется позиция
+     *
+     * @param string $oldCid        Полный cid, который нужно переместить
+     * @param int    $newCidSegment Новое значение позиции
+     * @param int    $lvl           Уровень на котором меняется позиция
      * @return string
      */
     public function moveCid($oldCid, $newCidSegment, $lvl)
@@ -155,7 +169,7 @@ class Model
         // если cid становится больше, то новое значение уменьшается на единицу,
         // если меньше, то новое значение остаётся прежним
         if ($newCidSegment > $oldCidSegment) {
-            for ($i = $oldCidSegment + 1; $i < $newCidSegment + 1; $i++) {
+            for ($i = intval($oldCidSegment) + 1; $i < $newCidSegment + 1; $i++) {
                 $oldCidPart = $parentCid . $this->numToCid($i);
                 $newCidPart = $parentCid . $this->numToCid($i - 1);
                 $update[$oldCidPart] = $newCidPart;
@@ -168,23 +182,23 @@ class Model
             }
         }
 
-        $tailPos = $lvl * $this->digits + 1; // начало хвоста - неизменяемой части cid, идущей после изм. уровня
+        $tailPos = $lvl * $this->digits + 1; // начало хвоста — неизменяемой части cid, идущей после изм. уровня
         $_sql = 'UPDATE {{ table }} SET cid = CASE';
-        $where = $or ='';
+        $where = $or = '';
         foreach ($update as $old => $new) {
             $_sql .= "\nWHEN cid LIKE '{$old}%' THEN CONCAT('{$new}', substring(cid, {$tailPos}))";
             $where .= $or . " cid LIKE '{$old}%'";
             $or = ' OR';
         }
-        $_sql .= "\n ELSE cid END WHERE ". $where;
+        $_sql .= "\n ELSE cid END WHERE " . $where;
         // На основании массива $update составляем список запросов для обновления cid'ов
         return $_sql;
     }
 
-
     /**
      * Возвращает массив с родительскими cid'ами для заданного cid
-     * @param $cid Сид для которого нужно определить родительские сиды
+     *
+     * @param string $cid Сид для которого нужно определить родительские сиды
      * @return array Массив родительских сидов
      */
     public function getParents($cid)
@@ -193,7 +207,9 @@ class Model
         $parentCid = '';
         $blocks = str_split($cid, $this->digits);
         foreach ($blocks as $v) {
-            if (intval($v) == 0) break;
+            if (intval($v) == 0) {
+                break;
+            }
             $parentCid .= $v;
             $parents[] = $this->reconstruct($parentCid);
         }
@@ -201,6 +217,11 @@ class Model
         return $parents;
     }
 
+    /**
+     * @param array $menu
+     * @param array $path
+     * @return array
+     */
     public function buildTree(&$menu, $path)
     {
         $url = new Field\Url\Model();

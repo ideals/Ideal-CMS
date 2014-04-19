@@ -37,4 +37,4 @@ $(function(){
                // $('#general_password-help').html('Пароли должны совпадать');
             }
     });
-})
+});

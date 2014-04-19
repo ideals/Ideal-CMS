@@ -1,14 +1,35 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Field\Pos;
 
 use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
 
+/**
+ * Поле для сортировки элементов по порядку значений
+ *
+ * Пример объявления в конфигурационном файле структуры:
+ *     'pos' => array(
+ *         'label' => '№',
+ *         'sql'   => 'int not null',
+ *         'type'  => 'Ideal_Pos'
+ *     ),
+ */
 class Controller extends AbstractController
 {
+    /** @inheritdoc */
     protected static $instance;
 
-
+    /**
+     * {@inheritdoc}
+     */
     public function showEdit()
     {
         $this->htmlName = $this->groupName . '_' . $this->name;
@@ -24,7 +45,9 @@ class Controller extends AbstractController
         return $html;
     }
 
-
+    /**
+     * {@inheritdoc}
+     */
     public function getInputText()
     {
         $value = $this->getValue();
@@ -36,7 +59,9 @@ class Controller extends AbstractController
         return $input;
     }
 
-
+    /**
+     * {@inheritdoc}
+     */
     public function pickupNewValue()
     {
         $request = new Request();
@@ -49,9 +74,10 @@ class Controller extends AbstractController
         $oldPos = (isset($pageData['pos'])) ? $pageData['pos'] : 0;
 
         // Если был указан и не изменился, то оставляем как есть
-        // Если был указан и изменился, перенумеровываем список
+        // Если был указан и изменился, перенумеруем список
         if ($this->newValue == '') {
             // Если pos не был указан, надо поставить максимальный
+            // todo переделать получение новой позиции не через основную модель, а через $posModel
             $this->newValue = $model->getNewPos();
         } elseif ($oldPos != $newPos) {
             $posModel = new Model();
@@ -61,5 +87,4 @@ class Controller extends AbstractController
 
         return $this->newValue;
     }
-
 }

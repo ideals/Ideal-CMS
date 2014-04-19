@@ -9,13 +9,28 @@
 
 namespace Ideal\Field\SelectMulti;
 
+use Ideal\Field\AbstractController;
+
 /**
- * Class Controller
+ * Поле для выбора значения из списка вариантов
  *
- * @package Ideal\Field\SelectMulti
+ * Пример объявления в конфигурационном файле структуры:
+ *
+ *     'structure' => array(
+ *         'label'  => 'Тип раздела',
+ *         'sql'    => 'varchar(30) not null',
+ *         'type'   => 'Ideal_SelectMulti',
+ *         'medium' => '\\Ideal\\Medium\\StructureList\\Model'
+ *     ),
+ *
+ * Полю medium присваивается название медиума для получения списка значений через промежуточную таблицу
+ *
  */
-class Controller extends \Ideal\Field\AbstractController
+class Controller extends AbstractController
 {
+    /** @inheritdoc */
+    protected static $instance;
+
     /** @var  \Ideal\Medium\AbstractModel Объект доступа к редактируемым данным */
     protected $medium;
 
@@ -26,7 +41,7 @@ class Controller extends \Ideal\Field\AbstractController
     {
         parent::setModel($model, $fieldName, $groupName);
 
-        // Инициализируем медиума для получения список значений select и сохранения данных
+        // Инициализируем медиум для получения списка значений select и сохранения данных
         $className = $this->field['medium'];
         $this->medium = new $className($this->model, $fieldName);
     }
@@ -56,7 +71,8 @@ class Controller extends \Ideal\Field\AbstractController
      */
     public function parseInputValue($isCreate)
     {
-        // Если товар связан с категорией через промежуточную таблицу
+        // При сохранении выбранных значений при использовании промежуточной таблицы,
+        // потребуются дополнительные запросы к БД, которые генерирует медиум
 
         $this->newValue = null;
         $newValue = $this->pickupNewValue();
