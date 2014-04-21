@@ -58,6 +58,21 @@ class Router
         }
 
         $path = $this->model->getPath();
+
+        if (count($path) == 0 && $this->model->is404) {
+            // Не смогли построить ни одного элемента пути и получили 404 ошибку
+            $config = Config::getInstance();
+            $path = array(
+                $config->getStartStructure(),
+            );
+            $this->model->setPath($path);
+        }
+
+        if (count($path) == 0) {
+            Util::addError('Не удалось построить путь. Модель: ' . get_class($this->model));
+            $this->model->is404 = true;
+            // todo отображение 404 ошибки
+        }
         $end = array_pop($path);
         $prev = array_pop($path);
 
