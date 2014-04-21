@@ -179,7 +179,8 @@ class Model
             '?' => '',
             ' ' => '-',
             '&' => '',
-            ',' => ''
+            ',' => '',
+            '%' => ''
         );
         $nm = strtr($nm, $arr);
         return $nm;
@@ -218,7 +219,8 @@ class Model
             '?' => '',
             ' ' => '-',
             '&' => '',
-            ',' => ''
+            ',' => '',
+            '%' => ''
         );
         $name = strtr($name, $arr);
         return $name . $ext;
@@ -230,7 +232,7 @@ class Model
      * @param string $nm - исходная строка
      * @return string преобразованная строка
      */
-    public function translit($nm)
+    public static function translit($nm)
     {
         $arr = array(
             'а' => 'a',
