@@ -188,6 +188,10 @@ DONE;
         }
         $tabs .= '</ul>';
         $tabsContent .= '</div>';
+        if (count($this->params) == 1) {
+            // Если вкладка только одна, то вкладки не надо отображать
+            $tabs = '';
+        }
         return $tabs . $tabsContent;
     }
 }
