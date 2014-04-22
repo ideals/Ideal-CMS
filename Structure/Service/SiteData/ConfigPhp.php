@@ -45,7 +45,7 @@ class ConfigPhp
                 // Комментария в нужном формате нет, значит это массив
                 preg_match('/\'(.*)\'\s*=>\s*array\s*\(\s*\/\/\s*(.*)/i', $other, $match);
                 if (!isset($match[1]) || !isset($match[2])) {
-                    echo "Ошибка парсинга файла site_data.php в строке $i<br />";
+                    echo "Ошибка парсинга файла {$fileName} в строке $i<br />";
                     exit;
                 }
                 $array = array();

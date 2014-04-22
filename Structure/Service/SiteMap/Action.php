@@ -24,19 +24,52 @@
     }
 </style>
 
-<label class="checkbox">
-    <input type="checkbox" name="force" id="force" />
-    Принудительное составление xml-карты сайта
-</label>
+<!-- Nav tabs -->
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#settings" data-toggle="tab">Настройки</a></li>
+    <li><a href="#start" data-toggle="tab">Запуск карты сайта</a></li>
+</ul>
 
-<button class="btn btn-info" value="Запустить сканирование" onclick="startSiteMap()">
-    Запустить сканирование
-</button>
+<!-- Tab panes -->
+<div class="tab-content">
+    <div class="tab-pane active" id="settings">
+        <form action="" method=post enctype="multipart/form-data">
 
-<span id="loading"></span>
+            <?php
+            $config = \Ideal\Core\Config::getInstance();
+            $file = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 
-<div id="iframe">
+            $file->loadFile($config->cmsFolder . '/site_map.php');
+
+            if (isset($_POST['edit'])) {
+                $file->saveFile($config->cmsFolder . '/site_map.php');
+            }
+
+            echo $file->showEdit();
+            ?>
+
+            <br />
+
+            <input type="submit" class="btn btn-info" name="edit" value="Сохранить настройки" />
+        </form>
+    </div>
+    <div class="tab-pane" id="start">
+        <label class="checkbox">
+            <input type="checkbox" name="force" id="force" />
+            Принудительное составление xml-карты сайта
+        </label>
+
+        <button class="btn btn-info" value="Запустить сканирование" onclick="startSiteMap()">
+            Запустить сканирование
+        </button>
+
+        <span id="loading"></span>
+
+        <div id="iframe">
+        </div>
+    </div>
 </div>
+
 
 <script type="application/javascript">
     function startSiteMap()
