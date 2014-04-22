@@ -181,6 +181,7 @@ class Sender
         if (isSet($this->attach_type)) {
             reset($this->attach_type);
             while(list($name, $content_type) = each($this->attach_type)) {
+                $this->body .= '--' . $this->boundary . "--\n";
                 $this->body .= '--' . $this->boundary2 . "\n";
                 $this->body .= "Content-Type: {$content_type}\n";
                 $this->body .= "Content-Transfer-Encoding: base64\n";
@@ -189,7 +190,7 @@ class Sender
                 $this->body .= "filename*0*=UTF8''" . rawurlencode($name) . ";\n\n";
                 $this->body .= chunk_split(base64_encode($this->attach[$name])) . "\n\n";
             }
-            $this->body .= '--' . $this->boundary2;
+            $this->body .= '--' . $this->boundary2 . '--';
         }
     }
 
