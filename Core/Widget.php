@@ -14,6 +14,8 @@ abstract class Widget
     protected $prefix;
     /** @var  string prev_structure для получения элементов в виджете */
     protected $prevStructure;
+    /** @var  string get парметры url для списка ссылок, генерируемых виджетом */
+    protected $query;
 
     public function __construct($model)
     {
@@ -30,5 +32,10 @@ abstract class Widget
     public function setPrefix($prefix)
     {
         $this->prefix = $prefix;
+    }
+
+    public function setQuery($query)
+    {
+        $this->query = $query;
     }
 }
