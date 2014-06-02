@@ -30,7 +30,8 @@ class Model extends \Ideal\Core\Admin\Model
     {
         $this->setPageDataByPrevStructure($this->prevStructure);
 
-        $this->disallow = explode('\n', $this->pageData['disallow']);
+        $this->pageData['disallow'] = str_replace("\r\n", "\n", $this->pageData['disallow']);
+        $this->disallow = explode("\n", $this->pageData['disallow']);
 
         $mode = explode('\\', get_class($this->parentModel));
         if ($mode[3] == 'Site') {
@@ -142,7 +143,9 @@ class Model extends \Ideal\Core\Admin\Model
                 if ($v['link'] !== array_reduce(
                         $tmp,
                         function(&$res, $rule) {
-                            if ($res == 1 || preg_match($rule, $res)) {
+                            // Добавляем слеш в конец строки в случае его отсутствия
+                            $res2 = strripos($res, "/") == strlen($res) - 1 ? $res : $res . "/";
+                            if ($res == 1 || preg_match($res2, $rule)) {
                                 return 1;
                             }
                             return $res;
