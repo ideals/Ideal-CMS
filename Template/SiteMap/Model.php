@@ -30,7 +30,8 @@ class Model extends \Ideal\Core\Admin\Model
     {
         $this->setPageDataByPrevStructure($this->prevStructure);
 
-        $this->disallow = explode('\n', $this->pageData['disallow']);
+        $this->pageData['disallow'] = str_replace("\r\n", "\n", $this->pageData['disallow']);
+        $this->disallow = explode("\n", $this->pageData['disallow']);
 
         $mode = explode('\\', get_class($this->parentModel));
         if ($mode[3] == 'Site') {
