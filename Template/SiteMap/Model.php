@@ -47,14 +47,13 @@ class Model extends \Ideal\Core\Admin\Model
      * Построение карты сайта в виде дерева
      *
      * @param int $page Не используется
-     * @throws \Exception
      * @return array
      */
     public function getList($page = null)
     {
         $config = Config::getInstance();
 
-        // Определение стартовой структуры и начать считываение с неё
+        // Определение стартовой структуры и начать считывание с неё
         $structure = $config->structures[0];
         $className = Util::getClassName($structure['structure'], 'Structure') . '\\Site\\Model';
         /** @var $startStructure \Ideal\Structure\Part\Site\Model */
@@ -141,15 +140,15 @@ class Model extends \Ideal\Core\Admin\Model
                 // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
                 $tmp = $this->disallow;
                 if ($v['link'] !== array_reduce(
-                        $tmp,
-                        function(&$res, $rule) {
-                            if ($res == 1 || preg_match($rule, $res)) {
-                                return 1;
-                            }
-                            return $res;
-                        },
-                        $v['link']
-                    )) {
+                    $tmp,
+                    function (&$res, $rule) {
+                        if ($res == 1 || preg_match($rule, $res)) {
+                            return 1;
+                        }
+                        return $res;
+                    },
+                    $v['link']
+                )) {
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }
