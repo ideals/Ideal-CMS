@@ -44,7 +44,7 @@ class Controller extends AbstractController
                     [ "Source", "-", "Preview", "Print", "-", "Templates" ],
                     [ "PasteText", "PasteFromWord", "-", "Undo", "Redo" ],
                     [ "Find", "Replace", "-", "Scayt" ],
-                    [ "Image", "Flash", "MediaEmbed", "Table", "HorizontalRule", "SpecialChar" ],
+                    [ "Image", "Flash", "oembed", "Table", "HorizontalRule", "SpecialChar" ],
                     "/",
                     [ "Bold", "Italic", "Underline", "Strike", "Subscript", "Superscript", "-", "RemoveFormat" ],
                     [ "NumberedList", "BulletedList", "-", "Outdent", "Indent", "-", "Blockquote", "CreateDiv", "-",
