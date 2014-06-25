@@ -55,7 +55,7 @@ function getVersions()
 {
     $config = Config::getInstance();
     // Путь к файлу README.md для cms
-    $mods['ideal'] = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal';
+    $mods['Ideal-CMS'] = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal';
 
 
     // Ищем файлы README.md в модулях
@@ -63,6 +63,11 @@ function getVersions()
     // Получаем разделы
     $modDirs = array_diff(scandir($modDirName), array('.', '..')); // получаем массив папок модулей
     foreach ($modDirs as $dir) {
+        // Исключаем разделы, явно не содержащие модули
+        if ((stripos($dir, '.') === 0) || (is_file($modDirName . '/' . $dir))) {
+            unset($mods[$dir]);
+            continue;
+        }
         $mods[$dir] = $modDirName . '/' . $dir;
     }
     // Получаем версии для каждого модуля и CMS из update.log
@@ -109,19 +114,14 @@ function getVersionFromFile($mods)
 function getVersionFromLog($mods, $log) {
     $linesLog = file($log);
     $version = array();
-    for($i = count($linesLog) - 1; $i>=0; $i++) {
+    for($i = count($linesLog) - 1; $i>=0; $i--) {
+        // Удаление спец символов конца строки (необходимость в таком удалении возникает в ОС Windows)
+        $linesLog[$i] = rtrim($linesLog[$i]);
         if ($linesLog[$i] != '[updateInfo]') continue;
         $buf['name'] = explode('=', $linesLog[$i + 1]);
         if (isset($version[$buf['name']['1']])) continue;
-        $buf['ver'] = explode('=', $linesLog[$i + 1]);
-        // Получаем номер версии из первой строки. Формат номера: пробел+v.+пробел+номер-версии+пробел-или-конец-строки
-        preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $buf['ver'][1], $ver);
-        // Если номер версии не удалось определить — выходим
-        if (!isset($ver[2][0]) || ($ver[2][0] == '')) {
-            $msg = 'Ошибка при разборе строки с версией файла';
-            return false;
-        }
-        $version[$buf['name'][1]] = $buf['ver'][1];
+        $buf['ver'] = explode('=', $linesLog[$i + 2]);
+        $version[$buf['name'][1]] = $buf['ver']['1'];
     }
 
     return $version;
@@ -149,9 +149,17 @@ function getVersionFromReadme($mods)
             $msg = 'Не удалось получить версию из ' . $v . '/' . $mdFile;
             return false;
         }
-        $ver[$k] = $lines[0];
+        // Получаем номер версии из первой строки. Формат номера: пробел+v.+пробел+номер-версии+пробел-или-конец-строки
+        preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $lines[0], $ver);
+        // Если номер версии не удалось определить — выходим
+        if (!isset($ver[2][0]) || ($ver[2][0] == '')) {
+            $msg = 'Ошибка при разборе строки с версией файла';
+            return false;
+        }
+
+        $version[$k] = $ver[2][0];
     }
-    return $ver;
+    return $version;
 }
 ?>
 
