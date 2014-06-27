@@ -81,8 +81,7 @@ function getVersions()
  * Получение версии из файла
  *
  * @param string $mods Папки с модулями и CMS
- * @param string $msg Сообщение $msg Сообщение
- * @return bool
+ * @return array Версия CMS  и модулей
  */
 function getVersionFromFile($mods)
 {
@@ -106,12 +105,18 @@ function getVersionFromFile($mods)
         $version = getVersionFromReadme($mods);
         putVersionLog($version, $log);
     } else {
-        $version = getVersionFromLog($mods, $log);
+        $version = getVersionFromLog($log);
     }
     return $version;
 }
 
-function getVersionFromLog($mods, $log) {
+/**
+ * Получение версий из файла update.log
+ *
+ * @param $log  Файл с логом обновлений
+ * @return array Версии модулей и обновлений
+ */
+function getVersionFromLog($log) {
     $linesLog = file($log);
     $version = array();
     for($i = count($linesLog) - 1; $i>=0; $i--) {
@@ -127,6 +132,12 @@ function getVersionFromLog($mods, $log) {
     return $version;
 }
 
+/**
+ * Запись версий в update.log
+ *
+ * @param $version Версии полученные из Readme.ms
+ * @param $log Файл с логом обновлений
+ */
 function putVersionLog($version, $log)
 {
     $lines = array();
@@ -138,6 +149,12 @@ function putVersionLog($version, $log)
     file_put_contents($log, implode("\r\n", $lines));
 }
 
+/**
+ * Получение версий из Readme.md
+ *
+ * @param $mods Массив состоящий из названий модулей и полных путей к ним
+ * @return array Версии модулей или false в случае ошибки
+ */
 function getVersionFromReadme($mods)
 {
     global $msg;
