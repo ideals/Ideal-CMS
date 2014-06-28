@@ -88,22 +88,28 @@ class Model
     protected function getVersionFromLog($log)
     {
         $linesLog = file($log);
-        $version = array();
-        for ($i = count($linesLog) - 1; $i>=0; $i--) {
-            // Удаление спец символов конца строки (необходимость в таком удалении возникает в ОС Windows)
-            $linesLog[$i] = rtrim($linesLog[$i]);
-            if ($linesLog[$i] != '[updateInfo]') {
-                continue;
+        $versions = array();
+
+        foreach ($linesLog as $v) {
+            // Удаление спец символов конца строки (если пролез символ \r)
+            $v = rtrim($v);
+            if (strpos($v, 'Installed ') === 0) {
+                // Строка содержит сведения об установленном модуле
+                $v = substr($v, 10);
+                $name = substr($v, 0, strpos($v, ' '));
+                // Формат номера: пробел+v.+пробел+номер-версии+пробел-или-конец-строки
+                preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $v, $ver);
+                // Если номер версии не удалось определить — выходим
+                if (!isset($ver[2][0]) || ($ver[2][0] == '')) {
+                    $this->errorText = 'Ошибка при разборе строки с версией файла';
+                    return false;
+                }
+
+                $versions[$name] = $ver[2][0];
             }
-            $buf['name'] = explode('=', $linesLog[$i + 1]);
-            if (isset($version[$buf['name']['1']])) {
-                continue;
-            }
-            $buf['ver'] = explode('=', $linesLog[$i + 2]);
-            $version[$buf['name'][1]] = $buf['ver']['1'];
         }
 
-        return $version;
+        return $versions;
     }
 
     /**
@@ -116,11 +122,9 @@ class Model
     {
         $lines = array();
         foreach ($version as $k => $v) {
-            $lines[] = "[updateInfo]";
-            $lines[] = "name={$k}";
-            $lines[] = "version={$v}";
+            $lines[] = 'Installed ' . $k . ' v.' . $v;
         }
-        file_put_contents($log, implode("\r\n", $lines));
+        file_put_contents($log, implode("\n", $lines));
     }
 
     /**
