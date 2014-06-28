@@ -89,6 +89,7 @@ $dbAdapter = Ideal\Core\Db::getInstance();
 // Загрузка файла
 if (isset($_POST['version']) && (isset($_POST['name']))) {
     $updateName  = $_POST['name'];
+    $updateVer  = $_POST['version'];
     $a =  $getFileScript . '?name=' . urlencode(serialize($updateName )) . '&ver=' . $_POST['version'];
     $file = file_get_contents($getFileScript . '?name=' . urlencode(serialize($updateName )) . '&ver=' . $_POST['version']);
 
@@ -162,16 +163,106 @@ if ($archive === true){
         uExit('Не удалось переименовать папку ' . $updateCore);
     }
     //Запускаем выполнение скриптов и запросов
-    runProcess();
+    runProcess($updateCore);
     // Удаляем старую директорию
     removeDirectory($updateCore . '_old');
 
     exit('Обновление завершено успешно');
 }
 
-function runProcess()
+/**
+ * Запуск применения скриптов для определённое версии
+ */
+function runProcess($updateCore)
 {
+    global $log, $updateVer, $updateName;
+    $applyScripts = parseUpdateLog($log, $updateName, $updateVer);
 
+    // Выполняем скрипты, получаем следующую версию
+    scriptsExe($updateCore, $updateVer);
+    // Если версия не соответствует необходимой изменяем $updateVer, вызываем runProcess
+}
+
+/**
+ * Выполненение скриптов
+ */
+function scriptsExe($updateCore, $updateVer, $applyScripts = null)
+{
+    $path = $updateCore . '/' . 'Setup/Update/';
+    //Получение скриптов для модуля или админки
+    $scripts = scandir($path . $updateVer);
+    //Отброс скриптов которые удалось выполнить
+    //Последовательное выполнение скриптов и запросов
+    if (!is_null($applyScripts))
+    foreach($scripts as $k => $v) {
+        if (in_array($v, $applyScripts)) {
+            unset($scripts[$k]);
+        }
+        $type = explode('.', $v);
+        $type = end($type);
+        switch ($type) {
+            case 'php': runPhp($v, $path);
+                break;
+            case 'sql': runSql($v, $path);
+                break;
+        }
+    }
+    //Получение новой версии и её возврат
+    $versions = scandir($updateCore . '/' . 'Setup/Update/');
+    $k = array_search($updateVer, $versions);
+    if ($k === false) return false;
+    $newVer = $versions[$k];
+    return $newVer;
+}
+
+function runPhp($script, $path)
+{
+    exec('php ' . $path . '/' . $script);
+}
+
+function runSql($script, $path)
+{
+    global $dbAdapter;
+    $sql = file_get_contents($path . '/' . $script);
+    $sqlArr = explode(";\n",trim($sql));
+    if (!empty($sqlArr)) {
+        foreach ($sqlArr as $query) {
+            $query = trim($query);
+            if (!empty($query)) {
+                $dbAdapter->query($query);
+            }
+        }
+    }
+}
+
+/**
+ * Разбор файла лога обновлений, для получения последней применённой версии модулей и ранее применённых скриптов обновлений
+ *
+ * @param $log Файл лога обновлений
+ * @param $updateName Название модуля
+ * @param $updateVer Версия модулей
+ *
+ * @return array|bool Возвращает true в случае нахождения нужной версии и отсутствия невыполненных скриптов,
+ * false, если ненаходит нужную версию модуля, массив невыполненных скриптов
+ */
+function parseUpdateLog($log, $updateName, $updateVer)
+{
+    $linesLog = file($log);
+    $vSize = count($linesLog);
+    $applyScripts = array();
+    for($i = $vSize - 1; $i>=0; $i--) {
+        // Удаление спец символов конца строки (необходимость в таком удалении возникает в ОС Windows)
+        $linesLog[$i] = rtrim($linesLog[$i]);
+        if ($linesLog[$i] != '[updateInfo]') continue;
+        if ($linesLog[$i+1] !== ('name=' . $updateName)) continue;
+        if ($linesLog[$i+2] !== ('ver=' . $updateVer)) continue;
+        if ($linesLog[$i+3] == '[updateInfo]') return true;
+        for ($j = $i +3; $j <= $vSize - 1; $j++) {
+            if ($linesLog[$i] == '[updateInfo]') return $applyScripts;
+            $applyScripts = $linesLog[$j];
+        }
+    }
+    return false;
 }
 
 /**
