@@ -1,4 +1,12 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru/)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 /*
  * 1 Получаем версии из update.log, а также, при наличии, названия ранее выполненных файлов
  * 2 Если не удалось получить доступ к файлу выводим сообщение об ошибке
@@ -276,7 +284,7 @@ function uExit($msg) {
         throw new Exception("Необходим аргумент типа строка");
     }
     $message = array(
-        'message ' => $msg
+        'message' => $msg
     );
     exit(json_encode($message));
 }
