@@ -1,4 +1,16 @@
 <?php
+/*
+ * 1 Проверка файла update.log на возможность записи
+ * 2 Если update.log пуст или не содержит обновлений о каком либо модуле вносим в него данные из Readme.md
+ * в формате
+ *      [updateInfo]
+ *      name=Наименование папки
+ *      ver=название + Версия
+ * 3 Получаем версии из update.log, а также, при наличии, названия ранее выполненных файлов
+ * 4 Выполнение скриптов для текущей версии (оставшихся или всех), записывая при этом каждый успешно выполненный скрипт
+ * 5 Запись в update.log новой версии
+ * */
+
 /**
  * Сервис обновления IdealCMS
  * Должен присутствовать на каждом сайте, отвечает за представление информации об обновлении
@@ -22,6 +34,9 @@ $getVersionScript = 'http://idealcms.ru/update/version.php';
 
 $config = \Ideal\Core\Config::getInstance();
 
+// Сообщение
+$msg = '';
+
 // todo Хранение версий
 
 // Установленные версии CMS и модулей
@@ -38,46 +53,131 @@ echo '<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/jque
 
 function getVersions()
 {
-    // Получаем файл README.md для cms
     $config = Config::getInstance();
-    $mdFile = 'README.md';
     // Путь к файлу README.md для cms
-    $cmsMdFileName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/' . $mdFile;
-    // Получаем версию cms
-    $versions['Ideal-CMS'] = getVersionFromFile($cmsMdFileName);
+    $mods['Ideal-CMS'] = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal';
+
 
     // Ищем файлы README.md в модулях
     $modDirName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Mods';
-    // Получаем версии модулей
+    // Получаем разделы
     $modDirs = array_diff(scandir($modDirName), array('.', '..')); // получаем массив папок модулей
     foreach ($modDirs as $dir) {
-        $modDir  = $modDirName . '/' . $dir  . '/' . $mdFile;
-        $version = getVersionFromFile($modDir); // пытаемся извлечь номер версии из файла README.md
-        if ($version) {
-            $versions[$dir] = $version;
+        // Исключаем разделы, явно не содержащие модули
+        if ((stripos($dir, '.') === 0) || (is_file($modDirName . '/' . $dir))) {
+            unset($mods[$dir]);
+            continue;
         }
+        $mods[$dir] = $modDirName . '/' . $dir;
     }
+    // Получаем версии для каждого модуля и CMS из update.log
+    $versions = getVersionFromFile($mods);
+
+
     return $versions;
 }
 
-function getVersionFromFile($cmsMdFileName)
+/**
+ * Получение версии из файла
+ *
+ * @param string $mods Папки с модулями и CMS
+ * @return array Версия CMS  и модулей
+ */
+function getVersionFromFile($mods)
 {
-    if (!file_exists($cmsMdFileName)) return false;
+    global $msg;
+    $config = Config::getInstance();
+    // Файл лога обновлений
+    $log = $config->cmsFolder . '/' . 'update.log';
 
-    // Получаем первую строку файла с наименованием и версией
-    $file = fopen($cmsMdFileName, "r");
-    $firstLine = trim(fgets($file));
-    fclose($file);
+    // Проверяем файл update.log
+    if (file_put_contents($log, '', FILE_APPEND) === false){
+        if (file_exists($log)) {
+            $msg = 'Файл ' . $log . ' недоступен для записи';
+        } else {
+            $msg = 'Не удалось создать файл ' . $log;
+        }
+        return false;
+    };
 
-    // Получаем номер версии из первой строки. Формат номера: пробел+v.+пробел+номер-версии+пробел-или-конец-строки
-    preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $firstLine, $ver);
-
-    // Если номер версии не удалось определить — выходим
-    if (!isset($ver[2][0]) || ($ver[2][0] == '')) return false;
-
-    return $ver[2][0];
+    //Получаем версии
+    if (filesize($log) == 0) {
+        $version = getVersionFromReadme($mods);
+        putVersionLog($version, $log);
+    } else {
+        $version = getVersionFromLog($log);
+    }
+    return $version;
 }
 
+/**
+ * Получение версий из файла update.log
+ *
+ * @param $log  Файл с логом обновлений
+ * @return array Версии модулей и обновлений
+ */
+function getVersionFromLog($log) {
+    $linesLog = file($log);
+    $version = array();
+    for($i = count($linesLog) - 1; $i>=0; $i--) {
+        // Удаление спец символов конца строки (необходимость в таком удалении возникает в ОС Windows)
+        $linesLog[$i] = rtrim($linesLog[$i]);
+        if ($linesLog[$i] != '[updateInfo]') continue;
+        $buf['name'] = explode('=', $linesLog[$i + 1]);
+        if (isset($version[$buf['name']['1']])) continue;
+        $buf['ver'] = explode('=', $linesLog[$i + 2]);
+        $version[$buf['name'][1]] = $buf['ver']['1'];
+    }
+
+    return $version;
+}
+
+/**
+ * Запись версий в update.log
+ *
+ * @param $version Версии полученные из Readme.ms
+ * @param $log Файл с логом обновлений
+ */
+function putVersionLog($version, $log)
+{
+    $lines = array();
+    foreach ($version as $k => $v) {
+        $lines[] = "[updateInfo]";
+        $lines[] = "name={$k}";
+        $lines[] = "version={$v}";
+    }
+    file_put_contents($log, implode("\r\n", $lines));
+}
+
+/**
+ * Получение версий из Readme.md
+ *
+ * @param $mods Массив состоящий из названий модулей и полных путей к ним
+ * @return array Версии модулей или false в случае ошибки
+ */
+function getVersionFromReadme($mods)
+{
+    global $msg;
+    // Получаем файл README.md для cms
+    $mdFile = 'README.md';
+    foreach ($mods as $k => $v) {
+        $lines = file($v . '/' . $mdFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (($lines == false) || (count($lines) == 0)){
+            $msg = 'Не удалось получить версию из ' . $v . '/' . $mdFile;
+            return false;
+        }
+        // Получаем номер версии из первой строки. Формат номера: пробел+v.+пробел+номер-версии+пробел-или-конец-строки
+        preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $lines[0], $ver);
+        // Если номер версии не удалось определить — выходим
+        if (!isset($ver[2][0]) || ($ver[2][0] == '')) {
+            $msg = 'Ошибка при разборе строки с версией файла';
+            return false;
+        }
+
+        $version[$k] = $ver[2][0];
+    }
+    return $version;
+}
 ?>
 
 
