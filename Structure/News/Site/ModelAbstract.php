@@ -5,6 +5,7 @@ use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
+use Ideal\Structure\User;
 
 class ModelAbstract extends \Ideal\Core\Site\Model
 {
@@ -45,8 +46,12 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     {
         $db = Db::getInstance();
 
+        // Для авторизированных в админку пользователей отображать скрытые страницы
+        $user = new User\Model();
+        $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
+
         $url = mysql_real_escape_string($url[0]);
-        $_sql = "SELECT * FROM {$this->_table} WHERE is_active=1 AND url='{$url}'  AND date_create < " . time();
+        $_sql = "SELECT * FROM {$this->_table} WHERE url='{$url}' {$checkActive} AND date_create < " . time();
 
         $news = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
 

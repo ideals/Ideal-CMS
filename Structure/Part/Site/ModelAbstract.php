@@ -7,6 +7,7 @@ use Ideal\Core\Config;
 use Ideal\Core\Util;
 use Ideal\Field;
 use Ideal\Field\Url;
+use Ideal\Structure\User;
 
 class ModelAbstract extends Site\Model
 {
@@ -78,8 +79,12 @@ class ModelAbstract extends Site\Model
             $_sql .= ' OR url="' . mysql_real_escape_string($v) . '"';
         }
 
+        // Для авторизированных в админку пользователей отображать скрытые страницы
+        $user = new User\Model();
+        $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
+
         $_sql = "SELECT * FROM {$this->_table} WHERE ({$_sql})
-                    AND prev_structure='{$this->prevStructure}' AND is_active=1 ORDER BY lvl, cid";
+                    AND prev_structure='{$this->prevStructure}' {$checkActive} ORDER BY lvl, cid";
 
         $list = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
 
