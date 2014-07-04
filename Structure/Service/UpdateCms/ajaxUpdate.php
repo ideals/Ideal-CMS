@@ -69,7 +69,7 @@ if (is_null($config->tmpDir) || ($config->tmpDir == '')) {
 }
 
 // Папка для хранения загруженных файлов обновлений
-$uploadDir = DOCUMENT_ROOT . $config->tmpDir . '/update/';
+$uploadDir = DOCUMENT_ROOT . $config->tmpDir . '/update';
 if (!file_exists($uploadDir)) {
     if (!mkdir($uploadDir, 0755, true)) {
         $updateModel->uExit('Не удалось создать папку' . $uploadDir);
@@ -105,7 +105,7 @@ $updateModel->downloadUpdate($_POST['name'], $_POST['version']);
 $updateModel->updateScripts($_POST['name'], $_POST['version']);
 
 // Модуль установился успешно, делаем запись в лог обновлений
-$this->writeLog('Installed ' . $_POST['name'] . ' v. ' . $_POST['version']);
+$updateModel->writeLog('Installed ' . $_POST['name'] . ' v. ' . $_POST['version']);
 
 // Удаляем старую папку
 $updateModel->removeDirectory($updateCore . '_old');

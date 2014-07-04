@@ -137,7 +137,7 @@ class Model
         foreach ($version as $k => $v) {
             $lines[] = 'Installed ' . $k . ' v.' . $v;
         }
-        file_put_contents($log, implode("\n", $lines));
+        file_put_contents($log, implode("\n", $lines) . "\n");
     }
 
     /**
@@ -386,7 +386,7 @@ class Model
         // Составление списка скриптов для обновления
         $scripts = array();
         foreach ($updates as $folder) {
-            $scriptFolder = $updateFolder . $folder;
+            $scriptFolder = $updateFolder . '/' . $folder;
             $files = array_diff(scandir($scriptFolder), array('.', '..'));
             foreach ($files as $file) {
                 $file = $scriptFolder . '/' . $file;
