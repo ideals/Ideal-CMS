@@ -51,7 +51,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $ids = implode(',', $par);
         $_sql = "SELECT * FROM {$this->_table}
                           WHERE ID IN ({$ids}) AND prev_structure='{$this->prevStructure}' ORDER BY cid";
-        $result = $db->queryArray($_sql);
+        $result = $db->select($_sql);
 
         // TODO обработка случая, когда ничего не нашлось — 404
 
@@ -114,7 +114,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
         $parentCid = $cidModel->getCidByLevel($cid, $lvl - 1, false);
         $_sql = "SELECT cid FROM {$this->_table} WHERE cid LIKE '{$parentCid}%' AND lvl={$lvl} ORDER BY cid DESC LIMIT 1";
-        $cidArr = $db->queryArray($_sql);
+        $cidArr = $db->select($_sql);
         if (count($cidArr) > 0) {
             // Если элементы на этом уровне есть, берём cid последнего
             $cid = $cidArr[0]['cid'];
@@ -156,11 +156,12 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $cid = $cid->getCidByLevel($this->pageData['cid'], $this->pageData['lvl'], false);
         $_sql = "SELECT ID FROM {$this->_table} WHERE lvl={$lvl} AND cid LIKE '{$cid}%'";
         $db = Db::getInstance();
-        $res = $db->queryArray($_sql);
+        $res = $db->select($_sql);
         if (count($res) > 0) {
             return 2;
         }
-        $db->delete($this->_table, $this->pageData['ID']);
+        $db->delete($this->_table)->where('ID=:id', array('id', $this->pageData['ID']));
+        $db->exec();
         // TODO сделать проверку успешности удаления
         return 1;
 

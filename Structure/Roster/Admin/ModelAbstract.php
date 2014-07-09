@@ -22,7 +22,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $first = intval($first);
         $_sql = "SELECT * FROM {$this->_table} WHERE ID={$first}";
         $db = Db::getInstance();
-        $localPath = $db->queryArray($_sql);
+        $localPath = $db->select($_sql);
         if (!isset($localPath[0]['ID'])) {
             $this->is404 = true;
             return $this;
@@ -50,9 +50,9 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     public function delete()
     {
         $db = Db::getInstance();
-        $db->delete($this->_table, $this->pageData['ID']);
+        $db->delete($this->_table)->where('ID=:id', array('id' => $this->pageData['ID']));
 
-        if(isset($this->pageData['pos'])) {
+        if (isset($this->pageData['pos'])) {
             // Если есть сортировка pos, то нужно уменьшить все следующие за удаляемым
             // элементы на единицу
             $_sql = "UPDATE {$this->_table} SET pos = pos - 1
@@ -71,7 +71,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $db = Db::getInstance();
 
         $_sql = "SELECT pos FROM {$this->_table} WHERE prev_structure='{$this->prevStructure}' ORDER BY pos DESC LIMIT 1";
-        $posArr = $db->queryArray($_sql);
+        $posArr = $db->select($_sql);
 
         $pos = 0;
         if (count($posArr) > 0) {

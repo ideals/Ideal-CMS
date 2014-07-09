@@ -84,8 +84,8 @@ abstract class Model
     {
         $db = Db::getInstance();
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE ID='{$id}'";
-        $pageData = $db->queryArray($_sql);
+        $_sql = "SELECT * FROM {$this->_table} WHERE ID=:id";
+        $pageData = $db->select($_sql, array('id' => $id));
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по ID ничего не нашлось
             $this->setPageData($pageData[0]);
@@ -97,8 +97,8 @@ abstract class Model
     {
         $db = Db::getInstance();
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure='{$prevStructure}'";
-        $pageData = $db->queryArray($_sql);
+        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps";
+        $pageData = $db->select($_sql, array('ps' => $prevStructure));
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
             $this->setPageData($pageData[0]);
@@ -239,7 +239,7 @@ abstract class Model
             $_sql .= " LIMIT {$start}, {$onPage}";
         }
 
-        $list = $db->queryArray($_sql);
+        $list = $db->select($_sql);
 
         return $list;
     }
@@ -258,7 +258,7 @@ abstract class Model
 
         // Считываем все элементы первого уровня
         $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
-        $list = $db->queryArray($_sql);
+        $list = $db->select($_sql);
 
         return $list[0]['COUNT(e.ID)'];
     }

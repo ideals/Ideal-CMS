@@ -76,7 +76,7 @@ class ModelAbstract extends Site\Model
         $_sql = ' is_skip=1';
         foreach ($url as $v) {
             if ($v == '') continue;
-            $_sql .= ' OR url="' . mysql_real_escape_string($v) . '"';
+            $_sql .= ' OR url="' . $db->real_escape_string($v) . '"';
         }
 
         // Для авторизированных в админку пользователей отображать скрытые страницы
@@ -86,7 +86,7 @@ class ModelAbstract extends Site\Model
         $_sql = "SELECT * FROM {$this->_table} WHERE ({$_sql})
                     AND prev_structure='{$this->prevStructure}' {$checkActive} ORDER BY lvl, cid";
 
-        $list = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
+        $list = $db->select($_sql); // запрос на получение всех страниц, соответствующих частям url
 
         // Страницу не нашли устанавливаем флаг 404-ошибки
         if (!isset($list[0]['cid'])) {
@@ -267,7 +267,7 @@ class ModelAbstract extends Site\Model
         $urlModel = new Url\Model();
 
         $_sql = "SELECT * FROM {$this->_table} WHERE is_active=1 ORDER BY cid";
-        $list = $db->queryArray($_sql);
+        $list = $db->select($_sql);
 
         if (count($this->path) == 0 ) {
             $url = array('0' => array('url' => $config->structures[0]['url']));
@@ -322,7 +322,7 @@ class ModelAbstract extends Site\Model
             // Считываем все элементы с указанными cid'ами
             $db = Db::getInstance();
             $_sql = "SELECT * FROM {$this->_table} WHERE cid IN ({$strCids}) ORDER BY cid";
-            $path = $db->queryArray($_sql);
+            $path = $db->select($_sql);
         }
 
         $path = array_merge($path, array($category)); // добавляем наш элемент к родительским

@@ -9,7 +9,7 @@ echo '<form method="POST" action="">';
 $db = Db::getInstance();
 $config = Config::getInstance();
 
-$result = $db->queryArray('SHOW TABLES');
+$result = $db->select('SHOW TABLES');
 
 $dbTables = array();
 foreach ($result as $v) {

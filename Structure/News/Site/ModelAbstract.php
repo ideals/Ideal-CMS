@@ -50,10 +50,10 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $user = new User\Model();
         $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
 
-        $url = mysql_real_escape_string($url[0]);
-        $_sql = "SELECT * FROM {$this->_table} WHERE url='{$url}' {$checkActive} AND date_create < " . time();
+        $_sql = "SELECT * FROM {$this->_table} WHERE url=:url {$checkActive} AND date_create < :time";
+        $par = array('url' => $url[0], 'time' => time());
 
-        $news = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
+        $news = $db->select($_sql, $par); // запрос на получение всех страниц, соответствующих частям url
 
         // Страницу не нашли, возвращаем 404
         if (!isset($news[0]['ID'])) {
@@ -86,7 +86,8 @@ class ModelAbstract extends \Ideal\Core\Site\Model
             // TODO проработать ситуацию, когда текст в шаблоне (сейчас нет определения модуля)
             $table = $config->db['prefix'] . 'Template_' . $end['template'];
             $prevStructure = $end['prev_structure'] . '-' . $end['ID'];
-            $text = $db->select($table, $prevStructure, '', 'prev_structure');
+            $_sql = "SELECT * FROM {$table} WHERE prev_structure=:ps";
+            $text = $db->select($_sql, array('ps' => $prevStructure));
             $text = $text[0]['content'];
         }
 

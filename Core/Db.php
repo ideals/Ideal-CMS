@@ -29,22 +29,31 @@ class Db extends \mysqli
 {
     /** @var array Массив для хранения подключений к разным БД */
     protected static $instance;
+
     /** @var array Массив для хранения пар ключ-значение метода set() */
     protected $updateValues = array();
+
     /** @var array Массив для хранения пар ключ-значение метода where() */
     protected $whereParams = array();
+
     /** @var string Название используемой БД для корректного кэширования запросов */
     protected $dbName;
+
     /** @var Memcache Экземпляр подключения к memcache */
     protected $cache;
+
     /** @var array Массив для хранения явно указанных таблиц при вызове cacheMe() */
     protected $involvedTables;
+
     /** @var string Строка с where-частью запроса */
     protected $whereQuery = '';
+
     /** @var string Название таблицы для запроса UPDATE */
     protected $updateTableName = '';
+
     /** @var string Название таблицы для запроса DELETE */
     protected $deleteTableName = '';
+
     /** @var bool Флаг того, что следующий запрос надо попытаться взять из кэша */
     protected $cacheEnabled = false;
 
@@ -56,7 +65,7 @@ class Db extends \mysqli
      * host, login, password, name
      *
      * @param array $params Параметры подключения к БД
-     * @return bool|NewDb объект, подключённый к БД, false — в случае невозможности подключиться к БД
+     * @return bool|Db объект, подключённый к БД, false — в случае невозможности подключиться к БД
      */
     public static function getInstance($params = null)
     {
@@ -99,7 +108,7 @@ class Db extends \mysqli
      *       'firstField' => 'firstValue',
      *       'secondField' => 'secondValue',
      *     )
-     * $id = $db->insert('table', $params);
+     *     $id = $db->insert('table', $params);
      * ВНИМАНИЕ: в результате выполнения этого метода сбрасывается кэш БД
      *
      * @param string $table  Таблица, в которую необходимо вставить строку
@@ -256,7 +265,7 @@ class Db extends \mysqli
      * В формируемый update-запрос добавляет значения полей для вставки
      *
      * @param array $values Названия и значения полей для вставки строки в таблицу
-     * @return $this
+     * @return $this Db
      */
     public function set(array $values)
     {
@@ -266,6 +275,10 @@ class Db extends \mysqli
 
     /**
      * В формируемый update/delete-запрос добавляет where-условие
+     *
+     * Пример использования:
+     *     $par = array('active' = 1);
+     *     $db->delete('tablename')->where('is_active = :active', $par)->exec();
      *
      * @param string $sql    Строка where-условия
      * @param array  $params Параметры, используемые в строке where-условия
@@ -297,8 +310,11 @@ class Db extends \mysqli
 
         if ($exec) {
             $this->clearCache($tag);
-            $this->query($sql);
-            $this->clearQueryAttributes();
+            if ($this->query($sql)) {
+                // Если запрос выполнился успешно, то очистить все заданные параметры запроса, иначе не затирать их,
+                // чтобы получить неправильный запрос при повторном вызове exec()
+                $this->clearQueryAttributes();
+            }
         } else {
             return $sql;
         }

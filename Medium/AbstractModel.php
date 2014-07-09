@@ -85,7 +85,7 @@ class AbstractModel
         $db = Db::getInstance();
         $owner = $this->obj->getPageData();
         $_sql = "SELECT {$elementsField} FROM {$this->table} WHERE {$ownerField}='{$owner['ID']}'";
-        $arr = $db->queryArray($_sql);
+        $arr = $db->select($_sql);
 
         $list = array();
         foreach ($arr as $v) {

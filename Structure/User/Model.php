@@ -91,11 +91,8 @@ class Model
 
         // Получаем пользователя с указанным логином
         $db = Db::getInstance();
-        $par = array(
-            $this->loginRow => $login,
-            'is_active' => 1
-        );
-        $user = $db->select($this->_table, $par);
+        $_sql = "SELECT * FROM {$this->_table} WHERE is_active = 1 AND {$this->loginRow} = :login";
+        $user = $db->select($_sql, array('login' => $login));
         if (count($user) == 0) {
             $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
             return false;
@@ -120,7 +117,8 @@ class Model
         $this->data = $user;
 
         // Обновляем запись о последнем визите пользователя
-        $db->update($this->_table, $user['ID'], $user);
+        $db->update($this->_table)->set($user);
+        $db->where('ID=:id', array('id' => $user['ID']))->exec();
 
         // Записываем данные о пользователе в сессию
         $this->_session['user_data'] = $this->data;

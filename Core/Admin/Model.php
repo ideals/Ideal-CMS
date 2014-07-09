@@ -16,7 +16,7 @@ abstract class Model extends Core\Model
     public function setPageDataNew()
     {
         $pageData = array();
-        foreach($this->fields as $fieldName => $field) {
+        foreach ($this->fields as $fieldName => $field) {
             $pageData[$fieldName] = '';
         }
         $this->setPageData($pageData);
@@ -35,7 +35,7 @@ abstract class Model extends Core\Model
         foreach ($this->params['field_list'] as $v) {
             $column = explode('!', $v);
             $headers[] = $column[0];
-            }
+        }
 
         return $headers;
     }
@@ -78,7 +78,7 @@ abstract class Model extends Core\Model
 
         // Для каждого поля прописываем имя вкладки, в которой оно находится
         $tabs = array('tab1');
-        foreach($this->fields as $fieldName => $field) {
+        foreach ($this->fields as $fieldName => $field) {
             if ($this->fieldsGroup != 'general') {
                 // Пока на каждый шаблон можно использовать только одну вкладку
                 $this->fields[$fieldName]['realTab'] = $this->fieldsGroup;
@@ -88,7 +88,7 @@ abstract class Model extends Core\Model
             $tab = 'tab1';
             if (isset($field['tab'])) {
                 if (!array_key_exists($field['tab'], $tabs)) {
-                    $tabs[$field['tab']] = 'tab' . (substr(end($tabs), 3) + 1);
+                    $tabs[$field['tab']] = 'tab' . ((int)substr(end($tabs), 3) + 1);
                 }
                 $tab = $tabs[$field['tab']];
             }
@@ -125,11 +125,11 @@ abstract class Model extends Core\Model
         // Проверяем все поля на ошибки, если ошибки есть — составляем список табов, в которых ошибки
         foreach ($result['items'] as $fieldName => $item) {
             // Если есть сообщение об ошибке - значит общий результат - ошибка
-            $result['isCorrect'] = (($item['message'] === '') AND ($result['isCorrect'] == true));
+            $result['isCorrect'] = (($item['message'] === '') && ($result['isCorrect'] == true));
 
-            // Составляем список табов, в которых возникли ошибки
+            // Составляем список вкладок, в которых возникли ошибки
             if (($item['message'] !== '')
-                AND (!in_array($item['realTab'], $result['errorTabs']))) {
+                && (!in_array($item['realTab'], $result['errorTabs']))) {
                 $result['errorTabs'][] = $item['realTab'];
             }
         }
@@ -159,13 +159,13 @@ abstract class Model extends Core\Model
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName
-                AND $field == 'prev_structure' AND $v['value'] == '') {
+                && $field == 'prev_structure' && $v['value'] == '') {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
                 $v['value'] = $this->prevStructure;
             }
 
             // Если в значении NULL, то сохранять это поле не надо
-            if ($v['value'] === NULL) {
+            if ($v['value'] === null) {
                 continue;
             }
 
@@ -181,13 +181,14 @@ abstract class Model extends Core\Model
             $result['items'][$groupName . '_ID']['value'] = $id;
             $groups[$groupName]['ID'] = $id;
 
-            if (isset($result['sqlAdd'][$groupName]) AND ($result['sqlAdd'][$groupName] != '')) {
+            if (isset($result['sqlAdd'][$groupName]) && ($result['sqlAdd'][$groupName] != '')) {
                 $sqlAdd = str_replace('{{ table }}', $this->_table, $result['sqlAdd'][$groupName]);
                 $sqlAdd = str_replace('{{ objectId }}', $id, $sqlAdd);
                 $sqlAdd = explode(';', $sqlAdd);
                 foreach ($sqlAdd as $_sql) {
-                    if ($_sql == '') continue;
-                    $db->query($_sql);
+                    if ($_sql != '') {
+                        $db->query($_sql);
+                    }
                 }
             }
 
@@ -195,7 +196,7 @@ abstract class Model extends Core\Model
         } else {
             // Добавить запись не получилось
             $result['isCorrect'] = 0;
-            $result['errorText'] = 'Ошибка при добавлении в БД. ' . $db->getLastError();
+            $result['errorText'] = 'Ошибка при добавлении в БД. ' . $db->error;
         }
         return $result;
     }
@@ -208,13 +209,13 @@ abstract class Model extends Core\Model
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName
-                AND $field == 'prev_structure' AND $v['value'] == '') {
+                && $field == 'prev_structure' && $v['value'] == '') {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
                 $v['value'] = $this->prevStructure;
             }
 
             // Если в значении NULL, то сохранять это поле не надо
-            if ($v['value'] === NULL) {
+            if ($v['value'] === null) {
                 continue;
             }
 
@@ -223,15 +224,23 @@ abstract class Model extends Core\Model
 
         $db = Db::getInstance();
 
-        $db->update($this->_table, $groups[$groupName]['ID'], $groups[$groupName]);
+        $db->update($this->_table)->set($groups[$groupName]);
+        $db->where('ID = :id', array('id' => $groups[$groupName]['ID']))->exec();
+        if ($db->errno > 0) {
+            // Если при попытке обновления произошла ошибка не выполнять доп. запросы, а сообщить об этом пользователю
+            $result['isCorrect'] = false;
+            $result['errorText'] = $db->error . PHP_EOL . 'Query: ' . $db->exec(false);
+            return $result;
+        }
 
-        if (isset($result['sqlAdd'][$groupName]) AND ($result['sqlAdd'][$groupName] != '')) {
+        if (isset($result['sqlAdd'][$groupName]) && ($result['sqlAdd'][$groupName] != '')) {
             $sqlAdd = str_replace('{{ table }}', $this->_table, $result['sqlAdd'][$groupName]);
             $sqlAdd = str_replace('{{ objectId }}', $groups[$groupName]['ID'], $sqlAdd);
             $sqlAdd = explode(';', $sqlAdd);
             foreach ($sqlAdd as $_sql) {
-                if ($_sql == '') continue;
-                $db->query($_sql);
+                if ($_sql != '') {
+                    $db->query($_sql);
+                }
             }
         }
 
@@ -255,7 +264,9 @@ abstract class Model extends Core\Model
 
         // Считываем данные дополнительных табов
         foreach ($this->fields as $fieldName => $field) {
-            if (strpos($field['type'], '_Template') === false) continue;
+            if (strpos($field['type'], '_Template') === false) {
+                continue;
+            }
 
             $templateData = $groups[$fieldName];
             $end = end($this->path);

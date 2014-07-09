@@ -29,7 +29,7 @@ class FreshNews
                  WHERE is_active=1
                  ORDER BY date_create DESC
                  LIMIT ' . intval($num);
-        $news = $db->queryArray($_sql);
+        $news = $db->select($_sql);
         $freshNews = array();
         $num = 0;
         foreach ($news as $v) {

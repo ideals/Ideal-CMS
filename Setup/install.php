@@ -238,22 +238,24 @@ function checkPost($post)
     }
 
     // Проверяем возможность подключиться к БД
-    if (mysql_connect($post['dbHost'], $post['dbLogin'], $post['dbPass']) === false) {
+    $db = new mysqli();
+    if ($db->connect($post['dbHost'], $post['dbLogin'], $post['dbPass']) === false) {
         $errorText = '<strong>Ошибка</strong>. Не могу подключиться к БД с параметрами: '
             . htmlspecialchars($post['dbHost']) . ', ' . htmlspecialchars($post['dbLogin']) . '.';
         return $errorText;
     }
 
     // Проверяем наличие заданной БД
-    if (mysql_select_db($post['dbName']) === false) {
+    if ($db->select_db($post['dbName']) === false) {
         $errorText = '<strong>Ошибка</strong>. Не могу подключиться к базе: '
             . htmlspecialchars($post['dbName']) . '.';
         return $errorText;
     }
 
     // Проверяем наличие таблиц с заданным префиксом
-    $result = mysql_query("SHOW TABLES LIKE '" . mysql_real_escape_string($post['dbPrefix']) . "%'");
-    if (mysql_numrows($result) > 0) {
+    /** @var MySQLi_Result $result */
+    $result = $db->query("SHOW TABLES LIKE '" . $db->real_escape_string($post['dbPrefix']) . "%'");
+    if ($result->num_rows > 0) {
         $errorText = '<strong>Ошибка</strong>. В базе данных уже есть таблицы CMS '
             . 'с префиксом ' . htmlspecialchars($post['dbPrefix']);
         return $errorText;
