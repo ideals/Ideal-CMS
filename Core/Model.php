@@ -388,7 +388,7 @@ abstract class Model
 
     /**
      * Получение названия основной таблицы модели
-     * 
+     *
      * @return string
      */
     public function getTableName()

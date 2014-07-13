@@ -23,7 +23,7 @@ return array(
         ),
         'structure' => array(
             'label' => 'Тип раздела',
-            'sql' => 'varchar(20) not null',
+            'sql' => 'varchar(30) not null',
             'type' => 'Ideal_Select',
             'medium' => '\\Ideal\\Medium\\StructureList\\Model'
         ),
