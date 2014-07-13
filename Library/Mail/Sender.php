@@ -11,25 +11,32 @@ namespace Mail;
 
 class Sender
 {
-    // Статические  значения
-    protected $boundary;
+
+    protected $attach;
+
+    protected $attach_type;
+
+    protected $body; // приоритет письма
+
+    protected $body_html; // отправитель
+
+    protected $body_plain; // получатель
+
+    protected $boundary; // тема письма
+
     protected $boundary2;
-    protected $priority = 3;  // приоритет письма
 
-    // А это вполне переменные значения
-    protected $from;          // отправитель
-    protected $to;            // получатель
-    protected $subj;          // тема письма
-    protected $header_txt;
+    protected $charset; // plain-text -- обычный текст письма
 
-    // Параметры
-    protected $body_plain;    // plain-text -- обычный текст письма
-    protected $body_html;     // html-формат письма
-    protected $body;          // все письмо целиком
-    protected $attach;        // вложенные файлы
-    protected $attach_type;   // типы (форматы) вложенных файлов
-    protected $charset;       // Кодировка письма
+    protected $from; // html-формат письма
 
+    protected $header_txt; // все письмо целиком
+
+    protected $priority = 3; // вложенные файлы
+
+    protected $subj; // типы (форматы) вложенных файлов
+
+    protected $to; // Кодировка письма
 
     function __construct()
     {
@@ -43,28 +50,112 @@ class Sender
     }
 
     /**
-     * Установка кодировки письма
-     * @param $code
+     * Прикрепляем файл к письму, если файл существует
+     *
+     * @param        $path   Путь к прикрепляемому файлу
+     * @param        $type   Тип прикрепляемого файла
+     * @param string $saveAs Имя, под которым нужно прикрепить файл
+     * @return boolean
      */
-    public function setCharset($code){
-        $this->charset = strtoupper($code);
+    public function fileAttach($path, $type, $saveAs = '')
+    {
+        $saveAs = ($saveAs == '') ? $path : $saveAs;
+        $name = preg_replace("/(.+\/)/", '', $saveAs);
+        if (!$r = fopen($path, 'r')) {
+            return false;
+        }
+        $this->attach($name, $type, fread($r, filesize($path)));
+        fclose($r);
+        return true;
     }
 
     /**
-     * Установка заголовка письма
-     * @param $subject string Заголовок письма
+     * Добавление вложения в письмо
+     *
+     * @param $name
+     * @param $type
+     * @param $data
      */
-    public function setSubj($subject)
+    protected function attach($name, $type, $data)
     {
-        $subject = stripslashes($subject);
-        $this->subj = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        $this->attach_type[$name] = $type;
+        $this->attach[$name] = $data;
     }
 
+    /**
+     * Проверка адреса электронной почты
+     *
+     * @param $mail
+     * @return bool
+     */
+    public function is_email($mail)
+    {
+        $filter = filter_var($mail, FILTER_VALIDATE_EMAIL);
+        if ($filter == $mail) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Отправляет письмо получателю
+     *
+     * @param $from адрес откуда будет отправлено письмо
+     * @param $to   адрес кому будет отправлено письмо
+     * @return bool
+     */
+    public function sent($from, $to)
+    {
+        $this->from = $this->conv_in($from);
+        $this->to = $this->conv_in($to);
+        $header = $this->conv_in($this->header());
+
+        if ($this->body === null) {
+            $this->body_create();
+            $this->body = $this->conv_in($this->body);
+
+            // Разрезаем строчки, длиннее 2020 символов (это ограничение почтовиков)
+            $body = explode("\n", $this->body);
+            foreach ($body as $k => $row) {
+                // TODO придумать, как резать больше, чем один раз
+                if (strlen($row) > 2030) {
+                    $splitPos = strpos($row, ' ', 2020);
+                    $row = substr_replace($row, "\n", $splitPos + 1, 0);
+                    $body[$k] = $row;
+                }
+            }
+            $this->body = implode("\n", $body);
+        }
+
+        return mail($this->to, $this->subj, $this->body, 'From: ' . $this->from . "\r\n" . $header);
+    }
+
+    /**
+     * Устанавливает кодировку текста
+     *
+     * @param $text
+     * @return string
+     */
+    protected function conv_in($text)
+    {
+        $code = mb_detect_encoding($text);
+        if (strnatcasecmp($this->charset, $code) === 0) {
+            return $text;
+        }
+        if (function_exists('mb_convert_encoding')) {
+            $text = mb_convert_encoding($text, $this->charset, $code);
+        } else {
+            if (function_exists('iconv')) {
+                $text = iconv(iconv, $this->charset, $text);
+            }
+        }
+        return $text;
+    }
 
     /**
      * Создание заголовка письма
      *
-     *@return string
+     * @return string
      */
     protected function header()
     {
@@ -88,55 +179,8 @@ class Sender
 
         $header .= $header_cnt;
 
-
         return $header;
     }
-
-    /**
-     * Добавление текста письма
-     * @param $plain
-     * @param $html
-     */
-    public function setBody($plain, $html)
-    {
-        $this->body_html = $html;
-        $this->body_plain = $plain;
-        if($this->body !== null) $this->body = null;
-    }
-
-    /**
-     * Добавление вложения в письмо
-     * @param $name
-     * @param $type
-     * @param $data
-     */
-    protected function attach($name, $type, $data)
-    {
-        $this->attach_type[$name] = $type;
-        $this->attach[$name] = $data;
-    }
-
-
-    /**
-     * Прикрепляем файл к письму, если файл существует
-     *
-     * @param $path Путь к прикрепляемому файлу
-     * @param $type Тип прикрепляемого файла
-     * @param string $saveAs Имя, под которым нужно прикрепить файл
-     * @return boolean
-     */
-    public function fileAttach($path, $type, $saveAs = '')
-    {
-        $saveAs = ($saveAs == '') ? $path : $saveAs;
-        $name = preg_replace("/(.+\/)/", '', $saveAs);
-        if (!$r = fopen($path, 'r')) {
-            return false;
-        }
-        $this->attach($name, $type, fread($r, filesize($path)));
-        fclose($r);
-        return true;
-    }
-
 
     /**
      * Подготавливаем и добавляем версию письма без разметки
@@ -180,7 +224,7 @@ class Sender
 
         if (isSet($this->attach_type)) {
             reset($this->attach_type);
-            while(list($name, $content_type) = each($this->attach_type)) {
+            while (list($name, $content_type) = each($this->attach_type)) {
                 $this->body .= '--' . $this->boundary . "--\n";
                 $this->body .= '--' . $this->boundary2 . "\n";
                 $this->body .= "Content-Type: {$content_type}\n";
@@ -195,68 +239,38 @@ class Sender
     }
 
     /**
-     * Отправляет письмо получателю
-     * @param $from адрес откуда будет отправлено письмо
-     * @param $to адрес кому будет отправлено письмо
-     * @return bool
+     * Добавление текста письма
+     *
+     * @param $plain
+     * @param $html
      */
-    public function sent($from, $to)
+    public function setBody($plain, $html)
     {
-        $this->from = $this->conv_in($from);
-        $this->to = $this->conv_in($to);
-        $header = $this->conv_in($this->header());
-
-        if ($this->body === null) {
-            $this->body_create();
-            $this->body = $this->conv_in($this->body);
-
-            // Разрезаем строчки, длиннее 2020 символов (это ограничение почтовиков)
-            $body = explode("\n", $this->body);
-            foreach ($body as $k => $row) {
-                // TODO придумать, как резать больше, чем один раз
-                if (strlen($row) > 2030) {
-                    $splitPos = strpos($row, ' ', 2020);
-                    $row = substr_replace($row, "\n", $splitPos + 1, 0);
-                    $body[$k] = $row;
-                }
-            }
-            $this->body = implode("\n", $body);
+        $this->body_html = $html;
+        $this->body_plain = $plain;
+        if ($this->body !== null) {
+            $this->body = null;
         }
-
-        return mail($this->to, $this->subj, $this->body, 'From: ' . $this->from . "\r\n" . $header );
     }
 
     /**
-     * Проверка адреса электронной почты
-     * @param $mail
-     * @return bool
+     * Установка кодировки письма
+     *
+     * @param $code
      */
-    public function is_email($mail)
+    public function setCharset($code)
     {
-        $filter = filter_var($mail, FILTER_VALIDATE_EMAIL);
-        if($filter == $mail) return true;
-        return false;
+        $this->charset = strtoupper($code);
     }
 
     /**
-     * Устанавливает кодировку текста
-     * @param $text
-     * @return string
+     * Установка заголовка письма
+     *
+     * @param $subject string Заголовок письма
      */
-    protected function conv_in($text)
+    public function setSubj($subject)
     {
-        $code = mb_detect_encoding($text);
-        if (strnatcasecmp($this->charset, $code) === 0) {
-            return $text;
-        }
-        if (function_exists('mb_convert_encoding')) {
-            $text= mb_convert_encoding($text, $this->charset, $code);
-        } else {
-            if (function_exists('iconv')) {
-                $text = iconv(iconv, $this->charset, $text);
-            }
-        }
-        return $text;
+        $subject = stripslashes($subject);
+        $this->subj = '=?UTF-8?B?' . base64_encode($subject) . '?=';
     }
-
 }
