@@ -52,7 +52,7 @@ class Controller extends Url\Controller
             . '<div class="input-group">' . $addOn
             . '<input type="text" class="form-control" name="' . $this->htmlName . '" id="' . $this->htmlName
             . '" value="' . $value['url'] . '"><span class="input-group-btn">'
-            . '<button id="UrlAuto" type="button" class="btn btn-danger" onclick="javascript:setTranslit(this)">'
+            . '<button id="UrlAuto" type="button" class="btn btn-danger" onclick="setTranslit(this)">'
             . 'auto url off</button>'
             . '</span></div>';
     }

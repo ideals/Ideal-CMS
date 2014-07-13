@@ -37,7 +37,7 @@ class Controller extends AbstractController
     {
         $value = htmlspecialchars($this->getValue());
         return '<div class="input-group">'
-        . '<span class="input-group-addon" style="padding: 0px 5px">'
+        . '<span class="input-group-addon" style="padding: 0 5px">'
         // миниатюра картинки
         . '<img id="' . $this->htmlName . 'Img" src="' . $value . '" style="max-height:32px"></span>'
         . '<input type="text" class="form-control" name="' . $this->htmlName

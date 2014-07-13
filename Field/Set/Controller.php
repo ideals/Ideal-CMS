@@ -54,7 +54,7 @@ class Controller extends AbstractController
                 $checked = ' checked="checked"';
             }
             $html .= '<label class="checkbox"><input type="checkbox" value="' . $v . '" '
-                . $checked . 'name="' . $this->htmlName . '[]">' . $v . '</label>';
+                . $checked . ' name="' . $this->htmlName . '[]">' . $v . '</label>';
         }
         $html .= '</div>';
         return $html;

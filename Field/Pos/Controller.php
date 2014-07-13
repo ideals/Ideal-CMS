@@ -60,8 +60,8 @@ class Controller extends AbstractController
         // Если был указан и изменился, перенумеруем список
         if ($this->newValue == '') {
             // Если pos не был указан, надо поставить максимальный
-            // todo переделать получение новой позиции не через основную модель, а через $posModel
-            $this->newValue = $model->getNewPos();
+            $posModel = new Model();
+            $this->newValue = $posModel->getNewPos($model);
         } elseif ($oldPos != $newPos) {
             $posModel = new Model();
             $this->sqlAdd = $posModel->movePos($oldPos, $newPos, $model->getPrevStructure());

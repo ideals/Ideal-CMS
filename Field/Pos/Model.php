@@ -9,11 +9,39 @@
 
 namespace Ideal\Field\Pos;
 
+use Ideal\Core\Db;
+
 /**
  * Модель для работы с полем сортировки
  */
 class Model
 {
+    /**
+     * Получение нового номера pos в списке элементов, на единицу большего, чем существующий
+     *
+     * @param \Ideal\Core\Model $model
+     * @return int
+     */
+    public function getNewPos($model)
+    {
+        $db = Db::getInstance();
+
+        $table = $model->getTableName();
+        $prevStructure = $model->getPrevStructure();
+
+        $_sql = "SELECT pos FROM {$table} WHERE prev_structure='{$prevStructure}' ORDER BY pos DESC LIMIT 1";
+        $posArr = $db->select($_sql);
+
+        $pos = 0;
+        if (count($posArr) > 0) {
+            // Если элементы на этом уровне есть, берём cid последнего
+            $pos = $posArr[0]['pos'];
+        }
+
+        // Прибавляем единицу в pos
+        return $pos + 1;
+    }
+
     /**
      * Изменение позиции $oldPos на новую $newPos
      *

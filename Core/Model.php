@@ -386,6 +386,16 @@ abstract class Model
         return $this->path;
     }
 
+    /**
+     * Получение названия основной таблицы модели
+     * 
+     * @return string
+     */
+    public function getTableName()
+    {
+        return $this->_table;
+    }
+
     public function setPath($path)
     {
         $this->path = $path;

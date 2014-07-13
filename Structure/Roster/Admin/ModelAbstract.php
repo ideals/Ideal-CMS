@@ -63,22 +63,4 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         }
         return $this;
     }
-
-    public function getNewPos()
-    {
-        /* @var Db $db */
-        $db = Db::getInstance();
-
-        $_sql = "SELECT pos FROM {$this->_table} WHERE prev_structure='{$this->prevStructure}' ORDER BY pos DESC LIMIT 1";
-        $posArr = $db->select($_sql);
-
-        $pos = 0;
-        if (count($posArr) > 0) {
-            // Если элементы на этом уровне есть, берём cid последнего
-            $pos = $posArr[0]['pos'];
-        }
-
-        // Прибавляем единицу в pos
-        return $pos + 1;
-    }
 }
