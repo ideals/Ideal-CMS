@@ -1,11 +1,12 @@
 <?php
 namespace Ideal\Core\Site;
 
-use Ideal\Structure\Part\Widget\MainMenu;
 use Ideal\Core\Config;
+use Ideal\Structure\Part\Widget\MainMenu;
 
 class Helper
 {
+
     public $xhtml = false;
 
     public function getVariables($model)
@@ -20,5 +21,4 @@ class Helper
 
         return $vars;
     }
-
 }

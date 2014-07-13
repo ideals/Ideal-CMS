@@ -1,17 +1,19 @@
 <?php
 namespace Ideal\Core\Site;
 
-use Ideal\Core\PluginBroker;
 use Ideal\Core\Config;
+use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
 
 class Router
 {
-    /** @var Model Модель активной страницы */
-    protected $model = null;
+
     /** @var string Название контроллера активной страницы */
     protected $controllerName = '';
+
+    /** @var Model Модель активной страницы */
+    protected $model = null;
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -44,54 +46,6 @@ class Router
 
         // Определяем корректную модель на основании поля structure
         $this->model = $this->model->detectActualModel();
-    }
-
-    /**
-     * Возвращает название контроллера для активной страницы
-     *
-     * @return string Название контроллера
-     */
-    public function getControllerName()
-    {
-        if ($this->controllerName != '') {
-            return $this->controllerName;
-        }
-
-        $path = $this->model->getPath();
-
-        if (count($path) == 0 && $this->model->is404) {
-            // Не смогли построить ни одного элемента пути и получили 404 ошибку
-            $config = Config::getInstance();
-            $path = array(
-                $config->getStartStructure(),
-            );
-            $this->model->setPath($path);
-        }
-
-        if (count($path) == 0) {
-            Util::addError('Не удалось построить путь. Модель: ' . get_class($this->model));
-            $this->model->is404 = true;
-            // todo отображение 404 ошибки
-        }
-        $end = array_pop($path);
-        $prev = array_pop($path);
-
-        if ($end['url'] == '/') {
-            // Если запрошена главная страница, принудительно устанавливаем структуру Ideal_Home
-            $structure = 'Ideal_Home';
-        } elseif (!isset($end['structure'])) {
-            // Если в последнем элементе нет поля structure (например в новостях), то берём название
-            // структуры из предыдущего элемента пути
-            $structure = $prev['structure'];
-        } else {
-            // В обычном случае название отображаемой структуры определяется по соответствующему
-            // полю последнего элемента пути
-            $structure = $end['structure'];
-        }
-
-        $controllerName =  Util::getClassName($structure, 'Structure') . '\\Site\\Controller';
-
-        return $controllerName;
     }
 
     /**
@@ -160,20 +114,51 @@ class Router
     }
 
     /**
-     * Возвращает объект модели активной страницы
+     * Возвращает название контроллера для активной страницы
      *
-     * @return Model Инициализированный объект модели активной страницы
+     * @return string Название контроллера
      */
-    public function getModel()
+    public function getControllerName()
     {
-        return $this->model;
-    }
+        if ($this->controllerName != '') {
+            return $this->controllerName;
+        }
 
-    /**
-     * @param $model Model Устанавливает модель, найденную роутером (обычно использется в плагинах)
-     */
-    public function setModel($model){
-        $this->model = $model;
+        $path = $this->model->getPath();
+
+        if (count($path) == 0 && $this->model->is404) {
+            // Не смогли построить ни одного элемента пути и получили 404 ошибку
+            $config = Config::getInstance();
+            $path = array(
+                $config->getStartStructure(),
+            );
+            $this->model->setPath($path);
+        }
+
+        if (count($path) == 0) {
+            Util::addError('Не удалось построить путь. Модель: ' . get_class($this->model));
+            $this->model->is404 = true;
+            // todo отображение 404 ошибки
+        }
+        $end = array_pop($path);
+        $prev = array_pop($path);
+
+        if ($end['url'] == '/') {
+            // Если запрошена главная страница, принудительно устанавливаем структуру Ideal_Home
+            $structure = 'Ideal_Home';
+        } elseif (!isset($end['structure'])) {
+            // Если в последнем элементе нет поля structure (например в новостях), то берём название
+            // структуры из предыдущего элемента пути
+            $structure = $prev['structure'];
+        } else {
+            // В обычном случае название отображаемой структуры определяется по соответствующему
+            // полю последнего элемента пути
+            $structure = $end['structure'];
+        }
+
+        $controllerName = Util::getClassName($structure, 'Structure') . '\\Site\\Controller';
+
+        return $controllerName;
     }
 
     /**
@@ -186,6 +171,24 @@ class Router
     public function setControllerName($name)
     {
         $this->controllerName = $name;
+    }
+
+    /**
+     * Возвращает объект модели активной страницы
+     *
+     * @return Model Инициализированный объект модели активной страницы
+     */
+    public function getModel()
+    {
+        return $this->model;
+    }
+
+    /**
+     * @param $model Model Устанавливает модель, найденную роутером (обычно использется в плагинах)
+     */
+    public function setModel($model)
+    {
+        $this->model = $model;
     }
 
     /**

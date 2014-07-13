@@ -12,12 +12,12 @@ define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DO
 // В пути поиска по умолчанию включаем корень сайта, путь к Ideal и папке кастомизации CMS
 set_include_path(
     get_include_path()
-        . PATH_SEPARATOR . DOCUMENT_ROOT 
-        . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal.c/'
-        . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal/'
-        . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Mods.c/'
-        . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Mods/'
-        . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal/Library/'
+    . PATH_SEPARATOR . DOCUMENT_ROOT
+    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal.c/'
+    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal/'
+    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Mods.c/'
+    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Mods/'
+    . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal/Library/'
 );
 
 // Подключаем автозагрузчик классов
@@ -44,7 +44,6 @@ if (strpos($_SERVER['REQUEST_URI'], $config->cmsFolder) === 1) {
 
     // Запускаем фронт контроллер
     $page->run('admin');
-
 } else {
     // Обращение к пользовательской части
     $page->run('site');

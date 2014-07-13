@@ -3,11 +3,11 @@
 {% block content %}
     <div class="col-xs-3">
         <ul class="nav nav-pills nav-stacked">
-        {% for item in items %}
-            <li {% if ID == item.ID %}class="active"{% endif %}>
-                <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}">{{ item.name }}</a>
-            </li>
-        {% endfor %}
+            {% for item in items %}
+                <li {% if ID == item.ID %}class="active"{% endif %}>
+                    <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}">{{ item.name }}</a>
+                </li>
+            {% endfor %}
         </ul>
     </div>
 

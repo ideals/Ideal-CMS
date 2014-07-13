@@ -23,6 +23,7 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
+
     /** {@inheritdoc} */
     protected static $instance;
 
@@ -34,6 +35,6 @@ class Controller extends AbstractController
         return
             '<textarea class="form-control" name="' . $this->htmlName
             . '" id="' . $this->htmlName
-            .'">' . htmlspecialchars(str_replace('\\', '\\\\', $this->getValue())) . '</textarea>';
+            . '">' . htmlspecialchars(str_replace('\\', '\\\\', $this->getValue())) . '</textarea>';
     }
 }

@@ -5,8 +5,8 @@
 
 namespace Ideal\Structure\Part\Widget;
 
-use Ideal\Core\Db;
 use Ideal\Core\Config;
+use Ideal\Core\Db;
 use Ideal\Field;
 
 class MainMenu extends \Ideal\Core\Widget
@@ -22,7 +22,8 @@ class MainMenu extends \Ideal\Core\Widget
         $par = array(
             'active' => 1,
             'menu' => 0,
-            'lvl' => 1);
+            'lvl' => 1
+        );
         $table = strtolower($config->db['prefix'] . 'ideal_structure_part');
         $_sql = "SELECT * FROM {$table} WHERE is_active=:active AND is_not_menu=:menu AND lvl=:lvl ORDER BY cid";
         $menu = $db->select($_sql, $par);
@@ -37,7 +38,8 @@ class MainMenu extends \Ideal\Core\Widget
             $menu[$k]['isActivePage'] = 0;
             if (isset($path[1]['ID']) && ($v['ID'] == $path[1]['ID'])) {
                 if (($end['ID'] == $v['ID']) && isset($end['lvl']) && ($end['lvl'] == 1)
-                        && ($end['prev_structure'] == $path[1]['prev_structure'])) {
+                    && ($end['prev_structure'] == $path[1]['prev_structure'])
+                ) {
                     $menu[$k]['link'] = '';
                 }
                 $menu[$k]['isActivePage'] = 1;
@@ -45,5 +47,4 @@ class MainMenu extends \Ideal\Core\Widget
         }
         return $menu;
     }
-
 }

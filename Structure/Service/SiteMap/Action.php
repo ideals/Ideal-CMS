@@ -2,25 +2,41 @@
     #iframe {
         margin-top: 15px;
     }
+
     #iframe iframe {
         width: 100%;
         border: 1px solid #E7E7E7;
         border-radius: 6px;
         height: 300px;
     }
+
     #loading {
         -webkit-animation: loading 3s linear infinite;
         animation: loading 3s linear infinite;
     }
+
     @-webkit-keyframes loading {
-        0% { color: rgba(34, 34, 34, 1); }
-        50% { color: rgba(34, 34, 34, 0); }
-        100% { color: rgba(34, 34, 34, 1); }
+        0% {
+            color: rgba(34, 34, 34, 1);
+        }
+        50% {
+            color: rgba(34, 34, 34, 0);
+        }
+        100% {
+            color: rgba(34, 34, 34, 1);
+        }
     }
+
     @keyframes loading {
-        0% { color: rgba(34, 34, 34, 1); }
-        50% { color: rgba(34, 34, 34, 0); }
-        100% { color: rgba(34, 34, 34, 1); }
+        0% {
+            color: rgba(34, 34, 34, 1);
+        }
+        50% {
+            color: rgba(34, 34, 34, 0);
+        }
+        100% {
+            color: rgba(34, 34, 34, 1);
+        }
     }
 </style>
 
@@ -48,14 +64,14 @@
             echo $file->showEdit();
             ?>
 
-            <br />
+            <br/>
 
-            <input type="submit" class="btn btn-info" name="edit" value="Сохранить настройки" />
+            <input type="submit" class="btn btn-info" name="edit" value="Сохранить настройки"/>
         </form>
     </div>
     <div class="tab-pane" id="start">
         <label class="checkbox">
-            <input type="checkbox" name="force" id="force" />
+            <input type="checkbox" name="force" id="force"/>
             Принудительное составление xml-карты сайта
         </label>
 
@@ -72,8 +88,7 @@
 
 
 <script type="application/javascript">
-    function startSiteMap()
-    {
+    function startSiteMap() {
         var param = '';
         if ($('#force').attr('checked') == 'checked') {
             param = '?w=1';
@@ -82,8 +97,7 @@
         $('#iframe').html('<iframe src="Ideal/Library/sitemap/index.php' + param + '" onLoad="finishLoad()" />');
     }
 
-    function finishLoad()
-    {
+    function finishLoad() {
         $('#loading').html('');
     }
 </script>

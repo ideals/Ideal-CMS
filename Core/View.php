@@ -3,11 +3,13 @@ namespace Ideal\Core;
 
 class View
 {
+
+    protected $template;
+
     /* @var $twig \Twig_Environment */
     protected $templater;
-    protected $template;
-    protected $vars = array();
 
+    protected $vars = array();
 
     public function __construct($pathToTemplates, $isCache = false)
     {
@@ -25,20 +27,6 @@ class View
         $this->templater = new \Twig_Environment($loader, $params);
     }
 
-
-    public function loadTemplate($fileName)
-    {
-        $this->template = $this->templater->loadTemplate($fileName);
-    }
-
-
-    public function render()
-    {
-        return $this->template->render($this->vars);
-
-    }
-
-
     public function __get($name)
     {
         if (isset($this->vars[$name])) {
@@ -47,10 +35,18 @@ class View
         return '';
     }
 
-
     public function __set($name, $value)
     {
         $this->vars[$name] = $value;
     }
 
+    public function loadTemplate($fileName)
+    {
+        $this->template = $this->templater->loadTemplate($fileName);
+    }
+
+    public function render()
+    {
+        return $this->template->render($this->vars);
+    }
 }

@@ -27,6 +27,7 @@ use Ideal\Field\Date;
  */
 class Controller extends Date\Controller
 {
+
     /** {@inheritdoc} */
     protected static $instance;
 

@@ -3,10 +3,10 @@ namespace Ideal\Structure\Part\Site;
 
 use Ideal\Core;
 use Ideal\Core\Request;
-use Ideal\Core\Pagination;
 
 class ControllerAbstract extends Core\Site\Controller
 {
+
     /** @var bool Включение листалки (пагинации) */
     protected $isPager = false;
 
@@ -20,5 +20,4 @@ class ControllerAbstract extends Core\Site\Controller
 
         $this->view->pager = $this->model->getPager($page, $request->getQueryWithout('page'));
     }
-
 }

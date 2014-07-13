@@ -9,8 +9,8 @@
 
 namespace Ideal\Field\Date;
 
-use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
+use Ideal\Field\AbstractController;
 
 /**
  * Поле, содержащее дату в формате MySQL DataTime
@@ -25,6 +25,7 @@ use Ideal\Core\Request;
  */
 class Controller extends AbstractController
 {
+
     /** {@inheritdoc} */
     protected static $instance;
 

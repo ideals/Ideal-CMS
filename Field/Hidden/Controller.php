@@ -25,6 +25,7 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
+
     /** {@inheritdoc} */
     protected static $instance;
 

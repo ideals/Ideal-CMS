@@ -9,8 +9,8 @@
 
 namespace Ideal\Field\Pos;
 
-use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
+use Ideal\Field\AbstractController;
 
 /**
  * Поле для сортировки элементов по порядку значений
@@ -24,26 +24,9 @@ use Ideal\Core\Request;
  */
 class Controller extends AbstractController
 {
+
     /** @inheritdoc */
     protected static $instance;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function showEdit()
-    {
-        $this->htmlName = $this->groupName . '_' . $this->name;
-        $value = $this->getValue();
-
-        if ($value == '') {
-            $html = '<input type="hidden" id="' . $this->htmlName
-                   . '" name="' . $this->htmlName
-                   . '" value="' . $value . '">';
-        } else {
-            $html = parent::showEdit();
-        }
-        return $html;
-    }
 
     /**
      * {@inheritdoc}
@@ -54,7 +37,7 @@ class Controller extends AbstractController
 
         $input = '<input type="text" class="form-control" name="' . $this->htmlName
             . '" id="' . $this->htmlName
-            .'" value="' . $value .'">';
+            . '" value="' . $value . '">';
 
         return $input;
     }
@@ -86,5 +69,23 @@ class Controller extends AbstractController
         }
 
         return $this->newValue;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function showEdit()
+    {
+        $this->htmlName = $this->groupName . '_' . $this->name;
+        $value = $this->getValue();
+
+        if ($value == '') {
+            $html = '<input type="hidden" id="' . $this->htmlName
+                . '" name="' . $this->htmlName
+                . '" value="' . $value . '">';
+        } else {
+            $html = parent::showEdit();
+        }
+        return $html;
     }
 }

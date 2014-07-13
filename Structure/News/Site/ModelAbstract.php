@@ -9,38 +9,8 @@ use Ideal\Structure\User;
 
 class ModelAbstract extends \Ideal\Core\Site\Model
 {
+
     public $cid;
-
-
-    public function getWhere($where)
-    {
-        $where = 'WHERE ' . $where . ' AND is_active=1 AND date_create < ' . time();
-        return $where;
-    }
-
-
-    /**
-     * @param int $page Номер отображаемой страницы
-     * @return array Полученный список элементов
-     */
-    public function getList($page = null)
-    {
-        $config = Config::getInstance();
-        $news = parent::getList($page);
-
-        $parentUrl = $this->getParentUrl();
-        foreach ($news as $k => $v) {
-            if ($v['content'] == '') {
-                $news[$k]['link'] = '';
-            } else {
-                $news[$k]['link'] = $parentUrl . '/' . $v['url'] . $config->urlSuffix;
-            }
-            $news[$k]['date_create'] = Util::dateReach($v['date_create']);
-        }
-
-        return $news;
-    }
-
 
     public function detectPageByUrl($path, $url)
     {
@@ -73,6 +43,33 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         return $this;
     }
 
+    public function getStructureElements()
+    {
+        $list = $this->getList(0, 9999);
+        return $list;
+    }
+
+    /**
+     * @param int $page Номер отображаемой страницы
+     * @return array Полученный список элементов
+     */
+    public function getList($page)
+    {
+        $config = Config::getInstance();
+        $news = parent::getList($page);
+
+        $parentUrl = $this->getParentUrl();
+        foreach ($news as $k => $v) {
+            if ($v['content'] == '') {
+                $news[$k]['link'] = '';
+            } else {
+                $news[$k]['link'] = $parentUrl . '/' . $v['url'] . $config->urlSuffix;
+            }
+            $news[$k]['date_create'] = Util::dateReach($v['date_create']);
+        }
+
+        return $news;
+    }
 
     public function getText()
     {
@@ -99,11 +96,9 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         return $text;
     }
 
-
-    public function getStructureElements()
+    public function getWhere($where)
     {
-        $list = $this->getList(0, 9999);
-        return $list;
+        $where = 'WHERE ' . $where . ' AND is_active=1 AND date_create < ' . time();
+        return $where;
     }
-
 }

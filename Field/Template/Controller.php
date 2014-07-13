@@ -10,9 +10,9 @@
 namespace Ideal\Field\Template;
 
 use Ideal\Core\Config;
-use Ideal\Field\Select;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
+use Ideal\Field\Select;
 
 /**
  * Специальное поле, предоставляющее возможность добавить к редактируемому элементу дополнительные поля
@@ -36,6 +36,7 @@ use Ideal\Core\Util;
  */
 class Controller extends Select\Controller
 {
+
     /** @inheritdoc */
     protected static $instance;
 

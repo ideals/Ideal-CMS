@@ -27,6 +27,7 @@ use Ideal\Field\Url;
  */
 class Controller extends Url\Controller
 {
+
     /** @inheritdoc */
     protected static $instance;
 

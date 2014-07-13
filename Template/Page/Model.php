@@ -9,5 +9,4 @@ class Model extends \Ideal\Core\Admin\Model
         $this->setPageDataByPrevStructure($this->prevStructure);
         return $this->pageData;
     }
-
 }

@@ -8,6 +8,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
 
     /**
      * Определение справочника по $parentUrl
+     *
      * @param $parentUrl
      * @return array
      */
@@ -17,9 +18,8 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         $_sql = "SELECT * FROM {$this->_table} WHERE parent_url='{$parentUrl}'";
         $arr = $db->select($_sql);
         if (!isset($arr[0]['ID'])) {
-             $arr[0] = array();
+            $arr[0] = array();
         }
         return $arr[0];
     }
-
 }

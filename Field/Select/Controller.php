@@ -33,31 +33,12 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
+
     /** @inheritdoc */
     protected static $instance;
 
-    /** @var array Список вариантов выбора для select  */
+    /** @var array Список вариантов выбора для select */
     protected $list;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setModel($model, $fieldName, $groupName = 'general')
-    {
-        parent::setModel($model, $fieldName, $groupName);
-
-        if (isset($this->field['values'])) {
-            // Если значения select заданы с помощью массива в поле values
-            $this->list = $this->field['values'];
-            return;
-        }
-
-        // Загоняем в $this->list список значений select
-        $className = $this->field['medium'];
-        /** @var \Ideal\Medium\AbstractModel $medium */
-        $medium = new $className($this->model, $fieldName);
-        $this->list = $medium->getList();
-    }
 
     /**
      * {@inheritdoc}
@@ -89,5 +70,25 @@ class Controller extends AbstractController
             $value = $keys[0];
         }
         return $value;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setModel($model, $fieldName, $groupName = 'general')
+    {
+        parent::setModel($model, $fieldName, $groupName);
+
+        if (isset($this->field['values'])) {
+            // Если значения select заданы с помощью массива в поле values
+            $this->list = $this->field['values'];
+            return;
+        }
+
+        // Загоняем в $this->list список значений select
+        $className = $this->field['medium'];
+        /** @var \Ideal\Medium\AbstractModel $medium */
+        $medium = new $className($this->model, $fieldName);
+        $this->list = $medium->getList();
     }
 }

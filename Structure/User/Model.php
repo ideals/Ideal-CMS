@@ -13,25 +13,22 @@ session_start();
 
 class Model
 {
-    public $data = array();         // массив с данными пользователя
-    public $errorMessage = '';      // последнее сообщение об ошибке
-    protected $_seance = '';        // наименование сессии и cookies
-    protected $_session = array();  // считанная сессия этого сеанса
+
+        static $instance; // массив с данными пользователя
+
+    public $data = array(); // последнее сообщение об ошибке
+
+    public $errorMessage = ''; // наименование сессии и cookies
+
+    protected $_seance = ''; // считанная сессия этого сеанса
+
+protected $_session = array();
+
     protected $_table = 'ideal_structure_user';
+
     protected $loginRow = 'email';
+
     protected $loginRowName = 'e-mail';
-
-    static $instance;
-
-
-    public static function getInstance()
-    {
-        if (empty(self::$instance)) {
-            self::$instance = new Model();
-        }
-        return self::$instance;
-    }
-
 
     /**
      * Считывает данные о пользователе из сессии
@@ -60,13 +57,26 @@ class Model
         }
     }
 
+    public static function getInstance()
+    {
+        if (empty(self::$instance)) {
+            self::$instance = new Model();
+        }
+        return self::$instance;
+    }
+
+    public function __destruct()
+    {
+        if (isset($this->_session['user_data'])) {
+            $_SESSION[$this->_seance] = serialize($this->_session);
+        }
+    }
 
     public function checkLogin()
     {
         // Если пользователь не залогинен - возвращаем FALSE
         return isset($this->data['ID']);
     }
-
 
     /**
      * Проверка введённого пароля
@@ -80,9 +90,9 @@ class Model
      */
     public function login($login, $pass)
     {
-		$login = trim($login);
-		$pass = trim($pass);
-	
+        $login = trim($login);
+        $pass = trim($pass);
+
         // Если не указан логин или пароль - выходим с false
         if (!$login OR !$pass) {
             $this->errorMessage = "Необходимо указать и {$this->loginRowName}, и пароль.";
@@ -100,16 +110,17 @@ class Model
         $user = $user[0];
 
         // Если юзера с таким логином не нашлось, или пароль не совпал - выходим с false
-        if (($user[$this->loginRow] == '' )
-		     OR (crypt($pass, $user['password']) != $user['password'])) {
+        if (($user[$this->loginRow] == '')
+            OR (crypt($pass, $user['password']) != $user['password'])
+        ) {
             $this->logout();
             $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
             return false;
         }
 
         // Если пользователь находится в процессе активации аккаунта
-        if ($user['act_key'] != '' ) {
-             $this->errorMessage = 'Этот аккаунт не активирован.';
+        if ($user['act_key'] != '') {
+            $this->errorMessage = 'Этот аккаунт не активирован.';
             return false;
         }
 
@@ -125,24 +136,14 @@ class Model
         return true;
     }
 
-
     /**
      * Выход юзера
      */
-    public function logout ()
+    public function logout()
     {
         $this->data = $this->_session = array();
         unset($_SESSION[$this->_seance]);
     }
-
-
-    public function __destruct()
-    {
-        if (isset($this->_session['user_data'])) {
-            $_SESSION[$this->_seance] = serialize($this->_session);
-        }
-    }
-
 
     public function setLoginField($loginRow, $loginRowName)
     {

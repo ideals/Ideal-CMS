@@ -1,6 +1,7 @@
 <?php
 /**
  * Ideal CMS (http://idealcms.ru/)
+ *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
  * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
@@ -20,20 +21,25 @@ use Ideal\Core\Db;
  */
 class AbstractModel
 {
-    /** @var  \Ideal\Core\Admin\Model Модель редактируемого элемента */
-    protected $obj;
+
     /** @var string Название редактируемого поля */
     protected $fieldName;
+
+    /** @var array Список полей в медиум-таблице, если она есть */
+    protected $fields;
+
+    /** @var  \Ideal\Core\Admin\Model Модель редактируемого элемента */
+    protected $obj;
+
+    /** @var array Настройки медиума из конфигурационного файла */
+    protected $params;
+
     /** @var string Название промежуточной таблицы, которая связывает владельца и список элементов */
     protected $table;
-    /** @var array Настройки медиума из конфигурационного файла  */
-    protected $params;
-    /** @var array Список полей в медиум-таблице, если она есть  */
-    protected $fields;
 
     /**
      * @param \Ideal\Core\Admin\Model $obj
-     * @param string $fieldName
+     * @param string                  $fieldName
      * @throws \Exception
      */
     public function __construct($obj, $fieldName)
@@ -72,6 +78,29 @@ class AbstractModel
     }
 
     /**
+     * Получение дополнительных sql-запросов для сохранения списка выбранных элементов для владельца
+     *
+     * @param mixed $newValue
+     * @return string
+     */
+    public function getSqlAdd($newValue)
+    {
+        $fieldNames = array_keys($this->fields);
+        $ownerField = $fieldNames[0];
+        $elementsField = $fieldNames[1];
+
+        // Удаляем все существующие связи владельца и элементов
+        $_sql = "DELETE FROM {$this->table} WHERE {$ownerField}='{{ objectId }}';";
+
+        // Добавляем связи владельца и элементов сделанные пользователем
+        foreach ($newValue as $v) {
+            $_sql .= "INSERT INTO {$this->table} SET {$ownerField}='{{ objectId }}', {$elementsField}='{$v}';";
+        }
+
+        return $_sql;
+    }
+
+    /**
      * Получение списка элементов выбранных в SelectMulti для этого владельца
      *
      * @return array Список выбранных элементов
@@ -93,28 +122,5 @@ class AbstractModel
         }
 
         return $list;
-    }
-
-    /**
-     * Получение дополнительных sql-запросов для сохранения списка выбранных элементов для владельца
-     *
-     * @param mixed $newValue
-     * @return string
-     */
-    public function getSqlAdd($newValue)
-    {
-        $fieldNames = array_keys($this->fields);
-        $ownerField = $fieldNames[0];
-        $elementsField = $fieldNames[1];
-
-        // Удаляем все существующие связи владельца и элементов
-        $_sql = "DELETE FROM {$this->table} WHERE {$ownerField}='{{ objectId }}';";
-
-        // Добавляем связи владельца и элементов сделанные пользователем
-        foreach ($newValue as $v) {
-            $_sql .= "INSERT INTO {$this->table} SET {$ownerField}='{{ objectId }}', {$elementsField}='{$v}';";
-        }
-
-        return $_sql;
     }
 }

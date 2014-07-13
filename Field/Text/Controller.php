@@ -23,6 +23,7 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
+
     /** @inheritdoc */
     protected static $instance;
 
@@ -35,6 +36,6 @@ class Controller extends AbstractController
         return
             '<input type="text" class="form-control" name="' . $this->htmlName
             . '" id="' . $this->htmlName
-            .'" value="' . $value .'">';
+            . '" value="' . $value . '">';
     }
 }

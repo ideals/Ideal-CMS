@@ -1,6 +1,7 @@
 <?php
 /**
  * Ideal CMS (http://idealcms.ru/)
+ *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
  * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
@@ -15,92 +16,13 @@ use Ideal\Core\Util;
  */
 class ConfigPhp
 {
+
     /** @var array Массив для хранения считанных данных из php-файла */
     protected $params = array();
 
     /**
-     * Считывание данных из php-файла
-     *
-     * @param string $fileName Имя php-файла из которого читается конфигурация
-     */
-    public function loadFile($fileName)
-    {
-        $cfg = file($fileName);
-        $skip = array('<?php', 'return array(', ');');
-
-        $params['default'] = array(
-            'arr' => array(),
-            'name' => 'Основное'
-        );
-
-        $c = count($cfg);
-        // Проходимся по всем строчкам php-файла и заполняем массив $params
-        for ($i = 0; $i < $c; $i++) {
-            $v = $cfg[$i];
-            if (in_array(trim($v), $skip)) {
-                continue;
-            }
-            list ($other, $label) = explode("', // ", $v);
-            if (is_null($label)) {
-                // Комментария в нужном формате нет, значит это массив
-                preg_match('/\'(.*)\'\s*=>\s*array\s*\(\s*\/\/\s*(.*)/i', $other, $match);
-                if (!isset($match[1]) || !isset($match[2])) {
-                    echo "Ошибка парсинга файла {$fileName} в строке $i<br />";
-                    exit;
-                }
-                $array = array();
-                while (trim($cfg[++$i]) != '),') {
-                    $v = $cfg[$i];
-                    $param = $this->parseStr($v);
-                    $array = array_merge($array, $param);
-                }
-                // Записываем массив данных в соответствующем формате
-                $params[$match[1]] = array(
-                    'arr' => $array,
-                    'name' => $match[2]
-                );
-            } else {
-                // Считываем и записываем переменную первого уровня
-                $param = $this->parseStr($v);
-                $params['default']['arr'] = array_merge($params['default']['arr'], $param);
-            }
-
-        }
-        $this->params = $params;
-    }
-
-    /**
-     * Парсим одну строку конфига в массив данных
-     *
-     * @param string $str Строка конфига
-     *
-     * @return array
-     */
-    protected function parseStr($str)
-    {
-        list ($other, $label) = explode("', // ", $str);
-        $label = chop($label);
-        $fields = explode(' | ', $label);
-        $label = $fields[0];
-        $type = $fields[1];
-        if ($type == '') {
-            $type = 'Ideal_Text';
-        }
-        list ($name, $value) = explode(" => '", $other);
-        $fieldName = trim($name, ' \''); // убираем стартовые пробелы и кавычку у названия поля
-        $param[$fieldName] = array(
-            'label' => $label,
-            'value' => ($type == 'Ideal_Area') ? str_replace('\n', "\n", $value) : $value,
-            'type' => $type
-        );
-        if ($type == 'Ideal_Select') {
-            $param[$fieldName]['values'] = json_decode($fields[2]);
-        }
-        return $param;
-    }
-
-    /**
      * Сохранение обработанных конфигурационных данных в файл
+     *
      * @param string $fileName Название php-файла, в который сохраняются данные
      */
     public function saveFile($fileName)
@@ -157,7 +79,88 @@ DONE;
     }
 
     /**
+     * Считывание данных из php-файла
+     *
+     * @param string $fileName Имя php-файла из которого читается конфигурация
+     */
+    public function loadFile($fileName)
+    {
+        $cfg = file($fileName);
+        $skip = array('<?php', 'return array(', ');');
+
+        $params['default'] = array(
+            'arr' => array(),
+            'name' => 'Основное'
+        );
+
+        $c = count($cfg);
+        // Проходимся по всем строчкам php-файла и заполняем массив $params
+        for ($i = 0; $i < $c; $i++) {
+            $v = $cfg[$i];
+            if (in_array(trim($v), $skip)) {
+                continue;
+            }
+            list ($other, $label) = explode("', // ", $v);
+            if (is_null($label)) {
+                // Комментария в нужном формате нет, значит это массив
+                preg_match('/\'(.*)\'\s*=>\s*array\s*\(\s*\/\/\s*(.*)/i', $other, $match);
+                if (!isset($match[1]) || !isset($match[2])) {
+                    echo "Ошибка парсинга файла {$fileName} в строке $i<br />";
+                    exit;
+                }
+                $array = array();
+                while (trim($cfg[++$i]) != '),') {
+                    $v = $cfg[$i];
+                    $param = $this->parseStr($v);
+                    $array = array_merge($array, $param);
+                }
+                // Записываем массив данных в соответствующем формате
+                $params[$match[1]] = array(
+                    'arr' => $array,
+                    'name' => $match[2]
+                );
+            } else {
+                // Считываем и записываем переменную первого уровня
+                $param = $this->parseStr($v);
+                $params['default']['arr'] = array_merge($params['default']['arr'], $param);
+            }
+        }
+        $this->params = $params;
+    }
+
+    /**
+     * Парсим одну строку конфига в массив данных
+     *
+     * @param string $str Строка конфига
+     *
+     * @return array
+     */
+    protected function parseStr($str)
+    {
+        list ($other, $label) = explode("', // ", $str);
+        $label = chop($label);
+        $fields = explode(' | ', $label);
+        $label = $fields[0];
+        $type = $fields[1];
+        if ($type == '') {
+            $type = 'Ideal_Text';
+        }
+        list ($name, $value) = explode(" => '", $other);
+        $fieldName = trim($name, ' \''); // убираем стартовые пробелы и кавычку у названия поля
+        $param[$fieldName] = array(
+            'label' => $label,
+            'value' => ($type == 'Ideal_Area') ? str_replace('\n', "\n", $value) : $value,
+            'type' => $type
+        );
+        if ($type == 'Ideal_Select') {
+            $param[$fieldName]['values'] = json_decode($fields[2]);
+        }
+        return $param;
+    }
+
+    /**
      * Отображение считанных конфигурационных данных в виде полей ввода с подписями
+     *
      * @return string Сгенерированный HTML-код
      */
     public function showEdit()
@@ -167,8 +170,8 @@ DONE;
         foreach ($this->params as $tabId => $tab) {
             $active = ($tabId == 'default') ? 'active' : '';
             $tabs .= '<li class="' . $active . '">'
-                   . '<a href="#' .$tabId . '" data-toggle="tab">' . $tab['name'] . '</a>'
-                   . '</li>';
+                . '<a href="#' . $tabId . '" data-toggle="tab">' . $tab['name'] . '</a>'
+                . '</li>';
             $tabsContent .= '<div class="tab-pane well ' . $active . '" id="' . $tabId . '">';
             foreach ($tab['arr'] as $field => $param) {
                 $fieldName = $tabId . '_' . $field;
@@ -196,15 +199,15 @@ DONE;
     }
 }
 
-
 class mockModel
 {
-    public $pageData;
+
     public $fields;
+
+    public $pageData;
 
     public function getPageData()
     {
         return $this->pageData;
     }
-
 }

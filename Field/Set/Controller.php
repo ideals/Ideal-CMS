@@ -9,8 +9,8 @@
 
 namespace Ideal\Field\Set;
 
-use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
+use Ideal\Field\AbstractController;
 
 /**
  * Визуальный вывод и сохранение данных MySQL типа SET
@@ -32,31 +32,12 @@ use Ideal\Core\Request;
  */
 class Controller extends AbstractController
 {
+
     /** @inheritdoc */
     protected static $instance;
 
-    /** @var array Список вариантов выбора для select  */
+    /** @var array Список вариантов выбора для select */
     protected $list;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setModel($model, $fieldName, $groupName = 'general')
-    {
-        parent::setModel($model, $fieldName, $groupName);
-
-        if (isset($this->field['values'])) {
-            // Если значения select заданы с помощью массива в поле values
-            $this->list = $this->field['values'];
-            return;
-        }
-
-        // Загоняем в $this->list список значений select
-        $className = $this->field['medium'];
-        /** @var \Ideal\Medium\AbstractModel $medium */
-        $medium = new $className();
-        $this->list = $medium->getList($this->model, $fieldName);
-    }
 
     /**
      * {@inheritdoc}
@@ -99,5 +80,25 @@ class Controller extends AbstractController
         $this->newValue = $request->$fieldName;
         $this->newValue = implode(',', $this->newValue);
         return $this->newValue;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setModel($model, $fieldName, $groupName = 'general')
+    {
+        parent::setModel($model, $fieldName, $groupName);
+
+        if (isset($this->field['values'])) {
+            // Если значения select заданы с помощью массива в поле values
+            $this->list = $this->field['values'];
+            return;
+        }
+
+        // Загоняем в $this->list список значений select
+        $className = $this->field['medium'];
+        /** @var \Ideal\Medium\AbstractModel $medium */
+        $medium = new $className();
+        $this->list = $medium->getList($this->model, $fieldName);
     }
 }

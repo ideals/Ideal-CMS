@@ -9,7 +9,7 @@
 
 namespace Ideal\Field\Cid;
 
-use \Ideal\Field;
+use Ideal\Field;
 
 /**
  * Модель для работы с cid'ами — основным элементом построения древовидной структуры Materialized Path.
@@ -17,11 +17,12 @@ use \Ideal\Field;
  */
 class Model
 {
-    /** @var int Количество уровней вложенности в cid  */
-    private $levels;
 
-    /** @var int Количество цифр (разрядов) на одном уровне вложенности  */
+    /** @var int Количество цифр (разрядов) на одном уровне вложенности */
     private $digits;
+
+    /** @var int Количество уровней вложенности в cid */
+    private $levels;
 
     /**
      * Устанавливает количество уровней вложенности и количество разрядов на одном уровне вложенности
@@ -33,6 +34,43 @@ class Model
     {
         $this->levels = $levels;
         $this->digits = $digits;
+    }
+
+    /**
+     * @param array $menu
+     * @param array $path
+     * @return array
+     */
+    public function buildTree(&$menu, $path)
+    {
+        $url = new Field\Url\Model();
+        $url->setParentUrl($path);
+
+        // Записываем в массив первый элемент
+        $categoryList = array(
+            array_shift($menu)
+        );
+        $categoryList[0]['link'] = $url->getUrl($categoryList[0]);
+
+        $prev = $categoryList[0]['lvl'];
+
+        while (count($menu) != 0) {
+            $m = reset($menu);
+            if ($m['lvl'] == $prev) {
+                $m['link'] = $url->getUrl($m);
+                $categoryList[] = $m;
+                $prev = $m['lvl'];
+                array_shift($menu);
+            } elseif ($m['lvl'] > $prev) {
+                $end = end($categoryList);
+                $key = key($categoryList);
+                $inPath = array_merge($path, array($end));
+                $categoryList[$key]['subCategoryList'] = $this->buildTree($menu, $inPath);
+            } else {
+                return $categoryList;
+            }
+        }
+        return $categoryList;
     }
 
     /**
@@ -65,85 +103,25 @@ class Model
     }
 
     /**
-     * Определение cid-блока на уровне $lvl и прибавление к нему $n
+     * Возвращает массив с родительскими cid'ами для заданного cid
      *
-     * @param string $cid Исходный cid-адрес
-     * @param int    $lvl Уровень, на котором надо поменять число
-     * @param int    $n   Число, которое надо прибавить, к тому, что есть
-     * @return string Возвращает только блок из cid на указанном уровне
+     * @param string $cid Сид для которого нужно определить родительские сиды
+     * @return array Массив родительских сидов
      */
-    public function getBlock($cid, $lvl, $n = 0)
+    public function getParents($cid)
     {
-        $current = ($lvl - 1) * $this->digits; // граница до несущей части адреса
-        $num = substr($cid, $current, $this->digits); // выцепляем номер
-
-        // Изменяем на нужное число
-        if ($n{0} == '+') {
-            $num += intval(substr($n, 1));
-        } elseif ($n{0} == '-') {
-            $num -= intval(substr($n, 1));
-        } elseif ($n > 0) {
-            $num = $n;
+        $parents = array();
+        $parentCid = '';
+        $blocks = str_split($cid, $this->digits);
+        foreach ($blocks as $v) {
+            if (intval($v) == 0) {
+                break;
+            }
+            $parentCid .= $v;
+            $parents[] = $this->reconstruct($parentCid);
         }
-
-        $c_block = $this->numToCid($num); // конвертация числа в блок cid адреса
-
-        return $c_block;
-    }
-
-    /**
-     * Конвертация числа в блок cid адреса
-     *
-     * Просто добавляет нули в начало переданного числа, чтобы сделанная
-     * строка соответствовала длине cid-блока
-     *
-     * @param int $num Число, которое нужно превратить в блок cid-адреса
-     * @return string Сформированный полноценный cid-адрес
-     */
-    public function numToCid($num)
-    {
-        // TODO сделать сообщение об ошибке, если число больше допустимого
-
-        // Вставляем перед числом нужное кол-во нулей
-        return str_pad($num, $this->digits, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * Изменение значения cid-блока на уровне $lvl на указанное значение $n
-     *
-     * Если ставится флаг $new, то все значения в $cid, после уровня $lvl
-     * обнуляются
-     *
-     * @param string $cid Cid для изменения
-     * @param int    $lvl Уровень, на котором нужно поменять значение
-     * @param int    $n   Число, которое надо прибавить, к тому, что есть
-     * @param bool   $new Флаг обнуления значений после указанного уровня
-     * @return string Изменённый cid
-     */
-    public function setBlock($cid, $lvl, $n, $new = false)
-    {
-        // Определение неизменяемых границ
-        $start = ($lvl - 1) * $this->digits;
-        $end = $start + $this->digits;
-
-        // Приведение $cid к стандартному формату, если он не в формате
-        $cid = $this->reconstruct($cid);
-
-        // Выцепление неизменяемых частей
-        $startBlock = substr($cid, 0, $start);
-        $endBlock = substr($cid, $end);
-
-        // Изменение блока
-        $block = $this->getBlock($cid, $lvl, $n);
-
-        if ($new) {
-            $endBlock = str_repeat('0', strlen($endBlock));
-        }
-
-        // Составление изменённого cid адреса
-        $cid = $startBlock . $block . $endBlock;
-
-        return $cid;
+        array_pop($parents); // убираем последний элемент
+        return $parents;
     }
 
     /**
@@ -196,61 +174,84 @@ class Model
     }
 
     /**
-     * Возвращает массив с родительскими cid'ами для заданного cid
+     * Изменение значения cid-блока на уровне $lvl на указанное значение $n
      *
-     * @param string $cid Сид для которого нужно определить родительские сиды
-     * @return array Массив родительских сидов
+     * Если ставится флаг $new, то все значения в $cid, после уровня $lvl
+     * обнуляются
+     *
+     * @param string $cid Cid для изменения
+     * @param int    $lvl Уровень, на котором нужно поменять значение
+     * @param int    $n   Число, которое надо прибавить, к тому, что есть
+     * @param bool   $new Флаг обнуления значений после указанного уровня
+     * @return string Изменённый cid
      */
-    public function getParents($cid)
+    public function setBlock($cid, $lvl, $n, $new = false)
     {
-        $parents = array();
-        $parentCid = '';
-        $blocks = str_split($cid, $this->digits);
-        foreach ($blocks as $v) {
-            if (intval($v) == 0) {
-                break;
-            }
-            $parentCid .= $v;
-            $parents[] = $this->reconstruct($parentCid);
+        // Определение неизменяемых границ
+        $start = ($lvl - 1) * $this->digits;
+        $end = $start + $this->digits;
+
+        // Приведение $cid к стандартному формату, если он не в формате
+        $cid = $this->reconstruct($cid);
+
+        // Выцепление неизменяемых частей
+        $startBlock = substr($cid, 0, $start);
+        $endBlock = substr($cid, $end);
+
+        // Изменение блока
+        $block = $this->getBlock($cid, $lvl, $n);
+
+        if ($new) {
+            $endBlock = str_repeat('0', strlen($endBlock));
         }
-        array_pop($parents); // убираем последний элемент
-        return $parents;
+
+        // Составление изменённого cid адреса
+        $cid = $startBlock . $block . $endBlock;
+
+        return $cid;
     }
 
     /**
-     * @param array $menu
-     * @param array $path
-     * @return array
+     * Определение cid-блока на уровне $lvl и прибавление к нему $n
+     *
+     * @param string $cid Исходный cid-адрес
+     * @param int    $lvl Уровень, на котором надо поменять число
+     * @param int    $n   Число, которое надо прибавить, к тому, что есть
+     * @return string Возвращает только блок из cid на указанном уровне
      */
-    public function buildTree(&$menu, $path)
+    public function getBlock($cid, $lvl, $n = 0)
     {
-        $url = new Field\Url\Model();
-        $url->setParentUrl($path);
+        $current = ($lvl - 1) * $this->digits; // граница до несущей части адреса
+        $num = substr($cid, $current, $this->digits); // выцепляем номер
 
-        // Записываем в массив первый элемент
-        $categoryList = array(
-            array_shift($menu)
-        );
-        $categoryList[0]['link'] = $url->getUrl($categoryList[0]);
-
-        $prev = $categoryList[0]['lvl'];
-
-        while (count($menu) != 0) {
-            $m = reset($menu);
-            if ($m['lvl'] == $prev) {
-                $m['link'] =  $url->getUrl($m);
-                $categoryList[] = $m;
-                $prev = $m['lvl'];
-                array_shift($menu);
-            } elseif ($m['lvl'] > $prev) {
-                $end = end($categoryList);
-                $key = key($categoryList);
-                $inPath = array_merge($path, array($end));
-                $categoryList[$key]['subCategoryList'] = $this->buildTree($menu, $inPath);
-            } else {
-                return $categoryList;
-            }
+        // Изменяем на нужное число
+        if ($n{0} == '+') {
+            $num += intval(substr($n, 1));
+        } elseif ($n{0} == '-') {
+            $num -= intval(substr($n, 1));
+        } elseif ($n > 0) {
+            $num = $n;
         }
-        return $categoryList;
+
+        $c_block = $this->numToCid($num); // конвертация числа в блок cid адреса
+
+        return $c_block;
+    }
+
+    /**
+     * Конвертация числа в блок cid адреса
+     *
+     * Просто добавляет нули в начало переданного числа, чтобы сделанная
+     * строка соответствовала длине cid-блока
+     *
+     * @param int $num Число, которое нужно превратить в блок cid-адреса
+     * @return string Сформированный полноценный cid-адрес
+     */
+    public function numToCid($num)
+    {
+        // TODO сделать сообщение об ошибке, если число больше допустимого
+
+        // Вставляем перед числом нужное кол-во нулей
+        return str_pad($num, $this->digits, '0', STR_PAD_LEFT);
     }
 }

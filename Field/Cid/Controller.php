@@ -9,8 +9,8 @@
 
 namespace Ideal\Field\Cid;
 
-use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
+use Ideal\Field\AbstractController;
 
 /**
  * Cid — поле используемое для сортировки элементов на своём уровне
@@ -28,26 +28,9 @@ use Ideal\Core\Request;
  */
 class Controller extends AbstractController
 {
+
     /** {@inheritdoc} */
     protected static $instance;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function showEdit()
-    {
-        $value = $this->getValue();
-
-        if ($value == '') {
-            // При создании элемента cid нельзя указать, он прописывается автоматически в конец списка
-            $html = '<input type="hidden" id="' . $this->htmlName
-                . '" name="' . $this->htmlName
-                . '" value="' . $value . '">';
-        } else {
-            $html = parent::showEdit();
-        }
-        return $html;
-    }
 
     /**
      * {@inheritdoc}
@@ -109,5 +92,23 @@ class Controller extends AbstractController
         }
 
         return $this->newValue;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function showEdit()
+    {
+        $value = $this->getValue();
+
+        if ($value == '') {
+            // При создании элемента cid нельзя указать, он прописывается автоматически в конец списка
+            $html = '<input type="hidden" id="' . $this->htmlName
+                . '" name="' . $this->htmlName
+                . '" value="' . $value . '">';
+        } else {
+            $html = parent::showEdit();
+        }
+        return $html;
     }
 }

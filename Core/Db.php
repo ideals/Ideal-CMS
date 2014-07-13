@@ -27,8 +27,27 @@ namespace Ideal\Core;
 
 class Db extends \mysqli
 {
+
     /** @var array Массив для хранения подключений к разным БД */
     protected static $instance;
+
+    /** @var Memcache Экземпляр подключения к memcache */
+    protected $cache;
+
+    /** @var bool Флаг того, что следующий запрос надо попытаться взять из кэша */
+    protected $cacheEnabled = false;
+
+    /** @var string Название используемой БД для корректного кэширования запросов */
+    protected $dbName;
+
+    /** @var string Название таблицы для запроса DELETE */
+    protected $deleteTableName = '';
+
+    /** @var array Массив для хранения явно указанных таблиц при вызове cacheMe() */
+    protected $involvedTables;
+
+    /** @var string Название таблицы для запроса UPDATE */
+    protected $updateTableName = '';
 
     /** @var array Массив для хранения пар ключ-значение метода set() */
     protected $updateValues = array();
@@ -36,26 +55,8 @@ class Db extends \mysqli
     /** @var array Массив для хранения пар ключ-значение метода where() */
     protected $whereParams = array();
 
-    /** @var string Название используемой БД для корректного кэширования запросов */
-    protected $dbName;
-
-    /** @var Memcache Экземпляр подключения к memcache */
-    protected $cache;
-
-    /** @var array Массив для хранения явно указанных таблиц при вызове cacheMe() */
-    protected $involvedTables;
-
     /** @var string Строка с where-частью запроса */
     protected $whereQuery = '';
-
-    /** @var string Название таблицы для запроса UPDATE */
-    protected $updateTableName = '';
-
-    /** @var string Название таблицы для запроса DELETE */
-    protected $deleteTableName = '';
-
-    /** @var bool Флаг того, что следующий запрос надо попытаться взять из кэша */
-    protected $cacheEnabled = false;
 
     /**
      * Получение singleton-объекта подключённого к БД
@@ -101,6 +102,207 @@ class Db extends \mysqli
     }
 
     /**
+     * Выполняет запрос к базе данных
+     *
+     * @link http://php.net/manual/ru/mysqli.query.php
+     * @param string $query
+     * @param int    $resultMode
+     * @return bool|\mysqli_result
+     */
+    public function query($query, $resultMode = MYSQLI_STORE_RESULT)
+    {
+        $result = parent::query($query, $resultMode);
+
+        if ($this->error) {
+            Util::addError($this->error . PHP_EOL . 'Query: ' . $query);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Установка флага попытки получения из кэша результатов следующего select-запроса
+     *
+     * @param array $involvedTables Массив с именами таблиц, участвующих в запросе.
+     *                              Используется в случаях, когда SQL-запрос содержит JOIN или
+     *                              вложенные подзапросы
+     * @return $this
+     */
+    public function cacheMe($involvedTables = null)
+    {
+        if ($involvedTables) {
+            $this->involvedTables = $involvedTables;
+        }
+
+        $this->cacheEnabled = true;
+        return $this;
+    }
+
+    /**
+     * Создание таблицы $table на основе данных полей $fields
+     *
+     * @param string $table  Название создаваемой таблицы
+     * @param array  $fields Названия создаваемых полей и описания их типа
+     * @return bool|\mysqli_result
+     */
+    public function create($table, $fields)
+    {
+        $sqlFields = array();
+
+        foreach ($fields as $key => $value) {
+            $sqlFields[] = "`{$key}` {$value['sql']} COMMENT '{$value['label']}'";
+        }
+
+        $sql = "CREATE TABLE `{$table}` (" . implode(',', $sqlFields) . ') DEFAULT CHARSET=utf8';
+
+        return $this->query($sql);
+    }
+
+    /**
+     * Удаление одной или нескольких строк
+     *
+     * Пример использования:
+     *     $db->delete($table)->where($sql, $params)->exec();
+     * ВНИМАНИЕ: в результате выполнения этого метода сбрасывается кэш БД
+     *
+     * @param string $table Таблица, в которой будут удаляться строки
+     * @return $this
+     */
+    public function delete($table)
+    {
+        // Очищаем where, если он был задан ранее
+        // Записываем название таблицы для DELETE
+
+        $this->clearQueryAttributes();
+        $this->deleteTableName = $table;
+
+        return $this;
+    }
+
+    /**
+     * Очистка параметров текущего update/delete запроса
+     */
+    protected function clearQueryAttributes()
+    {
+        $this->updateTableName = $this->deleteTableName = $this->whereParams = '';
+        $this->updateValues = $this->whereParams = array();
+        $this->involvedTables = null;
+    }
+
+    /**
+     * Выполняет сформированный update/delete-запрос
+     *
+     * @param bool $exec Флаг выполнять/возвращать сформированный sql-запрос
+     * @return bool|string Либо флаг успешности выполнения запроса, либо сам sql-запрос
+     */
+    public function exec($exec = true)
+    {
+        if (!$this->updateTableName && !$this->deleteTableName) {
+            Util::addError('Попытка вызова exec() без update() или delete().');
+            return false;
+        }
+
+        $tag = $this->updateTableName ? $this->updateTableName : $this->deleteTableName;
+        $sql = $this->updateTableName ? $this->getUpdateQuery() : $this->getDeleteQuery();
+
+        if ($exec) {
+            $this->clearCache($tag);
+            if ($this->query($sql)) {
+                // Если запрос выполнился успешно, то очистить все заданные параметры запроса, иначе не затирать их,
+                // чтобы получить неправильный запрос при повторном вызове exec()
+                $this->clearQueryAttributes();
+            }
+        } else {
+            return $sql;
+        }
+        return true;
+    }
+
+    /**
+     * Возвращает SQL-запрос для операции update() на основе значений, заданных с использованием set() и where()
+     *
+     * @return string UPDATE запрос
+     */
+    protected function getUpdateQuery()
+    {
+        $values = array();
+
+        foreach ($this->updateValues as $column => $value) {
+            $column = "`" . parent::real_escape_string($column) . "`";
+            $value = "'" . parent::real_escape_string($value) . "'";
+            $values[] = "{$column} = {$value}";
+        }
+
+        $values = implode(', ', $values);
+        $this->updateTableName = "`" . parent::real_escape_string($this->updateTableName) . "`";
+        $where = '';
+
+        if ($this->whereParams && $this->whereQuery) {
+            $where = 'WHERE ' . $this->prepareSql($this->whereQuery, $this->whereParams);
+        }
+
+        return 'UPDATE ' . $this->updateTableName . ' SET ' . $values . ' ' . $where . ';';
+    }
+
+    /**
+     * Подготовка запроса к выполнению
+     *
+     * Все значения из $params экранируются и подставляются в $sql на место
+     * плейсхолдеров :fieldName, имена таблиц подставляются на место
+     * плейсхолдера &table
+     *
+     * @param string $sql    Необработанный SQL-запрос
+     * @param array  $params Массив пар поле-значение, участвующих в запросе $sql
+     * @param array  $fields Имена таблиц участвующих в запросе $sql
+     * @return string Подготовленный SQL-запрос
+     */
+    protected function prepareSql($sql, $params = null, $fields = null)
+    {
+        if (is_array($params)) {
+            foreach ($params as $key => $value) {
+                $value = parent::real_escape_string($value);
+                $sql = str_replace(":{$key}", "'$value'", $sql);
+            }
+        }
+
+        if (is_array($fields)) {
+            foreach ($fields as $key => $value) {
+                $field = parent::real_escape_string($value);
+                $sql = str_replace("&{$key}", "`$field`", $sql);
+            }
+        }
+
+        return $sql;
+    }
+
+    /**
+     * Возвращает SQL-запрос для операции delete() на основе значений, заданных с использованием where()
+     *
+     * @return string DELETE запрос
+     */
+    protected function getDeleteQuery()
+    {
+        $this->deleteTableName = "`" . parent::real_escape_string($this->deleteTableName) . "`";
+        $where = '';
+
+        if ($this->whereParams && $this->whereQuery) {
+            $where = 'WHERE ' . $this->prepareSql($this->whereQuery, $this->whereParams);
+        }
+
+        return 'DELETE FROM ' . $this->deleteTableName . ' ' . $where . ';';
+    }
+
+    /**
+     * Очистка кэша запросов, связанных с таблицей $table
+     *
+     * @param string $table Название таблицы, для запросов из которой нужно очистить кэш
+     */
+    public function clearCache($table)
+    {
+        $this->cache->deleteByTag($table);
+    }
+
+    /**
      * Вставка новой строки в таблицу
      *
      * Пример использования:
@@ -132,48 +334,6 @@ class Db extends \mysqli
         $this->query($sql);
 
         return $this->insert_id;
-    }
-
-    /**
-     * Обновление одной или нескольких строк
-     *
-     * Пример использования:
-     *     $db->update($table)->set($values)->where($sql, $params)->exec();
-     * ВНИМАНИЕ: в результате выполнения этого метода сбрасывается кэш БД
-     *
-     * @param string $table Таблица, в которой будут обновляться строки
-     * @return $this
-     */
-    public function update($table)
-    {
-        // Очищаем set и where, если они были заданы ранее
-        // Записываем название таблицы для UPDATE
-
-        $this->clearQueryAttributes();
-        $this->updateTableName = $table;
-
-        return $this;
-    }
-
-    /**
-     * Удаление одной или нескольких строк
-     *
-     * Пример использования:
-     *     $db->delete($table)->where($sql, $params)->exec();
-     * ВНИМАНИЕ: в результате выполнения этого метода сбрасывается кэш БД
-     *
-     * @param string $table Таблица, в которой будут удаляться строки
-     * @return $this
-     */
-    public function delete($table)
-    {
-        // Очищаем where, если он был задан ранее
-        // Записываем название таблицы для DELETE
-
-        $this->clearQueryAttributes();
-        $this->deleteTableName = $table;
-
-        return $this;
     }
 
     /**
@@ -211,217 +371,6 @@ class Db extends \mysqli
         $this->cache->setWithTags($cacheKey, $queryResult, false, $cacheTags);
 
         return $queryResult;
-    }
-
-    /**
-     * Установка флага попытки получения из кэша результатов следующего select-запроса
-     *
-     * @param array $involvedTables Массив с именами таблиц, участвующих в запросе.
-     *                              Используется в случаях, когда SQL-запрос содержит JOIN или
-     *                              вложенные подзапросы
-     * @return $this
-     */
-    public function cacheMe($involvedTables = null)
-    {
-        if ($involvedTables) {
-            $this->involvedTables = $involvedTables;
-        }
-
-        $this->cacheEnabled = true;
-        return $this;
-    }
-
-    /**
-     * Очистка кэша запросов, связанных с таблицей $table
-     *
-     * @param string $table Название таблицы, для запросов из которой нужно очистить кэш
-     */
-    public function clearCache($table)
-    {
-        $this->cache->deleteByTag($table);
-    }
-
-    /**
-     * Создание таблицы $table на основе данных полей $fields
-     *
-     * @param string $table  Название создаваемой таблицы
-     * @param array  $fields Названия создаваемых полей и описания их типа
-     * @return bool|\mysqli_result
-     */
-    public function create($table, $fields)
-    {
-        $sqlFields = array();
-
-        foreach ($fields as $key => $value) {
-            $sqlFields[] = "`{$key}` {$value['sql']} COMMENT '{$value['label']}'";
-        }
-
-        $sql = "CREATE TABLE `{$table}` (" . implode(',', $sqlFields) . ') DEFAULT CHARSET=utf8';
-
-        return $this->query($sql);
-    }
-
-    /**
-     * В формируемый update-запрос добавляет значения полей для вставки
-     *
-     * @param array $values Названия и значения полей для вставки строки в таблицу
-     * @return $this Db
-     */
-    public function set(array $values)
-    {
-        $this->updateValues = $values;
-        return $this;
-    }
-
-    /**
-     * В формируемый update/delete-запрос добавляет where-условие
-     *
-     * Пример использования:
-     *     $par = array('active' = 1);
-     *     $db->delete('tablename')->where('is_active = :active', $par)->exec();
-     *
-     * @param string $sql    Строка where-условия
-     * @param array  $params Параметры, используемые в строке where-условия
-     * @return $this
-     */
-    public function where($sql, $params)
-    {
-        $this->whereQuery = $sql;
-        $this->whereParams = $params;
-
-        return $this;
-    }
-
-    /**
-     * Выполняет сформированный update/delete-запрос
-     *
-     * @param bool $exec Флаг выполнять/возвращать сформированный sql-запрос
-     * @return bool|string Либо флаг успешности выполнения запроса, либо сам sql-запрос
-     */
-    public function exec($exec = true)
-    {
-        if (!$this->updateTableName && !$this->deleteTableName) {
-            Util::addError('Попытка вызова exec() без update() или delete().');
-            return false;
-        }
-
-        $tag = $this->updateTableName ? $this->updateTableName : $this->deleteTableName;
-        $sql = $this->updateTableName ? $this->getUpdateQuery() : $this->getDeleteQuery();
-
-        if ($exec) {
-            $this->clearCache($tag);
-            if ($this->query($sql)) {
-                // Если запрос выполнился успешно, то очистить все заданные параметры запроса, иначе не затирать их,
-                // чтобы получить неправильный запрос при повторном вызове exec()
-                $this->clearQueryAttributes();
-            }
-        } else {
-            return $sql;
-        }
-        return true;
-    }
-
-    /**
-     * Выполняет запрос к базе данных
-     *
-     * @link http://php.net/manual/ru/mysqli.query.php
-     * @param string $query
-     * @param int    $resultMode
-     * @return bool|\mysqli_result
-     */
-    public function query($query, $resultMode = MYSQLI_STORE_RESULT)
-    {
-        $result = parent::query($query, $resultMode);
-
-        if ($this->error) {
-            Util::addError($this->error . PHP_EOL . 'Query: ' . $query);
-        }
-
-        return $result;
-    }
-
-    /**
-     * Очистка параметров текущего update/delete запроса
-     */
-    protected function clearQueryAttributes()
-    {
-        $this->updateTableName = $this->deleteTableName = $this->whereParams = '';
-        $this->updateValues = $this->whereParams = array();
-        $this->involvedTables = null;
-    }
-
-    /**
-     * Подготовка запроса к выполнению
-     *
-     * Все значения из $params экранируются и подставляются в $sql на место
-     * плейсхолдеров :fieldName, имена таблиц подставляются на место
-     * плейсхолдера &table
-     *
-     * @param string $sql    Необработанный SQL-запрос
-     * @param array  $params Массив пар поле-значение, участвующих в запросе $sql
-     * @param array  $fields Имена таблиц участвующих в запросе $sql
-     * @return string Подготовленный SQL-запрос
-     */
-    protected function prepareSql($sql, $params = null, $fields = null)
-    {
-        if (is_array($params)) {
-            foreach ($params as $key => $value) {
-                $value = parent::real_escape_string($value);
-                $sql = str_replace(":{$key}", "'$value'", $sql);
-            }
-        }
-
-        if (is_array($fields)) {
-            foreach ($fields as $key => $value) {
-                $field = parent::real_escape_string($value);
-                $sql = str_replace("&{$key}", "`$field`", $sql);
-            }
-        }
-
-        return $sql;
-    }
-
-    /**
-     * Возвращает SQL-запрос для операции update() на основе значений, заданных с использованием set() и where()
-     *
-     * @return string UPDATE запрос
-     */
-    protected function getUpdateQuery()
-    {
-        $values = array();
-
-        foreach ($this->updateValues as $column => $value) {
-            $column = "`" . parent::real_escape_string($column) . "`";
-            $value = "'" . parent::real_escape_string($value) . "'";
-            $values[] = "{$column} = {$value}";
-        }
-
-        $values = implode(', ', $values);
-        $this->updateTableName = "`" . parent::real_escape_string($this->updateTableName) . "`";
-        $where = '';
-
-        if ($this->whereParams && $this->whereQuery) {
-            $where = 'WHERE ' . $this->prepareSql($this->whereQuery, $this->whereParams);
-        }
-
-        return 'UPDATE ' . $this->updateTableName . ' SET ' . $values . ' ' . $where . ';';
-    }
-
-    /**
-     * Возвращает SQL-запрос для операции delete() на основе значений, заданных с использованием where()
-     *
-     * @return string DELETE запрос
-     */
-    protected function getDeleteQuery()
-    {
-        $this->deleteTableName = "`" . parent::real_escape_string($this->deleteTableName) . "`";
-        $where = '';
-
-        if ($this->whereParams && $this->whereQuery) {
-            $where = 'WHERE ' . $this->prepareSql($this->whereQuery, $this->whereParams);
-        }
-
-        return 'DELETE FROM ' . $this->deleteTableName . ' ' . $where . ';';
     }
 
     /**
@@ -481,5 +430,57 @@ class Db extends \mysqli
         }
 
         return array_unique($query);
+    }
+
+    /**
+     * В формируемый update-запрос добавляет значения полей для вставки
+     *
+     * @param array $values Названия и значения полей для вставки строки в таблицу
+     * @return $this Db
+     */
+    public function set(array $values)
+    {
+        $this->updateValues = $values;
+        return $this;
+    }
+
+    /**
+     * Обновление одной или нескольких строк
+     *
+     * Пример использования:
+     *     $db->update($table)->set($values)->where($sql, $params)->exec();
+     * ВНИМАНИЕ: в результате выполнения этого метода сбрасывается кэш БД
+     *
+     * @param string $table Таблица, в которой будут обновляться строки
+     * @return $this
+     */
+    public function update($table)
+    {
+        // Очищаем set и where, если они были заданы ранее
+        // Записываем название таблицы для UPDATE
+
+        $this->clearQueryAttributes();
+        $this->updateTableName = $table;
+
+        return $this;
+    }
+
+    /**
+     * В формируемый update/delete-запрос добавляет where-условие
+     *
+     * Пример использования:
+     *     $par = array('active' = 1);
+     *     $db->delete('tablename')->where('is_active = :active', $par)->exec();
+     *
+     * @param string $sql    Строка where-условия
+     * @param array  $params Параметры, используемые в строке where-условия
+     * @return $this
+     */
+    public function where($sql, $params)
+    {
+        $this->whereQuery = $sql;
+        $this->whereParams = $params;
+
+        return $this;
     }
 }

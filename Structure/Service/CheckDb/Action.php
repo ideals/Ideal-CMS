@@ -57,7 +57,9 @@ function checkTypeFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config, $t
         while (false !== ($file = readdir($handle))) {
             if (($file != '.') && ($file != '..') && (is_dir($dir . '/' . $file))) {
                 $c = require($dir . '/' . $file . '/config.php');
-                if (isset($c['params']['has_table']) && ($c['params']['has_table'] == false)) continue;
+                if (isset($c['params']['has_table']) && ($c['params']['has_table'] == false)) {
+                    continue;
+                }
                 $t = strtolower($config->db['prefix'] . $module . '_' . $type . '_' . $file);
                 if (array_search($t, $cfgTables) === false) {
                     $cfgTables[] = $t;

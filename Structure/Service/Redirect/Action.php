@@ -1,6 +1,7 @@
 <?php
 /**
  * Ideal CMS (http://idealcms.ru/)
+ *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
  * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
@@ -33,7 +34,9 @@ $table = $file->getTable();
 echo $file->getMsg();
 
 // Если уровень ошибки больше 1, то список редиректов не отображается
-if ($file->getError() > 1) return;
+if ($file->getError() > 1) {
+    return;
+}
 ?>
 <table id="redirect" class="table table-hover table-striped">
     <tr>
@@ -48,12 +51,14 @@ if ($file->getError() > 1) return;
 
 <br/>
 
-<button type="button" class="btn btn-primary pull-left" value="<?php echo $file->getCountParam(); ?>" onclick="addLine(this)">
+<button type="button" class="btn btn-primary pull-left" value="<?php echo $file->getCountParam(); ?>"
+        onclick="addLine(this)">
     Добавить редирект
 </button>
 
 <div class="alert alert-warning" style="margin-left: 190px;">
-    <strong>Не забывайте</strong> экранировать специмволы в первой колонке в соответствии с правилами регулярных выражений!
+    <strong>Не забывайте</strong> экранировать специмволы в первой колонке в соответствии с правилами регулярных
+    выражений!
 </div>
 
 <style>
@@ -68,29 +73,27 @@ if ($file->getError() > 1) return;
 
 
 <script type="text/javascript">
-    function addLine(e)
-    {
+    function addLine(e) {
         $(e).attr("disabled", "disabled");
         var i = parseInt($(e).val()) + 1;
         var from = $('#line' + (i - 1) + ' > .from').children().val();
         var to = $('#line' + (i - 1) + ' > .to').children().val();
         if (from !== '' && to !== '') {
             $('#redirect > tbody:last').append('<tr id="line' + i + '" class="element">'
-                + '<td class="from"><input type="text" name="from" class="form-control input-sm"></td>'
-                + '<td class="to"><input type="text" name="to" class="form-control input-sm"></td>'
-                + '<td><div class="button-edit btn-group btn-group-sm"> '
-                + '<button type="button" style="width: 47px;" onclick="saveLine(' + i + ')" title="Сохранить" class="btn btn-success">'
-                + '<span class="glyphicon glyphicon-ok"></span></button>'
-                + '<button onclick="delLine(' + i + ')" title="Удалить" class="btn btn-danger">'
-                + '<span class="glyphicon glyphicon-remove"></i></button></div>'
-                + '</td></tr>')
+            + '<td class="from"><input type="text" name="from" class="form-control input-sm"></td>'
+            + '<td class="to"><input type="text" name="to" class="form-control input-sm"></td>'
+            + '<td><div class="button-edit btn-group btn-group-sm"> '
+            + '<button type="button" style="width: 47px;" onclick="saveLine(' + i + ')" title="Сохранить" class="btn btn-success">'
+            + '<span class="glyphicon glyphicon-ok"></span></button>'
+            + '<button onclick="delLine(' + i + ')" title="Удалить" class="btn btn-danger">'
+            + '<span class="glyphicon glyphicon-remove"></i></button></div>'
+            + '</td></tr>')
             $(e).val(i + 1);
         }
         $(e).removeAttr('disabled');
     }
 
-    function delLine(e)
-    {
+    function delLine(e) {
         var line = $('#line' + e);
         var from = line.find('.from');
         var to = line.find('.to');
@@ -121,8 +124,7 @@ if ($file->getError() > 1) return;
         });
     }
 
-    function editLine(e)
-    {
+    function editLine(e) {
         var line = $('#line' + e);
         line.addClass('editLine');
         line.find('.btn-group-xs').removeClass('btn-group-xs').addClass('btn-group-sm');
@@ -142,8 +144,7 @@ if ($file->getError() > 1) return;
         to.html('<input type="text" name="to" value="' + to.html() + '"  class="form-control input-sm">');
     }
 
-    function cancelLine(e)
-    {
+    function cancelLine(e) {
         var line = $('#line' + e);
         var from = line.find('.from');
         var to = line.find('.to');
@@ -171,8 +172,7 @@ if ($file->getError() > 1) return;
 
     }
 
-    function saveLine(e)
-    {
+    function saveLine(e) {
         var type = 'add';
         var line = $('#line' + e);
         var from = line.find('.from');

@@ -9,8 +9,8 @@
 
 namespace Ideal\Field\RichEdit;
 
-use Ideal\Field\AbstractController;
 use Ideal\Core\Config;
+use Ideal\Field\AbstractController;
 
 /**
  * Текстовое поле с визуальным редактором html-кода
@@ -24,8 +24,19 @@ use Ideal\Core\Config;
  */
 class Controller extends AbstractController
 {
+
     /** @inheritdoc */
     protected static $instance;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function showEdit()
+    {
+        $html = '<div id="' . $this->htmlName . '-control-group">'
+            . $this->getLabelText() . '<br />' . $this->getInputText() . '</div>';
+        return $html;
+    }
 
     /**
      * {@inheritdoc}
@@ -42,16 +53,6 @@ class Controller extends AbstractController
                 CKEDITOR.replace("{$this->htmlName}");
             </script>
 HTML;
-        return $html;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function showEdit()
-    {
-        $html = '<div id="' . $this->htmlName . '-control-group">'
-            . $this->getLabelText() . '<br />' . $this->getInputText() . '</div>';
         return $html;
     }
 }

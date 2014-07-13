@@ -17,8 +17,8 @@ class Model
     /**
      * Изменение позиции $oldPos на новую $newPos
      *
-     * @param int $oldPos Старое значение позиции
-     * @param int $newPos Новое значение позиции
+     * @param int    $oldPos        Старое значение позиции
+     * @param int    $newPos        Новое значение позиции
      * @param string $prevStructure Путь к структуре в которой меняются позиции
      * @return string Sql-запрос изменения позиции
      */
@@ -40,7 +40,7 @@ class Model
         }
 
         $_sql = 'UPDATE {{ table }} SET pos = CASE';
-        $where = $or ='';
+        $where = $or = '';
         foreach ($update as $old => $new) {
             $_sql .= "\nWHEN pos = {$old} THEN {$new}";
             $where .= $or . " pos = {$old}";

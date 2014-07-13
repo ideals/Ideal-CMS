@@ -9,8 +9,8 @@
 
 namespace Ideal\Field\Checkbox;
 
-use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
+use Ideal\Field\AbstractController;
 
 /**
  * Отображение и редактирование поля, содержащего true/false (checkbox)
@@ -24,8 +24,20 @@ use Ideal\Core\Request;
  */
 class Controller extends AbstractController
 {
+
     /** {@inheritdoc} */
     protected static $instance;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getInputText()
+    {
+        $checked = ($this->getValue() == 1) ? 'checked="checked"' : '';
+        return '<label class="checkbox"><input type="checkbox" name="' . $this->htmlName
+        . '" id="' . $this->htmlName . '" '
+        . $checked . '> ' . $this->field['label'] . '</label>';
+    }
 
     /**
      * {@inheritdoc}
@@ -35,17 +47,6 @@ class Controller extends AbstractController
         // Label для checkbox выводится справа от него, а не слева,
         // поэтому для левого label возвращаем пустую строку
         return '';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getInputText()
-    {
-        $checked = ($this->getValue() == 1) ? 'checked="checked"' : '';
-        return '<label class="checkbox"><input type="checkbox" name="' . $this->htmlName
-            . '" id="' . $this->htmlName . '" '
-            . $checked .'> '. $this->field['label'] . '</label>';
     }
 
     /**

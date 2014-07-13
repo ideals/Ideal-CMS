@@ -29,9 +29,9 @@
 ?>
 
 <p id="message">
-    Внимание! Обновление в рамках одинакового первого номера происходит автоматически.<br />
-    Обновление на другой первый номер версии требует ручного вмешательства.<br />
-    <hr />
+    Внимание! Обновление в рамках одинакового первого номера происходит автоматически.<br/>
+    Обновление на другой первый номер версии требует ручного вмешательства.<br/>
+<hr/>
 </p>
 
 <?php
@@ -47,7 +47,7 @@ $nowVersions = $updateModel->getVersions();
 $domain = urlencode($config->domain);
 
 // Сервер обновлений
-$url = $getVersionScript . '?domain=' . $domain . '&ver=' .  urlencode(serialize($nowVersions));
+$url = $getVersionScript . '?domain=' . $domain . '&ver=' . urlencode(serialize($nowVersions));
 
 // Переводим информацию о версиях в формат json для передачи в JS
 $nowVersions = json_encode($nowVersions);
@@ -70,7 +70,7 @@ if ($msg !== '') {
         url: '<?php echo $url ?>',
         callbackParameter: 'callback',
         dataType: 'jsonp',
-        success: function(versions) {
+        success: function (versions) {
             var nowVersions = '<?php echo  $nowVersions ?>';
             nowVersions = $.parseJSON(nowVersions);
 
@@ -79,48 +79,47 @@ if ($msg !== '') {
                 nowVersions = null;
             }
 
-            $.each(nowVersions, function(key,value) {
+            $.each(nowVersions, function (key, value) {
                 // Выводим заголовок с именем обновляемого модуля
                 var buf = key + " " + value;
                 $('<h4>').appendTo('#form-input').text(buf);
                 var update = versions[key];
 
-                if ((update == undefined) || (update == "")){
+                if ((update == undefined) || (update == "")) {
                     $('<p>').appendTo('#form-input').text("Обновление не требуется.");
                     return true;
                 }
-                if (update['message'] !== undefined){
+                if (update['message'] !== undefined) {
                     $('<p>').appendTo('#form-input').text(update['message']);
                     return true;
                 }
 
                 $('<form>')
                     .appendTo('#form-input')
-                    .attr('class','update-form form-inline')
-                    .attr('action','javascript:void(0)')
-                    .attr('method','post');
+                    .attr('class', 'update-form form-inline')
+                    .attr('action', 'javascript:void(0)')
+                    .attr('method', 'post');
 
-                $.each(update, function(keyLine, line){
+                $.each(update, function (keyLine, line) {
                     buf = 'updateModule("' + key + '","' + line['version'] + '")';
                     $('<button>')
-                        .appendTo('form:last').attr('class','btn')
-                        .attr('onClick', buf).attr('class','btn')
+                        .appendTo('form:last').attr('class', 'btn')
+                        .attr('onClick', buf).attr('class', 'btn')
                         .text('Обновить на версию ' + line['version'] + ' (' + line['date'] + ')');
                     if (line['danger']) {
-                        $('button:last').attr('class','btn btn-danger')
+                        $('button:last').attr('class', 'btn btn-danger')
                     }
                     $('button:last').after('&nbsp; &nbsp;');
                 });
             });
         },
-        error: function(){
+        error: function () {
             $('#message').after('<p><b>Не удалось соединиться с сервером</b></p>');
         }
     });
 
     /** Обновление CMS или модуля */
-    function updateModule(moduleName, version)
-    {
+    function updateModule(moduleName, version) {
         $.ajax({
             url: 'Ideal/Structure/Service/UpdateCms/ajaxUpdate.php',
             type: 'POST',
@@ -130,12 +129,12 @@ if ($msg !== '') {
                 version: version,
                 config: '<?php echo $config->cmsFolder; ?>'
             },
-            success: function(data) {
+            success: function (data) {
                 // Выводим сообщение и обновляем страницу
                 alert(data.message);
                 location.reload();
             },
-            error: function() {
+            error: function () {
                 alert('Не удалось произвести обновление');
             }
         })

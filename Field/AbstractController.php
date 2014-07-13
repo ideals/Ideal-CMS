@@ -17,20 +17,21 @@ use Ideal\Core\Request;
  */
 abstract class AbstractController
 {
-    /** @var  string Новое значение поля, полученное от пользователя (при редактировании в браузере) */
-    public $newValue;
+
+    /** @var  mixed Хранит в себе копию соответствующего объекта поля (паттерн singleton) */
+    protected static $instance;
 
     /** @var  string Название поля, используемое для полей ввода в html-коде */
     public $htmlName;
 
-    /** @var string CSS-класс для определения ширины поля для подписи к полю ввода */
-    public $labelClass = 'col-xs-3';
-
     /** @var string CSS-класс для определения ширины поля ввода */
     public $inputClass = 'col-xs-9';
 
-    /** @var  string Название поля */
-    protected $name;
+    /** @var string CSS-класс для определения ширины поля для подписи к полю ввода */
+    public $labelClass = 'col-xs-3';
+
+    /** @var  string Новое значение поля, полученное от пользователя (при редактировании в браузере) */
+    public $newValue;
 
     /** @var  array Параметры поля, взятые из конфигурационного файла структуры */
     protected $field;
@@ -41,11 +42,11 @@ abstract class AbstractController
     /** @var  \Ideal\Core\Admin\Model Модель данных, в которой находится редактируемое поле */
     protected $model;
 
+    /** @var  string Название поля */
+    protected $name;
+
     /** @var  string Дополнительный sql-код, генерируемый полем для сохранения всех своих данных */
     protected $sqlAdd = '';
-
-    /** @var  mixed Хранит в себе копию соответствующего объекта поля (паттерн singleton) */
-    protected static $instance;
 
     /**
      * Обеспечение паттерна singleton
@@ -87,64 +88,6 @@ abstract class AbstractController
         }
         return $value;
     }
-
-    /**
-     * Отображение html-элементов для редактирования этого поля
-     *
-     * @return string HTML-код группы редактирования для этого поля
-     */
-    public function showEdit()
-    {
-        $label = $this->getLabelText();
-        $input = $this->getInputText();
-        $html = <<<HTML
-        <div id="{$this->htmlName}-control-group" class="form-group">
-            <label class="{$this->labelClass} control-label" for="{$this->htmlName}">{$label}</label>
-            <div class="{$this->inputClass} {$this->htmlName}-controls">
-                {$input}
-                <div id="{$this->htmlName}-help"></div>
-            </div>
-        </div>
-HTML;
-
-        return $html;
-    }
-
-    /**
-     * Получение текста, подписывающего это поле ввода (тег label)
-     *
-     * @return string Строка содержащая текст подписи
-     */
-    public function getLabelText()
-    {
-        return $this->field['label'] . ':';
-    }
-
-    /**
-     * Установка модели редактируемого объекта, частью которого является редактируемое поле
-     *
-     * Полю необходимо получать сведения о состоянии объекта и о других полях, т.к.
-     * его значения и поведение может зависеть от значений других полей
-     *
-     * @param \Ideal\Core\Admin\Model $model     Модель редактируемого объекта
-     * @param string                  $fieldName Редактируемое поле
-     * @param string                  $groupName Вкладка, к которой принадлежит редактируемое поле
-     */
-    public function setModel($model, $fieldName, $groupName = 'general')
-    {
-        $this->name = $fieldName;
-        $this->model = $model;
-        $this->field = $model->fields[$fieldName];
-        $this->groupName = $groupName;
-        $this->htmlName = $this->groupName . '_' . $this->name;
-    }
-
-    /**
-     * Возвращает строку, содержащую html-код элементов ввода для редактирования поля
-     *
-     * @return string html-код элементов ввода
-     */
-    abstract public function getInputText();
 
     /**
      * Форматирование значения поля для отображения значения в списке элементов
@@ -214,4 +157,62 @@ HTML;
         $this->newValue = $request->$fieldName;
         return $this->newValue;
     }
+
+    /**
+     * Установка модели редактируемого объекта, частью которого является редактируемое поле
+     *
+     * Полю необходимо получать сведения о состоянии объекта и о других полях, т.к.
+     * его значения и поведение может зависеть от значений других полей
+     *
+     * @param \Ideal\Core\Admin\Model $model     Модель редактируемого объекта
+     * @param string                  $fieldName Редактируемое поле
+     * @param string                  $groupName Вкладка, к которой принадлежит редактируемое поле
+     */
+    public function setModel($model, $fieldName, $groupName = 'general')
+    {
+        $this->name = $fieldName;
+        $this->model = $model;
+        $this->field = $model->fields[$fieldName];
+        $this->groupName = $groupName;
+        $this->htmlName = $this->groupName . '_' . $this->name;
+    }
+
+    /**
+     * Отображение html-элементов для редактирования этого поля
+     *
+     * @return string HTML-код группы редактирования для этого поля
+     */
+    public function showEdit()
+    {
+        $label = $this->getLabelText();
+        $input = $this->getInputText();
+        $html = <<<HTML
+        <div id="{$this->htmlName}-control-group" class="form-group">
+            <label class="{$this->labelClass} control-label" for="{$this->htmlName}">{$label}</label>
+            <div class="{$this->inputClass} {$this->htmlName}-controls">
+                {$input}
+                <div id="{$this->htmlName}-help"></div>
+            </div>
+        </div>
+HTML;
+
+        return $html;
+    }
+
+    /**
+     * Получение текста, подписывающего это поле ввода (тег label)
+     *
+     * @return string Строка содержащая текст подписи
+     */
+    public function getLabelText()
+    {
+        return $this->field['label'] . ':';
+    }
+
+    /**
+     * Возвращает строку, содержащую html-код элементов ввода для редактирования поля
+     *
+     * @return string html-код элементов ввода
+     */
+    abstract public function getInputText();
 }

@@ -83,111 +83,6 @@ class Memcache extends \Memcache
     }
 
     /**
-     * Устанавливает значение $value по ключу $key в кэше
-     *
-     * @param string       $key      Ключ для записи $value
-     * @param mixed        $value    Значение, помещаемое в кэш
-     * @param bool         $ttl      Время жизни значения в кэше
-     * @param string|array $tagsKeys Строка или массив с тегами для ключа $key
-     * @return bool Возвращает true при успешном выполнении и false в случае ошибки
-     */
-    public function setWithTags($key, $value, $ttl = false, $tagsKeys = 'default')
-    {
-        $value = $this->createTagsContainer($value, $tagsKeys);
-
-        if (false === $value) {
-            $value = self::FALSE_VALUE;
-        }
-
-        return parent::set($key, $value, false, (int)$ttl);
-    }
-
-    /**
-     * Получает значение по ключу $key
-     *
-     * @param string $key Ключ кэширования
-     * @return mixed
-     */
-    public function getWithTags($key)
-    {
-        $value = parent::get($key);
-
-        if (false === $value) {
-            $value = null;
-        }
-
-        if (self::FALSE_VALUE === $value) {
-            $value = false;
-        }
-
-        if (!$value) {
-            return $value;
-        }
-
-        if (is_array($key)) {
-            foreach ($key as $singleKey) {
-                if (!isset($value[$singleKey])) {
-                    $value[$singleKey] = null;
-                }
-            }
-        }
-
-        return $this->getFromTagsContainer($key, $value);
-    }
-
-    /**
-     * Безопасное увеличение значения в memcache
-     *
-     * Если значения по ключу $key не было, то оно будет создано
-     *
-     * @param      $key
-     * @param int  $value
-     * @param bool $ttl
-     */
-    public function safeIncrement($key, $value = 1, $ttl = false)
-    {
-        if ($result = parent::increment($key, $value)) {
-            return $result;
-        }
-
-        parent::add($key, 0, $ttl);
-
-        return parent::increment($key, $value);
-    }
-
-    /**
-     * Безопасное уменьшение значения в memcache.
-     *
-     * Если значения по ключу $key не было, то оно будет создано
-     *
-     * @param      $key
-     * @param int  $value
-     * @param bool $ttl
-     */
-    public function safeDecrement($key, $value = 1, $ttl = false)
-    {
-        if ($result = parent::decrement($key, $value)) {
-            return $result;
-        }
-
-        parent::add($key, 0, $ttl);
-
-        return parent::decrement($key, $value);
-    }
-
-    /**
-     * Удаление значений в кеше по тегу или группе тегов
-     *
-     * @param $tag string|array Строка или массив тегов
-     */
-    public function deleteByTag($tag)
-    {
-        // Обновляем в кэше версию для тега
-
-        $this->safeIncrement($tag);
-    }
-
-    /**
      * Подготовка контейнера с тегами для кеширования
      *
      * Структура контейнера:
@@ -222,6 +117,71 @@ class Memcache extends \Memcache
             'tags' => $tagsValues,
             'value' => $value
         );
+    }
+
+    /**
+     * Удаление значений в кеше по тегу или группе тегов
+     *
+     * @param $tag string|array Строка или массив тегов
+     */
+    public function deleteByTag($tag)
+    {
+        // Обновляем в кэше версию для тега
+
+        $this->safeIncrement($tag);
+    }
+
+    /**
+     * Безопасное увеличение значения в memcache
+     *
+     * Если значения по ключу $key не было, то оно будет создано
+     *
+     * @param      $key
+     * @param int  $value
+     * @param bool $ttl
+     */
+    public function safeIncrement($key, $value = 1, $ttl = false)
+    {
+        if ($result = parent::increment($key, $value)) {
+            return $result;
+        }
+
+        parent::add($key, 0, $ttl);
+
+        return parent::increment($key, $value);
+    }
+
+    /**
+     * Получает значение по ключу $key
+     *
+     * @param string $key Ключ кэширования
+     * @return mixed
+     */
+    public function getWithTags($key)
+    {
+        $value = parent::get($key);
+
+        if (false === $value) {
+            $value = null;
+        }
+
+        if (self::FALSE_VALUE === $value) {
+            $value = false;
+        }
+
+        if (!$value) {
+            return $value;
+        }
+
+        if (is_array($key)) {
+            foreach ($key as $singleKey) {
+                if (!isset($value[$singleKey])) {
+                    $value[$singleKey] = null;
+                }
+            }
+        }
+
+        return $this->getFromTagsContainer($key, $value);
     }
 
     /**
@@ -261,5 +221,45 @@ class Memcache extends \Memcache
         }
 
         return true;
+    }
+
+    /**
+     * Безопасное уменьшение значения в memcache.
+     *
+     * Если значения по ключу $key не было, то оно будет создано
+     *
+     * @param      $key
+     * @param int  $value
+     * @param bool $ttl
+     */
+    public function safeDecrement($key, $value = 1, $ttl = false)
+    {
+        if ($result = parent::decrement($key, $value)) {
+            return $result;
+        }
+
+        parent::add($key, 0, $ttl);
+
+        return parent::decrement($key, $value);
+    }
+
+    /**
+     * Устанавливает значение $value по ключу $key в кэше
+     *
+     * @param string       $key      Ключ для записи $value
+     * @param mixed        $value    Значение, помещаемое в кэш
+     * @param bool         $ttl      Время жизни значения в кэше
+     * @param string|array $tagsKeys Строка или массив с тегами для ключа $key
+     * @return bool Возвращает true при успешном выполнении и false в случае ошибки
+     */
+    public function setWithTags($key, $value, $ttl = false, $tagsKeys = 'default')
+    {
+        $value = $this->createTagsContainer($value, $tagsKeys);
+
+        if (false === $value) {
+            $value = self::FALSE_VALUE;
+        }
+
+        return parent::set($key, $value, false, (int)$ttl);
     }
 }

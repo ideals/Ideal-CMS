@@ -1,5 +1,6 @@
 <?php
 use Ideal\Core\Config;
+
 $config = Config::getInstance();
 
 try {
@@ -32,12 +33,12 @@ if (is_dir($backupPart)) {
     rsort($files);
     foreach ($files as $file) {
         $file = basename($file);
-        $year = substr($file,5,4);
-        $month = substr($file,10,2);
-        $day = substr($file,13,2);
-        $hour = substr($file,16,2);
-        $minute = substr($file,19,2);
-        $second = substr($file,22,2);
+        $year = substr($file, 5, 4);
+        $month = substr($file, 10, 2);
+        $day = substr($file, 13, 2);
+        $hour = substr($file, 16, 2);
+        $minute = substr($file, 19, 2);
+        $second = substr($file, 22, 2);
 
         $file = $backupPart . DIRECTORY_SEPARATOR . $file;
 
@@ -45,7 +46,9 @@ if (is_dir($backupPart)) {
         echo '<a href="" onClick="return downloadDump(\'' . addslashes($file) . '\')"> ';
         echo "$day.$month.$year - $hour:$minute:$second" . '</a></td>';
         echo '<td>';
-        echo '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' . addslashes($file) . '\'); false;">';
+        echo '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' . addslashes(
+                $file
+            ) . '\'); false;">';
         echo ' <span class="glyphicon glyphicon-remove"></span> ';
         echo '</button></td>';
         echo '</tr>';
@@ -54,10 +57,10 @@ if (is_dir($backupPart)) {
 }
 
 
-
 /**
  * Функция получения полного пути к папке бэкапа
  * Проверяем временную папку и папку для бэкапов на существование, возможность создания и записи
+ *
  * @param string $tmpDir Временная папка
  * @param string $backupDir Название папки бэкапа относительно временной папки
  * @return string Полный путь к папке бэкапа
@@ -80,9 +83,13 @@ function getDir($tmpDir, $backupDir)
         }
     }
 
-    if ($tmpFull === false) throw new Exception("Не удалось создать папку $tmpDir для сохранения дампа базы");
+    if ($tmpFull === false) {
+        throw new Exception("Не удалось создать папку $tmpDir для сохранения дампа базы");
+    }
 
-    if (!is_writable($tmpFull)) throw new Exception("Папка $tmpFull недоступна для записи");
+    if (!is_writable($tmpFull)) {
+        throw new Exception("Папка $tmpFull недоступна для записи");
+    }
 
     // Проверяем существует ли папка для создания бэкапов и если нет, то пытаемся её создать
     $backupDir = $tmpFull . $backupDir;
@@ -93,9 +100,13 @@ function getDir($tmpDir, $backupDir)
         }
     }
 
-    if ($backupFull === false) throw new Exception("Не удалось создать папку $backupDir для сохранения дампа базы");
+    if ($backupFull === false) {
+        throw new Exception("Не удалось создать папку $backupDir для сохранения дампа базы");
+    }
 
-    if (!is_writable($backupFull)) throw new Exception("Папка $backupFull недоступна для записи");
+    if (!is_writable($backupFull)) {
+        throw new Exception("Папка $backupFull недоступна для записи");
+    }
 
     return $backupFull;
 }
@@ -104,80 +115,79 @@ function getDir($tmpDir, $backupDir)
 
 <script type="text/javascript">
 
-// Удаление файла
-function delDump(nameFile) {
-    if (confirm('Удалить файл копии БД:\n\n' + nameFile.split(/[\\/]/).pop() + '\n\n?')) {
+    // Удаление файла
+    function delDump(nameFile) {
+        if (confirm('Удалить файл копии БД:\n\n' + nameFile.split(/[\\/]/).pop() + '\n\n?')) {
+            var path = window.location.href;
+            $.ajax({
+                url: path + "&action=ajaxDelete",
+                type: 'POST',
+                data: {
+                    name: nameFile
+                },
+                success: function (data) {
+                    //Выводим сообщение
+                    var message = data;
+                    if (message == true) {
+                        var el = document.getElementById(nameFile);
+                        el.parentNode.removeChild(el);
+                        $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Файл успешно удалён');
+                    } else {
+                        $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при удалении файла');
+                    }
+                },
+                error: function () {
+                    $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Не удалось удалить файл');
+                }
+            })
+        } else {
+            // Do nothing!
+        }
+    }
+
+    // Создание дампа базы данных
+    function createDump() {
+        $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт создание копии БД');
         var path = window.location.href;
         $.ajax({
-            url: path + "&action=ajaxDelete",
+            url: path + "&action=ajaxCreateDump",
             type: 'POST',
             data: {
-                name: nameFile
+                createMysqlDump: true,
+                backupPart: '<?php echo addslashes($backupPart)?>'
             },
-            success: function(data){
+            success: function (data) {
                 //Выводим сообщение
                 var message = data;
-                if (message == true) {
-                    var el = document.getElementById(nameFile);
-                    el.parentNode.removeChild(el);
-                    $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Файл успешно удалён');
+                if (message.length > 1) {
+                    $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Копия БД создана');
+                    $('#dumpTable').prepend(data);
                 } else {
-                    $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при удалении файла');
+                    $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при создании копии БД');
                 }
             },
-            error: function() {
-                $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Не удалось удалить файл');
+            error: function () {
+                $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Не удалось создать копию БД');
             }
         })
-    } else {
-        // Do nothing!
     }
-}
 
-// Создание дампа базы данных
-function createDump() {
-    $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт создание копии БД');
-    var path = window.location.href;
-    $.ajax({
-        url: path + "&action=ajaxCreateDump",
-        type: 'POST',
-        data: {
-            createMysqlDump: true,
-            backupPart: '<?php echo addslashes($backupPart)?>'
-        },
-        success: function(data){
-            //Выводим сообщение
-            var message = data;
-            if (message.length > 1) {
-                $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Копия БД создана');
-                $('#dumpTable').prepend(data);
-            } else {
-                $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при создании копии БД');
-            }
-        },
-        error: function() {
-            $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Не удалось создать копию БД');
-        }
-    })
-}
+    function downloadDump(data) {
+        var url = window.location.href;
+        data = window.location.search.substr(1).split('?') + '&file=' + data + "&action=ajaxDownload";
+        method = 'get';
 
-function downloadDump(data)
-{
-    var url = window.location.href;
-    data = window.location.search.substr(1).split('?') + '&file=' + data + "&action=ajaxDownload";
-    method = 'get';
+        // Разрезаем параметры в input'ы
+        var inputs = '';
+        jQuery.each(data.split('&'), function () {
+            var pair = this.split('=');
+            inputs += '<input type="hidden" name="' + pair[0] + '" value="' + pair[1] + '" />';
+        });
 
-    // Разрезаем параметры в input'ы
-    var inputs = '';
-    jQuery.each(data.split('&'), function(){
-        var pair = this.split('=');
-        inputs += '<input type="hidden" name="'+ pair[0] +'" value="'+ pair[1] +'" />';
-    });
+        // Отправляем запрос
+        jQuery('<form action="' + url + '" method="' + (method || 'post') + '">' + inputs + '</form>')
+            .appendTo('body').submit().remove();
 
-    // Отправляем запрос
-    jQuery('<form action="'+ url +'" method="'+ (method||'post') +'">'+inputs+'</form>')
-        .appendTo('body').submit().remove();
-
-    return false;
-}
+        return false;
+    }
 </script>

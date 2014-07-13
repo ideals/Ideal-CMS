@@ -1,19 +1,19 @@
 <?php
 namespace Ideal\Structure\News\Widget;
 
-use Ideal\Core\Db;
 use Ideal\Core\Config;
+use Ideal\Core\Db;
 use Ideal\Core\Util;
 
 /**
  * Отображает последние новости
  */
-
 class FreshNews
 {
 
     /**
      * Получение последних новостей
+     *
      * @param int $num Кол-во новостей
      * @return array
      */
@@ -41,7 +41,6 @@ class FreshNews
             $num++;
         }
 
-        return $freshNews;        
+        return $freshNews;
     }
-
 }

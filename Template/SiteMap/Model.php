@@ -1,6 +1,7 @@
 <?php
 /**
  * Ideal CMS (http://idealcms.ru/)
+ *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
  * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
@@ -17,6 +18,7 @@ use Ideal\Core\Util;
  */
 class Model extends \Ideal\Core\Admin\Model
 {
+
     /** @var array Массив правил для запрещения отображения ссылок в карте сайта */
     protected $disallow = array();
 
@@ -37,7 +39,7 @@ class Model extends \Ideal\Core\Admin\Model
         if ($mode[3] == 'Site') {
             // Для фронтенда к контенту добавляется карта сайта в виде ul-списка разделов
             $list = $this->getList(1); // считываем из БД все открытые разделы
-            $this->pageData['content'] .=  $this->createSiteMap($list); // строим html-код карты сайта
+            $this->pageData['content'] .= $this->createSiteMap($list); // строим html-код карты сайта
         }
 
         return $this->pageData;
@@ -112,9 +114,9 @@ class Model extends \Ideal\Core\Admin\Model
         return $newElements;
     }
 
-
     /**
      * Построение html-карты сайта на основе древовидного списка
+     *
      * @param array $list Древовидный список
      * @return string html-код списка ссылок карты сайта
      */
@@ -140,15 +142,16 @@ class Model extends \Ideal\Core\Admin\Model
                 // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
                 $tmp = $this->disallow;
                 if ($v['link'] !== array_reduce(
-                    $tmp,
-                    function (&$res, $rule) {
-                        if ($res == 1 || preg_match($rule, $res)) {
-                            return 1;
-                        }
-                        return $res;
-                    },
-                    $v['link']
-                )) {
+                        $tmp,
+                        function (&$res, $rule) {
+                            if ($res == 1 || preg_match($rule, $res)) {
+                                return 1;
+                            }
+                            return $res;
+                        },
+                        $v['link']
+                    )
+                ) {
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }

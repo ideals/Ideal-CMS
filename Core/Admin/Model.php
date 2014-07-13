@@ -8,18 +8,190 @@ use Ideal\Core\Util;
 
 abstract class Model extends Core\Model
 {
+
     protected $fieldsGroup = 'general';
 
-    /**
-     * Заполнение pageData пустыми значениями полей
-     */
-    public function setPageDataNew()
+    public function checkTemplateChange($result)
     {
-        $pageData = array();
-        foreach ($this->fields as $fieldName => $field) {
-            $pageData[$fieldName] = '';
+        foreach ($result['items'] as $fieldName => $field) {
+            $result['items'][$fieldName]['confirm'] = '';
+            $fieldsGroup = $this->fieldsGroup . '_';
+            if (substr($fieldName, 0, strlen($fieldsGroup)) != $fieldsGroup) {
+                continue;
+            }
+            $realName = substr($fieldName, strlen($fieldsGroup));
+            if (!isset($this->fields[$realName])) {
+                continue;
+            }
+            if ($this->fields[$realName]['type'] != 'Template') {
+                continue;
+            }
+            if ($this->pageData[$realName] == '') {
+                // Если изначально шаблон не был задан - просто сохраняем введённое значение
+                continue;
+            }
+            if ($field['value'] != $this->pageData[$realName]) {
+                $result['isCorrect'] = 2;
+
+                $oldTemplateName = Util::getClassName($this->pageData[$realName], 'Template') . '\\Model';
+                $oldTemplate = new $oldTemplateName($this->pageData[$realName], '');
+                $oldTemplateCap = $oldTemplate->params['name'];
+
+                $newTemplateName = Util::getClassName($field['value'], 'Template') . '_Model';
+                $newTemplate = new $newTemplateName($field['value'], '');
+                $newTemplateCap = $newTemplate->params['name'];
+
+                $result['items'][$fieldName]['confirm'] = 'шаблон «'
+                    . $this->fields[$realName]['label']
+                    . '» с «' . $oldTemplateCap
+                    . '» на «' . $newTemplateCap . '»';
+            }
         }
-        $this->setPageData($pageData);
+        return $result;
+    }
+
+    public function createElement($result, $groupName = 'general')
+    {
+        // Из общего списка введённых данных выделяем те, что помечены general
+        foreach ($result['items'] as $v) {
+            list($group, $field) = explode('_', $v['fieldName'], 2);
+
+            if ($group == $groupName
+                && $field == 'prev_structure' && $v['value'] == ''
+            ) {
+                $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
+                $v['value'] = $this->prevStructure;
+            }
+
+            // Если в значении NULL, то сохранять это поле не надо
+            if ($v['value'] === null) {
+                continue;
+            }
+
+            $groups[$group][$field] = $v['value'];
+        }
+        unset($groups[$groupName]['ID']);
+
+        $db = Db::getInstance();
+
+        $id = $db->insert($this->_table, $groups[$groupName]);
+
+        if ($id !== false) {
+            $result['items'][$groupName . '_ID']['value'] = $id;
+            $groups[$groupName]['ID'] = $id;
+
+            if (isset($result['sqlAdd'][$groupName]) && ($result['sqlAdd'][$groupName] != '')) {
+                $sqlAdd = str_replace('{{ table }}', $this->_table, $result['sqlAdd'][$groupName]);
+                $sqlAdd = str_replace('{{ objectId }}', $id, $sqlAdd);
+                $sqlAdd = explode(';', $sqlAdd);
+                foreach ($sqlAdd as $_sql) {
+                    if ($_sql != '') {
+                        $db->query($_sql);
+                    }
+                }
+            }
+
+            $result = $this->saveAddData($result, $groups, $groupName, true);
+        } else {
+            // Добавить запись не получилось
+            $result['isCorrect'] = 0;
+            $result['errorText'] = 'Ошибка при добавлении в БД. ' . $db->error;
+        }
+        return $result;
+    }
+
+    /**
+     * Обработка переменных от дополнительных табов с шаблонами
+     *
+     * @param array  $result
+     * @param array  $groups
+     * @param string $groupName
+     * @param bool   $isCreate
+     * @return array
+     */
+    function saveAddData($result, $groups, $groupName, $isCreate = false)
+    {
+        $config = Config::getInstance();
+
+        // Считываем данные дополнительных табов
+        foreach ($this->fields as $fieldName => $field) {
+            if (strpos($field['type'], '_Template') === false) {
+                continue;
+            }
+
+            $templateData = $groups[$fieldName];
+            $end = end($this->path);
+            $prevStructure = $config->getStructureByName($end['structure']);
+            $templateData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
+            if (empty($templateData['ID'])) {
+                // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
+                $isCreate = true;
+            }
+            if ($isCreate) {
+                unset($templateData['ID']);
+            }
+
+            $templateModelName = Util::getClassName($groups[$groupName][$fieldName], 'Template') . '\\Model';
+
+            /* @var $templateModel \Ideal\Core\Admin\Model */
+            $templateModel = new $templateModelName($templateData['prev_structure']);
+            if ($isCreate) {
+                // Записываем данные шаблона в БД и в $result
+                $result = $templateModel->createElement($result, $fieldName);
+            } else {
+                $templateModel->setPageDataById($groups[$fieldName]['ID']);
+                $result = $templateModel->saveElement($result, $fieldName);
+            }
+        }
+        return $result;
+    }
+
+    public function saveElement($result, $groupName = 'general')
+    {
+        // Из общего списка введённых данных выделяем те, что помечены general
+        foreach ($result['items'] as $v) {
+            list($group, $field) = explode('_', $v['fieldName'], 2);
+
+            if ($group == $groupName
+                && $field == 'prev_structure' && $v['value'] == ''
+            ) {
+                $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
+                $v['value'] = $this->prevStructure;
+            }
+
+            // Если в значении NULL, то сохранять это поле не надо
+            if ($v['value'] === null) {
+                continue;
+            }
+
+            $groups[$group][$field] = $v['value'];
+        }
+
+        $db = Db::getInstance();
+
+        $db->update($this->_table)->set($groups[$groupName]);
+        $db->where('ID = :id', array('id' => $groups[$groupName]['ID']))->exec();
+        if ($db->errno > 0) {
+            // Если при попытке обновления произошла ошибка не выполнять доп. запросы, а сообщить об этом пользователю
+            $result['isCorrect'] = false;
+            $result['errorText'] = $db->error . PHP_EOL . 'Query: ' . $db->exec(false);
+            return $result;
+        }
+
+        if (isset($result['sqlAdd'][$groupName]) && ($result['sqlAdd'][$groupName] != '')) {
+            $sqlAdd = str_replace('{{ table }}', $this->_table, $result['sqlAdd'][$groupName]);
+            $sqlAdd = str_replace('{{ objectId }}', $groups[$groupName]['ID'], $sqlAdd);
+            $sqlAdd = explode(';', $sqlAdd);
+            foreach ($sqlAdd as $_sql) {
+                if ($_sql != '') {
+                    $db->query($_sql);
+                }
+            }
+        }
+
+        $result = $this->saveAddData($result, $groups, $groupName);
+
+        return $result;
     }
 
     public function detectPageByIds($path, $par)
@@ -27,19 +199,18 @@ abstract class Model extends Core\Model
         throw new \Exception('Попытка вызвать непереопределённый метод detectPageByIds в классе ' . get_class($this));
     }
 
-    public function getHeaders()
+    public function getFieldsList($tab)
     {
-        $headers = array();
-
-        // Убираем символы ! из заголовков
-        foreach ($this->params['field_list'] as $v) {
-            $column = explode('!', $v);
-            $headers[] = $column[0];
+        $tabsContent = '';
+        foreach ($tab as $fieldName => $field) {
+            $fieldClass = Util::getClassName($field['type'], 'Field') . '\\Controller';
+            /* @var $fieldModel \Ideal\Field\AbstractController */
+            $fieldModel = $fieldClass::getInstance();
+            $fieldModel->setModel($this, $fieldName, $this->fieldsGroup);
+            $tabsContent .= $fieldModel->showEdit();
         }
-
-        return $headers;
+        return $tabsContent;
     }
-
 
     public function getHeaderNames()
     {
@@ -55,16 +226,43 @@ abstract class Model extends Core\Model
         return $headerNames;
     }
 
-
-    public function setFieldsGroup($name)
+    public function getHeaders()
     {
-        $this->fieldsGroup = $name;
+        $headers = array();
+
+        // Убираем символы ! из заголовков
+        foreach ($this->params['field_list'] as $v) {
+            $column = explode('!', $v);
+            $headers[] = $column[0];
+        }
+
+        return $headers;
     }
 
+    public function getTitle()
+    {
+        $config = Config::getInstance();
+
+        $title = $this->getHeader() . ' - админка ' . $config->domain;
+
+        return $title;
+    }
+
+    public function getHeader()
+    {
+        $end = end($this->path);
+        return $end['name'];
+    }
+
+    public function getToolbar()
+    {
+        return '';
+    }
 
     /**
      * Если всё правильно - возвращает массив для сохранения,
      * если неправильно - массив с сообщениями об ошибках.
+     *
      * @param $isCreate
      * @return array | bool
      */
@@ -73,7 +271,7 @@ abstract class Model extends Core\Model
         $result = array(
             'isCorrect' => true,
             'errorTabs' => array(),
-            'items'     => array()
+            'items' => array()
         );
 
         // Для каждого поля прописываем имя вкладки, в которой оно находится
@@ -129,7 +327,8 @@ abstract class Model extends Core\Model
 
             // Составляем список вкладок, в которых возникли ошибки
             if (($item['message'] !== '')
-                && (!in_array($item['realTab'], $result['errorTabs']))) {
+                && (!in_array($item['realTab'], $result['errorTabs']))
+            ) {
                 $result['errorTabs'][] = $item['realTab'];
             }
         }
@@ -137,224 +336,20 @@ abstract class Model extends Core\Model
         return $result;
     }
 
-
-    public function getFieldsList($tab)
+    public function setFieldsGroup($name)
     {
-        $tabsContent = '';
-        foreach ($tab as $fieldName => $field) {
-            $fieldClass = Util::getClassName($field['type'], 'Field') . '\\Controller';
-            /* @var $fieldModel \Ideal\Field\AbstractController */
-            $fieldModel = $fieldClass::getInstance();
-            $fieldModel->setModel($this, $fieldName, $this->fieldsGroup);
-            $tabsContent .= $fieldModel->showEdit();
-        }
-        return $tabsContent;
+        $this->fieldsGroup = $name;
     }
-
-
-    public function createElement($result, $groupName = 'general')
-    {
-        // Из общего списка введённых данных выделяем те, что помечены general
-        foreach ($result['items'] as $v) {
-            list($group, $field) = explode('_', $v['fieldName'], 2);
-
-            if ($group == $groupName
-                && $field == 'prev_structure' && $v['value'] == '') {
-                $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
-                $v['value'] = $this->prevStructure;
-            }
-
-            // Если в значении NULL, то сохранять это поле не надо
-            if ($v['value'] === null) {
-                continue;
-            }
-
-            $groups[$group][$field] = $v['value'];
-        }
-        unset($groups[$groupName]['ID']);
-
-        $db = Db::getInstance();
-
-        $id = $db->insert($this->_table, $groups[$groupName]);
-
-        if ($id !== false) {
-            $result['items'][$groupName . '_ID']['value'] = $id;
-            $groups[$groupName]['ID'] = $id;
-
-            if (isset($result['sqlAdd'][$groupName]) && ($result['sqlAdd'][$groupName] != '')) {
-                $sqlAdd = str_replace('{{ table }}', $this->_table, $result['sqlAdd'][$groupName]);
-                $sqlAdd = str_replace('{{ objectId }}', $id, $sqlAdd);
-                $sqlAdd = explode(';', $sqlAdd);
-                foreach ($sqlAdd as $_sql) {
-                    if ($_sql != '') {
-                        $db->query($_sql);
-                    }
-                }
-            }
-
-            $result = $this->saveAddData($result, $groups, $groupName, true);
-        } else {
-            // Добавить запись не получилось
-            $result['isCorrect'] = 0;
-            $result['errorText'] = 'Ошибка при добавлении в БД. ' . $db->error;
-        }
-        return $result;
-    }
-
-
-    public function saveElement($result, $groupName = 'general')
-    {
-        // Из общего списка введённых данных выделяем те, что помечены general
-        foreach ($result['items'] as $v) {
-            list($group, $field) = explode('_', $v['fieldName'], 2);
-
-            if ($group == $groupName
-                && $field == 'prev_structure' && $v['value'] == '') {
-                $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
-                $v['value'] = $this->prevStructure;
-            }
-
-            // Если в значении NULL, то сохранять это поле не надо
-            if ($v['value'] === null) {
-                continue;
-            }
-
-            $groups[$group][$field] = $v['value'];
-        }
-
-        $db = Db::getInstance();
-
-        $db->update($this->_table)->set($groups[$groupName]);
-        $db->where('ID = :id', array('id' => $groups[$groupName]['ID']))->exec();
-        if ($db->errno > 0) {
-            // Если при попытке обновления произошла ошибка не выполнять доп. запросы, а сообщить об этом пользователю
-            $result['isCorrect'] = false;
-            $result['errorText'] = $db->error . PHP_EOL . 'Query: ' . $db->exec(false);
-            return $result;
-        }
-
-        if (isset($result['sqlAdd'][$groupName]) && ($result['sqlAdd'][$groupName] != '')) {
-            $sqlAdd = str_replace('{{ table }}', $this->_table, $result['sqlAdd'][$groupName]);
-            $sqlAdd = str_replace('{{ objectId }}', $groups[$groupName]['ID'], $sqlAdd);
-            $sqlAdd = explode(';', $sqlAdd);
-            foreach ($sqlAdd as $_sql) {
-                if ($_sql != '') {
-                    $db->query($_sql);
-                }
-            }
-        }
-
-        $result = $this->saveAddData($result, $groups, $groupName);
-
-        return $result;
-    }
-
 
     /**
-     * Обработка переменных от дополнительных табов с шаблонами
-     * @param array $result
-     * @param array $groups
-     * @param string $groupName
-     * @param bool $isCreate
-     * @return array
+     * Заполнение pageData пустыми значениями полей
      */
-    function saveAddData($result, $groups, $groupName, $isCreate = false)
+    public function setPageDataNew()
     {
-        $config = Config::getInstance();
-
-        // Считываем данные дополнительных табов
+        $pageData = array();
         foreach ($this->fields as $fieldName => $field) {
-            if (strpos($field['type'], '_Template') === false) {
-                continue;
-            }
-
-            $templateData = $groups[$fieldName];
-            $end = end($this->path);
-            $prevStructure = $config->getStructureByName($end['structure']);
-            $templateData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
-            if (empty($templateData['ID'])) {
-                // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
-                $isCreate = true;
-            }
-            if ($isCreate) {
-                unset($templateData['ID']);
-            }
-
-            $templateModelName = Util::getClassName($groups[$groupName][$fieldName], 'Template') . '\\Model';
-
-            /* @var $templateModel \Ideal\Core\Admin\Model */
-            $templateModel = new $templateModelName($templateData['prev_structure']);
-            if ($isCreate) {
-                // Записываем данные шаблона в БД и в $result
-                $result = $templateModel->createElement($result, $fieldName);
-            } else {
-                $templateModel->setPageDataById($groups[$fieldName]['ID']);
-                $result = $templateModel->saveElement($result, $fieldName);
-            }
+            $pageData[$fieldName] = '';
         }
-        return $result;
-    }
-
-
-    public function checkTemplateChange($result)
-    {
-        foreach ($result['items'] as $fieldName => $field) {
-            $result['items'][$fieldName]['confirm'] = '';
-            $fieldsGroup = $this->fieldsGroup . '_';
-            if (substr($fieldName, 0, strlen($fieldsGroup)) != $fieldsGroup) {
-                continue;
-            }
-            $realName = substr($fieldName, strlen($fieldsGroup));
-            if (!isset($this->fields[$realName])) {
-                continue;
-            }
-            if ($this->fields[$realName]['type'] != 'Template') {
-                continue;
-            }
-            if ($this->pageData[$realName] == '') {
-                // Если изначально шаблон не был задан - просто сохраняем введённое значение
-                continue;
-            }
-            if ($field['value'] != $this->pageData[$realName]) {
-                $result['isCorrect'] = 2;
-
-                $oldTemplateName = Util::getClassName($this->pageData[$realName], 'Template') . '\\Model';
-                $oldTemplate = new $oldTemplateName($this->pageData[$realName], '');
-                $oldTemplateCap = $oldTemplate->params['name'];
-
-                $newTemplateName = Util::getClassName($field['value'], 'Template') . '_Model';
-                $newTemplate = new $newTemplateName($field['value'], '');
-                $newTemplateCap = $newTemplate->params['name'];
-
-                $result['items'][$fieldName]['confirm'] = 'шаблон «'
-                                                        . $this->fields[$realName]['label']
-                                                        . '» с «' . $oldTemplateCap
-                                                        . '» на «' . $newTemplateCap . '»';
-            }
-        }
-        return $result;
-    }
-
-
-    public function getHeader()
-    {
-        $end = end($this->path);
-        return $end['name'];
-    }
-
-
-    public function getTitle()
-    {
-        $config = Config::getInstance();
-
-        $title =  $this->getHeader() . ' - админка ' . $config->domain;
-
-        return $title;
-    }
-
-
-    public function getToolbar()
-    {
-        return '';
+        $this->setPageData($pageData);
     }
 }

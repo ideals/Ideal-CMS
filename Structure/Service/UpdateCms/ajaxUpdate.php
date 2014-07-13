@@ -45,8 +45,6 @@ $config->errorLog = 'firebug';
 // Загружаем список структур из конфигурационных файлов структур
 $config->loadSettings();
 
-
-
 $updateModel = new \Ideal\Structure\Service\UpdateCms\Model();
 
 // Сервер обновлений
@@ -85,10 +83,12 @@ if (!file_exists(SETUP_DIR)) {
     }
 }
 
-$updateModel->setUpdateFolders(array(
-    'getFileScript' => $getFileScript,
-    'uploadDir' => $uploadDir
-));
+$updateModel->setUpdateFolders(
+    array(
+        'getFileScript' => $getFileScript,
+        'uploadDir' => $uploadDir
+    )
+);
 
 // Загрузка файла
 

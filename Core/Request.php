@@ -10,7 +10,7 @@ class Request
             $_REQUEST = array_merge($_REQUEST, $values);
             unset($_REQUEST['formValues']);
         }
-        
+
         if (isset($_REQUEST[$name])) {
             return $_REQUEST[$name];
         }
@@ -18,12 +18,10 @@ class Request
         return '';
     }
 
-
     public function __set($name, $value)
     {
         $_REQUEST[$name] = $value;
     }
-
 
     public function getQueryWithout($without)
     {

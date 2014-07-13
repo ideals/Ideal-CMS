@@ -2,10 +2,10 @@
 namespace Ideal\Structure\Service\Admin;
 
 use Ideal\Core\Config;
-use Ideal\Core\Db;
 
 class ModelAbstract extends \Ideal\Core\Admin\Model
 {
+
     protected $menu = array();
 
     public function detectPageByIds($path, $par)
@@ -30,7 +30,6 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         return $this;
     }
 
-
     public function getMenu()
     {
         if (count($this->menu) > 0) {
@@ -46,14 +45,16 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         );
 
         // Сортируем экшены по полю pos
-        usort($actions, function($a, $b){
-            return ($a['pos'] - $b['pos']);
-        });
+        usort(
+            $actions,
+            function ($a, $b) {
+                return ($a['pos'] - $b['pos']);
+            }
+        );
 
         $this->menu = $actions;
         return $actions;
     }
-
 
     protected function getActions($folder)
     {
@@ -62,8 +63,12 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $dir = stream_resolve_include_path($config->cmsFolder . '/' . $folder);
         if ($handle = opendir($dir)) {
             while (false !== ($file = readdir($handle))) {
-                if ($file == '.' OR $file == '..' OR $file == 'Admin') continue;
-                if (!is_dir($dir . '/' . $file)) continue; // пропускаем файлы, работаем только с папками
+                if ($file == '.' OR $file == '..' OR $file == 'Admin') {
+                    continue;
+                }
+                if (!is_dir($dir . '/' . $file)) {
+                    continue;
+                } // пропускаем файлы, работаем только с папками
 
                 $action = include($dir . '/' . $file . '/config.php');
                 $actions[$action['ID']] = $action;
@@ -72,7 +77,6 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         return $actions;
     }
 
-
     protected function getModulesActions($folder)
     {
         $config = Config::getInstance();
@@ -80,14 +84,19 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $dir = stream_resolve_include_path($config->cmsFolder . '/' . $folder);
         if ($handle = opendir($dir)) {
             while (false !== ($file = readdir($handle))) {
-                if ($file == '.' OR $file == '..' OR $file == '.hg') continue;
-                if (!is_dir($dir . '/' . $file)) continue; // пропускаем файлы, работаем только с папками
+                if ($file == '.' OR $file == '..' OR $file == '.hg') {
+                    continue;
+                }
+                if (!is_dir($dir . '/' . $file)) {
+                    continue;
+                } // пропускаем файлы, работаем только с папками
 
-                $actions = array_merge($actions,
-                    $this->getActions($folder . '/' . $file . '/Structure/Service'));
+                $actions = array_merge(
+                    $actions,
+                    $this->getActions($folder . '/' . $file . '/Structure/Service')
+                );
             }
         }
         return $actions;
     }
-
 }

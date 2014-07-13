@@ -28,23 +28,12 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
+
     /** @inheritdoc */
     protected static $instance;
 
     /** @var  \Ideal\Medium\AbstractModel Объект доступа к редактируемым данным */
     protected $medium;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setModel($model, $fieldName, $groupName = 'general')
-    {
-        parent::setModel($model, $fieldName, $groupName);
-
-        // Инициализируем медиум для получения списка значений select и сохранения данных
-        $className = $this->field['medium'];
-        $this->medium = new $className($this->model, $fieldName);
-    }
 
     /**
      * {@inheritdoc}
@@ -85,5 +74,17 @@ class Controller extends AbstractController
         );
 
         return $item;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setModel($model, $fieldName, $groupName = 'general')
+    {
+        parent::setModel($model, $fieldName, $groupName);
+
+        // Инициализируем медиум для получения списка значений select и сохранения данных
+        $className = $this->field['medium'];
+        $this->medium = new $className($this->model, $fieldName);
     }
 }

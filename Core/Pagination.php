@@ -3,9 +3,17 @@ namespace Ideal\Core;
 
 class Pagination
 {
-    protected $visiblePages = 4;
-    protected $prev;
+
     protected $next;
+
+    protected $prev;
+
+    protected $visiblePages = 4;
+
+    public function getNext()
+    {
+        return $this->next;
+    }
 
     public function getPages($itemsCount, $itemsOnPage, $page, $urlString, $urlParam)
     {
@@ -70,19 +78,11 @@ class Pagination
         }
 
         return $pages;
-
     }
-
 
     public function getPrev()
     {
         return $this->prev;
-    }
-
-
-    public function getNext()
-    {
-        return $this->next;
     }
 
     public function setVisiblePages($countPages)

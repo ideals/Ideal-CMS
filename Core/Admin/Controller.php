@@ -3,82 +3,96 @@ namespace Ideal\Core\Admin;
 
 use Ideal\Core;
 use Ideal\Core\Config;
-use Ideal\Core\View;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
+use Ideal\Core\View;
 use Ideal\Structure;
 
 class Controller
 {
+
     /** @var Model Модель соответствующая этому контроллеру */
     protected $model;
+
     /** @var array Путь к этой странице, включая и её саму */
     protected $path;
+
     /** @var View Объект вида — twig-шаблонизатор */
     protected $view;
 
-    /**
-     * Генерация контента страницы для отображения в браузере
-     * @param Router $router
-     * @return string Содержимое отображаемой страницы
-     */
-    public function run(Router $router)
+    public function createAction()
     {
-        $this->model = $router->getModel();
+        $this->model->setPageDataNew();
 
-        // Определяем и вызываем требуемый action у контроллера
+        // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
+        $result = $this->model->parseInputParams(true);
+
+        if ($result['isCorrect']) {
+            $result = $this->model->createElement($result);
+        }
+
+        echo json_encode($result);
+        exit;
+    }
+
+    public function deleteAction()
+    {
         $request = new Request();
-        $actionName = $request->action;
-        if ($actionName == '') {
-            $actionName = 'index';
+
+        $result = array();
+        $result['ID'] = intval($request->id);
+
+        $this->model->setPageDataById($result['ID']);
+
+        $result['isCorrect'] = $this->model->delete();
+
+        echo json_encode($result);
+        exit;
+    }
+
+    public function editAction()
+    {
+        $request = new Request();
+        $this->model->setPageDataById($request->id);
+
+        // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
+        $result = $this->model->parseInputParams();
+
+        // Проверяем не выбран ли другой прикреплённый шаблон
+        if ($request->changeTemplate == 0) {
+            $result = $this->model->checkTemplateChange($result);
         }
-        $actionName = $actionName . 'Action';
-        $this->$actionName();
 
-        $config = Config::getInstance();
-
-        $this->view->domain = strtoupper($config->domain);
-        $this->view->cmsFolder = '/' . $config->cmsFolder;
-        $this->view->title = $this->model->getTitle();
-        $this->view->header = $this->model->getHeader();
-
-        // Регистрируем объект пользователя
-        /* @var $user Structure\User\Model */
-        $user = Structure\User\Model::getInstance();
-        if (isset($user->data['ID'])) {
-            $prev = $user->data['prev_structure'];
-            // todo обычно юзеры всегда на первом уровне, но нужно доделать чтобы работало не только для первого уровня
-            $user->data['par'] = substr($prev, strrpos($prev, '-') + 1);
+        if ($result['isCorrect'] == 1) {
+            $result = $this->model->saveElement($result);
         }
-        $this->view->user = $user->data;
 
-        // Отображение верхнего меню структур
-        $this->view->structures = $config->structures;
+        echo json_encode($result);
+        exit;
+    }
+
+    /**
+     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
+     */
+    public function error404Action()
+    {
+        $name = $title = 'Страница не найдена';
+        $this->templateInit('404.twig');
+
+        // Добавляем в path пустой элемент
         $path = $this->model->getPath();
-        $this->view->activeStructureId = $path[0]['ID'];
+        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
+        $this->model->setPath($path);
 
-        // Отображение хлебных крошек
-        $pars = $breadCrumbs = array();
-        foreach ($path as $v) {
-            $pars[] = $v['ID'];
-            $breadCrumbs[] = array(
-                'link' => implode('-', $pars),
-                'name' => $v['name']
-            );
-        }
-        $this->view->breadCrumbs = $breadCrumbs;
-
-        $this->view->toolbar = $this->model->getToolbar();
-
-        $this->view->hideToolbarForm = !is_array($request->toolbar) OR (count($request->toolbar) == 0);
-
-        $this->finishMod($actionName);
-
-        return $this->view->render();
+        // Устанавливаем нужный нам title
+        $pageData = $this->model->getPageData();
+        $pageData['title'] = $title;
+        $this->model->setPageData($pageData);
     }
 
     /**
      * Инициализация админского twig-шаблона
+     *
      * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
      */
     public function templateInit($tplName = '')
@@ -134,12 +148,14 @@ class Controller
         );
     }
 
-    /**
-     * Внесение финальных изменений в шаблон, после всех-всех-всех
-     * @param string $actionName
-     */
-    public function finishMod($actionName)
+    // TODO перенести в контроллер юзера
+
+    public function logoutAction()
     {
+        $user = Structure\User\Model::getInstance();
+        $user->logout();
+        header('Location: index.php');
+        exit;
     }
 
     public function parseList($headers, $list)
@@ -182,6 +198,84 @@ class Controller
         $this->view->rows = $rows;
     }
 
+    /**
+     * Генерация контента страницы для отображения в браузере
+     *
+     * @param Router $router
+     * @return string Содержимое отображаемой страницы
+     */
+    public function run(Router $router)
+    {
+        $this->model = $router->getModel();
+
+        // Определяем и вызываем требуемый action у контроллера
+        $request = new Request();
+        $actionName = $request->action;
+        if ($actionName == '') {
+            $actionName = 'index';
+        }
+        $actionName = $actionName . 'Action';
+        $this->$actionName();
+
+        $config = Config::getInstance();
+
+        $this->view->domain = strtoupper($config->domain);
+        $this->view->cmsFolder = '/' . $config->cmsFolder;
+        $this->view->title = $this->model->getTitle();
+        $this->view->header = $this->model->getHeader();
+
+        // Регистрируем объект пользователя
+        /* @var $user Structure\User\Model */
+        $user = Structure\User\Model::getInstance();
+        if (isset($user->data['ID'])) {
+            $prev = $user->data['prev_structure'];
+            // todo обычно юзеры всегда на первом уровне, но нужно доделать чтобы работало не только для первого уровня
+            $user->data['par'] = substr($prev, strrpos($prev, '-') + 1);
+        }
+        $this->view->user = $user->data;
+
+
+        // Отображение верхнего меню структур
+        $this->view->structures = $config->structures;
+        $path = $this->model->getPath();
+        $this->view->activeStructureId = $path[0]['ID'];
+
+        // Отображение хлебных крошек
+        $pars = $breadCrumbs = array();
+        foreach ($path as $v) {
+            $pars[] = $v['ID'];
+            $breadCrumbs[] = array(
+                'link' => implode('-', $pars),
+                'name' => $v['name']
+            );
+        }
+        $this->view->breadCrumbs = $breadCrumbs;
+
+        $this->view->toolbar = $this->model->getToolbar();
+
+        $this->view->hideToolbarForm = !is_array($request->toolbar) OR (count($request->toolbar) == 0);
+
+        $this->finishMod($actionName);
+
+        return $this->view->render();
+    }
+
+    /**
+     * Внесение финальных изменений в шаблон, после всех-всех-всех
+     *
+     * @param string $actionName
+     */
+    public function finishMod($actionName)
+    {
+    }
+
+    public function showCreateAction()
+    {
+        $this->model->setPageDataNew();
+        // Отображаем список полей структуры part
+        $this->showEditTabs();
+        exit;
+    }
 
     protected function showEditTabs($values = '')
     {
@@ -214,25 +308,6 @@ class Controller
         print $tabsContent;
     }
 
-    // TODO перенести в контроллер юзера
-    public function logoutAction()
-    {
-        $user = Structure\User\Model::getInstance();
-        $user->logout();
-        header('Location: index.php');
-        exit;
-    }
-
-
-    public function showCreateAction()
-    {
-        $this->model->setPageDataNew();
-        // Отображаем список полей структуры part
-        $this->showEditTabs();
-        exit;
-    }
-
-
     public function showEditAction()
     {
         $request = new Request();
@@ -240,78 +315,5 @@ class Controller
         // TODO доработать $this->model->getPath() так, чтобы в пути присутствовала и главная
         $this->showEditTabs();
         exit;
-    }
-
-
-    public function createAction()
-    {
-        $this->model->setPageDataNew();
-
-        // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
-        $result = $this->model->parseInputParams(true);
-
-        if ($result['isCorrect']) {
-            $result = $this->model->createElement($result);
-        }
-
-        echo json_encode($result);
-        exit;
-    }
-
-
-    public function editAction()
-    {
-        $request = new Request();
-        $this->model->setPageDataById($request->id);
-
-        // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
-        $result = $this->model->parseInputParams();
-
-        // Проверяем не выбран ли другой прикреплённый шаблон
-        if ($request->changeTemplate == 0) {
-            $result = $this->model->checkTemplateChange($result);
-        }
-
-        if ($result['isCorrect'] == 1) {
-            $result = $this->model->saveElement($result);
-        }
-
-        echo json_encode($result);
-        exit;
-    }
-
-
-    public function deleteAction()
-    {
-        $request = new Request();
-
-        $result = array();
-        $result['ID'] = intval($request->id);
-
-        $this->model->setPageDataById($result['ID']);
-
-        $result['isCorrect'] = $this->model->delete();
-
-        echo json_encode($result);
-        exit;
-    }
-
-    /**
-     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
-     */
-    public function error404Action()
-    {
-        $name = $title = 'Страница не найдена';
-        $this->templateInit('404.twig');
-
-        // Добавляем в path пустой элемент
-        $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
-        $this->model->setPath($path);
-
-        // Устанавливаем нужный нам title
-        $pageData = $this->model->getPageData();
-        $pageData['title'] = $title;
-        $this->model->setPageData($pageData);
     }
 }

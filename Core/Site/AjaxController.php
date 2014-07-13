@@ -5,6 +5,16 @@ use Ideal\Core\Request;
 
 class AjaxController extends \Ideal\Core\Site\Controller
 {
+    public function getHttpStatus()
+    {
+        return '';
+    }
+
+    public function getLastMod()
+    {
+        return '';
+    }
+
     public function run(Router $router)
     {
         $request = new Request();
@@ -16,18 +26,5 @@ class AjaxController extends \Ideal\Core\Site\Controller
         $actionName = $actionName . 'Action';
 
         $this->$actionName();
-
-    }
-
-
-    public function getHttpStatus()
-    {
-        return '';
-    }
-
-
-    public function getLastMod()
-    {
-        return '';
     }
 }

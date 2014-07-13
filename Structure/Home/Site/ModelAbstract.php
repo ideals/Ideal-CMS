@@ -1,9 +1,9 @@
 <?php
 namespace Ideal\Structure\Home\Site;
 
-use Ideal\Structure\Part;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
+use Ideal\Structure\Part;
 
 class ModelAbstract extends Part\Site\Model
 {
@@ -24,7 +24,6 @@ class ModelAbstract extends Part\Site\Model
         $this->_table = strtolower($config->db['prefix'] . 'Structure_' . $structure['structure']);
     }
 
-
     public function detectPageByUrl($path, $url)
     {
         $db = Db::getInstance();
@@ -44,5 +43,4 @@ class ModelAbstract extends Part\Site\Model
 
         return $this;
     }
-
 }
