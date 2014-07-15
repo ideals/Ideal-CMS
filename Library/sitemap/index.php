@@ -22,7 +22,7 @@ class myCrawler
     /**
      * Считывание и инициализация настроек
      */
-    function __construct()
+    public function __construct()
     {
         // Запоминаем путь до скрипта от корня сайта
         $home = dirname($_SERVER['SCRIPT_FILENAME']);
@@ -33,22 +33,22 @@ class myCrawler
         }
 
         // Проверяем статус запуска - тестовый или по расписанию
-        if ($_SERVER['argv'][1] == 'w' OR isset($_GET['w'])) {
+        if ($_SERVER['argv'][1] == 'w' || isset($_GET['w'])) {
             $this->status = 'test';
         }
 
         // Проверяем, есть ли ini-файл рядом со скриптом
-        $iniFile = $home . '/sitemap.ini';
-        $message = 'Working with ini-file from local directory';
+        $iniFile = $home . '/site_map.php';
+        $message = 'Working with settings php-file from local directory';
 
         if (!file_exists($iniFile)) {
             // Проверяем, есть ли ini-файл в корневой папке Ideal CMS
             $iniFile = substr($home, 0, stripos($home, '/Ideal/Library/sitemap'))
-                . '/sitemap.ini';
-            $message = 'Working with ini-file from config directory';
+                . '/site_map.php';
+            $message = 'Working with settings php-file from config directory';
             if (!file_exists($iniFile)) {
                 // Ini-файла нигде не нашли :(
-                $message = 'Ini-files not found. Path: ' . $iniFile;
+                $message = 'Settings php-files not found. Path: ' . $iniFile;
                 $iniFile = '';
             }
         }
@@ -56,8 +56,11 @@ class myCrawler
         $this->info('', $message . "\n");
 
         if ($iniFile != '') {
-            $this->config = parse_ini_file($iniFile, true);
-            rtrim($this->config['website'], '/');
+            $this->config = include($iniFile);
+            $this->config['website'] = rtrim($this->config['website'], '/');
+            $this->config['disallow_regexp'] = explode('\n', $this->config['disallow_regexp']);
+            $this->config['disallow_key'] = explode('\n', $this->config['disallow_key']);
+            $this->config['seo_urls'] = explode('\n', $this->config['seo_urls']);
         } else {
             $this->code = 'error';
         }
@@ -260,9 +263,7 @@ class myCrawler
             // $crawler->setFiles($SETTINGS[PSNG_TIMEOUT_FILE]);
         }
         $crawler->setForbiddenKeys($this->config['disallow_key']);
-        $crawler->setForbiddenDirectories($this->config['disallow_dir']);
-        $crawler->setForbiddenFiles($this->config['disallow_file']);
-        $crawler->setForbiddenPages($this->config['disallowPage']);
+        $crawler->setForbiddenPages($this->config['disallow_regexp']);
 
         //Set the directory to forbid the crawler to follow below it
         $crawler->setDirectory($path);
@@ -622,7 +623,7 @@ $sitemap = new myCrawler();
 // Проверяем, нужно ли кешировать вывод для ручной отправки письма с результатами
 $manualSend = 0;
 
-if ($sitemap->status == 'cron' AND $sitemap->config['sendmail']['send']) {
+if ($sitemap->status == 'cron' && $sitemap->config['sendmail']['send']) {
     $manualSend = 1;
     ob_start();
 }

@@ -35,10 +35,6 @@ class Crawler
 
     var $forbiddenPage = array();
 
-    var $forbidden_dir = array();
-
-    var $forbidden_files = array();
-
     var $host = '';
 
     var $keys = array();
@@ -192,22 +188,6 @@ class Crawler
     function setDone($done)
     {
         $this->done = $done;
-    }
-
-    /**
-     * set list of forbidden directories
-     */
-    function setForbiddenDirectories($directories = array())
-    {
-        $this->forbidden_dir = $directories;
-    }
-
-    /**
-     * set list of forbidden files
-     */
-    function setForbiddenFiles($files = array())
-    {
-        $this->forbidden_files = $files;
     }
 
     function setForbiddenKeys($keys)
@@ -386,10 +366,6 @@ class Crawler
             if (!in_array($file, $this->visitedUrls) && !array_key_exists($file, $this->files)) {
                 // check forbidden files
                 if ($this->checkFileName($file)) {
-                    continue;
-                }
-                // check forbidden directories
-                if ($this->checkDirectoryName($file)) {
                     continue;
                 }
                 //debug($file, 'Adding URL to todo list');
@@ -670,7 +646,7 @@ class Crawler
         // check file size
         if (isset($header['Content-Length']) && $header['Content-Length'] > PSNG_CRAWLER_MAX_FILESIZE) {
             $this->info(
-                $size,
+                $header['Content-Length'],
                 "File size " . $header['Content-Length'] . " of " . $urlString . " exceeds file size limit of " . PSNG_CRAWLER_MAX_FILESIZE . " byte!"
             );
             fclose($fp);
@@ -894,73 +870,36 @@ class Crawler
     }
 
     /**
-     * WAS: only allowed masking char: * (before and/or after search string)
-     *
-     * TODO check this with more data
+     * Проверяем, нужно исключать этот URL или не надо
+     * @param $filename
+     * @return bool
      */
     function checkFileName($filename)
     {
-        $filename = substr($filename, strrpos($filename, '/') + 1);
-        if (is_array($this->forbidden_files) && count($this->forbidden_files) > 0) {
-            foreach ($this->forbidden_files as $id => $file) {
-                if ($file == '') {
-                    continue;
-                }
-                $pos = strpos($filename, $file);
-                /*	    		$file_search = '';
-                                  if (!(($as = strpos($file, '*')) === FALSE)) {
-                                      $file_search = str_replace('*', '', $file);
-                                      if ($as == 0) $pos = @strpos($filename, $file_search, (strlen($filename)-strlen($file_search)));
-                                      if ($as == strlen($file_search)) $pos = (@strpos($filename, $file_search) != 0);
-                                  } else {
-                                    $pos = ($filename === $file);
-                                  }
-                */
-                if ($pos === false) {
-                    continue;
-                }
-                return true;
-            }
-        }
-        if (is_array($this->forbiddenPage) && count($this->forbiddenPage) > 0) {
-            foreach ($this->forbiddenPage as $k => $v) {
-                if ($v == '') {
-                    continue;
-                }
-                if (strcasecmp($filename, $v) == 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+        // Отрезаем доменную часть
+        $filename = substr($filename, strpos($filename, '/') + 1);
 
-    function checkDirectoryName($directory)
-    {
-        $directory = substr($directory, 0, strrpos($directory, '/') + 1); // with last "/"
-        if (is_array($this->forbidden_dir) && count($this->forbidden_dir) > 0) {
-            foreach ($this->forbidden_dir as $id => $dir) {
-                if ($dir == '') {
-                    continue;
-                }
-                $pos = strpos($directory, $dir);
-                /*	    		$dir_search = '';
-                                  if (!(($as = strpos($dir, '*')) === FALSE)) {
-                                      $dir_search = str_replace('*', '', $dir);
-                                      if ($as == 0) $pos = @strpos($directory, $dir_search, (strlen($directory)-strlen($dir_search)));
-                                      if ($as == strlen($dir_search)) $pos = (@strpos($directory, $dir_search) != 0);
-                                  } else {
-                                    $pos = ($directory === $dir);
-                                  }
-                */ // echo "directory: $directory, dir: $dir, dir_search: $dir_search, pos: $pos<br>\n";
-                if ($pos === false) {
-                    continue;
-                }
+        if (is_array($this->forbiddenPage) && count($this->forbiddenPage) > 0) {
+            // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
+            // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
+            $tmp = $this->forbiddenPage;
+            if ($filename !== array_reduce(
+                    $tmp,
+                    function (&$res, $rule) {
+                        if ($res == 1 || preg_match($rule, $res)) {
+                            return 1;
+                        }
+                        return $res;
+                    },
+                    $filename
+                )
+            ) {
+                // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                 return true;
             }
         }
+
+        // Ни одно из правил не сработало, значит страницу исключать не надо
         return false;
     }
 }
-
-?>
