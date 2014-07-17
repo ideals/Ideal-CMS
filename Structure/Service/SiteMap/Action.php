@@ -70,6 +70,7 @@
         </form>
     </div>
     <div class="tab-pane" id="start">
+        <h3>Запуск карты сайта вручную</h3>
         <label class="checkbox">
             <input type="checkbox" name="force" id="force"/>
             Принудительное составление xml-карты сайта
@@ -82,6 +83,19 @@
         <span id="loading"></span>
 
         <div id="iframe">
+        </div>
+
+        <div>
+            <p>&nbsp;</p>
+            <h3>Запуск карты сайта через cron</h3>
+            <p>Чтобы прописать в cron'е команду на запуск составления карты сайта в терминале выполните команду:</p>
+            <pre><code>crontab -e</code></pre>
+            <p>Далее в открывшемся редакторе запишите такую строку:</p>
+            <pre><code>*/3 2-4 * * * /usr/bin/php <?php
+                    echo DOCUMENT_ROOT . '/' . $config->cmsFolder; ?>/Ideal/Library/sitemap/index.php</code></pre>
+            <p>Эта инструкция означает запуск скрипта каждые три минуты с двух до четырёх ночи.
+                Если этого времени не хватает для составления карты сайта, то можно увеличить диапазон часов.</p>
+
         </div>
     </div>
 </div>
