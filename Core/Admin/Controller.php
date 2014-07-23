@@ -45,9 +45,11 @@ class Controller
         // Регистрируем объект пользователя
         /* @var $user Structure\User\Model */
         $user = Structure\User\Model::getInstance();
-        $prev = $user->data['prev_structure'];
-        // todo обычно юзеры всегда на первом уровне, но нужно доделать чтобы работало не только для первого уровня
-        $user->data['par'] = substr($prev, strrpos($prev, '-') + 1);
+        if (isset($user->data['ID'])) {
+            $prev = $user->data['prev_structure'];
+            // todo обычно юзеры всегда на первом уровне, но нужно доделать чтобы работало не только для первого уровня
+            $user->data['par'] = substr($prev, strrpos($prev, '-') + 1);
+        }
         $this->view->user = $user->data;
 
         // Отображение верхнего меню структур

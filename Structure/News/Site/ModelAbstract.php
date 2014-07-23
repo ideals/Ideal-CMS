@@ -23,7 +23,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
      * @param int $page Номер отображаемой страницы
      * @return array Полученный список элементов
      */
-    public function getList($page)
+    public function getList($page = null)
     {
         $config = Config::getInstance();
         $news = parent::getList($page);

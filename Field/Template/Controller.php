@@ -53,7 +53,8 @@ class Controller extends Select\Controller
         $pageData = $this->model->getPageData();
         if (isset($pageData['ID'])) {
             $config = Config::getInstance();
-            $end = end($this->model->getPath());
+            $path = $this->model->getPath();
+            $end = end($path);
             $prevStructure = $config->getStructureByName($end['structure']);
             $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
             $model->setPageDataByPrevStructure($prevStructure);
