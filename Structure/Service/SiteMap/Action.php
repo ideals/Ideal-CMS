@@ -55,10 +55,10 @@
             $config = \Ideal\Core\Config::getInstance();
             $file = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 
-            $file->loadFile($config->cmsFolder . '/site_map.php');
+            $file->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_map.php');
 
             if (isset($_POST['edit'])) {
-                $file->saveFile($config->cmsFolder . '/site_map.php');
+                $file->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_map.php');
             }
 
             echo $file->showEdit();
