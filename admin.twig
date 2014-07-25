@@ -137,9 +137,10 @@
     <div class="modal fade" id="myModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog" style="width: 80%;">
             <div class="modal-content">
-                <div class="modal-header" id="myModal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="myModalLabel">Редактирование</h4>
+                <div class="modal-header" id="myModal-header" style="padding: 15px 0 0; border-bottom: none;">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" style="padding-right:13px;">&times;</button>
+                    <h4 class="modal-title" style="float:left; padding: 6px 25px 0 25px;" id="myModalLabel">Редактирование</h4>
+                    <div id="modalTabs"></div>
                 </div>
                 <div class="modal-body" style="overflow: auto;">
                     <form class="form-horizontal" id="editForm">
@@ -206,7 +207,8 @@
                         par: par,
                         id: id
                     },
-                    onShowModalSuccess
+                    onShowModalSuccess,
+                    "json"
             );
         }
 
@@ -218,7 +220,8 @@
             } else {
                 $('#myModalLabel').html('Редактирование');
             }
-            $('#modalContent').html(data).trigger('windowOpen');
+            $('#modalTabs').html(data['tabs']);
+            $('#modalContent').html(data['content']).trigger('windowOpen');
             $('#myModal')
                 .modal({
                     backdrop: 'static',

@@ -304,8 +304,12 @@ class Controller
         }
         $tabLine .= '</ul>';
         $tabsContent .= '</div>';
-        print $tabLine;
-        print $tabsContent;
+        echo json_encode(
+            array(
+                'tabs' => $tabLine,
+                'content' => $tabsContent
+            )
+        );
     }
 
     public function showEditAction()
