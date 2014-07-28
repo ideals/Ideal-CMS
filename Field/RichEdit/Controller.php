@@ -51,6 +51,12 @@ class Controller extends AbstractController
             <script>
                 CKFinder.setupCKEditor( null, "/{$config->cmsFolder}/Ideal/Library/ckfinder/" );
                 CKEDITOR.replace("{$this->htmlName}");
+                // разрешить теги <style>
+                CKEDITOR.config.protectedSource.push(/<(style)[^>]*>.*<\\\\\\/style>/ig);
+                // разрешить теги <script>
+                CKEDITOR.config.protectedSource.push(/<(script)[^>]*>.*<\\\\\\/script>/ig);
+                // разрешить любой код: <!--dev-->код писать вот тут<!--/dev-->
+                CKEDITOR.config.protectedSource.push(/<!--dev-->[\\\\\\s\\\\\\S]*<!--\\\\\\/dev-->/g);
             </script>
 HTML;
         return $html;
