@@ -504,8 +504,7 @@ class myCrawler
         $header .= 'From: sitemap@' . $host;
 
         // Отправляем письма об изменениях
-        $to = implode(',', $this->config['email']);
-        mail($to, $this->config['website'], $text, $header);
+        mail($this->config['email_notify'], $this->config['website'], $text, $header);
     }
 
     /**
@@ -623,7 +622,7 @@ $sitemap = new myCrawler();
 // Проверяем, нужно ли кешировать вывод для ручной отправки письма с результатами
 $manualSend = 0;
 
-if ($sitemap->status == 'cron' && $sitemap->config['sendmail']['send']) {
+if ($sitemap->status == 'cron' && ($sitemap->config['email_cron'] != '')) {
     $manualSend = 1;
     ob_start();
 }
@@ -644,7 +643,7 @@ if ($manualSend) {
     $text = ob_get_contents();
     ob_end_clean();
     mail(
-        $sitemap->config['sendmail']['address'],
+        $sitemap->config['email_cron'],
         str_replace('http://', '', $sitemap->config['website']) . ' sitemap',
         $text,
         "From: Sitemap Maker <sitemap@" . str_replace('http://', '', $sitemap->config['website']) . ">\r\n"
