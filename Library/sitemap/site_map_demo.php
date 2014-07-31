@@ -17,13 +17,3 @@ return array(
     'email_cron' => 'help@neox.ru', // Электронная почта для cron-сообщений | Ideal_Text
     'email_notify' => 'top@neox.ru', // Электронная почта для уведомления о добавленных/удалённых ссылках | Ideal_Text
 );
-
-
-[sendmail]
-send = 0
-address = help@neox.ru
-[email]
-; список куда отправлять изменения sitemap
-1 = seo1@neox.ru
-2 = top@neox.ru
-3 = help1@neox.ru
