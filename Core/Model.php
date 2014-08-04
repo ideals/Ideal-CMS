@@ -211,6 +211,10 @@ abstract class Model
         $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
         $where = $this->getWhere($where);
 
+        if ($where === false) {
+            return array();
+        }
+
         $db = Db::getInstance();
 
         $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} ORDER BY e.{$this->params['field_sort']}";
