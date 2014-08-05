@@ -225,6 +225,10 @@ class ModelAbstract extends Site\Model
      */
     public function getList($page = null)
     {
+        if ($this->pageData['is_self_menu']) {
+            return array();
+        }
+
         $list = parent::getList($page);
 
         // Построение правильных URL
@@ -323,9 +327,6 @@ class ModelAbstract extends Site\Model
             // Считываем все элементы последнего уровня из пути
             $c = count($this->path);
             $end = end($this->path);
-            if ($end['is_self_menu']) {
-                return false;
-            }
             if (isset($this->path[$c - 2]) AND ($end['structure'] == $this->path[$c - 2]['structure'])) {
                 $lvl = $end['lvl'] + 1;
                 $cidModel = new Field\Cid\Model($this->params['levels'], $this->params['digits']);
