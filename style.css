@@ -49,3 +49,18 @@ div.checkbox {
     margin-left: 25%;
     margin-bottom: 10px;
 }
+
+#modalTabsEdit {float: right; margin-right: 20px; font-size: 12px; margin-top: 1px;}
+
+#tabsModal {
+    background-color: #fff;
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    position: absolute;
+    right: 45px;
+    margin-top: 16px;
+    display: none;
+}
