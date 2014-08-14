@@ -21,7 +21,7 @@ class Util
         switch ($config->errorLog) {
             case 'file':
                 // Вывод сообщения в текстовый файл
-                $ff = DOCUMENT_ROOT . $config->cmsFolder . '/error.log';
+                $ff = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/error.log';
                 $fp = fopen($ff, 'a');
                 $msg = Date('d.m.y H:i', time()) . '  ' . $_SERVER['REQUEST_URI'] . "\r\n";
                 $msg .= $txt . "\r\n\r\n";
