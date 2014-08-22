@@ -114,8 +114,11 @@ class ModelAbstract extends Site\Model
                     $url = array_slice($url, count($newPath) - 2);
                     $model = $structure->detectPageByUrl($newPath, $url);
                     return $model;
-                } else {
-                    // todo обработку когда сегмент URL пропускается внутри структуры
+                } elseif (end($url) == $end['url']) {
+                    // Если в URL запрошен элемент с is_skip=1
+                    $newPath = $branch['branch'];
+                    unset($url[(count($url)-1)]);
+                    break;
                 }
                 continue;
             }
