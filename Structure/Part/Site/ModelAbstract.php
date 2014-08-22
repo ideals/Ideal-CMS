@@ -115,7 +115,13 @@ class ModelAbstract extends Site\Model
                     $model = $structure->detectPageByUrl($newPath, $url);
                     return $model;
                 } else {
-                    // todo обработку когда сегмент URL пропускается внутри структуры
+                    if (end($url) == $end['url']) {
+                        $newPath = $branch['branch'];
+                        unset($url[(count($url)-1)]);
+                        break;
+                    } else {
+                        // todo обработку когда сегмент URL пропускается внутри структуры
+                    }
                 }
                 continue;
             }
