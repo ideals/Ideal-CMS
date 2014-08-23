@@ -25,7 +25,7 @@ class Model extends AbstractModel
         $templates = $this->obj->fields[$this->fieldName]['available'];
         $list = array();
         foreach ($templates as $template) {
-            $class = Util::getClassName($template, 'Template');
+            $class = Util::getClassName($template, 'Addon');
             $folder = ltrim(ltrim(str_replace('\\', '/', $class), '/'), 'Ideal/');
             $arr = require($folder . '/config.php');
             $list[$template] = $arr['params']['name'];
