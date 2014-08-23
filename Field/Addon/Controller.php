@@ -106,8 +106,7 @@ HTML;
         // Скрываем выбор добавляемого аддона за кнопкой +
         $html = '<button id="add-addon-button" class="btn btn-default">+</button>'
               . '<div id="add-addon" class="input-group hide">'
-              . '<select class="form-control" name="' . $this->htmlName . '1" id="' . $this->htmlName . '1">'
-              . '';
+              . '<select class="form-control" name="add-addon-select" id="add-addon-select">';
 
         // Получаем список доступных для добавления аддонов для этого элемента
         $className = $this->field['medium'];
@@ -152,15 +151,18 @@ HTML;
             // Получаем название и содержимое вкладки
             $tab = $this->getTab($tabId, $addonVar);
 
+            $addonVar .= '_' . $tabId;
+            $addonName = ($addonName == '') ? $tab['name'] : $addonName; // если по какой-то причине в БД сбросится
+
             // Записываем заголовок вкладки
             $result['names'] .= addslashes(
-                "<!--suppress HtmlUnknownAnchorTarget -->"
+                "<!--suppress HtmlUnknownAnchorTarget -->" // это чтобы PhpStorm не ругался на href='#tab{$addonVar}'
                 . "<li><a data-toggle=\"tab\" id=\"tab{$addonVar}Head\" href='#tab{$addonVar}'>{$addonName}</a>"
                 . "</li>"
             );
 
             // Записываем содержимое вкладки
-            $result['contents'] .= addslashes("<div id=\"tab{$addonVar}\" class=\"tab-pane\">{$tab['content']}</div>");
+            $result['contents'] .= "<div id=\"tab{$addonVar}\" class=\"tab-pane\">{$tab['content']}<\/div>";
         }
 
         return $result;
@@ -175,7 +177,33 @@ HTML;
      */
     protected function getTab($id, $addonName)
     {
-        return array('name' => $addonName, 'content' => $id);
+        $class = Util::getClassName($addonName, 'Addon') . '\\Model';
+        /** @var \Ideal\Core\Admin\Model $model */
+        $model = new $class('');
+        $model->setFieldsGroup($this->name . '_' . $id);
+        // Загрузка данных связанного объекта
+        $pageData = $this->model->getPageData();
+        if (isset($pageData['ID'])) {
+            $config = Config::getInstance();
+            $path = $this->model->getPath();
+            $end = end($path);
+            $prevStructure = $config->getStructureByName($end['structure']);
+            $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
+            $model->setPageDataByPrevStructure($prevStructure);
+        }
+
+        // Получение содержимого вкладки
+        $tabContent = $model->getFieldsList($model->fields);
+
+        // Убираем переводы строки, иначе текст не обрабатывается в JS
+        $tabContent = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tabContent);
+        $tabContent = str_replace(
+            array('<script>', '</script>', "'"),
+            array('\<script>', '<\/script>', "\\'"),
+            $tabContent
+        );
+
+        return array('name' => $model->params['name'], 'content' => $tabContent);
     }
 
     /**
@@ -187,7 +215,7 @@ HTML;
         // todo убрать, когда заработает редактирование аддонов
         return json_encode(array(
             array(1, 'Ideal_Page', 'Текст'),
-            array(2, 'Ideal_Php', 'Php-файл'),
+            array(2, 'Ideal_PhpFile', 'Php-файл'),
         ));
     }
 }
