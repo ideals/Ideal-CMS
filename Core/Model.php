@@ -59,7 +59,7 @@ abstract class Model
             case 'Structure':
                 $structure = $config->getStructureByName($structureFullName);
                 break;
-            case 'Template':
+            case 'Addon':
                 $includeFile = $module . 'Template/' . $structureName . '/config.php';
                 $structure = include($includeFile);
                 if (!is_array($structure)) {
