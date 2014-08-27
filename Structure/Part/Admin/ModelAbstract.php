@@ -22,7 +22,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         if (count($res) > 0) {
             return 2;
         }
-        $db->delete($this->_table)->where('ID=:id', array('id', $this->pageData['ID']));
+        $db->delete($this->_table)->where('ID=:id', array('id' => $this->pageData['ID']));
         $db->exec();
         // TODO сделать проверку успешности удаления
         return 1;
