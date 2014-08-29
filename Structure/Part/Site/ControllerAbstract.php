@@ -18,6 +18,6 @@ class ControllerAbstract extends Core\Site\Controller
         $page = intval($request->page);
         $this->view->parts = $this->model->getList($page);
 
-        $this->view->pager = $this->model->getPager($page, $request->getQueryWithout('page'));
+        $this->view->pager = $this->model->getPager('page');
     }
 }

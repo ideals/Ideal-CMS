@@ -355,7 +355,12 @@ class Db extends \mysqli
 
         if (!$this->cacheEnabled) {
             // Если кэширование не включено, то выполняем запрос и возвращаем результат в виде ассоциативного массива
-            return $this->query($sql)->fetch_all(MYSQLI_ASSOC);
+            $result = $this->query($sql);
+            if ($result === false) {
+                return array();
+            }
+
+            return $result->fetch_all(MYSQLI_ASSOC);
         }
 
         $this->cacheEnabled = false; // т.к. кэширование включается только для одного запроса

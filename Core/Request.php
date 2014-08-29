@@ -26,9 +26,9 @@ class Request
     public function getQueryWithout($without)
     {
         // Убираем переменную $without стоящую внутри GET-строки
-        $uri = preg_replace('/' . $without . '\=(.*)\&/', '', $_SERVER['REQUEST_URI']);
+        $uri = preg_replace('/' . $without . '\=(.*)(\&|$)/iU', '', $_SERVER['REQUEST_URI']);
         // Убираем переменную $without в конце строки
-        $uri = preg_replace('/' . $without . '\=(.*)$/', '', $uri);
+        $uri = preg_replace('/' . $without . '\=(.*)(\&|$)/iU', '', $uri);
         // Убираем последний амперсанд, если остался после предыдущих операций
         $uri = preg_replace('/\&$/', '', $uri);
         // Убираем последний знак вопроса, если остался после предыдущих операций
