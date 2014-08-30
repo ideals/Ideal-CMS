@@ -75,7 +75,7 @@ class Controller extends AbstractController
             $path = $model->getPath();
             $c = count($path);
             $end = $path[$c - 1];
-            if ($c > 1 && ($path[$c - 2]['structure'] != $end['structure'])) {
+            if ($c < 2 || ($path[$c - 2]['structure'] != $end['structure'])) {
                 $end['cid'] = '';
                 $end['lvl'] = 0;
             }
