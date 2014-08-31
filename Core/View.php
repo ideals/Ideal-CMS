@@ -22,7 +22,12 @@ class View
         $config = Config::getInstance();
         $params = array();
         if ($isCache) {
-            $params['cache'] = DOCUMENT_ROOT . $config->templateCachePath;
+            $cachePath = DOCUMENT_ROOT . $config->tmpDir . '/templates';
+            $params['cache'] = stream_resolve_include_path($cachePath);
+            if ($params['cache'] == false) {
+                Util::addError('Не удалось определить путь для кэша шаблонов: ' . $cachePath);
+                exit;
+            }
         }
         $this->templater = new \Twig_Environment($loader, $params);
     }
