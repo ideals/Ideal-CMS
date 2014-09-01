@@ -64,12 +64,12 @@ class Controller extends Select\Controller
         // Получение содержимого вкладки
         $tabContent = $model->getFieldsList($model->fields);
         // Убираем переводы строки, иначе текст не обрабатывается в JS
-        $tabContent = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tabContent);
         $tabContent = str_replace(
-            array('<script>', '</script>', "'"),
-            array('\<script>', '<\/script>', "\\'"),
+            array("\\", '<script>', '</script>', "'"),
+            array("\\\\", '\<script>', '<\/script>', "\\'"),
             $tabContent
         );
+        $tabContent = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tabContent);
         $html = parent::getInputText();
         // Добавляем обработчик на изменение select
         $html = str_replace('<select', '<select onchange="changeTemplate(this, \'' . $this->name . '\')"', $html);

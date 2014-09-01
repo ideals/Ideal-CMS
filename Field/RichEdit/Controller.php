@@ -50,13 +50,14 @@ class Controller extends AbstractController
                 id="{$this->htmlName}">{$value}</textarea>
             <script>
                 CKFinder.setupCKEditor( null, "/{$config->cmsFolder}/Ideal/Library/ckfinder/" );
+                // Закрываем от авто модификации и wysiwig-редактирования содержимое тега script
+                CKEDITOR.config.protectedSource.push(/<script[\\s\\S]*?script>/ig);
+                // Код в блоке <div class="protectedSource"></div> не будет редактироваться во WYSIWIG,
+                // но будет доступен в режиме редактирования исходного кода HTML
+                CKEDITOR.config.protectedSource.push(/<div[\\s\\S]*?class="protected"[\\s\\S]*?<\\/div>/g);
+                // Разрешаем использовать для всех тегов — атрибуты style и class
+                CKEDITOR.config.extraAllowedContent = '*(*)[style]{*}; *(*)[class]{*}';
                 CKEDITOR.replace("{$this->htmlName}");
-                // разрешить теги <style>
-                CKEDITOR.config.protectedSource.push(/<(style)[^>]*>.*<\\\\\\/style>/ig);
-                // разрешить теги <script>
-                CKEDITOR.config.protectedSource.push(/<(script)[^>]*>.*<\\\\\\/script>/ig);
-                // разрешить любой код: <!--dev-->код писать вот тут<!--/dev-->
-                CKEDITOR.config.protectedSource.push(/<!--dev-->[\\\\\\s\\\\\\S]*<!--\\\\\\/dev-->/g);
             </script>
 HTML;
         return $html;
