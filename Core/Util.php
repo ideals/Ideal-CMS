@@ -18,7 +18,7 @@ class Util
     static function addError($txt)
     {
         $config = Config::getInstance();
-        switch ($config->errorLog) {
+        switch ($config->cms['errorLog']) {
             case 'file':
                 // Вывод сообщения в текстовый файл
                 $ff = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/error.log';
@@ -337,14 +337,14 @@ class Util
     public static function shutDown()
     {
         $config = Config::getInstance();
-        if ($config->errorLog == 'email' && count(self::$errorArray) > 0) {
+        if ($config->cms['errorLog'] == 'email' && count(self::$errorArray) > 0) {
             $text = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"
                 . implode("\n", self::$errorArray);
             $mail = new \Mail\Sender();
             $mail->setSubj("Сообщение об ошибке на сайте " . $config->domain);
             $mail->setBody($text, '');
-            $mail->sent($config->robotEmail, $config->mailForm);
+            $mail->sent($config->robotEmail, $config->cms['adminEmail']);
         }
     }
 

@@ -7,8 +7,11 @@ return array(
     'startUrl' => '[[SUBFOLDER_START_SLASH]]', // Начальная папка CMS | Ideal_Text
     'urlSuffix' => '.html', // Стандартный суффикс URL | Ideal_Text
     'tmpDir' => '/tmp', // Путь к папке с временными файлами | Ideal_Text
-    'errorLog' => 'firebug', // Способ уведомления об ошибках | Ideal_Select | {"firebug":"FireBug","email":"отправлять на email менеджера","display":"отображать в браузере","comment":"комментарий в html-коде","file":"сохранять в файл notice.log"}
     'allowResize' => '', // Разрешённые размеры изображений (по одному на строку) | Ideal_Area
+    'cms' => array( // CMS
+        'errorLog' => 'firebug', // Способ уведомления об ошибках | Ideal_Select | {"firebug":"FireBug","email":"отправлять на email менеджера","display":"отображать в браузере","comment":"комментарий в html-коде","file":"сохранять в файл notice.log"}
+        'adminEmail' => '[[CMSLOGIN]]', // Почта, на которую будут отправляться сообщения об ошибках | Ideal_Text
+    ),
     'cache' => array( // Кэширование
         'templateSite' => '0', // Кэширование twig-шаблонов | Ideal_Checkbox
         'templateAdmin' => '0', // Кэширование twig-шаблонов админской части | Ideal_Checkbox
