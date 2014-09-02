@@ -39,9 +39,6 @@ $config = Ideal\Core\Config::getInstance();
 // Каталог, в котором находятся модифицированные скрипты CMS
 $config->cmsFolder = $subFolder . $cmsFolder;
 
-// Куда будет вестись лог ошибок. Варианты file|display|comment|firebug|email
-$config->errorLog = 'firebug';
-
 // Загружаем список структур из конфигурационных файлов структур
 $config->loadSettings();
 
@@ -62,12 +59,12 @@ if (file_put_contents($log, '', FILE_APPEND) === false) {
     $updateModel->uExit('Файл ' . $log . ' недоступен для записи');
 }
 
-if (is_null($config->tmpDir) || ($config->tmpDir == '')) {
+if (is_null($config->cms['tmpFolder']) || ($config->cms['tmpFolder'] == '')) {
     $updateModel->uExit('В настройках не указана папка для хранения временных файлов');
 }
 
 // Папка для хранения загруженных файлов обновлений
-$uploadDir = DOCUMENT_ROOT . $config->tmpDir . '/update';
+$uploadDir = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/update';
 if (!file_exists($uploadDir)) {
     if (!mkdir($uploadDir, 0755, true)) {
         $updateModel->uExit('Не удалось создать папку' . $uploadDir);

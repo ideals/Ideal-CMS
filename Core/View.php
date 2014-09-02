@@ -22,7 +22,7 @@ class View
         $config = Config::getInstance();
         $params = array();
         if ($isCache) {
-            $cachePath = DOCUMENT_ROOT . $config->tmpDir . '/templates';
+            $cachePath = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/templates';
             $params['cache'] = stream_resolve_include_path($cachePath);
             if ($params['cache'] == false) {
                 Util::addError('Не удалось определить путь для кэша шаблонов: ' . $cachePath);
