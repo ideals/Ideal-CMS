@@ -189,8 +189,8 @@ class Model
         if ($lastUrlPart == '/' || $lastUrlPart == '') {
             $lastUrlPart = '/';
             // Ссылка на главную обрабатывается особым образом
-            if ($config->startUrl != '') {
-                $lastUrlPart = $config->startUrl . '/';
+            if ($config->cms['startUrl'] != '') {
+                $lastUrlPart = $config->cms['startUrl'] . '/';
             }
             return $lastUrlPart;
         }
@@ -208,7 +208,7 @@ class Model
         }
 
         if ($parentUrl == '' || $parentUrl == '/') {
-            $parentUrl = $config->startUrl;
+            $parentUrl = $config->cms['startUrl'];
         } elseif (is_array($parentUrl)) {
             $parentUrl = implode('/', $parentUrl);
         }

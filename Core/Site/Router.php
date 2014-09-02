@@ -66,7 +66,7 @@ class Router
         // Удаляем параметры из URL (текст после символов "?" и "#")
         $url = preg_replace('/[\?\#].*/', '', $url);
         // Убираем начальные слэши и начальный сегмент, если cms не в корне сайта
-        $url = ltrim(substr($url, strlen($config->startUrl)), '/');
+        $url = ltrim(substr($url, strlen($config->cms['startUrl'])), '/');
 
         // Если запрошена главная страница
         if ($url == '') {

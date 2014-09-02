@@ -173,7 +173,7 @@ class Controller
         $config = Config::getInstance();
 
         $this->view->domain = strtoupper($config->domain);
-        $this->view->startUrl = $config->startUrl;
+        $this->view->startUrl = $config->cms['startUrl'];
 
         $this->view->breadCrumbs = $this->model->getBreadCrumbs();
 
