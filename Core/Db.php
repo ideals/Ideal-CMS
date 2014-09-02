@@ -360,7 +360,16 @@ class Db extends \mysqli
                 return array();
             }
 
-            return $result->fetch_all(MYSQLI_ASSOC);
+            if (method_exists('mysqli_result', 'fetch_all')) # Compatibility layer with PHP < 5.3
+            {
+                $res = $result->fetch_all(MYSQLI_ASSOC);
+            } else {
+                for ($res = array(); $tmp = $this->fetch_array(MYSQLI_ASSOC);) {
+                    $res[] = $tmp;
+                }
+            }
+
+            return $res;
         }
 
         $this->cacheEnabled = false; // т.к. кэширование включается только для одного запроса
@@ -370,8 +379,16 @@ class Db extends \mysqli
         if ($cachedResult = $this->cache->getWithTags($cacheKey)) {
             return $cachedResult;
         }
+        if (method_exists('mysqli_result', 'fetch_all')) # Compatibility layer with PHP < 5.3
+        {
+            $queryResult = $this->query($sql)->fetch_all(MYSQLI_ASSOC);
+        } else {
+            for ($res = array(); $tmp = $this->query($sql)->fetch_array(MYSQLI_ASSOC);) {
+                $res[] = $tmp;
+            }
+            $queryResult = $res;
+        }
 
-        $queryResult = $this->query($sql)->fetch_all(MYSQLI_ASSOC);
         $cacheTags = $this->prepareCacheTags($sql);
         $this->cache->setWithTags($cacheKey, $queryResult, false, $cacheTags);
 
