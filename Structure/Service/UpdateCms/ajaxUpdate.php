@@ -48,7 +48,7 @@ $config->loadSettings();
 $updateModel = new \Ideal\Structure\Service\UpdateCms\Model();
 
 // Сервер обновлений
-$srv = 'http://idealcms/update';
+$srv = 'http://idealcms.ru/update';
 $getFileScript = $srv . '/get.php';
 
 // Файл лога обновлений

@@ -36,7 +36,7 @@
 
 <?php
 // Сервер обновлений
-$getVersionScript = 'http://idealcms/update/version.php';
+$getVersionScript = 'http://idealcms.ru/update/version.php';
 
 $config = \Ideal\Core\Config::getInstance();
 $updateModel = new \Ideal\Structure\Service\UpdateCms\Model();
