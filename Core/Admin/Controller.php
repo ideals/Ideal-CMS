@@ -130,7 +130,7 @@ class Controller
 
         // Инициализируем Twig-шаблонизатор
         $config = Config::getInstance();
-        $this->view = new View(array($gblRoot, $tplRoot), $config->isTemplateAdminCache);
+        $this->view = new View(array($gblRoot, $tplRoot), $config->cache['templateAdmin']);
         $this->view->loadTemplate($tplName);
     }
 

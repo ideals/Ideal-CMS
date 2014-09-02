@@ -88,7 +88,7 @@ class Controller
 
         $config = Config::getInstance();
         $folders = array_merge(array($gblRoot, $tplRoot), $tplFolders);
-        $this->view = new View($folders, $config->isTemplateCache);
+        $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
 
