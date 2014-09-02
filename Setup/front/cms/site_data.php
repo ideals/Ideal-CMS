@@ -12,5 +12,6 @@ return array(
     'cache' => array( // Кэширование
         'templateSite' => '0', // Кэширование twig-шаблонов | Ideal_Checkbox
         'templateAdmin' => '0', // Кэширование twig-шаблонов админской части | Ideal_Checkbox
+        'memcache' => '0', // Кэширование запросов к БД | Ideal_Checkbox
     ),
 );
