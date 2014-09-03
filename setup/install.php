@@ -17,7 +17,7 @@ define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DO
 
 // Абсолютный адрес размещения админки
 define('CMS_ROOT', $_SERVER['DOCUMENT_ROOT']
-    . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/Setup')));
+    . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/setup')));
 
 // Абсолютный адрес папки, в которой находится папка админки
 define('ROOT', substr(CMS_ROOT, 0, strrpos(CMS_ROOT, '/')));
@@ -389,7 +389,7 @@ function installCopyRoot()
 
 /**
  * ШАГ 2.
- * Скопировать папку /Ideal/Setup/front/cms/ в указанную папку для CMS
+ * Скопировать папку /Ideal/setup/front/cms/ в указанную папку для CMS
  *
  * @return bool
  */

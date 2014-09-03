@@ -197,7 +197,7 @@ class Model
     {
         // Находим путь к последнему установленному скрипту модуля
         $logFile = file($this->log);
-        $str = ($updateName == 'Ideal-CMS') ? '/Ideal/Setup/Update' : '/Mods/' . $updateName . '/Setup/Update';
+        $str = ($updateName == 'Ideal-CMS') ? '/Ideal/setup/update' : '/Mods/' . $updateName . '/setup/update';
         $lastScript = '';
         foreach ($logFile as $v) {
             if (strpos($v, $str) === 0) {

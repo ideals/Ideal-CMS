@@ -72,8 +72,8 @@ if (!file_exists($uploadDir)) {
 }
 
 // Папка для разархивации файлов новой CMS
-// Пример /www/example.com/tmp/Setup/Update
-define('SETUP_DIR', $uploadDir . '/Setup');
+// Пример /www/example.com/tmp/setup/Update
+define('SETUP_DIR', $uploadDir . '/setup');
 if (!file_exists(SETUP_DIR)) {
     if (!mkdir(SETUP_DIR, 0755, true)) {
         $updateModel->uExit('Не удалось создать папку' . SETUP_DIR);
