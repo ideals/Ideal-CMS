@@ -1,4 +1,4 @@
-Ideal CMS v. 2.0b5
+Ideal CMS v. 2.0b6
 =========
 
 Система управления контентом с открытым исходным кодом, написанная на PHP.
@@ -18,10 +18,20 @@ Ideal CMS v. 2.0b5
 
 Все подробности на сайте [idealcms.ru](http://idealcms.ru/)
 
+Версия 2.0b6
+---
+1. FIX: если не определён mysqli_result::fetch_all (не подключён mysqlnd)
+2. Изменена структура файла site_data.php
+2.1. Поля startUrl, errorLog выведены во вкладку cms
+2.2. Поле tmpDir перенесено во вкладку cms и переименовано в tmpFolder
+2.3. Удалено поле templateCachePath
+2.4. Поля isTemplateCache и isTemplateAdminCache переименованы в templateSite и templateAdmin и перенесены во вкладку cache
+2.5. Во вкладку cache добавлено поле memcache
+
 Версия 2.0b5
 ---
 1. Вкладки в окне редактирования перенесены в заголовок
-2. FIX: в CKEditor удалялся тег script и аттрибуты style и class
+2. FIX: в CKEditor удалялся тег script и атрибуты style и class
 3. Отображение страниц с is_skip=1
 4. FIX: формат конфигурационного файла в папке установки
 5. FIX: постраничная навигация, лог ошибок в файл, удаление элементов в админке
