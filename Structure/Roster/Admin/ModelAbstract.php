@@ -15,7 +15,9 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     public function delete()
     {
         $db = Db::getInstance();
-        $db->delete($this->_table)->where('ID=:id', array('id' => $this->pageData['ID']));
+        $db->delete($this->_table)
+            ->where('ID=:id', array('id' => $this->pageData['ID']))
+            ->exec();
 
         if (isset($this->pageData['pos'])) {
             // Если есть сортировка pos, то нужно уменьшить все следующие за удаляемым
