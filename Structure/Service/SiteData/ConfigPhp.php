@@ -109,7 +109,9 @@ DONE;
             if (in_array(trim($v), $skip)) {
                 continue;
             }
-            list ($other, $label) = explode("', // ", $v);
+            $cols = explode("', // ", $v);
+            $other = $cols[0];
+            $label = isset($cols[1]) ? $cols[1] : null;
             if (is_null($label)) {
                 // Комментария в нужном формате нет, значит это массив
                 preg_match('/\'(.*)\'\s*=>\s*array\s*\(\s*\/\/\s*(.*)/i', $other, $match);
