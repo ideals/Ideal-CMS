@@ -77,9 +77,10 @@ class Db extends \mysqli
             return self::$instance[$key];
         }
 
+        $config = Config::getInstance();
+
         if (is_null($params)) {
             // Если параметры подключения явно не заданы, берём их из конфигурации
-            $config = Config::getInstance();
             $params = $config->db;
         }
 
@@ -95,7 +96,12 @@ class Db extends \mysqli
         $db->query('set names utf8');
 
         $db->dbName = $params['name'];
-        $db->cache = Memcache::getInstance();
+
+        if ($config->cache['memcache']) {
+            // Если в настройках site_data.php включён memcache, подключаем его
+            $db->cache = Memcache::getInstance();
+        }
+
         self::$instance[$key] = $db;
 
         return $db;
@@ -299,7 +305,9 @@ class Db extends \mysqli
      */
     public function clearCache($table)
     {
-        $this->cache->deleteByTag($table);
+        if (isset($this->cache)) {
+            $this->cache->deleteByTag($table);
+        }
     }
 
     /**
@@ -353,7 +361,7 @@ class Db extends \mysqli
     {
         $sql = $this->prepareSql($sql, $params, $fields);
 
-        if (!$this->cacheEnabled) {
+        if (!$this->cacheEnabled || !isset($this->cache)) {
             // Если кэширование не включено, то выполняем запрос и возвращаем результат в виде ассоциативного массива
             $result = $this->query($sql);
             if ($result === false) {

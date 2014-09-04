@@ -5,7 +5,7 @@ $config = Config::getInstance();
 
 try {
     // Пытаемся определить полный путь к папке бэкапов, если это возможно
-    $backupPart = getDir($config->tmpDir, '/backup/');
+    $backupPart = getDir($config->cms['tmpFolder'], '/backup/');
 } catch (Exception $e) {
     echo '<div class="alert">' . $e->getMessage() . '</div>';
     return;
@@ -61,30 +61,30 @@ if (is_dir($backupPart)) {
  * Функция получения полного пути к папке бэкапа
  * Проверяем временную папку и папку для бэкапов на существование, возможность создания и записи
  *
- * @param string $tmpDir Временная папка
- * @param string $backupDir Название папки бэкапа относительно временной папки
+ * @param string $tmpFolder Временная папка
+ * @param string $backupFolder Название папки бэкапа относительно временной папки
  * @return string Полный путь к папке бэкапа
  * @throws Exception Исключение, содержащее текст возникшей ошибки
  */
-function getDir($tmpDir, $backupDir)
+function getDir($tmpFolder, $backupFolder)
 {
-    if ($tmpDir == '') {
+    if ($tmpFolder == '') {
         throw new Exception('Не задана временная папка tmpDir в файле site_data.php');
     }
 
     // Определяем доступность временной папки
-    $tmpDir = DOCUMENT_ROOT . $tmpDir;
-    $tmpFull = stream_resolve_include_path($tmpDir);
+    $tmpFolder = DOCUMENT_ROOT . $tmpFolder;
+    $tmpFull = stream_resolve_include_path($tmpFolder);
 
     // Проверяем существует ли временная папка и если нет, то пытаемся её создать
     if ($tmpFull === false) {
-        if (mkdir($tmpDir, 0755)) {
-            $tmpFull = stream_resolve_include_path($tmpDir);
+        if (mkdir($tmpFolder, 0755)) {
+            $tmpFull = stream_resolve_include_path($tmpFolder);
         }
     }
 
     if ($tmpFull === false) {
-        throw new Exception("Не удалось создать папку $tmpDir для сохранения дампа базы");
+        throw new Exception("Не удалось создать папку $tmpFolder для сохранения дампа базы");
     }
 
     if (!is_writable($tmpFull)) {
@@ -92,16 +92,16 @@ function getDir($tmpDir, $backupDir)
     }
 
     // Проверяем существует ли папка для создания бэкапов и если нет, то пытаемся её создать
-    $backupDir = $tmpFull . $backupDir;
-    $backupFull = stream_resolve_include_path($backupDir);
+    $backupFolder = $tmpFull . $backupFolder;
+    $backupFull = stream_resolve_include_path($backupFolder);
     if ($backupFull === false) {
-        if (mkdir($backupDir, 0755)) {
-            $backupFull = stream_resolve_include_path($backupDir);
+        if (mkdir($backupFolder, 0755)) {
+            $backupFull = stream_resolve_include_path($backupFolder);
         }
     }
 
     if ($backupFull === false) {
-        throw new Exception("Не удалось создать папку $backupDir для сохранения дампа базы");
+        throw new Exception("Не удалось создать папку $backupFolder для сохранения дампа базы");
     }
 
     if (!is_writable($backupFull)) {

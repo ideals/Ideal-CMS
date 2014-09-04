@@ -88,7 +88,7 @@ class Controller
 
         $config = Config::getInstance();
         $folders = array_merge(array($gblRoot, $tplRoot), $tplFolders);
-        $this->view = new View($folders, $config->isTemplateCache);
+        $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
 
@@ -173,7 +173,7 @@ class Controller
         $config = Config::getInstance();
 
         $this->view->domain = strtoupper($config->domain);
-        $this->view->startUrl = $config->startUrl;
+        $this->view->startUrl = $config->cms['startUrl'];
 
         $this->view->breadCrumbs = $this->model->getBreadCrumbs();
 

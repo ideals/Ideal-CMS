@@ -21,6 +21,15 @@ class ConfigPhp
     protected $params = array();
 
     /**
+     * Геттер для защищённого поля $params
+     * @return array Набор считанных из файла параметров
+     */
+    public function getParams()
+    {
+        return $this->params;
+    }
+
+    /**
      * Сохранение обработанных конфигурационных данных в файл
      *
      * @param string $fileName Название php-файла, в который сохраняются данные
@@ -156,6 +165,15 @@ DONE;
             $param[$fieldName]['values'] = json_decode($fields[2]);
         }
         return $param;
+    }
+
+    /**
+     * Сеттер для защищённого поля $this->params
+     * @param array $params Модифицированный набор полей для сохранения в конфигурационном файле
+     */
+    public function setParams($params)
+    {
+        $this->params = $params;
     }
 
     /**
