@@ -121,10 +121,13 @@ if ($msg !== '') {
     /** Обновление CMS или модуля */
     function updateModule(moduleName, version) {
         $.ajax({
-            url: 'Ideal/Structure/Service/UpdateCms/ajaxUpdate.php',
+            url: 'index.php?par=<?php echo $_GET['par']; ?>',
             type: 'POST',
             dataType: 'json',
             data: {
+                mode: 'ajax',
+                controller: '\\Ideal\\Structure\\Service\\UpdateCms',
+                action: 'ajaxDownload',
                 name: moduleName,
                 version: version,
                 config: '<?php echo $config->cmsFolder; ?>'
