@@ -195,13 +195,14 @@ HTML;
         // Получение содержимого вкладки
         $tabContent = $model->getFieldsList($model->fields);
 
-        // Убираем переводы строки, иначе текст не обрабатывается в JS
-        $tabContent = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tabContent);
         $tabContent = str_replace(
-            array('<script>', '</script>', "'"),
-            array('\<script>', '<\/script>', "\\'"),
+            array("\\", '<script>', '</script>', "'"),
+            array("\\\\", '\<script>', '<\/script>', "\\'"),
             $tabContent
         );
+
+        // Убираем переводы строки, иначе текст не обрабатывается в JS
+        $tabContent = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tabContent);
 
         return array('name' => $model->params['name'], 'content' => $tabContent);
     }
