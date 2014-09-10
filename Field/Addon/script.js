@@ -6,7 +6,7 @@ $(document).ready(function() {
     // Получаем список доступных для добавления аддонов
     available = $.parseJSON($('#available_addons'));
 
-    // Строим список подключенных аддонов в html-виде
+    // Строим список подключённых аддонов в html-виде
     addonsHtml = '<ul>';
     for (i = 0; i < addons.length; i++) {
         addonsHtml += '<li>' + addons[i][2] + '</li>';
@@ -36,21 +36,25 @@ $('#add-addon-button').click(function(){
 // Навешиваем событие на кнопку добавления аддона после выбора из select
 $('#add-addon-add').click(function(){
     addonName = $('select#add-addon-select').val();
+    addonField = getAddonFieldName();
 
     // Переданные параметры нужно записать в глобальную переменную idObject
-    window.idObject['action'] = action;
-    window.idObject['changeTemplate'] = 0;
+    //window.idObject['action'] = action;
+    //window.idObject['changeTemplate'] = 0;
 
     // Пытаемся получить заголовок и содержимое новой вкладки
     // В случае удачи — добавляем новую вкладку
-    // todo разобраться в формате передачи данных и кто их обрабатывает, желательно перенести эту обработку в отдельный файл
     $.get(
         "index.php",
         {
-            action: action,
+            mode: 'ajax-model',
+            controller: '\\Ideal\\Field\\Addon',
+            action: 'add',
             par: window.idObject['par'],
             id: window.idObject['id'],
-            template: addonName,
+            addonName: addonName,
+            addonField: addonField,
+            groupName: 'general', // todo могут ли быть аддоны в аддонах или вложенных вкладках
             name: ''
         },
         onAddNewTab,
