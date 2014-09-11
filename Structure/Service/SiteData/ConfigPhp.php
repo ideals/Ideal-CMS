@@ -13,6 +13,7 @@ use Ideal\Core\Util;
 
 /**
  * Чтение, отображение и запись специального формата конфигурационных php-файлов
+ * todo написать магические геттеры и сеттеры, чтобы переменные конфига можно было изменять без обращения к массивам
  */
 class ConfigPhp
 {
@@ -91,9 +92,14 @@ DONE;
      * Считывание данных из php-файла
      *
      * @param string $fileName Имя php-файла из которого читается конфигурация
+     * @return bool Флаг успешного считывания данных из файла
      */
     public function loadFile($fileName)
     {
+        if (!file_exists($fileName)) {
+            return false;
+        }
+
         $cfg = file($fileName);
         $skip = array('<?php', 'return array(', ');');
 
@@ -137,6 +143,7 @@ DONE;
             }
         }
         $this->params = $params;
+        return true;
     }
 
     /**

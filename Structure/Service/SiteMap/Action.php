@@ -55,7 +55,14 @@
             $config = \Ideal\Core\Config::getInstance();
             $file = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 
-            $file->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_map.php');
+            if (!$file->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_map.php')) {
+                // Если не удалось прочитать данные из кастомного файла, значит его нет
+                // Поэтому читаем данные из демо-файла
+                $file->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/Library/sitemap/site_map_demo.php');
+                $params = $file->getParams();
+                $params['default']['arr']['website']['value'] = 'http://' . $config->domain;
+                $file->setParams($params);
+            }
 
             if (isset($_POST['edit'])) {
                 $file->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_map.php');
