@@ -86,8 +86,11 @@ class Controller
             }
         }
 
+        // Определяем корневую папку системы для подключение шаблонов из любой вложенной папки через их путь
+        $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
+
         $config = Config::getInstance();
-        $folders = array_merge(array($gblRoot, $tplRoot), $tplFolders);
+        $folders = array_merge(array($cmsFolder, $gblRoot, $tplRoot), $tplFolders);
         $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
