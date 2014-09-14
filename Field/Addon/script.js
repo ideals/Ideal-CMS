@@ -37,6 +37,14 @@ $('#add-addon-button').click(function(){
 $('#add-addon-add').click(function(){
     addonName = $('select#add-addon-select').val();
     addonField = getAddonFieldName();
+    addons = $.parseJSON($('#' + addonField).val()); // список подключенных к странице аддонов
+
+    // Ищем максимальный ID
+    maxId = 0;
+    for (i = 0; i < addons.length; i++) {
+        maxId = (addons[i][0] > maxId) ? addons[i][0] : maxId;
+    }
+    newId = maxId - 0 + 1; // - 0 нужен для приведения типа maxId
 
     // Переданные параметры нужно записать в глобальную переменную idObject
     //window.idObject['action'] = action;
@@ -55,7 +63,7 @@ $('#add-addon-add').click(function(){
             addonName: addonName,
             addonField: addonField,
             groupName: 'general', // todo могут ли быть аддоны в аддонах или вложенных вкладках
-            name: ''
+            newId: newId
         },
         onAddNewTab,
         "json"
@@ -74,12 +82,12 @@ function onAddNewTab(data) {
     $('#add-addon-button').toggle();
     $('#add-addon').toggleClass('hide');
 
-    // Добавляем в список вкладок для редактрования
-    $('#addonsList').append('<li>' + data['tabName'] + '</li>');
+    // Добавляем в список вкладок для редактирования
+    $('div#addonsList > ul').append('<li>' + data['name'] + '</li>');
 
     // Добавляем вкладку к списку вкладок
-    $('#tabs').append(data['tabHeader']);
+    $('#tabs').append(data['header']);
 
     // Добавляем собственно само содержимое вкладок
-    $('#tabs-content').append(data['tabContent']);
+    $('#tabs-content').append(data['content']);
 }
