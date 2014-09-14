@@ -81,21 +81,23 @@ class Model
             $addonVar = $v[1];
             $addonName = $v[2];
 
-            // Получаем название и содержимое вкладки
-            $tab = $this->getTab($tabId, $addonVar);
-
-            $addonVar .= '_' . $tabId;
-            $addonName = ($addonName == '') ? $tab['name'] : $addonName; // если по какой-то причине в БД сбросится
+            // Получаем название, заголовок и содержимое вкладки
+            $tab = $this->getTab($tabId, $addonVar, $addonName);
 
             // Записываем заголовок вкладки
-            $result['names'] .= addslashes(
-                "<!--suppress HtmlUnknownAnchorTarget -->" // это чтобы PhpStorm не ругался на href='#tab{$addonVar}'
-                . "<li><a data-toggle=\"tab\" id=\"tab{$addonVar}Head\" href='#tab{$addonVar}'>{$addonName}</a>"
-                . "</li>"
+            $result['names'] .= addslashes($tab['header']);
+
+            $tab['content'] = str_replace(
+                array("\\", '<script>', '/', "'"),
+                array("\\\\", '\<script>', '\/', "\\'"),
+                $tab['content']
             );
 
+            // Убираем переводы строки, иначе текст не обрабатывается в JS
+            $tab['content'] = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tab['content']);
+
             // Записываем содержимое вкладки
-            $result['contents'] .= "<div id=\"tab{$addonVar}\" class=\"tab-pane\">{$tab['content']}<\/div>";
+            $result['contents'] .= $tab['content'];
         }
 
         return $result;
@@ -105,12 +107,12 @@ class Model
      * Получение названия и содержимого одной вкладки
      *
      * @param  integer $id Идентификатор вкладки
-     * @param string $addonName Название аддона
+     * @param string $addonVar Название аддона
      * @return array
      */
-    protected function getTab($id, $addonName)
+    public function getTab($id, $addonVar, $addonName = '')
     {
-        $class = Util::getClassName($addonName, 'Addon') . '\\Model';
+        $class = Util::getClassName($addonVar, 'Addon') . '\\Model';
         /** @var \Ideal\Core\Admin\Model $model */
         $model = new $class('');
         $model->setFieldsGroup($this->name . '_' . $id);
@@ -125,19 +127,26 @@ class Model
             $model->setPageDataByPrevStructure($prevStructure);
         }
 
+        $addonVar .= '_' . $id;
+        $addonName = ($addonName == '') ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
+
+        $tab = "<!--suppress HtmlUnknownAnchorTarget -->" // это чтобы PhpStorm не ругался на href='#tab{$addonVar}'
+            . "<li><a data-toggle=\"tab\" id=\"tab{$addonVar}Head\" href=\"#tab{$addonVar}\">{$addonName}</a>"
+            . "</li>";
+
         // Получение содержимого вкладки
         $tabContent = $model->getFieldsList($model->fields);
 
-        $tabContent = str_replace(
-            array("\\", '<script>', '</script>', "'"),
-            array("\\\\", '\<script>', '<\/script>', "\\'"),
-            $tabContent
+        // Оборачиваем в div вкладки
+        $tabContent = "<div id=\"tab{$addonVar}\" class=\"tab-pane\">{$tabContent}</div>";
+
+        $result = array(
+            'name' => $addonName,
+            'header' => $tab,
+            'content' => $tabContent
         );
 
-        // Убираем переводы строки, иначе текст не обрабатывается в JS
-        $tabContent = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tabContent);
-
-        return array('name' => $model->params['name'], 'content' => $tabContent);
+        return $result;
     }
 
     /**

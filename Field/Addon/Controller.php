@@ -59,7 +59,7 @@ class Controller extends AbstractController
         $editHtml = '<div id="addonsList"></div>'
             . $addonModel->getAvailableAddonsList()
             . '<button class="btn btn-primary">Сохранить</button>'
-            . '<button class="btn btn-default" onclick="$(\'#tabsModal\').toggle()">Отменить</button>';
+            . '<button class="btn btn-default" onclick="$(\'#tabsModal\').toggle()">Закрыть</button>';
 
         $editHtml = strtr($editHtml, array("\n" => ''));
         $editHtml = addcslashes($editHtml, "'");
