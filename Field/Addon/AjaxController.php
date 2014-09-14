@@ -26,9 +26,12 @@ class AjaxController extends \Ideal\Core\AjaxController
         $this->model->setPageDataById($request->id);
 
         $addonModel = new Model();
-        $addonModel->setModel($this->model, $request->addonField, $request->groupName);
+        $field = substr($request->addonField, strlen($request->groupName) + 1);
+        $addonModel->setModel($this->model, $field, $request->groupName);
 
-        echo '111';
+        // Получаем html-код новой вкладки, её заголовок и название
+        $result = $addonModel->getTab($request->newId, $request->addonName);
+
+        echo json_encode($result);
     }
-
 }
