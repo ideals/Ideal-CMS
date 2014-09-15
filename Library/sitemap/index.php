@@ -1,9 +1,14 @@
+#!
 <?php
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING); //| E_STRICT
 ini_set('display_errors', 'On');
 
 require_once(dirname(__FILE__) . '/Ontology.php');
-require_once(dirname(__FILE__) . '/Crawler.class.php');
+if (file_exists('../../../Ideal.c/Library/sitemap/Crawler.class.php')) {
+    require_once '../../../Ideal.c/Library/sitemap/Crawler.class.php';
+} else {
+    require_once(dirname(__FILE__) . '/Crawler.class.php');
+}
 require_once(dirname(__FILE__) . '/GsgXml.class.php');
 
 class myCrawler
