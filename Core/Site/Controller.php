@@ -178,6 +178,7 @@ class Controller
 
         $this->view->domain = strtoupper($config->domain);
         $this->view->startUrl = $config->cms['startUrl'];
+        $this->view->minifier = $config->cache['jsAndCss']; // флаг включения минификации js и css
 
         $this->view->breadCrumbs = $this->model->getBreadCrumbs();
 
