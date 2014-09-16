@@ -16,8 +16,10 @@ if ($scriptDir !== $_SERVER['REQUEST_URI']) {
 define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT']);
 
 // Абсолютный адрес размещения админки
-define('CMS_ROOT', $_SERVER['DOCUMENT_ROOT']
-    . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/setup')));
+define(
+    'CMS_ROOT',
+    $_SERVER['DOCUMENT_ROOT'] . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/setup'))
+);
 
 // Абсолютный адрес папки, в которой находится папка админки
 define('ROOT', substr(CMS_ROOT, 0, strrpos(CMS_ROOT, '/')));
@@ -371,9 +373,17 @@ function installCopyRoot()
 
     copyDir('front/files', ROOT . '/files');
     copyDir('front/images', ROOT . '/images');
-    if (!file_exists(ROOT . '/js')) {
-        mkdir(ROOT . '/js');
-    }
+
+    copyDir('front/css', ROOT . '/css');
+    $file = file_get_contents('css/min.gen.php');
+    fillPlaceholders($file);
+    file_put_contents(ROOT . '/css/min.gen.php', $file);
+
+    copyDir('front/js', ROOT . '/js');
+    $file = file_get_contents('js/min.gen.php');
+    fillPlaceholders($file);
+    file_put_contents(ROOT . '/js/min.gen.php', $file);
+
     copyDir('../Library/bootstrap', ROOT . '/js/bootstrap');
     copyDir('../Library/jquery', ROOT . '/js/jquery');
     if (!file_exists(ROOT . '/tmp')) {
