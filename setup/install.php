@@ -373,6 +373,21 @@ function installCopyRoot()
     copyDir('front/images', ROOT . '/images');
     if (!file_exists(ROOT . '/js')) {
         mkdir(ROOT . '/js');
+        copy('scripts-styles/.htaccess', ROOT . '/js/.htaccess');
+
+        $file = file_get_contents('scripts-styles/min.gen.php');
+        fillPlaceholders($file);
+        $file = str_replace('[[TYPE]]', 'js', $file);
+        file_put_contents(ROOT . '/js/min.gen.php', $file);
+    }
+    if (!file_exists(ROOT . '/css')) {
+        mkdir(ROOT . '/css');
+        copy('scripts-styles/.htaccess', ROOT . '/css/.htaccess');
+
+        $file = file_get_contents('scripts-styles/min.gen.php');
+        fillPlaceholders($file);
+        $file = str_replace('[[TYPE]]', 'css', $file);
+        file_put_contents(ROOT . '/css/min.gen.php', $file);
     }
     copyDir('../Library/bootstrap', ROOT . '/js/bootstrap');
     copyDir('../Library/jquery', ROOT . '/js/jquery');

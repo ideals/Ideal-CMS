@@ -11,6 +11,7 @@ return array(
         'tmpFolder' => '/tmp', // Путь к папке с временными файлами | Ideal_Text
         'errorLog' => 'firebug', // Способ уведомления об ошибках | Ideal_Select | {"firebug":"FireBug","email":"отправлять на email менеджера","display":"отображать в браузере","comment":"комментарий в html-коде","file":"сохранять в файл notice.log"}
         'adminEmail' => '[[CMSLOGIN]]', // Почта, на которую будут отправляться сообщения об ошибках | Ideal_Text
+        'enabledMin' => '0', // Сборка и минификация css и js файлов | Ideal_Checkbox
     ),
     'cache' => array( // Кэширование
         'templateSite' => '0', // Кэширование twig-шаблонов | Ideal_Checkbox

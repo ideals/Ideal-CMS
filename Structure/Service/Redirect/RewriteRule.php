@@ -318,13 +318,18 @@ RULE;
         // Основным считается список редиректов из redirect.txt
         $this->redirects = $redirectTxt;
 
-        // Уведомление о том, когда есть в redirect.txt и нет в htaccess
-        foreach ($redirectTxt as $from => $v) {
-            if (!isset($redirectHtaccess[$from])) {
-                $v['error'] .= 'Редирект есть в redirect.txt и нет в .htaccess<br />';
-                $this->redirects[$from] = $v;
+        if (is_array($redirectTxt)) {
+            // Уведомление о том, когда есть в redirect.txt и нет в htaccess
+            foreach ($redirectTxt as $from => $v) {
+                if (!isset($redirectHtaccess[$from])) {
+                    $v['error'] .= 'Редирект есть в redirect.txt и нет в .htaccess<br />';
+                    $this->redirects[$from] = $v;
+                }
             }
         }
+
+        // Проверим, инициализировался ли массив $redirectHtaccess
+        if (!is_array($redirectHtaccess)) return;
 
         // Проходимся по редиректам из .htaccess и добавляем недостающие в основной список
         foreach ($redirectHtaccess as $from => $v) {

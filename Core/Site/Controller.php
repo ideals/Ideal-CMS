@@ -180,7 +180,7 @@ class Controller
         $this->view->startUrl = $config->cms['startUrl'];
 
         $this->view->breadCrumbs = $this->model->getBreadCrumbs();
-
+        $this->view->minificator = $config->cms['enabledMin'];
         $this->view->year = date('Y');
 
         $helper = new Helper();
