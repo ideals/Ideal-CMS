@@ -24,11 +24,10 @@ class Router
      */
     public function __construct()
     {
-        // Проверка на AJAX-запрос
+        // Проверка на простой AJAX-запрос
         $request = new Request();
         if ($request->mode == 'ajax') {
-            $this->controllerName = $request->module . '\\Structure\\'
-                . $request->controller . '\\Site\\AjaxController';
+            $this->controllerName = $request->controller . '\\AjaxController';
             return;
         }
 
@@ -124,6 +123,12 @@ class Router
             return $this->controllerName;
         }
 
+        $request = new Request();
+        if ($request->mode == 'ajax-model' && $request->controller != '') {
+            // Если это ajax-вызов с явно указанным namespace класса ajax-контроллера
+            return $request->controller . '\\AjaxController';
+        }
+
         $path = $this->model->getPath();
 
         if (count($path) == 0 && $this->model->is404) {
@@ -154,6 +159,12 @@ class Router
             // В обычном случае название отображаемой структуры определяется по соответствующему
             // полю последнего элемента пути
             $structure = $end['structure'];
+        }
+
+        if ($request->mode == 'ajax-model' && $request->controller == '') {
+            // Если это ajax-вызов без указанного namespace класса ajax-контроллера,
+            // то используем namespace модели
+            return Util::getClassName($end['structure'], 'Structure') . '\\Site\\AjaxController';
         }
 
         $controllerName = Util::getClassName($structure, 'Structure') . '\\Site\\Controller';

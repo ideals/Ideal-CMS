@@ -35,6 +35,6 @@ class Controller extends AbstractController
         return
             '<textarea class="form-control" name="' . $this->htmlName
             . '" id="' . $this->htmlName
-            . '">' . htmlspecialchars(str_replace('\\', '\\\\', $this->getValue())) . '</textarea>';
+            . '">' . htmlspecialchars($this->getValue()) . '</textarea>';
     }
 }
