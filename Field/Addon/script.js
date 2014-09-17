@@ -90,4 +90,8 @@ function onAddNewTab(data) {
 
     // Добавляем собственно само содержимое вкладок
     $('#tabs-content').append(data['content']);
+
+    // Записываем в поле аддона новый список элементов
+    addonField = getAddonFieldName();
+    $('#' + addonField).val(data['list']);
 }
