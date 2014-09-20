@@ -60,7 +60,7 @@ if ($error == '' && $errorText == 'Ok') {
 
         <link href="../Library/bootstrap/css/bootstrap.css" rel="stylesheet">
 
-        <script type="text/javascript" src="../Library/jquery/jquery-1.8.3.min.js"></script>
+        <script type="text/javascript" src="../Library/jquery/jquery.min.js"></script>
         <script type="text/javascript" src="../Library/bootstrap/js/bootstrap.min.js"></script>
         <script type="text/javascript">
             $(document).ready(function () {
