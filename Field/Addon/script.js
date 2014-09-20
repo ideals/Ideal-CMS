@@ -7,11 +7,11 @@ $(document).ready(function() {
     available = $.parseJSON($('#available_addons'));
 
     // Строим список подключённых аддонов в html-виде
-    addonsHtml = '<ul>';
+    addonsHtml = '<div class="list-group">';
     for (i = 0; i < addons.length; i++) {
-        addonsHtml += '<li>' + addons[i][2] + '</li>';
+        addonsHtml += '<a class="list-group-item">' + addons[i][2] + '</a>';
     }
-    addonsHtml += '</ul>';
+    addonsHtml += '</div>';
 
     // Отображаем список аддонов на странице
     $('#addonsList').html(addonsHtml);
@@ -83,7 +83,7 @@ function onAddNewTab(data) {
     $('#add-addon').toggleClass('hide');
 
     // Добавляем в список вкладок для редактирования
-    $('div#addonsList > ul').append('<li>' + data['name'] + '</li>');
+    $('div#addonsList > ul').append('<a class="list-group-item">' + data['name'] + '</a>');
 
     // Добавляем вкладку к списку вкладок
     $('#tabs').append(data['header']);
