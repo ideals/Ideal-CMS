@@ -44,7 +44,7 @@ class Minifier {
         'encode' => false,          //base64 images from CSS and include as part of the file?
         'timer' => true,           //Ouput script execution time
         'gzip' => false,            //Output as php with gzip?
-        'closure' => true,          //Use google closure (utilizes cURL)
+        'closure' => false,          //Use google closure (utilizes cURL)
         'remove_comments' => true   // remove comments
     );
     
@@ -330,18 +330,18 @@ class Minifier {
                 else
                 {
                     //Not using google closure, default to JShrink but make sure the file exists
-                    if( !file_exists( dirname( __FILE__ ) .'/jShrink.php' ) )
+                    if( !file_exists( '../Jshrink/jShrink.php' ) )
                     {
                         $this->messages[]['Minifier Log'] = 'jShrink does not exist locally.  Retrieving...';
                         
-                        $this->handle = fopen( dirname( __FILE__ ) .'/jShrink.php', 'w' );
+                        $this->handle = fopen('../Jshrink/jShrink.php', 'w' );
                         $this->jshrink = file_get_contents( 'https://raw.github.com/tedivm/JShrink/master/src/JShrink/Minifier.php' );
                         fwrite( $this->handle, $this->jshrink );
                         fclose( $this->handle );
                     }
                 
                     //Include jsmin
-                    require_once( dirname( __FILE__ ) .'/jShrink.php' );
+                    require_once( dirname( __FILE__ ) .'../Jshrink/jShrink.php' );
                 
                     //Minify the javascript
                     $this->content = JShrink\Minifier::minify( $this->content, array( 'flaggedComments' => $this->settings['remove_comments'] ) );
