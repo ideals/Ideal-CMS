@@ -30,8 +30,6 @@ class Minifier {
     public $output_file;
     public $extension;
     private $type;
-    //Max image size for inclusion
-    const IMAGE_MAX_SIZE = 5;
     //For script execution time (src: http://bit.ly/18O3VWw)
     private $mtime;
     //Sum of output messages
@@ -41,10 +39,8 @@ class Minifier {
     //List of available config keys that can be set via init
     private $config_keys = array(
         'echo' => false,             //Return or echo the values
-        'encode' => false,          //base64 images from CSS and include as part of the file?
         'timer' => true,           //Ouput script execution time
         'gzip' => false,            //Output as php with gzip?
-        'closure' => true,          //Use google closure (utilizes cURL)
         'remove_comments' => true   // remove comments
     );
     
@@ -111,113 +107,6 @@ class Minifier {
             return false;
         }
     }
-    
-    
-    /**
-     * Function to seek out and replace image references within CSS with base64_encoded data streams
-     * Used in minify_contents function IF global for $this->encode
-     * This function will retrieve the contents of local OR remote images, and is based on 
-     * Matthias Mullie <minify@mullie.eu>'s function, "importFiles" from the JavaScript and CSS minifier
-     * http://www.phpclasses.org/package/7519-PHP-Optimize-JavaScript-and-CSS-files.html
-     *
-     * @access private
-     * @param string $source_file (used for location)
-     * @param string $contents
-     * @return string $updated_style
-     */
-    private function merge_images( $source_file, $contents )
-    {
-        global $messages;
-        
-        $this->directory = dirname( $source_file ) .'/';
-
-        if( preg_match_all( '/url\((["\']?)((?!["\']?data:).*?\.(gif|png|jpg|jpeg))\\1\)/i', $contents, $this->matches, PREG_SET_ORDER ) )
-        {
-            $this->find = array();
-            $this->replace = array();
-
-            foreach( $this->matches as $this->graphic )
-            {
-
-                $this->extension = pathinfo( $this->graphic[2], PATHINFO_EXTENSION );
-
-                $this->image_file = '';
-
-                //See if the file is remote or local
-                if( $this->remote_file( $this->graphic[2] ) )
-                {
-
-                    //It's remote, and CURL is pretty fast
-                    $ch = curl_init();
-                    curl_setopt( $ch, CURLOPT_URL, $this->graphic[2] );
-                    curl_setopt( $ch, CURLOPT_NOBODY, 1 );
-                    curl_setopt( $ch, CURLOPT_FAILONERROR, 1 );
-                    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
-
-                    //And it WAS remote, and it DOES exist
-                    if( curl_exec( $ch ) !== FALSE )
-                    {
-
-                        //Get the image file
-                        $cd = curl_init( $this->graphic[2] );
-                        curl_setopt( $cd, CURLOPT_HEADER, 0 );
-                        curl_setopt( $cd, CURLOPT_RETURNTRANSFER, 1 );
-                        curl_setopt( $cd, CURLOPT_BINARYTRANSFER, 1 );
-                        $this->image_file = curl_exec( $cd );
-                        //Get the remote filesize
-                        $this->filesize = curl_getinfo( $cd, CURLINFO_CONTENT_LENGTH_DOWNLOAD );
-                        curl_close( $cd );
-                        
-                        if( $this->filesize <= Minifier::IMAGE_MAX_SIZE * 1024 )
-                        {
-                            //Assign the find and replace
-                            $this->find[] = $this->graphic[0];
-                            $this->replace[] = 'url(data:'.$this->extension.';base64,'.base64_encode( $this->image_file ).')';   
-                        }
-
-                    } //End file exists
-                    curl_close( $ch );
-                
-                } //End remote file
-                
-                elseif( file_exists( $this->directory . $this->graphic[2] ) )
-                {
-                    //File DOES exist locally, get the contents
-                    
-                    //Check the filesize
-                    $this->filesize = filesize( $this->directory . $this->graphic[2] );
-                    
-                    if( $this->filesize <= Minifier::IMAGE_MAX_SIZE * 1024 )
-                    {
-                        //File is within the filesize requirements so add it
-                        $this->image_file = file_get_contents( $this->directory . $this->graphic[2] );
-
-                        //Assign the find and replace
-                        $this->find[] = $this->graphic[0];
-                        $this->replace[] = 'url(data:'.$this->extension.';base64,'.base64_encode( $this->image_file ).')';   
-                    }
-                
-                } //End local file
-
-            }
-
-            //Log the number of replacements to the console
-            $this->messages[]['Minifier Log: merge_images'] = count( $this->replace ) .' files base64_encoded into ' . $source_file;
-            
-            //Find and replace all the images with the base64 data
-            $this->updated_style = str_replace( $this->find, $this->replace, $contents );
-            
-            return $this->updated_style;
-
-        } //End if( regex for images)
-        else
-        {
-            //No images found in the sheet, just return the contents
-            return $contents;
-        }
-        
-    } //end merge_images()
-    
 	
     /**
      * Private function to handle minification of file contents
@@ -260,11 +149,6 @@ class Minifier {
             if( !empty( $this->type ) && $this->type == 'css' )
             {
                 $this->content = $this->source;
-                //If the param is set to merge images into the css before minifying...
-                if( $this->settings['encode'] )
-                {
-                    $this->content = $this->merge_images( $src_file, $this->content );   
-                }
                 
                 /* remove comments */
                 if( $this->settings['remove_comments'] )
@@ -284,69 +168,24 @@ class Minifier {
             if( !empty( $this->type ) && $this->type == 'js' )
             {
                 $this->content = $this->source;
-                
-                /**
-                 * Migrated preg_replace and str_replace custom minification to use google closure API
-                 * OR jsMin on 15-Jun-2013 due to js minification irregularities with most regex's: 
-                 * https://github.com/tedivm/JShrink
-                 * https://developers.google.com/closure/compiler/
-                 * Accomodates lack of local file for JShrink by getting contents from github
-                 * and writing to a local file for the class (just in case)
-                 * If bool is passed for 'closure' => true during class initiation, cURL request processes
-                 */
-                if( $this->settings['closure'] )
+
+                //Not using google closure, default to JShrink but make sure the file exists
+                if( !file_exists( dirname( __FILE__ ) .'/jShrink.php' ) )
                 {
-                    
-                    //Build the data array
-                    $data = array(
-                        'compilation_level' => 'SIMPLE_OPTIMIZATIONS',
-                        'output_format' => 'text', 
-                        'output_info' => 'compiled_code', 
-                        'js_code' => urlencode( $this->content )
-                    );
+                    $this->messages[]['Minifier Log'] = 'jShrink does not exist locally.  Retrieving...';
 
-                    //Compile it into a post compatible format
-                    $fields_string = '';
-                    foreach( $data as $key => $value )
-                    {
-                        $fields_string .= $key . '=' . $value . '&';
-                    }
-                    rtrim( $fields_string, '&' );
-                    
-                    //Initiate and execute the curl request
-                    $h = curl_init();
-                    curl_setopt( $h, CURLOPT_URL, 'http://closure-compiler.appspot.com/compile' ); 
-                    curl_setopt( $h, CURLOPT_POST, true );
-                    curl_setopt( $h, CURLOPT_POSTFIELDS, $fields_string );
-                    curl_setopt( $h, CURLOPT_HEADER, false );
-                    curl_setopt( $h, CURLOPT_RETURNTRANSFER, 1 );
-                    $result = curl_exec( $h );
-                    $this->content = $result;
+                    $this->handle = fopen( dirname( __FILE__ ) .'/jShrink.php', 'w' );
+                    $this->jshrink = file_get_contents( 'https://raw.github.com/tedivm/JShrink/master/src/JShrink/Minifier.php' );
+                    fwrite( $this->handle, $this->jshrink );
+                    fclose( $this->handle );
+                }
 
-                    //close connection
-                    curl_close( $h );
-                    
-                } //end if( $this->settings['closure'] )
-                else
-                {
-                    //Not using google closure, default to JShrink but make sure the file exists
-                    if( !file_exists( dirname( __FILE__ ) .'/jShrink.php' ) )
-                    {
-                        $this->messages[]['Minifier Log'] = 'jShrink does not exist locally.  Retrieving...';
-                        
-                        $this->handle = fopen( dirname( __FILE__ ) .'/jShrink.php', 'w' );
-                        $this->jshrink = file_get_contents( 'https://raw.github.com/tedivm/JShrink/master/src/JShrink/Minifier.php' );
-                        fwrite( $this->handle, $this->jshrink );
-                        fclose( $this->handle );
-                    }
-                
-                    //Include jsmin
-                    require_once( dirname( __FILE__ ) .'/jShrink.php' );
-                
-                    //Minify the javascript
-                    $this->content = JShrink\Minifier::minify( $this->content, array( 'flaggedComments' => $this->settings['remove_comments'] ) );
+                //Include jsmin
+                require_once( dirname( __FILE__ ) .'/jShrink.php' );
 
-                } //end if( !$this->settings['closure'] )
+                //Minify the javascript
+                $this->content = JShrink\Minifier::minify( $this->content, array( 'flaggedComments' => $this->settings['remove_comments'] ) );
+
 
             } //end $this->type == 'js'
             
