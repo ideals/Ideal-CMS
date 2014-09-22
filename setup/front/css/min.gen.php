@@ -17,5 +17,5 @@ $request = $_REQUEST['css'];
 array_walk($request, 'Minifier::concat_prefix');
 $min = new Minifier();
 $min->merge($_SERVER['DOCUMENT_ROOT'] . '/css/all.min.css', $_SERVER['DOCUMENT_ROOT'] . '/css', $request);
-
+header('Content-type: text/css');
 die (file_get_contents($min->compressed));
