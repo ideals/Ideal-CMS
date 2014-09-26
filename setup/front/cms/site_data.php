@@ -13,6 +13,7 @@ return array(
         'adminEmail' => '[[CMSLOGIN]]', // Почта, на которую будут отправляться сообщения об ошибках | Ideal_Text
     ),
     'cache' => array( // Кэширование
+        'jsAndCss' => '0', // Объединение и минификация css и js файлов | Ideal_Checkbox
         'templateSite' => '0', // Кэширование twig-шаблонов | Ideal_Checkbox
         'templateAdmin' => '0', // Кэширование twig-шаблонов админской части | Ideal_Checkbox
         'memcache' => '0', // Кэширование запросов к БД | Ideal_Checkbox
