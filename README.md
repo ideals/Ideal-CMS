@@ -1,4 +1,4 @@
-Ideal CMS v. 2.0b6
+Ideal CMS v. 2.0b7
 =========
 
 Система управления контентом с открытым исходным кодом, написанная на PHP.
@@ -18,15 +18,30 @@ Ideal CMS v. 2.0b6
 
 Все подробности на сайте [idealcms.ru](http://idealcms.ru/)
 
+Версия 2.0b7
+---
+
+1. FIX: удаление в админке элементов ростера и пользователей
+2. FIX: дублирование слэшей в поле Area
+3. Изменение схемы вызова ajax-контроллеров
+4. Создание файла настроек site_map.php в корне админки, если его нет в системе
+5. Подключение twig-шаблонов внутри самих шаблонов с помощью указания пути к шаблону от корня админки
+6. CKFinder обновлён до версии 2.4.2
+7. Twitter Bootstrap обновлён до версии 3.2.0
+8. Переход на версию JQuery 2.1.1 (в админке не поддерживаются IE 6, 7, 8)
+9. CKEditor обновлён до версии 4.4.5
+10. Добавлен объединитель и минимизатор JS и CSS файлов
+11. FIX: система обновлений
+
 Версия 2.0b6
 ---
 1. FIX: если не определён mysqli_result::fetch_all (не подключён mysqlnd)
-2. Изменена структура файла site_data.php
-2.1. Поля startUrl, errorLog выведены во вкладку cms
-2.2. Поле tmpDir перенесено во вкладку cms и переименовано в tmpFolder
-2.3. Удалено поле templateCachePath
-2.4. Поля isTemplateCache и isTemplateAdminCache переименованы в templateSite и templateAdmin и перенесены во вкладку cache
-2.5. Во вкладку cache добавлено поле memcache
+2. Изменена структура файла site_data.php:
+3. Поля startUrl, errorLog выведены во вкладку cms
+4. Поле tmpDir перенесено во вкладку cms и переименовано в tmpFolder
+5. Удалено поле templateCachePath
+6. Поля isTemplateCache и isTemplateAdminCache переименованы в templateSite и templateAdmin и перенесены во вкладку cache
+7. Во вкладку cache добавлено поле memcache
 
 Версия 2.0b5
 ---
