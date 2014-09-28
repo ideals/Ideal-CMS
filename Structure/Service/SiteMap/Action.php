@@ -40,6 +40,24 @@
     }
 </style>
 
+<?php
+$config = \Ideal\Core\Config::getInstance();
+$file = new \Ideal\Structure\Service\SiteData\ConfigPhp();
+
+if (!$file->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_map.php')) {
+    // Если не удалось прочитать данные из кастомного файла, значит его нет
+    // Поэтому читаем данные из демо-файла
+    $file->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/Library/sitemap/site_map_demo.php');
+    $params = $file->getParams();
+    $params['default']['arr']['website']['value'] = 'http://' . $config->domain;
+    $file->setParams($params);
+}
+
+if (isset($_POST['edit'])) {
+    $file->changeAndSave(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_map.php');
+}
+?>
+
 <!-- Nav tabs -->
 <ul class="nav nav-tabs">
     <li class="active"><a href="#settings" data-toggle="tab">Настройки</a></li>
@@ -51,25 +69,7 @@
     <div class="tab-pane active" id="settings">
         <form action="" method=post enctype="multipart/form-data">
 
-            <?php
-            $config = \Ideal\Core\Config::getInstance();
-            $file = new \Ideal\Structure\Service\SiteData\ConfigPhp();
-
-            if (!$file->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_map.php')) {
-                // Если не удалось прочитать данные из кастомного файла, значит его нет
-                // Поэтому читаем данные из демо-файла
-                $file->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/Library/sitemap/site_map_demo.php');
-                $params = $file->getParams();
-                $params['default']['arr']['website']['value'] = 'http://' . $config->domain;
-                $file->setParams($params);
-            }
-
-            if (isset($_POST['edit'])) {
-                $file->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_map.php');
-            }
-
-            echo $file->showEdit();
-            ?>
+            <?php echo $file->showEdit(); ?>
 
             <br/>
 

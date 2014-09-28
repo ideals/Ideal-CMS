@@ -7,7 +7,7 @@
     $file->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php');
 
     if (isset($_POST['edit'])) {
-        $file->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php');
+        $file->changeAndSave(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php');
     }
 
     echo $file->showEdit();

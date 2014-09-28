@@ -31,9 +31,40 @@ class ConfigPhp
     }
 
     /**
+     * Замена значений настроек в $this->params на данные, введённые пользователем
+     */
+    public function pickupValues()
+    {
+        foreach ($this->params as $tabId => $tab) {
+            foreach ($tab['arr'] as $field => $param) {
+                $fieldName = $tabId . '_' . $field;
+                $model = new MockModel();
+                $model->fields[$fieldName] = $param;
+                $model->pageData[$fieldName] = $param['value'];
+
+                $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
+                /** @var $fieldModel \Ideal\Field\AbstractController */
+                $fieldModel = $fieldClass::getInstance();
+                $fieldModel->setModel($model, $fieldName, 'general');
+
+                // Получаем данные от пользователя
+                $value = $fieldModel->pickupNewValue();
+
+                // Экранируем переводы строки для сохранения в файле
+                $value = str_replace("\r", '', $value);
+                $value = str_replace("\n", '\n', $value);
+
+                $this->params[$tabId]['arr'][$field]['value'] = $value;
+            }
+        }
+
+    }
+
+    /**
      * Сохранение обработанных конфигурационных данных в файл
      *
      * @param string $fileName Название php-файла, в который сохраняются данные
+     * @return int Возвращает количество записанных в файл байт или false
      */
     public function saveFile($fileName)
     {
@@ -46,26 +77,10 @@ class ConfigPhp
                 $pad = 8;
             }
             foreach ($tab['arr'] as $field => $param) {
-                $fieldName = $tabId . '_' . $field;
-                $model = new mockModel();
-                $model->fields[$fieldName] = $param;
-                $model->pageData[$fieldName] = $param['value'];
-
-                $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
-                /** @var $fieldModel \Ideal\Field\AbstractController */
-                $fieldModel = $fieldClass::getInstance();
-                $fieldModel->setModel($model, $fieldName, 'general');
-
-                $value = $fieldModel->pickupNewValue();
-                if ($param['type'] == 'Ideal_Area') {
-                    $value = str_replace("\r", '', $value);
-                    $value = str_replace("\n", '\n', $value);
-                }
-
                 $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;
                 $values = ($param['type'] == 'Ideal_Select') ? ' | ' . json_encode($param['values'], $options) : '';
 
-                $file .= str_repeat(' ', $pad) . "'" . $field . "' => '" . $value
+                $file .= str_repeat(' ', $pad) . "'" . $field . "' => '" . $param['value']
                     . "', // " . $param['label'] . ' | ' . $param['type'] . $values . "\n";
             }
             if ($tabId != 'default') {
@@ -74,18 +89,36 @@ class ConfigPhp
         }
 
         $file .= ");\n";
-        $fp = fopen($fileName, 'w');
-        if (fwrite($fp, $file)) {
-            $this->loadFile($fileName);
-            print <<<DONE
-<script type="text/javascript">
-        var text = '<div class="alert alert-block alert-success fade in">'
-                 + '<button type="button" class="close" data-dismiss="alert">&times;</button>'
-                 + '<span class="alert-heading">Настройки сохранены!</span></div>';
-        $("form").prepend(text);
-</script>
-DONE;
+
+        return file_put_contents($fileName, $file);
+    }
+
+    /**
+     * Изменение настроек на введённые пользователем и сохранение их в файл
+     *
+     * @param string $fileName Название php-файла, в который сохраняются данные
+     * @return bool Флаг успешности сохранения данных в файл
+     */
+    public function changeAndSave($fileName)
+    {
+        $class = 'alert';
+        $res = true;
+        $text = 'Настройки сохранены!';
+
+        // Заменяем настройки на введённые пользователем
+        $this->pickupValues();
+
+        if ($this->saveFile($fileName) === false) {
+            $res = false;
+            $text = 'Не получилось сохранить настройки в файл ' . $fileName;
         }
+
+        print <<<DONE
+        <div class="{$class} {$class}-block {$class}-success fade in">
+        <button type="button" class="close" data-dismiss="{$class}">&times;</button>
+        <span class="{$class}-heading">{$text}</span></div>
+DONE;
+        return $res;
     }
 
     /**
@@ -202,7 +235,7 @@ DONE;
             $tabsContent .= '<div class="tab-pane well ' . $active . '" id="' . $tabId . '">';
             foreach ($tab['arr'] as $field => $param) {
                 $fieldName = $tabId . '_' . $field;
-                $model = new mockModel();
+                $model = new MockModel();
                 $model->fields[$fieldName] = $param;
                 $model->pageData[$fieldName] = $param['value'];
 
@@ -226,7 +259,7 @@ DONE;
     }
 }
 
-class mockModel
+class MockModel
 {
 
     public $fields;
