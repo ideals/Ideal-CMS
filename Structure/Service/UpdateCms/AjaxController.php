@@ -100,6 +100,16 @@ class AjaxController extends \Ideal\Core\AjaxController
         // Модуль установился успешно, делаем запись в лог обновлений
         $this->updateModel->writeLog('Installed ' . $_POST['name'] . ' v. ' . $_POST['version']);
 
+        // Определяем путь к тому что мы обновляем, cms или модули
+        $config = Config::getInstance();
+        if ($_POST['name'] == "Ideal-CMS") {
+            // Путь к cms
+            $updateCore = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Ideal";
+        } else {
+            // Путь к модулям
+            $updateCore = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Mods" . '/' . $_POST['name'];
+        }
+
         // Удаляем старую папку
         $this->updateModel->removeDirectory($updateCore . '_old');
 

@@ -156,6 +156,10 @@ class Model
     public function removeDirectory($dir, $clear = false)
     {
         $res = true;
+        if (!file_exists($dir)) {
+            // Если папки нет, то и удалять её не надо, а если требовалось очистить - возвращаем ошибку
+            return !$clear;
+        }
         $files = array_diff(scandir($dir), array('.', '..'));
         foreach ($files as $file) {
             $res = (is_dir("$dir/$file")) ? $this->removeDirectory("$dir/$file") : unlink("$dir/$file");
@@ -201,7 +205,7 @@ class Model
         $lastScript = '';
         foreach ($logFile as $v) {
             if (strpos($v, $str) === 0) {
-                $lastScript = $v;
+                $lastScript = trim($v);
             }
         }
 
@@ -248,8 +252,8 @@ class Model
             $scriptFolder = $updateFolder . '/' . $folder;
             $files = array_diff(scandir($scriptFolder), array('.', '..'));
             foreach ($files as $file) {
-                $file = $scriptFolder . '/' . $file;
-                if (is_dir($file)) {
+                $file = $str . '/' . $folder . '/' . $file;
+                if (is_dir($scriptFolder . '/' . $file)) {
                     continue;
                 }
                 if ($lastScript == $file) {
@@ -267,10 +271,10 @@ class Model
             $ext = substr($script, strrpos($script, '.'));
             switch ($ext) {
                 case '.php':
-                    include $script;
+                    include DOCUMENT_ROOT . '/' . $config->cmsFolder . $script;
                     break;
                 case '.sql':
-                    $query = file_get_contents($script);
+                    $query = file_get_contents(DOCUMENT_ROOT . '/' . $config->cmsFolder . $script);
                     $db->query($query);
                     break;
                 default:
