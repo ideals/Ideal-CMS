@@ -29,6 +29,26 @@ class Controller extends AbstractController
     protected static $instance;
 
     /**
+     * Отображение html-элементов для редактирования этого поля
+     *
+     * @return string HTML-код группы редактирования для этого поля
+     */
+    public function showEdit()
+    {
+        $input = $this->getInputText();
+        $html = <<<HTML
+        <div id="{$this->htmlName}-control-group" class="form-group checkbox">
+            <div class="{$this->inputClass} {$this->htmlName}-controls">
+                {$input}
+                <div id="{$this->htmlName}-help"></div>
+            </div>
+        </div>
+HTML;
+
+        return $html;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getInputText()
@@ -37,16 +57,6 @@ class Controller extends AbstractController
         return '<label class="checkbox"><input type="checkbox" name="' . $this->htmlName
         . '" id="' . $this->htmlName . '" '
         . $checked . '> ' . $this->field['label'] . '</label>';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getLabelText()
-    {
-        // Label для checkbox выводится справа от него, а не слева,
-        // поэтому для левого label возвращаем пустую строку
-        return '';
     }
 
     /**
