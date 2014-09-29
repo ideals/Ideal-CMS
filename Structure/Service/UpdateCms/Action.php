@@ -52,9 +52,6 @@ $url = $getVersionScript . '?domain=' . $domain . '&ver=' . urlencode(serialize(
 // Переводим информацию о версиях в формат json для передачи в JS
 $nowVersions = json_encode($nowVersions);
 
-// Подключаем библиотеку для использования JSONP
-echo '<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/jquery.jsonp-2.4.0.min.js"> </script>';
-
 $msg = $updateModel->getErrorText();
 if ($msg !== '') {
     echo '<div class="alert-error">' . $msg . "</div>\n";
@@ -63,83 +60,15 @@ if ($msg !== '') {
 
 <div id="form-input"></div>
 
+<!-- Подключаем библиотеку для использования JSONP -->
+<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/jquery.jsonp-2.4.0.min.js"> </script>
+
+<!-- Передаём в JS необходимые переменные -->
 <script type="text/javascript">
-
-    /** Получение новых версий и создания представления */
-    $.jsonp({
-        url: '<?php echo $url ?>',
-        callbackParameter: 'callback',
-        dataType: 'jsonp',
-        success: function (versions) {
-            var nowVersions = '<?php echo  $nowVersions ?>';
-            nowVersions = $.parseJSON(nowVersions);
-
-            if (versions['message'] !== undefined) {
-                $('<h4>').appendTo('#form-input').html(versions['message']);
-                nowVersions = null;
-            }
-
-            $.each(nowVersions, function (key, value) {
-                // Выводим заголовок с именем обновляемого модуля
-                var buf = key + " " + value;
-                $('<h4>').appendTo('#form-input').text(buf);
-                var update = versions[key];
-
-                if ((update == undefined) || (update == "")) {
-                    $('<p>').appendTo('#form-input').text("Обновление не требуется.");
-                    return true;
-                }
-                if (update['message'] !== undefined) {
-                    $('<p>').appendTo('#form-input').text(update['message']);
-                    return true;
-                }
-
-                $('<form>')
-                    .appendTo('#form-input')
-                    .attr('class', 'update-form form-inline')
-                    .attr('action', 'javascript:void(0)')
-                    .attr('method', 'post');
-
-                $.each(update, function (keyLine, line) {
-                    buf = 'updateModule("' + key + '","' + line['version'] + '")';
-                    $('<button>')
-                        .appendTo('form:last').attr('class', 'btn')
-                        .attr('onClick', buf).attr('class', 'btn')
-                        .text('Обновить на версию ' + line['version'] + ' (' + line['date'] + ')');
-                    if (line['danger']) {
-                        $('button:last').attr('class', 'btn btn-danger')
-                    }
-                    $('button:last').after('&nbsp; &nbsp;');
-                });
-            });
-        },
-        error: function () {
-            $('#message').after('<p><b>Не удалось соединиться с сервером</b></p>');
-        }
-    });
-
-    /** Обновление CMS или модуля */
-    function updateModule(moduleName, version) {
-        $.ajax({
-            url: 'index.php?par=<?php echo $_GET['par']; ?>',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                mode: 'ajax',
-                controller: '\\Ideal\\Structure\\Service\\UpdateCms',
-                action: 'ajaxDownload',
-                name: moduleName,
-                version: version,
-                config: '<?php echo $config->cmsFolder; ?>'
-            },
-            success: function (data) {
-                // Выводим сообщение и обновляем страницу
-                alert(data.message);
-                location.reload();
-            },
-            error: function () {
-                alert('Не удалось произвести обновление');
-            }
-        })
-    }
+    var urlSrv = '<?php echo $url; ?>';
+    var nowVersions = '<?php echo  $nowVersions ?>';
+    var url = '<?php echo $_GET['par']; ?>';
 </script>
+
+<!-- Подключаем ajax скрыпты -->
+<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/ajax.js"> </script>

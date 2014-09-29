@@ -11,6 +11,7 @@ namespace Ideal\Structure\Service\UpdateCms;
 
 use Ideal\Core\Config;
 use Ideal\Core\Db;
+use Ideal\Core\Util;
 
 /**
  * Получение номеров версий установленной CMS и модулей
@@ -28,26 +29,68 @@ class Model
     /** @var array Массив папок для обновления */
     protected $updateFolders = array();
 
+    /** @var string Название модуля */
+    public $updateName = '';
+
+    /** @var string Версия, на которую производится обновление */
+    public  $updateVersion = '';
+
     /**
      * Инициализация путей к нужным папкам и файлам
      */
     public function __construct()
     {
+        if (!$this->setLog()) {
+            $this->uExit($this->errorText);
+        };
+    }
+
+    private function setLog()
+    {
         $config = Config::getInstance();
-        $this->log = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . 'update.log';
+        // Файл лога обновлений
+        $log = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . 'update.log';
+        // Проверяем существует ли файл лога
+        $fileNotExists = false;
+        if (!file_exists($log)) {
+            $this->errorText = 'Файл лога обновлений не существует ' . $log;
+            $fileNotExists = true;
+        }
+        // Проверяем доступность файла лога на запись
+        if (file_put_contents($log, '', FILE_APPEND) === false) {
+            // Если файл лога не существует и создать его не удалось
+            if ($fileNotExists) {
+                return false;
+            }
+            $this->errorText = 'Файл ' . $log . ' недоступен для записи';
+            return false;
+        }
+        $this->log = $log;
+        return true;
+    }
+
+    /**
+     * Задаём название и версию обновляемого модуля
+     *
+     * @param string $updateName    Название модуля
+     * @param string $updateVersion Номер версии, на которую обновляемся
+     */
+    public function setUpdate($updateName, $updateVersion)
+    {
+        // todo Сделать защиту от хакеров на POST-переменные
+        $this->updateName = $updateName;
+        $this->updateVersion = $updateVersion;
     }
 
     /**
      * Загрузка и распаковка архива с обновлением модуля
-     *
-     * @param string $updateName    Название модуля
-     * @param string $updateVersion Номер версии, на которую обновляемся
      * @throws \Exception
      */
-    public function downloadUpdate($updateName, $updateVersion)
+    public function downloadUpdate()
     {
-        $updateUrl = $this->updateFolders['getFileScript'] . '?name=' . urlencode(serialize($updateName))
-            . '&ver=' . $updateVersion;
+        $updateUrl = $this->updateFolders['getFileScript']
+            . '?name=' . urlencode(serialize($this->updateName))
+            . '&ver=' . $this->updateVersion;
         $file = file_get_contents($updateUrl);
 
         // Проверка получен ли ответ от сервера
@@ -83,14 +126,24 @@ class Model
         }
 
         // Сохраняем полученный архив в свою папку (например, /www/example.com/tmp/update)
-        $archive = $this->updateFolders['uploadDir'] . $updateName;
+        $archive = $this->updateFolders['uploadDir'] . $this->updateName;
         file_put_contents($archive, $fileGet['file']);
 
         if (md5_file($archive) != $fileGet['md5']) {
             $this->uExit('Полученный файл повреждён (хеш не совпадает)');
         }
 
-        // После успешной загрузки архива, распаковываем его
+        // Возвращаем название загруженного архива
+        return($archive);
+    }
+
+    /**
+     * @param string $archive Полный путь к файлу архива с новой версии
+     * @return bool
+     * @throws \Exception
+     */
+    public function unpackUpdate($archive)
+    {
         $zip = new \ZipArchive;
         $res = $zip->open($archive);
 
@@ -105,28 +158,41 @@ class Model
         $zip->extractTo(SETUP_DIR);
         $zip->close();
         unlink($archive);
+        return true;
+    }
 
-        // Если разархивирование произошло успешно
-
+    /**
+     * Замена каталога со старой версией на каталог с новой версией
+     *
+     * @return string Путь к старому разделу
+     * @throws \Exception
+     */
+    public function swapUpdate()
+    {
         // Определяем путь к тому что мы обновляем, cms или модули
         $config = Config::getInstance();
-        if ($updateName == "Ideal-CMS") {
+        if ($this->updateName == "Ideal-CMS") {
             // Путь к cms
             $updateCore = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Ideal";
         } else {
             // Путь к модулям
-            $updateCore = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Mods" . '/' . $updateName;
+            $updateCore = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Mods" . '/' . $this->updateName;
         }
-
         // Переименовывем папку, которую собираемся заменить
         if (!rename($updateCore, $updateCore . '_old')) {
             $this->uExit('Не удалось переименовать папку ' . $updateCore);
         }
-
         // Перемещаем новую папку на место старой
         if (!rename(SETUP_DIR, $updateCore)) {
             $this->uExit('Не удалось переименовать папку ' . $updateCore);
         }
+
+        $util = new Util();
+
+        $util->chmodR($updateCore, $config->cms['fileMode'], $config->cms['dirMode']);
+        $chmodResult = $util->resultInfo;
+
+        return $updateCore . '_old';
     }
 
     /**
@@ -191,17 +257,17 @@ class Model
         );
     }
 
+
     /**
-     * Запуск скриптов обновления модуля
+     * Получение списка скриптов
      *
-     * @param string $updateName    Название модуля
-     * @param string $updateVersion Номер версии, на которую обновляемся
+     * @return array
      */
-    public function updateScripts($updateName, $updateVersion)
+    public function getUpdateScripts()
     {
         // Находим путь к последнему установленному скрипту модуля
         $logFile = file($this->log);
-        $str = ($updateName == 'Ideal-CMS') ? '/Ideal/setup/update' : '/Mods/' . $updateName . '/setup/update';
+        $str = ($this->updateName == 'Ideal-CMS') ? '/Ideal/setup/update' : '/Mods/' . $this->updateName . '/setup/update';
         $lastScript = '';
         foreach ($logFile as $v) {
             if (strpos($v, $str) === 0) {
@@ -216,7 +282,7 @@ class Model
             $currentVersion = array_pop($scriptArr);
         } else {
             $versions = $this->getVersions(); // получаем список установленных модулей
-            $currentVersion = $versions[$updateName];
+            $currentVersion = $versions[$this->updateName];
         }
 
         // Считываем названия папок со скриптами обновления
@@ -264,27 +330,37 @@ class Model
                 $scripts[] = $file;
             }
         }
-
-        // Производим запуск скриптов обновления
-        $db = Db::getInstance();
-        foreach ($scripts as $script) {
-            $ext = substr($script, strrpos($script, '.'));
-            switch ($ext) {
-                case '.php':
-                    include DOCUMENT_ROOT . '/' . $config->cmsFolder . $script;
-                    break;
-                case '.sql':
-                    $query = file_get_contents(DOCUMENT_ROOT . '/' . $config->cmsFolder . $script);
-                    $db->query($query);
-                    break;
-                default:
-                    continue;
-            };
-            $this->writeLog($script);
-        }
+        return $scripts;
     }
 
     /**
+     * Запуск скрипта обновления
+     *
+     * @param string $script
+     */
+    public function runScript($script)
+    {
+        // Производим запуск скриптов обновления
+        $db = Db::getInstance();
+        $config = Config::getInstance();
+        $ext = substr($script, strrpos($script, '.'));
+        switch ($ext) {
+            case '.php':
+                include DOCUMENT_ROOT . '/' . $config->cmsFolder . $script;
+                break;
+            case '.sql':
+                $query = file_get_contents(DOCUMENT_ROOT . '/' . $config->cmsFolder . $script);
+                $db->query($query);
+                break;
+            default:
+                continue;
+        };
+        $this->writeLog($script);
+    }
+
+    /**
+     * Получение версии админки, а также наименований модулей и их версий
+     *
      * @return array Массив с номерами установленных версий
      */
     public function getVersions()

@@ -9,6 +9,7 @@ class Util
 {
 
     static $errorArray;
+    public $resultInfo;
 
     /**
      * Вывод сообщения об ошибке
@@ -400,5 +401,40 @@ class Util
             }
         }
         return $str;
+    }
+
+    /**
+     * Рекурсивно изменяет режим доступа к файлу
+     *
+     * @param string $path путь к папке или файлу
+     * @param string $fileMode Режим доступа к файлу "0644"
+     * @param string $dirMode Режим доступа к папке "0755"
+     * @param array $resultInfo Содержит информацию о неудачных попытках изменения режима доступа
+     */
+    public function chmodR($path, $fileMode, $dirMode)
+    {
+        if (is_dir($path)) {
+            if (!chmod($path, intval($dirMode, 8))) {
+                $this->resultInfo[] = array('path' => $path, 'mode' => $dirMode, 'is_dir' => true);
+                return;
+            }
+            $dh = opendir($path);
+            while (($file = readdir($dh)) !== false) {
+                // skip self and parent pointing directories
+                if ($file != '.' && $file != '..') {
+                    $fullPath = $path.'/'.$file;
+                    $this->chmodR($fullPath, $fileMode, $dirMode);
+                }
+            }
+            closedir($dh);
+        } else {
+            if (is_link($path)) {
+                return;
+            }
+            if (!chmod($path, intval($fileMode, 8))) {
+                $this->resultInfo[] = array('path' => $path, 'mode' => $dirMode, 'is_dir' => false);
+                return;
+            }
+        }
     }
 }
