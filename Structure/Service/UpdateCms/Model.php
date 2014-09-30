@@ -20,8 +20,8 @@ use Ideal\Core\Util;
 class Model
 {
 
-    /** @var string Сообщение об ошибке при попытке получения номеров версий */
-    protected $errorText = '';
+    /** @var string Сообщение, возвращаемое ajax */
+    protected $message = '';
 
     /** @var string Путь к файлу с логом обновлений */
     protected $log = '';
@@ -35,14 +35,18 @@ class Model
     /** @var string Версия, на которую производится обновление */
     public  $updateVersion = '';
 
+    /** @var bool  */
+    public $error = false;
+
+    /** @var array  */
+    public $data = array();
+
     /**
      * Инициализация путей к нужным папкам и файлам
      */
     public function __construct()
     {
-        if (!$this->setLog()) {
-            $this->uExit($this->errorText);
-        };
+        $this->setLog();
     }
 
     private function setLog()
@@ -53,17 +57,19 @@ class Model
         // Проверяем существует ли файл лога
         $fileNotExists = false;
         if (!file_exists($log)) {
-            $this->errorText = 'Файл лога обновлений не существует ' . $log;
+            $this->message = 'Файл лога обновлений не существует ' . $log;
             $fileNotExists = true;
         }
         // Проверяем доступность файла лога на запись
         if (file_put_contents($log, '', FILE_APPEND) === false) {
             // Если файл лога не существует и создать его не удалось
             if ($fileNotExists) {
-                return false;
+                $this->error = true;
+                $this->uExit();
             }
-            $this->errorText = 'Файл ' . $log . ' недоступен для записи';
-            return false;
+            $this->message .= 'Файл ' . $log . ' недоступен для записи';
+            $this->error = true;
+            $this->uExit();
         }
         $this->log = $log;
         return true;
@@ -95,6 +101,7 @@ class Model
 
         // Проверка получен ли ответ от сервера
         if (strlen($file) === 0) {
+            $this->error = true;
             $this->uExit('Не удалось получить файл обновления с сервера обновлений');
         }
 
@@ -105,6 +112,7 @@ class Model
             $msg = json_decode($msg);
             if (!isset($msg->message)) {
                 $msg = array(
+                    'error' => true,
                     'message' => "Получен непонятный ответ: " . $file
                 );
             }
@@ -113,6 +121,7 @@ class Model
 
         // Если получили md5
         if ($prefix !== "(md5)") {
+            $this->error = true;
             $this->uExit("Ответ от сервера некорректен:\n" . $file);
         }
 
@@ -122,14 +131,16 @@ class Model
         );
 
         if (!isset($fileGet['md5'])) {
+            $this->error = true;
             $this->uExit('Не удалось получить хеш получаемого файла');
         }
 
         // Сохраняем полученный архив в свою папку (например, /www/example.com/tmp/update)
-        $archive = $this->updateFolders['uploadDir'] . $this->updateName;
+        $archive = $this->updateFolders['uploadDir'] . '/' . $this->updateName;
         file_put_contents($archive, $fileGet['file']);
 
         if (md5_file($archive) != $fileGet['md5']) {
+            $this->error = true;
             $this->uExit('Полученный файл повреждён (хеш не совпадает)');
         }
 
@@ -148,6 +159,7 @@ class Model
         $res = $zip->open($archive);
 
         if ($res !== true) {
+            $this->error = true;
             $this->uExit('Не получилось из-за ошибки #' . $res);
         }
 
@@ -180,17 +192,17 @@ class Model
         }
         // Переименовывем папку, которую собираемся заменить
         if (!rename($updateCore, $updateCore . '_old')) {
+            $this->error = true;
             $this->uExit('Не удалось переименовать папку ' . $updateCore);
         }
         // Перемещаем новую папку на место старой
         if (!rename(SETUP_DIR, $updateCore)) {
+            $this->error = true;
             $this->uExit('Не удалось переименовать папку ' . $updateCore);
         }
 
         $util = new Util();
-
-        $util->chmodR($updateCore, $config->cms['fileMode'], $config->cms['dirMode']);
-        $chmodResult = $util->resultInfo;
+        $result = $util->chmod($updateCore, $config->cms['dirMode'], $config->cms['fileMode']);
 
         return $updateCore . '_old';
     }
@@ -199,17 +211,27 @@ class Model
      * Завершение выполнения скрипта с выводом сообщения
      *
      * @param string $msg Сообщение которое нужно передать в качестве результата работы скрипта
+     * @param bool $error Сообщение которое нужно передать в качестве результата работы скрипта
+     * @param array $data Данные, возвращаемые в ответ на ajax запрос
      * @throws \Exception если аргумент функции не является строкой
      */
-    public function uExit($msg)
+    public function uExit($msg = '', $error = false, $data = null)
     {
+        $msg = $msg ? $msg : $this->message;
+        $error = $error ? $error : $this->error;
+        $data = $data ? $data : $this->data;
         if (!is_string($msg)) {
             throw new \Exception("Необходим аргумент типа строка");
         }
-        $message = array(
-            'message' => $msg
+        if (!is_bool($error)) {
+            throw new \Exception("Необходим аргумент булева типа");
+        }
+        $result = array(
+            'message' => $msg,
+            'error' => $error,
+            'data' => $this->data
         );
-        exit(json_encode($message));
+        exit(json_encode($result));
     }
 
     /**

@@ -52,6 +52,9 @@ $url = $getVersionScript . '?domain=' . $domain . '&ver=' . urlencode(serialize(
 // Переводим информацию о версиях в формат json для передачи в JS
 $nowVersions = json_encode($nowVersions);
 
+// Подключаем диалоговое окно
+include('modalUpdate.html');
+
 $msg = $updateModel->getErrorText();
 if ($msg !== '') {
     echo '<div class="alert-error">' . $msg . "</div>\n";
@@ -71,4 +74,4 @@ if ($msg !== '') {
 </script>
 
 <!-- Подключаем ajax скрыпты -->
-<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/ajax.js"> </script>
+<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/js.js"> </script>
