@@ -11,6 +11,7 @@ namespace Ideal\Structure\Service\UpdateCms;
 
 use Ideal\Core\Config;
 use Ideal\Core\Db;
+use Ideal\Core\Util;
 
 /**
  * Получение номеров версий установленной CMS и модулей
@@ -19,8 +20,8 @@ use Ideal\Core\Db;
 class Model
 {
 
-    /** @var string Сообщение об ошибке при попытке получения номеров версий */
-    protected $errorText = '';
+    /** @var array Сообщения, возвращаемые ajax */
+    protected $message = array();
 
     /** @var string Путь к файлу с логом обновлений */
     protected $log = '';
@@ -28,31 +29,77 @@ class Model
     /** @var array Массив папок для обновления */
     protected $updateFolders = array();
 
+    /** @var string Название модуля */
+    public $updateName = '';
+
+    /** @var string Версия, на которую производится обновление */
+    public $updateVersion = '';
+
+    /** @var bool  */
+    public $error = false;
+
+    /** @var array  */
+    public $data = array();
+
     /**
-     * Инициализация путей к нужным папкам и файлам
+     * Инициализация файла лога обновлений
      */
     public function __construct()
     {
         $config = Config::getInstance();
-        $this->log = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . 'update.log';
+        // Файл лога обновлений
+        $log = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . 'update.log';
+        // Проверяем существует ли файл лога
+        $fileNotExists = false;
+        if (!file_exists($log)) {
+            $this->addMessage('Файл лога обновлений не существует ' . $log, 'info');
+            $fileNotExists = true;
+        }
+        // Проверяем доступность файла лога на запись
+        if (file_put_contents($log, '', FILE_APPEND) === false) {
+            // Если файл лога не существует и создать его не удалось
+            if ($fileNotExists) {
+                $this->addMessage('Не удалось создать файл лога ' . $log, 'error');
+                $this->error = true;
+                $this->uExit();
+            } else {
+                $this->addMessage('Файл лога обновлений создан ', 'info');
+            }
+            $this->addMessage('Файл ' . $log . ' недоступен для записи', 'error');
+            $this->error = true;
+            $this->uExit();
+        }
+        $this->log = $log;
     }
 
     /**
-     * Загрузка и распаковка архива с обновлением модуля
+     * Задаём название и версию обновляемого модуля
      *
      * @param string $updateName    Название модуля
      * @param string $updateVersion Номер версии, на которую обновляемся
+     */
+    public function setUpdate($updateName, $updateVersion)
+    {
+        // todo Сделать защиту от хакеров на POST-переменные
+        $this->updateName = $updateName;
+        $this->updateVersion = $updateVersion;
+    }
+
+    /**
+     * Загрузка архива с обновлениями
      * @throws \Exception
      */
-    public function downloadUpdate($updateName, $updateVersion)
+    public function downloadUpdate()
     {
-        $updateUrl = $this->updateFolders['getFileScript'] . '?name=' . urlencode(serialize($updateName))
-            . '&ver=' . $updateVersion;
+        $updateUrl = $this->updateFolders['getFileScript']
+            . '?name=' . urlencode(serialize($this->updateName))
+            . '&ver=' . $this->updateVersion;
         $file = file_get_contents($updateUrl);
 
         // Проверка получен ли ответ от сервера
         if (strlen($file) === 0) {
-            $this->uExit('Не удалось получить файл обновления с сервера обновлений');
+            $this->error = true;
+            $this->addMessage('Не удалось получить файл обновления с сервера обновлений', 'warring');
         }
 
         // Если вместо файла найдено сообщение, выводим его
@@ -62,6 +109,7 @@ class Model
             $msg = json_decode($msg);
             if (!isset($msg->message)) {
                 $msg = array(
+                    'error' => true,
                     'message' => "Получен непонятный ответ: " . $file
                 );
             }
@@ -70,6 +118,7 @@ class Model
 
         // Если получили md5
         if ($prefix !== "(md5)") {
+            $this->error = true;
             $this->uExit("Ответ от сервера некорректен:\n" . $file);
         }
 
@@ -79,22 +128,36 @@ class Model
         );
 
         if (!isset($fileGet['md5'])) {
+            $this->error = true;
             $this->uExit('Не удалось получить хеш получаемого файла');
         }
 
         // Сохраняем полученный архив в свою папку (например, /www/example.com/tmp/update)
-        $archive = $this->updateFolders['uploadDir'] . $updateName;
+        $archive = $this->updateFolders['uploadDir'] . '/' . $this->updateName;
         file_put_contents($archive, $fileGet['file']);
 
         if (md5_file($archive) != $fileGet['md5']) {
+            $this->error = true;
             $this->uExit('Полученный файл повреждён (хеш не совпадает)');
         }
 
-        // После успешной загрузки архива, распаковываем его
+        // Возвращаем название загруженного архива
+        return($archive);
+    }
+
+    /**
+     * Распаковка архива
+     * @param string $archive Полный путь к файлу архива с новой версии
+     * @return bool
+     * @throws \Exception
+     */
+    public function unpackUpdate($archive)
+    {
         $zip = new \ZipArchive;
         $res = $zip->open($archive);
 
         if ($res !== true) {
+            $this->error = true;
             $this->uExit('Не получилось из-за ошибки #' . $res);
         }
 
@@ -105,45 +168,81 @@ class Model
         $zip->extractTo(SETUP_DIR);
         $zip->close();
         unlink($archive);
+        return true;
+    }
 
-        // Если разархивирование произошло успешно
-
+    /**
+     * Замена каталога со старой версией на каталог с новой версией
+     *
+     * @return string Путь к старому разделу
+     * @throws \Exception
+     */
+    public function swapUpdate()
+    {
         // Определяем путь к тому что мы обновляем, cms или модули
         $config = Config::getInstance();
-        if ($updateName == "Ideal-CMS") {
+        if ($this->updateName == "Ideal-CMS") {
             // Путь к cms
             $updateCore = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Ideal";
         } else {
             // Путь к модулям
-            $updateCore = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Mods" . '/' . $updateName;
+            $updateCore = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Mods" . '/' . $this->updateName;
         }
-
         // Переименовывем папку, которую собираемся заменить
-        if (!rename($updateCore, $updateCore . '_old')) {
+        /*if (!rename($updateCore, $updateCore . '_old')) {
+            $this->error = true;
             $this->uExit('Не удалось переименовать папку ' . $updateCore);
-        }
-
+        }*/
         // Перемещаем новую папку на место старой
-        if (!rename(SETUP_DIR, $updateCore)) {
+        /*if (!rename(SETUP_DIR, $updateCore)) {
+            $this->error = true;
             $this->uExit('Не удалось переименовать папку ' . $updateCore);
+        }*/
+
+        $util = new Util();
+        $result = $util->chmod($updateCore, $config->cms['dirMode'], $config->cms['fileMode']);
+
+        return $updateCore . '_old';
+    }
+
+    /**
+     * Добавление сообщения, возвращаемого в ответ на ajax запрос
+     *
+     * @param $message
+     * @param $type
+     * @throws \Exception
+     */
+    public function addMessage($message, $type)
+    {
+        if (!is_string($message) || !is_string($type)) {
+            throw new \Exception("Необходим аргумент типа строка");
         }
+        if (!in_array($type, array('error', 'info', 'warring', 'success'))) {
+            throw new \Exception("Недопустимое значение типа сообщения");
+        }
+        $message[] = array($message, $type);
     }
 
     /**
      * Завершение выполнения скрипта с выводом сообщения
      *
-     * @param string $msg Сообщение которое нужно передать в качестве результата работы скрипта
+     * @param bool $error Сообщение которое нужно передать в качестве результата работы скрипта
+     * @param array $data Данные, возвращаемые в ответ на ajax запрос
      * @throws \Exception если аргумент функции не является строкой
      */
-    public function uExit($msg)
+    public function uExit($error = false, $data = null)
     {
-        if (!is_string($msg)) {
-            throw new \Exception("Необходим аргумент типа строка");
+        $error = $error ? $error : $this->error;
+        $data = $data ? $data : $this->data;
+        if (!is_bool($error)) {
+            throw new \Exception("Необходим аргумент булева типа");
         }
-        $message = array(
-            'message' => $msg
+        $result = array(
+            'message' => $this->message,
+            'error' => $error,
+            'data' => $this->data
         );
-        exit(json_encode($message));
+        exit(json_encode($result));
     }
 
     /**
@@ -171,14 +270,6 @@ class Model
     }
 
     /**
-     * @return string
-     */
-    public function getErrorText()
-    {
-        return $this->errorText;
-    }
-
-    /**
      * Установка путей к папкам для обновления модулей
      *
      * @param $array
@@ -192,16 +283,15 @@ class Model
     }
 
     /**
-     * Запуск скриптов обновления модуля
+     * Получение списка скриптов
      *
-     * @param string $updateName    Название модуля
-     * @param string $updateVersion Номер версии, на которую обновляемся
+     * @return array
      */
-    public function updateScripts($updateName, $updateVersion)
+    public function getUpdateScripts()
     {
         // Находим путь к последнему установленному скрипту модуля
         $logFile = file($this->log);
-        $str = ($updateName == 'Ideal-CMS') ? '/Ideal/setup/update' : '/Mods/' . $updateName . '/setup/update';
+        $str = ($this->updateName == 'Ideal-CMS') ? '/Ideal/setup/update' : '/Mods/' . $this->updateName . '/setup/update';
         $lastScript = '';
         foreach ($logFile as $v) {
             if (strpos($v, $str) === 0) {
@@ -216,7 +306,7 @@ class Model
             $currentVersion = array_pop($scriptArr);
         } else {
             $versions = $this->getVersions(); // получаем список установленных модулей
-            $currentVersion = $versions[$updateName];
+            $currentVersion = $versions[$this->updateName];
         }
 
         // Считываем названия папок со скриптами обновления
@@ -264,27 +354,37 @@ class Model
                 $scripts[] = $file;
             }
         }
-
-        // Производим запуск скриптов обновления
-        $db = Db::getInstance();
-        foreach ($scripts as $script) {
-            $ext = substr($script, strrpos($script, '.'));
-            switch ($ext) {
-                case '.php':
-                    include DOCUMENT_ROOT . '/' . $config->cmsFolder . $script;
-                    break;
-                case '.sql':
-                    $query = file_get_contents(DOCUMENT_ROOT . '/' . $config->cmsFolder . $script);
-                    $db->query($query);
-                    break;
-                default:
-                    continue;
-            };
-            $this->writeLog($script);
-        }
+        return $scripts;
     }
 
     /**
+     * Запуск скрипта обновления
+     *
+     * @param string $script
+     */
+    public function runScript($script)
+    {
+        // Производим запуск скриптов обновления
+        $db = Db::getInstance();
+        $config = Config::getInstance();
+        $ext = substr($script, strrpos($script, '.'));
+        switch ($ext) {
+            case '.php':
+                include DOCUMENT_ROOT . '/' . $config->cmsFolder . $script;
+                break;
+            case '.sql':
+                $query = file_get_contents(DOCUMENT_ROOT . '/' . $config->cmsFolder . $script);
+                $db->query($query);
+                break;
+            default:
+                continue;
+        };
+        $this->writeLog($script);
+    }
+
+    /**
+     * Получение версии админки, а также наименований модулей и их версий
+     *
      * @return array Массив с номерами установленных версий
      */
     public function getVersions()
