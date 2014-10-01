@@ -89,7 +89,17 @@ class AjaxController extends \Ideal\Core\AjaxController
 
     }
 
-    public function ajaxUpdateAction()
+    public function ajaxSwapAction()
+    {
+
+    }
+
+    public function ajaxGetUpdateAction()
+    {
+
+    }
+
+    public function ajaxRunAction()
     {
         // Запускаем выполнение скриптов и запросов
         $this->updateModel->updateScripts($_POST['name'], $_POST['version']);
