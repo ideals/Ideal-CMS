@@ -429,7 +429,7 @@ class Util
                 return array();
             }
             if (!chmod($path, intval($fileMode, 8))) {
-                $resultInfo[] = array('path' => $path, 'mode' => $dirMode, 'is_dir' => false);
+                $resultInfo[] = array('path' => $path, 'mode' => $fileMode, 'is_dir' => false);
             }
         }
         return $resultInfo;

@@ -194,6 +194,17 @@ class Model
         $util = new Util();
         $result = $util->chmod($updateCore, $config->cms['dirMode'], $config->cms['fileMode']);
 
+        if (count($result) != 0) {
+            // Объединяем все пути, для которых не удалось изменить права в одну строку
+            $paths = array_reduce(
+                $result,
+                function (&$result, $item) {
+                    $result = $result . "<br />\n" . $item['path'];
+                }
+            );
+            $this->addAnswer("Не удалось изменить права для следующих файлов/папок: <br />\n{$paths}", 'warning');
+        }
+
         $this->addAnswer('Заменены файлы', 'success');
         return $updateCore . '_old';
     }
