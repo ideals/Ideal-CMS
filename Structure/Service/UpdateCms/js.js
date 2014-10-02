@@ -114,7 +114,7 @@ function Update(moduleName, version, url, modalBox) {
             case ('info'): classBlock = 'alert alert-info fade in'; break;
             case ('success'): classBlock = 'alert alert-success fade in'; break;
             case ('warning'): classBlock = 'alert alert-warning fade in'; break;
-            default: classBlock = 'bg-info';
+            default: classBlock = 'alert alert-info fade in';
         }
         $('<div>').appendTo(this.modalBox.find('.modal-body')).html(data).attr('class', classBlock);
     };
@@ -141,7 +141,7 @@ function Update(moduleName, version, url, modalBox) {
                 break;
             case 'ajaxRunScript':
             case 'ajaxGetUpdateScript':
-                if (result.data.count != 'undefined') {
+                if (result.data != null && result.data.count != 'undefined') {
                     scriptsExecutes = result.data.count;
                 }
                 if (scriptsExecutes > 0) {

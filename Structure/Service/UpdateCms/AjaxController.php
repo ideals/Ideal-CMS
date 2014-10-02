@@ -31,16 +31,16 @@ class AjaxController extends \Ideal\Core\AjaxController
 
 
         if (is_null($config->cms['tmpFolder']) || ($config->cms['tmpFolder'] == '')) {
-            $this->updateModel->addMessage('В настройках не указана папка для хранения временных файлов', 'error');
-            $this->updateModel->uExit(true);
+            $this->updateModel->addAnswer('В настройках не указана папка для хранения временных файлов', 'error');
+            exit;
         }
 
         // Папка для хранения загруженных файлов обновлений
         $uploadDir = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/update';
         if (!file_exists($uploadDir)) {
             if (!mkdir($uploadDir, 0755, true)) {
-                $this->updateModel->addMessage('Не удалось создать папку' . $uploadDir, 'error');
-                $this->updateModel->uExit(true);
+                $this->updateModel->addAnswer('Не удалось создать папку' . $uploadDir, 'error');
+                exit;
             }
         }
 
@@ -49,8 +49,8 @@ class AjaxController extends \Ideal\Core\AjaxController
         define('SETUP_DIR', $uploadDir . '/setup');
         if (!file_exists(SETUP_DIR)) {
             if (!mkdir(SETUP_DIR, 0755, true)) {
-                $this->updateModel->addMessage('Не удалось создать папку' . SETUP_DIR, 'error');
-                $this->updateModel->uExit(true);
+                $this->updateModel->addAnswer('Не удалось создать папку' . SETUP_DIR, 'error');
+                exit;
             }
         }
 
@@ -62,8 +62,8 @@ class AjaxController extends \Ideal\Core\AjaxController
         );
 
         if (!isset($_POST['version']) || !isset($_POST['name'])) {
-            $this->updateModel->addMessage('Непонятно, что обновлять. Не указаны version и name', 'error');
-            $this->updateModel->uExit(true);
+            $this->updateModel->addAnswer('Непонятно, что обновлять. Не указаны version и name', 'error');
+            exit;
         } else {
 
             $this->updateModel->setUpdate($_POST['name'], $_POST['version']);
@@ -92,8 +92,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     {
         // Скачиваем архив с обновлениями
         $_SESSION['update']['archive'] = $this->updateModel->downloadUpdate();
-        $this->updateModel->addMessage('Загружен архив с обновлениями', 'success');
-        exit();
+        exit;
     }
 
     // Распаковка архива с обновлением
@@ -101,12 +100,11 @@ class AjaxController extends \Ideal\Core\AjaxController
     {
         $archive = isset($_SESSION['update']['archive']) ? $_SESSION['update']['archive'] : null;
         if (!$archive) {
-            $this->updateModel->addMessage('Неполучен путь к файлу архива', 'error');
-            $this->updateModel->uExit(true);
+            $this->updateModel->addAnswer('Неполучен путь к файлу архива', 'error');
+            exit;
         }
         $this->updateModel->unpackUpdate($archive);
-        $this->updateModel->addMessage('Распакован архив с обновлениями', 'success');
-        exit();
+        exit;
     }
 
     /**
@@ -115,8 +113,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     public function ajaxSwapAction()
     {
         $_SESSION['oldFolder'] = $this->updateModel->swapUpdate();
-        $this->updateModel->addMessage('Заменены файлы', 'success');
-        exit();
+        exit;
     }
 
     /**
@@ -126,8 +123,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     {
         // Запускаем выполнение скриптов и запросов
         $_SESSION['scripts'] = $this->updateModel->getUpdateScripts();
-        $this->updateModel->addMessage('Получен список скриптов в количстве: ' . count($_SESSION['scripts']), 'success');
-        $this->updateModel->uExit(false, array('count' =>count($_SESSION['scripts'])));
+        exit;
     }
 
     /**
@@ -136,18 +132,17 @@ class AjaxController extends \Ideal\Core\AjaxController
     public function ajaxRunScriptAction()
     {
         if (!isset($_SESSION['scripts'])) {
-            exit();
+            exit;
         }
         // Получаем скрипт, выполняемый в текущем ajax запросе
         $script = array_shift($_SESSION['scripts']);
         // Если все скрипты были выполнены ранее, возвращаем false
         if (!$script) {
-            exit();
+            exit;
         }
         // Запускаем выполнение скриптов и запросов
         $this->updateModel->runScript($script);
-        $this->updateModel->addMessage('Выполнен скрипт: ' . $script, 'success');
-        exit();
+        exit;
     }
 
     /**
@@ -164,18 +159,18 @@ class AjaxController extends \Ideal\Core\AjaxController
         $oldFolder = isset($_SESSION['update']['oldFolder']) ? $_SESSION['update']['oldFolder'] : null;
         $oldFolderError = '';
         if (!$oldFolder) {
-            $this->updateModel->addMessage('Не удалось удалить раздел со старой версией.', 'warring');
+            $this->updateModel->addAnswer('Не удалось удалить раздел со старой версией.', 'warring');
         }
         // Удаляем старую папку
         $this->updateModel->removeDirectory($oldFolder);
 
-        $this->updateModel->addMessage('Обновление завершено успешно' . $oldFolderError, 'success');
-        exit();
+        $this->updateModel->addAnswer('Обновление завершено успешно' . $oldFolderError, 'success');
+        exit;
     }
 
     public function __destruct()
     {
-        $result = $this->updateModel->getData();
+        $result = $this->updateModel->getAnswer();
         echo json_encode($result);
     }
 }
