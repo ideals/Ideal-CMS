@@ -61,13 +61,13 @@ class Model
             if ($fileNotExists) {
                 $this->addMessage('Не удалось создать файл лога ' . $log, 'error');
                 $this->error = true;
-                $this->uExit();
+                exit;
             } else {
                 $this->addMessage('Файл лога обновлений создан ', 'info');
             }
             $this->addMessage('Файл ' . $log . ' недоступен для записи', 'error');
             $this->error = true;
-            $this->uExit();
+            exit;
         }
         $this->log = $log;
     }
@@ -100,6 +100,7 @@ class Model
         if (strlen($file) === 0) {
             $this->error = true;
             $this->addMessage('Не удалось получить файл обновления с сервера обновлений', 'warring');
+            exit;
         }
 
         // Если вместо файла найдено сообщение, выводим его
@@ -108,18 +109,18 @@ class Model
             $msg = substr($file, 5, strlen($file));
             $msg = json_decode($msg);
             if (!isset($msg->message)) {
-                $msg = array(
-                    'error' => true,
-                    'message' => "Получен непонятный ответ: " . $file
-                );
+                $this->error = true;
+                $this->addMessage('Получен непонятный ответ: ' . $file, 'error');
             }
-            exit(json_encode($msg));
+            $this->addMessage($msg, 'warring');
+            exit;
         }
 
         // Если получили md5
         if ($prefix !== "(md5)") {
             $this->error = true;
-            $this->uExit("Ответ от сервера некорректен:\n" . $file);
+            $this->addMessage("Ответ от сервера некорректен:\n" . $file, 'error');
+            exit;
         }
 
         $fileGet = array(
@@ -129,7 +130,8 @@ class Model
 
         if (!isset($fileGet['md5'])) {
             $this->error = true;
-            $this->uExit('Не удалось получить хеш получаемого файла');
+            $this->addMessage('Не удалось получить хеш получаемого файла', 'error');
+            exit;
         }
 
         // Сохраняем полученный архив в свою папку (например, /www/example.com/tmp/update)
@@ -138,7 +140,8 @@ class Model
 
         if (md5_file($archive) != $fileGet['md5']) {
             $this->error = true;
-            $this->uExit('Полученный файл повреждён (хеш не совпадает)');
+            $this->addMessage('Полученный файл повреждён (хеш не совпадает)', 'error');
+            exit;
         }
 
         // Возвращаем название загруженного архива
@@ -158,7 +161,8 @@ class Model
 
         if ($res !== true) {
             $this->error = true;
-            $this->uExit('Не получилось из-за ошибки #' . $res);
+            $this->addMessage('Не получилось из-за ошибки #' . $res, 'error');
+            exit;
         }
 
         // Очищаем папку перед распаковкой в неё файлов
@@ -168,7 +172,6 @@ class Model
         $zip->extractTo(SETUP_DIR);
         $zip->close();
         unlink($archive);
-        return true;
     }
 
     /**
@@ -191,12 +194,14 @@ class Model
         // Переименовывем папку, которую собираемся заменить
         /*if (!rename($updateCore, $updateCore . '_old')) {
             $this->error = true;
-            $this->uExit('Не удалось переименовать папку ' . $updateCore);
-        }*/
+            $this->addMessage('Не удалось переименовать папку ' . $updateCore, 'error');
+            exit;
+        }
         // Перемещаем новую папку на место старой
-        /*if (!rename(SETUP_DIR, $updateCore)) {
+        if (!rename(SETUP_DIR, $updateCore)) {
             $this->error = true;
-            $this->uExit('Не удалось переименовать папку ' . $updateCore);
+            $this->addMessage('Не удалось переименовать папку ' . $updateCore, 'error');
+            exit;
         }*/
 
         $util = new Util();
@@ -220,7 +225,29 @@ class Model
         if (!in_array($type, array('error', 'info', 'warring', 'success'))) {
             throw new \Exception("Недопустимое значение типа сообщения");
         }
-        $message[] = array($message, $type);
+        $this->message[] = array($message, $type);
+    }
+
+    /**
+     * Возврат массива сообщений и их статусов
+     * @return array
+     */
+    public function getMessage()
+    {
+        return $this->message;
+    }
+
+    /**
+     * Получение результирующих данных
+     * @return array
+     */
+    public function getData()
+    {
+        return array(
+            'message' => $this->message,
+            'error' =>  $this->error,
+            'data' => $this->data
+        );
     }
 
     /**
@@ -237,12 +264,9 @@ class Model
         if (!is_bool($error)) {
             throw new \Exception("Необходим аргумент булева типа");
         }
-        $result = array(
-            'message' => $this->message,
-            'error' => $error,
-            'data' => $this->data
-        );
-        exit(json_encode($result));
+        $this->error = $error;
+        $this->data = $data;
+        exit;
     }
 
     /**
@@ -425,9 +449,9 @@ class Model
         // Проверяем файл update.log
         if (file_put_contents($log, '', FILE_APPEND) === false) {
             if (file_exists($log)) {
-                $this->errorText = 'Файл ' . $log . ' недоступен для записи';
+                $this->addMessage('Файл ' . $log . ' недоступен для записи', 'error');
             } else {
-                $this->errorText = 'Не удалось создать файл ' . $log;
+                $this->addMessage('Не удалось создать файл ' . $log, 'error');
             }
             return false;
         };
@@ -456,7 +480,7 @@ class Model
         foreach ($mods as $k => $v) {
             $lines = file($v . '/' . $mdFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             if (($lines == false) || (count($lines) == 0)) {
-                $this->errorText = 'Не удалось получить версию из ' . $v . '/' . $mdFile;
+                $this->addMessage('Не удалось получить версию из ' . $v . '/' . $mdFile, 'error');
                 return false;
             }
             // Получаем номер версии из первой строки
@@ -464,7 +488,7 @@ class Model
             preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $lines[0], $ver);
             // Если номер версии не удалось определить — выходим
             if (!isset($ver[2][0]) || ($ver[2][0] == '')) {
-                $this->errorText = 'Ошибка при разборе строки с версией файла';
+                $this->addMessage('Ошибка при разборе строки с версией файла', 'error');
                 return false;
             }
 
@@ -510,7 +534,7 @@ class Model
                 preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $v, $ver);
                 // Если номер версии не удалось определить — выходим
                 if (!isset($ver[2][0]) || ($ver[2][0] == '')) {
-                    $this->errorText = 'Ошибка при разборе строки с версией файла';
+                    $this->addMessage('Ошибка при разборе строки с версией файла', 'error');
                     return false;
                 }
 
