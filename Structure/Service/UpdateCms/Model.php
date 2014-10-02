@@ -56,6 +56,7 @@ class Model
                 $this->addAnswer('Не удалось создать файл лога ' . $log, 'error');
                 exit;
             } else {
+                Util::chmod($log, $config->cms['dirMode'], $config->cms['fileMode']);
                 $this->addAnswer('Файл лога обновлений создан ', 'info');
             }
             $this->addAnswer('Файл ' . $log . ' недоступен для записи', 'error');
@@ -191,8 +192,7 @@ class Model
             exit;
         }
 
-        $util = new Util();
-        $result = $util->chmod($updateCore, $config->cms['dirMode'], $config->cms['fileMode']);
+        $result = Util::chmod($updateCore, $config->cms['dirMode'], $config->cms['fileMode']);
 
         if (count($result) != 0) {
             // Объединяем все пути, для которых не удалось изменить права в одну строку
