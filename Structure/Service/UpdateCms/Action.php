@@ -55,9 +55,9 @@ $nowVersions = json_encode($nowVersions);
 // Подключаем диалоговое окно
 include('modalUpdate.html');
 
-$msg = $updateModel->getErrorText();
-if ($msg !== '') {
-    echo '<div class="alert-error">' . $msg . "</div>\n";
+$msg = $updateModel->getMessage();
+if (count($msg)) {
+    echo "<div class=\"alert-{$msg[0]}\">{$msg[1]}</div>\n";
 }
 ?>
 

@@ -73,12 +73,11 @@ function Update(moduleName, version, url, modalBox) {
             success: function (result) {
                 var check = update.dataCheck(result);
                 if (check) {
-                    update.print('Успешно выполнено действие ' + data.action, 'success');
                     update.run(result, data.action);
                 }
             },
-            error: function () {
-                update.print('Не удалось выполнить ajax запрос', 'error');
+            error: function (data) {
+                update.print('Не удалось выполнить ajax запрос <br />' + data.responseText, 'error');
             }
         })
     };
@@ -95,21 +94,16 @@ function Update(moduleName, version, url, modalBox) {
             this.print('Сбой в работе при выполнении действия' + action + '<br />' + data, 'error');
             return false;
         }
-        // Если получено сообщение, но ошибка не зафиксирована
-        if ((data.message != null) && (data.error == false)) {
-            this.print(data.message, 'message');
+        // Выводим полученные сообщения
+        for (var i = 0; i < data.message.length; i++) {
+            this.print(data.message[i][0], data.message[i][1]);
         }
-        // Если получено сообщение и зафиксирована ошибка
-        if ((data.message != null) && (data.error == true)) {
-            this.print(data.message, 'error');
-            return false;
-        }
-        // Если нет сообщения, но зафиксирована ошибка
-        if ((data.message == null) && (data.error == true)) {
+        // Если нет сообщений, но зафиксирована ошибка
+        if ((data.message.length == 0) && (data.error == true)) {
             this.print('Произошла ошибка в работе метода ' + action, 'error');
             return false;
         }
-        return true;
+        return data.error === false;
     };
 
     this.print = function(data, type) {
@@ -170,7 +164,7 @@ function Update(moduleName, version, url, modalBox) {
 /** Обновление CMS или модуля */
 function updateModule(moduleName, version) {
     var update = new Update(moduleName, version, url, $('#modalUpdate'));
-    update.modalBox.find('.modal-body').html();
+    update.modalBox.find('.modal-body').html('');
     // Открываем модальное окно
     update.modalBox.modal('show');
     update.print('Обновление начато!', 'success');
