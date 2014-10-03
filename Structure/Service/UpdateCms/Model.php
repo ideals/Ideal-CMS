@@ -171,6 +171,7 @@ class Model
         $this->addAnswer('Распакован архив с обновлениями', 'success');
     }
 
+
     /**
      * Замена каталога со старой версией на каталог с новой версией
      *
@@ -189,7 +190,7 @@ class Model
             $updateCore = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . "Mods" . '/' . $this->updateName;
         }
         // Переименовывем папку, которую собираемся заменить
-        /*if (!rename($updateCore, $updateCore . '_old')) {
+        if (!rename($updateCore, $updateCore . '_old')) {
             $this->addAnswer('Не удалось переименовать папку ' . $updateCore, 'error');
             exit;
         }
@@ -197,7 +198,7 @@ class Model
         if (!rename(SETUP_DIR, $updateCore)) {
             $this->addAnswer('Не удалось переименовать папку ' . $updateCore, 'error');
             exit;
-        }*/
+        }
 
         $util = new Util();
         $result = $util->chmod($updateCore, $config->cms['dirMode'], $config->cms['fileMode']);
@@ -290,12 +291,11 @@ class Model
     {
         // Находим путь к последнему установленному скрипту модуля
         $logFile = file($this->log);
-        $str = ($this->updateName == 'Ideal-CMS') ?
-            '/Ideal/setup/update' : '/Mods/' . $this->updateName . '/setup/update';
+        $updateFolder = SETUP_DIR . '/setup/update';
         $lastScript = '';
         foreach ($logFile as $v) {
-            if (strpos($v, $str) === 0) {
-                $lastScript = trim($v);
+            if (strpos($v, $updateFolder) === 0) {
+                $lastScript = str_replace($updateFolder, '', trim($v));
             }
         }
 
@@ -310,8 +310,6 @@ class Model
         }
 
         // Считываем названия папок со скриптами обновления
-        $config = Config::getInstance();
-        $updateFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder . $str;
         $updates = array_diff(scandir($updateFolder), array('.', '..'));
 
         // Убираем из списка файлы
@@ -342,7 +340,7 @@ class Model
             $scriptFolder = $updateFolder . '/' . $folder;
             $files = array_diff(scandir($scriptFolder), array('.', '..'));
             foreach ($files as $file) {
-                $file = $str . '/' . $folder . '/' . $file;
+                $file = '/' . $folder . '/' . $file;
                 if (is_dir($scriptFolder . '/' . $file)) {
                     continue;
                 }
@@ -365,6 +363,28 @@ class Model
     }
 
     /**
+     * Выполнение скриптов до замены файлов
+     *
+     * @param $scripts Список всех скриптов, используемых при обновлении
+     * @return array Список скриптов, которые нужно выполнить после замены файлов
+     */
+    public function runOldScript($scripts)
+    {
+        // Получаем элементы массива не содержащие в начале строки 'new_'
+        $scriptsOld = preg_grep("(\/new_\.*)", $scripts, PREG_GREP_INVERT);
+        foreach ($scriptsOld as $v) {
+            $this->runScript(SETUP_DIR . '/setup/update' . $v);
+        }
+        $scripts = array_diff_key($scripts, $scriptsOld);
+        $this->addAnswer(
+            'Выполнено скриптов: ' . count($scriptsOld),
+            'success',
+            array('count' =>count($scripts))
+        );
+        return $scripts;
+    }
+
+    /**
      * Запуск скрипта обновления
      *
      * @param string $script
@@ -377,10 +397,10 @@ class Model
         $ext = substr($script, strrpos($script, '.'));
         switch ($ext) {
             case '.php':
-                include DOCUMENT_ROOT . '/' . $config->cmsFolder . $script;
+                include $script;
                 break;
             case '.sql':
-                $query = file_get_contents(DOCUMENT_ROOT . '/' . $config->cmsFolder . $script);
+                $query = file_get_contents($script);
                 $db->query($query);
                 break;
             default:

@@ -108,21 +108,22 @@ class AjaxController extends \Ideal\Core\AjaxController
     }
 
     /**
-     * Замена старого каталога на новый
-     */
-    public function ajaxSwapAction()
-    {
-        $_SESSION['oldFolder'] = $this->updateModel->swapUpdate();
-        exit;
-    }
-
-    /**
      * Получение скриптов, которые необходимо выполнить для перехода на новую версию
      */
     public function ajaxGetUpdateScriptAction()
     {
         // Запускаем выполнение скриптов и запросов
         $_SESSION['scripts'] = $this->updateModel->getUpdateScripts();
+        exit;
+    }
+
+    /**
+     * Замена старого каталога на новый
+     */
+    public function ajaxSwapAction()
+    {
+        $_SESSION['scripts'] = $this->updateModel->runOldScript($_SESSION['scripts']);
+        $_SESSION['oldFolder'] = $this->updateModel->swapUpdate();
         exit;
     }
 
@@ -140,6 +141,7 @@ class AjaxController extends \Ideal\Core\AjaxController
         if (!$script) {
             exit;
         }
+        $script = (($this->updateModel->updateName == 'Ideal-CMS') ? '/Ideal' : '/Mods') . '/setup/update' . $script;
         // Запускаем выполнение скриптов и запросов
         $this->updateModel->runScript($script);
         exit;
@@ -159,7 +161,7 @@ class AjaxController extends \Ideal\Core\AjaxController
         $oldFolder = isset($_SESSION['update']['oldFolder']) ? $_SESSION['update']['oldFolder'] : null;
         $oldFolderError = '';
         if (!$oldFolder) {
-            $this->updateModel->addAnswer('Не удалось удалить раздел со старой версией.', 'warring');
+            $this->updateModel->addAnswer('Не удалось удалить раздел со старой версией.', 'warning');
         }
         // Удаляем старую папку
         $this->updateModel->removeDirectory($oldFolder);
