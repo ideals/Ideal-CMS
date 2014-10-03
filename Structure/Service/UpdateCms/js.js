@@ -134,13 +134,15 @@ function Update(moduleName, version, url, modalBox) {
                 data.action = 'ajaxUnpack';
                 break;
             case 'ajaxUnpack':
+                data.action = 'ajaxGetUpdateScript';
+                break;
+            case 'ajaxGetUpdateScript':
                 data.action = 'ajaxSwap';
                 break;
             case 'ajaxSwap':
-                data.action = 'ajaxGetUpdateScript';
+                data.action = 'ajaxRunScript';
                 break;
             case 'ajaxRunScript':
-            case 'ajaxGetUpdateScript':
                 if (result.data != null && result.data.count != 'undefined') {
                     scriptsExecutes = result.data.count;
                 }
