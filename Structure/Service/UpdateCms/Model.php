@@ -88,10 +88,17 @@ class Model
             . '?name=' . urlencode(serialize($this->updateName))
             . '&ver=' . $this->updateVersion;
         $file = file_get_contents($updateUrl);
-
+        // Проверка на получение файла
+        if ($file === false) {
+            $this->addAnswer(
+                'Не удалось получить файл обновления с сервера обновлений ' . $this->updateFolders['getFileScript'],
+                'error'
+            );
+            exit;
+        }
         // Проверка получен ли ответ от сервера
         if (strlen($file) === 0) {
-            $this->addAnswer('Не удалось получить файл обновления с сервера обновлений', 'error');
+            $this->addAnswer('Не удалось получить содержимое файла. Возможно файл пуст.', 'error');
             exit;
         }
 

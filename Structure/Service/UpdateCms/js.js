@@ -78,6 +78,7 @@ function Update(moduleName, version, url, modalBox) {
             },
             error: function (data) {
                 update.print('Не удалось выполнить ajax запрос <br />' + data.responseText, 'error');
+                update.modalBox.find('.close, .btn-close').removeAttr('disabled');
             }
         })
     };
@@ -154,8 +155,10 @@ function Update(moduleName, version, url, modalBox) {
                 }
                 break;
             case 'ajaxFinish':
+                this.modalBox.find('.close, .btn-close').removeAttr('disabled');
                 return true;
             default:
+                this.modalBox.find('.close, .btn-close').removeAttr('disabled');
                 return false;
         }
         this.ajaxRequest(data);
@@ -167,9 +170,14 @@ function Update(moduleName, version, url, modalBox) {
 function updateModule(moduleName, version) {
     var update = new Update(moduleName, version, url, $('#modalUpdate'));
     update.modalBox.find('.modal-body').html('');
+    update.modalBox.find('.close, .btn-close').attr('disabled', 'disabled');
     // Открываем модальное окно
     update.modalBox.modal('show');
     update.print('Обновление начато!', 'success');
-    update.run(true);
-    update.modalBox.find('.close, .btn-close').removeAttr('disabled');
+
+    $('#modalUpdate').on('hidden.bs.modal', function (e) {
+        location.reload(true);
+    });
+
+    var result = update.run(true);
 }
