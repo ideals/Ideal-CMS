@@ -401,4 +401,37 @@ class Util
         }
         return $str;
     }
+
+    /**
+     * Рекурсивно изменяет права доступа к папке и всем её подпапкам и файлам
+     *
+     * @param string $path путь к папке или файлу
+     * @param string $dirMode Права доступа к папке "0755"
+     * @param string $fileMode Права доступа к файлу "0644"
+     * @return array Содержит информацию о неудачных попытках изменения прав доступа
+     */
+    public static function chmod($path, $dirMode, $fileMode)
+    {
+        $resultInfo = array();
+
+        if (is_dir($path)) {
+            if (!chmod($path, intval($dirMode, 8))) {
+                return array('path' => $path, 'mode' => $dirMode, 'is_dir' => true);
+            }
+            $files = array_diff(scandir($path), array('.', '..'));
+            foreach ($files as $file) {
+                $fullPath = $path . '/' . $file;
+                $arr = self::chmod($fullPath, $dirMode, $fileMode);
+                $resultInfo = array_merge($resultInfo, $arr);
+            }
+        } else {
+            if (is_link($path)) {
+                return array();
+            }
+            if (!chmod($path, intval($fileMode, 8))) {
+                $resultInfo[] = array('path' => $path, 'mode' => $fileMode, 'is_dir' => false);
+            }
+        }
+        return $resultInfo;
+    }
 }
