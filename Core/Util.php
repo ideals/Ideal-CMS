@@ -421,7 +421,7 @@ class Util
             $files = array_diff(scandir($path), array('.', '..'));
             foreach ($files as $file) {
                 $fullPath = $path . '/' . $file;
-                $arr = self::chmod($fullPath, $fileMode, $dirMode);
+                $arr = self::chmod($fullPath, $dirMode, $fileMode);
                 $resultInfo = array_merge($resultInfo, $arr);
             }
         } else {
