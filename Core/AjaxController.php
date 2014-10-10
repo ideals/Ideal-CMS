@@ -9,8 +9,6 @@
 
 namespace Ideal\Core;
 
-use Ideal\Core\Admin\Router;
-
 /**
  * Class AjaxController
  */
@@ -22,10 +20,10 @@ class AjaxController
     /**
      * Генерация контента страницы для отображения в браузере
      *
-     * @param Router $router
+     * @param \Ideal\Core\Site\Router | \Ideal\Core\Admin\Router $router
      * @return string Содержимое отображаемой страницы
      */
-    public function run(Router $router)
+    public function run($router)
     {
         $this->model = $router->getModel();
 
