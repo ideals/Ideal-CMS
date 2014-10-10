@@ -33,7 +33,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         }
 
         $news[0]['structure'] = 'Ideal_News';
-        $news[0]['url'] = $url;
+        $news[0]['url'] = $url[0];
 
         $this->path = array_merge($path, $news);
 
