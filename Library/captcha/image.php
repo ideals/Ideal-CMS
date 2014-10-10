@@ -499,7 +499,7 @@ switch (strtoupper($cryptformat)) {
     case "JPEG" :
         if (imagetypes() & IMG_JPG) {
             header("Content-type: image/jpeg");
-            imagejpeg($img, "", 80);
+            imagejpeg($img, null, 80);
         }
         break;
     case "GIF"  :
