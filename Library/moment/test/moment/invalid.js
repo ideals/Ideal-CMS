@@ -1,7 +1,14 @@
-var moment = require("../../moment");
+var moment = require('../../moment');
 
 exports.invalid = {
-    "invalid" : function (test) {
+    setUp : function (done) {
+        moment.createFromInputFallback = function () {
+            throw new Error('input not handled by moment');
+        };
+        done();
+    },
+
+    'invalid' : function (test) {
         var m = moment.invalid();
         test.equals(m.isValid(), false);
         test.equals(m.parsingFlags().userInvalidated, true);
@@ -9,7 +16,7 @@ exports.invalid = {
         test.done();
     },
 
-    "invalid with existing flag" : function (test) {
+    'invalid with existing flag' : function (test) {
         var m = moment.invalid({invalidMonth : 'whatchamacallit'});
         test.equals(m.isValid(), false);
         test.equals(m.parsingFlags().userInvalidated, false);
@@ -18,7 +25,7 @@ exports.invalid = {
         test.done();
     },
 
-    "invalid with custom flag" : function (test) {
+    'invalid with custom flag' : function (test) {
         var m = moment.invalid({tooBusyWith : 'reiculating splines'});
         test.equals(m.isValid(), false);
         test.equals(m.parsingFlags().userInvalidated, false);

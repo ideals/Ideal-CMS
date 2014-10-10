@@ -1,30 +1,29 @@
 module.exports = function (grunt) {
-
-    var embedOption = grunt.option('embed_languages'),
-        embedLanguageDest = embedOption ?
-            'min/moment-with-customlangs.js' :
-            'min/moment-with-langs.js',
-        embedLanguageLangs = 'lang/*.js';
+    var embedOption = grunt.option('embedLocales'),
+        embedLocaleDest = embedOption ?
+            'min/moment-with-customlocales.js' :
+            'min/moment-with-locales.js',
+        embedLocaleSrc = 'locale/*.js';
 
     if (embedOption && embedOption.match(/,/)) {
-        embedLanguageLangs = 'lang/{' + embedOption + '}.js';
+        embedLocaleSrc = 'locale/{' + embedOption + '}.js';
     }
     else if (embedOption) {
-        embedLanguageLangs = 'lang/' + embedOption + '.js';
+        embedLocaleSrc = 'locale/' + embedOption + '.js';
     }
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         concat : {
-            langs: {
-                src: 'lang/*.js',
-                dest: 'min/langs.js'
+            locales: {
+                src: 'locale/*.js',
+                dest: 'min/locales.js'
             },
             tests: {
                 src: [
                     'test/browser-prefix.js',
                     'test/moment/*.js',
-                    'test/lang/*.js',
+                    'test/locale/*.js',
                     'test/browser-suffix.js'
                 ],
                 dest: 'min/tests.js'
@@ -38,7 +37,7 @@ module.exports = function (grunt) {
             options: {
                 frameworks: ['nodeunit'],
                 files: [
-                    'min/moment-with-langs.js',
+                    'min/moment-with-locales.js',
                     'min/tests.js',
                     'test/browser.js'
                 ],
@@ -47,29 +46,29 @@ module.exports = function (grunt) {
                     testName: 'MomentJS'
                 },
                 customLaunchers: {
-                    sl_chrome_win_xp: {
+                    slChromeWinXp: {
                         base: 'SauceLabs',
                         browserName: 'chrome',
                         platform: 'Windows XP'
                     },
-                    sl_ie9_win7: {
+                    slIe9Win7: {
                         base: 'SauceLabs',
                         browserName: 'internet explorer',
                         platform: 'Windows 7',
                         version: '9'
                     },
-                    sl_ie8_win7: {
+                    slIe8Win7: {
                         base: 'SauceLabs',
                         browserName: 'internet explorer',
                         platform: 'Windows 7',
                         version: '8'
                     },
-                    sl_ff_linux: {
+                    slFfLinux: {
                         base: 'SauceLabs',
                         browserName: 'firefox',
                         platform: 'Linux'
                     },
-                    sl_safari_osx: {
+                    slSafariOsx: {
                         base: 'SauceLabs',
                         browserName: 'safari',
                         platform: 'OS X 10.8'
@@ -91,79 +90,93 @@ module.exports = function (grunt) {
                 options: {reporters: ['dots']},
                 singleRun: true,
                 browsers: [
-                    'sl_chrome_win_xp',
-                    'sl_ie9_win7',
-                    'sl_ie8_win7',
-                    'sl_ff_linux',
-                    'sl_safari_osx'
+                    'slChromeWinXp',
+                    'slIe9Win7',
+                    'slIe8Win7',
+                    'slFfLinux',
+                    'slSafariOsx'
                 ]
             }
         },
 
         uglify : {
-            target: {
+            main: {
                 files: {
-                    'min/moment-with-langs.min.js'       : 'min/moment-with-langs.js',
-                    'min/moment-with-customlangs.min.js' : 'min/moment-with-customlangs.js',
-                    'min/langs.min.js'                   : 'min/langs.js',
+                    'min/moment-with-locales.min.js'     : 'min/moment-with-locales.js',
+                    'min/locales.min.js'                 : 'min/locales.js',
                     'min/moment.min.js'                  : 'moment.js'
+                }
+            },
+            customlocales: {
+                files: {
+                    'min/moment-with-customlocales.min.js' : 'min/moment-with-customlocales.js'
                 }
             },
             options: {
                 mangle: true,
                 compress: {
-                    dead_code: false
+                    dead_code: false // jshint ignore:line
                 },
                 output: {
-                    ascii_only: true
+                    ascii_only: true // jshint ignore:line
                 },
                 report: 'min',
                 preserveComments: 'some'
             }
         },
         nodeunit : {
-            all : ["test/moment/**/*.js", "test/lang/**/*.js"]
+            all : ['test/moment/**/*.js', 'test/locale/**/*.js']
         },
         jshint: {
             all: [
-                "Gruntfile.js", "moment.js", "lang/**/*.js", "test/**/*.js",
-                "!test/browser*.js"
+                'Gruntfile.js', 'moment.js', 'locale/**/*.js', 'test/**/*.js',
+                '!test/browser*.js'
             ],
             options: {
-                "node"     : true,
-                "browser"  : true,
-                "boss"     : false,
-                "curly"    : true,
-                "debug"    : false,
-                "devel"    : false,
-                "eqeqeq"   : true,
-                "eqnull"   : true,
-                "evil"     : false,
-                "forin"    : false,
-                "immed"    : false,
-                "laxbreak" : false,
-                "newcap"   : true,
-                "noarg"    : true,
-                "noempty"  : false,
-                "nonew"    : false,
-                "onevar"   : true,
-                "plusplus" : false,
-                "regexp"   : false,
-                "undef"    : true,
-                "sub"      : true,
-                "strict"   : false,
-                "white"    : true,
-                "es3"      : true,
-                "globals": {
-                    "define": false
+                'node'     : true,
+                'browser'  : true,
+                'boss'     : false,
+                'curly'    : true,
+                'debug'    : false,
+                'devel'    : false,
+                'eqeqeq'   : true,
+                'eqnull'   : true,
+                'evil'     : false,
+                'forin'    : false,
+                'immed'    : false,
+                'laxbreak' : false,
+                'newcap'   : true,
+                'noarg'    : true,
+                'noempty'  : false,
+                'nonew'    : false,
+                'onevar'   : true,
+                'plusplus' : false,
+                'regexp'   : false,
+                'undef'    : true,
+                'sub'      : true,
+                'strict'   : false,
+                'white'    : true,
+                'es3'      : true,
+                'camelcase' : true,
+                'globals': {
+                    'define': false
                 }
+            }
+        },
+        jscs: {
+            all: [
+                'Gruntfile.js', 'moment.js', 'locale/**/*.js',
+                'test/**/*.js', '!test/browser*.js'
+            ],
+            options: {
+                config: '.jscs.json'
             }
         },
         watch : {
             test : {
                 files : [
                     'moment.js',
-                    'lang/*.js',
+                    'locale/*.js',
                     'test/**/*.js'
                 ],
                 tasks: ['nodeunit']
@@ -173,44 +186,45 @@ module.exports = function (grunt) {
                 tasks: ['jshint']
             }
         },
-        embed_languages: {
+        embedLocales: {
             moment: 'moment.js',
-            dest: embedLanguageDest,
-            targetLangs: embedLanguageLangs
+            dest: embedLocaleDest,
+            targetLocales: embedLocaleSrc
+        },
+        benchmark: {
+            all: {
+                src: ['benchmarks/*.js']
+            }
         }
     });
 
-    grunt.loadTasks("tasks");
+    grunt.loadTasks('tasks');
 
     // These plugins provide necessary tasks.
-    grunt.loadNpmTasks('grunt-contrib-nodeunit');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-env');
-    grunt.loadNpmTasks('grunt-karma');
+    require('load-grunt-tasks')(grunt);
 
     // Default task.
-    grunt.registerTask('default', ['jshint', 'nodeunit']);
+    grunt.registerTask('default', ['jshint', 'jscs', 'nodeunit']);
 
-    //test tasks
+    // test tasks
     grunt.registerTask('test', ['test:node', 'test:browser']);
     grunt.registerTask('test:node', ['nodeunit']);
-    grunt.registerTask('test:server', ['concat', 'embed_languages', 'karma:server']);
-    grunt.registerTask('test:browser', ['concat', 'embed_languages', 'karma:chrome', 'karma:firefox']);
-    grunt.registerTask('test:sauce-browser', ['concat', 'embed_languages', 'env:sauceLabs', 'karma:sauce']);
-    grunt.registerTask('test:travis-sauce-browser', ['concat', 'embed_languages', 'karma:sauce']);
+    grunt.registerTask('test:server', ['concat', 'embedLocales', 'karma:server']);
+    grunt.registerTask('test:browser', ['concat', 'embedLocales', 'karma:chrome', 'karma:firefox']);
+    grunt.registerTask('test:sauce-browser', ['concat', 'embedLocales', 'env:sauceLabs', 'karma:sauce']);
+    grunt.registerTask('test:travis-sauce-browser', ['concat', 'embedLocales', 'karma:sauce']);
 
     // travis build task
     grunt.registerTask('build:travis', [
-        'jshint', 'test:node', 'check-sauce-creds',
-        'test:travis-sauce-browser'
+        // code style
+        'jshint', 'jscs',
+        // node tests
+        'test:node'
     ]);
 
     // Task to be run when releasing a new version
     grunt.registerTask('release', [
-        'jshint', 'nodeunit', 'concat', 'embed_languages',
-        'component', 'uglify'
+        'jshint', 'nodeunit', 'concat', 'embedLocales',
+        'component', 'uglify:main'
     ]);
 };

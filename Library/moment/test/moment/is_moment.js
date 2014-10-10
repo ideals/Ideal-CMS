@@ -1,7 +1,14 @@
 var moment = require('../../moment');
 
-exports.is_moment = {
-    "is moment object": function (test) {
+exports.isMoment = {
+    setUp : function (done) {
+        moment.createFromInputFallback = function () {
+            throw new Error('input not handled by moment');
+        };
+        done();
+    },
+
+    'is moment object': function (test) {
         test.expect(13);
 
         var MyObj = function () {},
@@ -17,7 +24,7 @@ exports.is_moment = {
         };
 
         test.ok(moment.isMoment(moment()), 'simple moment object');
-        test.ok(moment.isMoment(moment('invalid date')), 'invalid moment object');
+        test.ok(moment.isMoment(moment(null)), 'invalid moment object');
         test.ok(moment.isMoment(extend({}, moment())), 'externally cloned moments are moments');
         test.ok(moment.isMoment(extend({}, moment.utc())), 'externally cloned utc moments are moments');
 
@@ -31,6 +38,17 @@ exports.is_moment = {
         test.ok(!moment.isMoment(null), 'null is not moment object');
         test.ok(!moment.isMoment(undefined), 'undefined is not moment object');
 
+        test.done();
+    },
+
+    'is moment with hacked hasOwnProperty': function (test) {
+        var obj = {};
+        // HACK to suppress jshint warning about bad property name
+        obj['hasOwnMoney'.replace('Money', 'Property')] = function () {
+            return true;
+        };
+
+        test.ok(!moment.isMoment(obj), 'isMoment works even if passed object has a wrong hasOwnProperty implementation (ie8)');
         test.done();
     }
 };
