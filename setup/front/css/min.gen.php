@@ -10,7 +10,7 @@
 if (!isset($_REQUEST['css']) || empty($_REQUEST['css'])) {
     die;
 }
-require_once('../[[CMS]]/Ideal/Library/Minifier/Minifier.php');
+require_once('../[[CMS]]/Ideal/Library/Minifier/class.magic-min.php');
 
 // Абсолютный адрес корня сервера, не должен оканчиваться на слэш.
 define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT']);
