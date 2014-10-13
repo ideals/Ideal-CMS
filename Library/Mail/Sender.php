@@ -248,9 +248,7 @@ class Sender
     {
         $this->body_html = $html;
         $this->body_plain = $plain;
-        if ($this->body !== null) {
-            $this->body = null;
-        }
+        $this->body = null;
     }
 
     /**
