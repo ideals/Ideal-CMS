@@ -80,6 +80,9 @@ class Model extends \Ideal\Core\Admin\Model
         $config = Config::getInstance();
         $end = end($path);
         $newElements = array();
+        if (empty($elements)) {
+            return array();
+        }
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
         foreach ($elements as $element) {
             $newElements[] = $element;
@@ -144,7 +147,7 @@ class Model extends \Ideal\Core\Admin\Model
                 if ($v['link'] !== array_reduce(
                     $tmp,
                     function (&$res, $rule) {
-                        if ($res == 1 || preg_match($rule, $res)) {
+                        if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
                             return 1;
                         }
                         return $res;
