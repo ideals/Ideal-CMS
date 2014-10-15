@@ -49,8 +49,8 @@ class Model
             $this->addAnswer('Файл лога обновлений не существует ' . $log, 'info');
             $fileNotExists = true;
         }
-        // Проверяем доступность файла лога на запись
-        if (file_put_contents($log, '', FILE_APPEND) === false) {
+        $path =  realpath($log);
+        if (!is_writable($path)) {
             // Если файл лога не существует и создать его не удалось
             if ($fileNotExists) {
                 $this->addAnswer('Не удалось создать файл лога ' . $log, 'error');
@@ -61,6 +61,9 @@ class Model
             }
             $this->addAnswer('Файл ' . $log . ' недоступен для записи', 'error');
             exit;
+        }
+        if (file_put_contents($log, '', FILE_APPEND) == false) {
+            $this->addAnswer('Не удалось записать данные в файл ' . $log, 'error');
         }
         $this->log = $log;
     }
