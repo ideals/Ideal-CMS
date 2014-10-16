@@ -25,7 +25,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     public function __construct()
     {
         $config = Config::getInstance();
-        $this->updateModel = new Model();
+        $this->updateModel = new Model(true);
 
         $getFileScript = $this->srv . '/get.php';
 
