@@ -39,10 +39,10 @@
 $getVersionScript = 'http://idealcms.ru/update/version.php';
 
 $config = \Ideal\Core\Config::getInstance();
-$updateModel = new \Ideal\Structure\Service\UpdateCms\Model();
+$versions = new \Ideal\Structure\Service\UpdateCms\Versions();
 
 // Получаем установленные версии CMS и модулей
-$nowVersions = $updateModel->getVersions();
+$nowVersions = $versions->getVersions();
 
 $domain = urlencode($config->domain);
 
@@ -55,9 +55,27 @@ $nowVersions = json_encode($nowVersions);
 // Подключаем диалоговое окно
 include('modalUpdate.html');
 
-$msg = $updateModel->getAnswer();
+$msg = $versions->getAnswer();
 if (count($msg['message'])) {
-    echo "<div class=\"alert-{$msg['message'][0]}\">{$msg['message'][1]}</div>\n";
+    foreach ($msg['message'] as $m) {
+        switch ($m[1]) {
+            case ('error'):
+                $classBlock = 'alert alert-danger fade in';
+                break;
+            case ('info'):
+                $classBlock = 'alert alert-info fade in';
+                break;
+            case ('success'):
+                $classBlock = 'alert alert-success fade in';
+                break;
+            case ('warning'):
+                $classBlock = 'alert alert-warning fade in';
+                break;
+            default:
+                $classBlock = 'alert alert-info fade in';
+        }
+        echo "<div class=\"{$classBlock}\">{$m[0]}</div>\n";
+    }
 }
 ?>
 
