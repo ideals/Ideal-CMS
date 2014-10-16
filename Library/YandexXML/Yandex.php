@@ -651,9 +651,7 @@ class Yandex
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $xml->asXML());
         curl_setopt($ch, CURLOPT_POST, true);
-        //$data = curl_exec($ch);
-
-        $data = file_get_contents(DOCUMENT_ROOT . '/text.xml');
+        $data = curl_exec($ch);
 
         $this->response = new \SimpleXMLElement($data);
         $this->response = $this->response->response;

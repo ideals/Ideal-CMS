@@ -35,7 +35,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         ;
 
         if (!empty($yandex->error)) {
-            throw new \Exception($yandex->error);
+            return $yandex->error;
         }
         $list = $yandex->results();
         $list = $this->view($list);

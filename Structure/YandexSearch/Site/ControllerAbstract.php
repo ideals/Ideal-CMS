@@ -26,7 +26,12 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
         $this->model->setQuery($query);
 
         $this->view->query = $query;
-        $this->view->parts = $this->model->getList($page);
+        $list = $this->model->getList($page);
+        if (!is_array($list)) {
+            $this->view->content = $list;
+            return true;
+        }
+        $this->view->parts = $list;
         $this->view->pager = $this->model->getPager('page');
     }
 }
