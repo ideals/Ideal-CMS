@@ -40,7 +40,7 @@ class Controller extends AbstractController
         $html = <<<HTML
 <link href="Ideal/Library/datetimepicker/build/css/bootstrap-datetimepicker.min.css" rel="stylesheet" type="text/css" >
 <script type="text/javascript" src="Ideal/Library/moment/moment.js"></script>
-<script type="text/javascript" src="Ideal/Library/moment/locale /ru.js"></script>
+<script type="text/javascript" src="Ideal/Library/moment/locale/ru.js"></script>
 <script type="text/javascript" src="Ideal/Library/datetimepicker/src/js/bootstrap-datetimepicker.js"></script>
 
 <div id="picker_{$htmlName}" class="input-group date">
