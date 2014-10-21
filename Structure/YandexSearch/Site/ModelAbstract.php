@@ -22,7 +22,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     public function getList($page = null)
     {
         $config = Config::getInstance();
-        $yandex = new Yandex($this->params['user'], $this->params['key']);
+        $yandex = new Yandex($config->cms['yandexUser'], $config->cms['yandexKey']);
 
         if (empty($this->query)) {
             throw new \Exception('Пустой поисковый запрос');
