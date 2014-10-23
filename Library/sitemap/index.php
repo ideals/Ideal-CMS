@@ -162,7 +162,7 @@ class myCrawler
                     break;
                 case 'onePage':
                     $this->info('', 'В sitemap доступна только одна ссылка на запись');
-                    $this->sendEmail('Попытка записи только одной страницы в sitemap');
+                    $this->sendEmail("Попытка записи в sitemap вместо списка ссылок:\n" .  print_r($this->url, true));
                     break;
                 default:
                     $sitemap_file = $this->config['pageroot'] . $this->config['sitemap_file'];
@@ -339,7 +339,7 @@ class myCrawler
             unlink($tmpFile);
 
             $SETTINGS[PSNG_TIMEOUT_ACTION] = '';
-            if (count($this->url) == 1) {
+            if (count($this->url) < 2) {
                 $this->code = 'onePage';
                 return false;
             }
