@@ -111,7 +111,7 @@ if (isset($_POST['edit'])) {
 <script type="application/javascript">
     function startSiteMap() {
         var param = '';
-        if ($('#force').attr('checked') == 'checked') {
+        if ($('#force').prop('checked')) {
             param = '?w=1';
         }
         $('#loading').html('Идёт составление карты сайта. Ждите.');
