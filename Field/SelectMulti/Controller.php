@@ -25,6 +25,8 @@ use Ideal\Field\AbstractController;
  *
  * Полю medium присваивается название медиума для получения списка значений через промежуточную таблицу
  *
+ * Для редактирования подключается jQuery-плагин bootstrap-multiselect.js
+ *
  */
 class Controller extends AbstractController
 {
@@ -42,7 +44,17 @@ class Controller extends AbstractController
     {
         $list = $this->medium->getList();
         $variants = $this->medium->getValues();
-        $html = '<select multiple="multiple" class="form-control" name="' . $this->htmlName
+        $html = <<<HTML
+<link href="Ideal/Library/bootstrapMultiselect/dist/css/bootstrap-multiselect.css" rel="stylesheet">
+<script type="text/javascript" src="Ideal/Library/bootstrapMultiselect/dist/js/bootstrap-multiselect.js"></script>
+<!-- Initialize the bootstrap multiselect plugin: -->
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#general_size_multi').multiselect();
+    });
+</script>
+HTML;
+        $html .= '<select multiple="multiple" class="form-control" name="' . $this->htmlName
             . '[]" id="' . $this->htmlName . '">';
         foreach ($list as $k => $v) {
             $selected = '';
