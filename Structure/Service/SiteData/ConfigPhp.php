@@ -35,14 +35,17 @@ class ConfigPhp
      */
     public function pickupValues()
     {
+        $pageData = array();
         foreach ($this->params as $tabId => $tab) {
             foreach ($tab['arr'] as $field => $param) {
                 $fieldName = $tabId . '_' . $field;
-                $model = new MockModel();
+                $model = new MockModel('');
                 $model->fields[$fieldName] = $param;
-                $model->pageData[$fieldName] = $param['value'];
+                $pageData[$fieldName] = $param['value'];
+                $model->setPageData($pageData);
 
                 $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
+                /** @noinspection PhpUndefinedMethodInspection  */
                 /** @var $fieldModel \Ideal\Field\AbstractController */
                 $fieldModel = $fieldClass::getInstance();
                 $fieldModel->setModel($model, $fieldName, 'general');
@@ -69,7 +72,7 @@ class ConfigPhp
     public function saveFile($fileName)
     {
         // Изменяем постоянные настройки сайта
-        $file = "<?php\nreturn array(\n";
+        $file = "<?php\n// @codingStandardsIgnoreFile\nreturn array(\n";
         foreach ($this->params as $tabId => $tab) {
             $pad = 4;
             if ($tabId != 'default') {
@@ -134,7 +137,12 @@ DONE;
         }
 
         $cfg = file($fileName);
-        $skip = array('<?php', 'return array(', ');');
+        $skip = array(
+            '<?php',
+            '// @codingStandardsIgnoreFile',
+            'return array(',
+            ');'
+        );
 
         $params['default'] = array(
             'arr' => array(),
@@ -233,13 +241,16 @@ DONE;
                 . '<a href="#' . $tabId . '" data-toggle="tab">' . $tab['name'] . '</a>'
                 . '</li>';
             $tabsContent .= '<div class="tab-pane well ' . $active . '" id="' . $tabId . '">';
+            $pageData = array();
             foreach ($tab['arr'] as $field => $param) {
                 $fieldName = $tabId . '_' . $field;
-                $model = new MockModel();
+                $model = new MockModel('');
                 $model->fields[$fieldName] = $param;
-                $model->pageData[$fieldName] = $param['value'];
+                $pageData[$fieldName] = $param['value'];
+                $model->setPageData($pageData);
 
                 $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
+                /** @noinspection PhpUndefinedMethodInspection  */
                 /** @var $fieldModel \Ideal\Field\AbstractController */
                 $fieldModel = $fieldClass::getInstance();
                 $fieldModel->setModel($model, $fieldName, 'general');
@@ -256,18 +267,5 @@ DONE;
             $tabs = '';
         }
         return $tabs . $tabsContent;
-    }
-}
-
-class MockModel
-{
-
-    public $fields;
-
-    public $pageData;
-
-    public function getPageData()
-    {
-        return $this->pageData;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+// @codingStandardsIgnoreFile
 return array(
     'domain' => '[[SITENAME]]', // Домен | Ideal_Text
     'robotEmail' => 'robot@[[SITENAME]]', // Почтовый ящик, с которого будут приходить письма с сайта | Ideal_Text
