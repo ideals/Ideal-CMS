@@ -6,22 +6,23 @@
 
     {{ template.content |raw }}
 
-    {%if parts|length > 0 %}
-    {% for part in parts %}
-        <p>
-            <small>{{ part.date_create }}</small><br />
-            <strong>
-            {% if part.content == '' %}{{ part.name }}
-                {% else %}<a href="{{ part.link }}">{{ part.name }}</a>
-            {% endif %}
-            </strong>
-            {% if part.annot != '' %}<br />{% endif %}
-            {{ part.annot }}
-        </p>
-    {% endfor %}
+    {% if parts|length > 0 %}
+        {% for part in parts %}
+            <p>
+                <small>{{ part.date_create }}</small>
+                <br/>
+                <strong>
+                    {% if part.content == '' %}{{ part.name }}
+                    {% else %}<a href="{{ part.link }}">{{ part.name }}</a>
+                    {% endif %}
+                </strong>
+                {% if part.annot != '' %}<br/>{% endif %}
+                {{ part.annot }}
+            </p>
+        {% endfor %}
     {% endif %}
 
-    {%if pager.pages|length > 1 %}
+    {% if pager.pages|length > 1 %}
         <div class="pagination pagination-left">
             <ul>
                 {% for page in pager.pages %}

@@ -2,22 +2,51 @@
 namespace Ideal\Core\Site;
 
 use Ideal\Core;
-use Ideal\Core\Util;
 use Ideal\Field;
 
 abstract class Model extends Core\Model
 {
-    public $metaTags = array(
-        'robots' => 'index, follow');
 
-    public function getTitle()
+    public $metaTags = array(
+        'robots' => 'index, follow'
+    );
+
+    abstract function detectPageByUrl($path, $url);
+
+    public function getBreadCrumbs()
     {
-        $end = $this->pageData;
-        if (isset($end['title']) AND $end['title'] != '') {
-            return $end['title'];
-        } else {
-            return $end['name'];
+        $path = $this->path;
+        $path[0]['name'] = $path[0]['startName'];
+
+        if (isset($this->path[1]['url']) AND ($this->path[1]['url'] == '/') AND count($path) == 2) {
+            // На главной странице хлебные крошки отображать не надо
+            return '';
         }
+
+        // Отображение хлебных крошек
+        $pars = array();
+        $breadCrumbs = array();
+        $url = new Field\Url\Model();
+        foreach ($path as $v) {
+            if (isset($v['is_skip']) && $v['is_skip']) {
+                continue;
+            }
+            $url->setParentUrl($pars);
+            $link = $url->getUrl($v);
+            $pars[] = $v;
+            if ($link == '/') {
+                $breadCrumbs[] = array(
+                    'link' => $link,
+                    'name' => $v['startName']
+                );
+            } else {
+                $breadCrumbs[] = array(
+                    'link' => $link,
+                    'name' => $v['name']
+                );
+            }
+        }
+        return $breadCrumbs;
     }
 
     public function getHeader()
@@ -35,7 +64,6 @@ abstract class Model extends Core\Model
         }
         return $header;
     }
-
 
     public function extractHeader($text)
     {
@@ -55,61 +83,31 @@ abstract class Model extends Core\Model
 
         if (isset($end['description']) AND $end['description'] != '') {
             $meta .= '<meta name="description" content="'
-                   . str_replace('"', '&quot;', $end['description'])
-                   . '" ' . $xhtml . '>';
+                . str_replace('"', '&quot;', $end['description'])
+                . '" ' . $xhtml . '>';
         }
 
         if (isset($end['keywords']) AND $end['keywords'] != '') {
             $meta .= '<meta name="keywords" content="'
-                   . str_replace('"', '&quot;', $end['keywords'])
-                   . '" ' . $xhtml . '>';
+                . str_replace('"', '&quot;', $end['keywords'])
+                . '" ' . $xhtml . '>';
         }
 
-        foreach($this->metaTags as $tag => $value) {
+        foreach ($this->metaTags as $tag => $value) {
             $meta .= '<meta name="' . $tag . '" content="'
-                  . $value . '" ' . $xhtml . '>';
+                . $value . '" ' . $xhtml . '>';
         }
 
         return $meta;
     }
 
-
-    public function getBreadCrumbs()
+    public function getTitle()
     {
-        $path = $this->path;
-        $path[0]['name'] = $path[0]['startName'];
-
-
-        if (isset($this->path[1]['url']) AND ($this->path[1]['url'] == '/') AND count($path) == 2) {
-            // На главной странице хлебные крошки отображать не надо
-            return '';
+        $end = $this->pageData;
+        if (isset($end['title']) AND $end['title'] != '') {
+            return $end['title'];
+        } else {
+            return $end['name'];
         }
-
-        // Отображение хлебных крошек
-        $pars = array();
-        $breadCrumbs = array();
-        $url = new Field\Url\Model();
-        foreach ($path as $v) {
-            if (isset($v['is_skip']) && $v['is_skip']) continue;
-            $url->setParentUrl($pars);
-            $link = $url->getUrl($v);
-            $pars[] = $v;
-            if ($link == '/') {
-                $breadCrumbs[] = array(
-                    'link' => $link,
-                    'name' => $v['startName']
-                );
-
-            } else {
-                $breadCrumbs[] = array(
-                    'link' => $link,
-                    'name' => $v['name']
-                );
-            }
-        }
-        return $breadCrumbs;
     }
-
-
-    abstract function detectPageByUrl($path, $url);
 }

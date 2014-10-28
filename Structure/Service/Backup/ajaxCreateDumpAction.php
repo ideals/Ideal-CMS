@@ -4,7 +4,6 @@
  */
 use Ideal\Core\Config;
 
-
 if (isset($_POST['createMysqlDump'])) {
     // Подключаем библиотеку
     require_once 'Library/MySQLDump/mysqldump.php';
@@ -24,7 +23,14 @@ if (isset($_POST['createMysqlDump'])) {
         'add-locks' => true,
         'extended-insert' => true
     );
-    $dump = new Mysqldump($config->db['name'], $config->db['login'], $config->db['password'], $config->db['host'], 'mysql', $dumpSettings);
+    $dump = new Mysqldump(
+        $config->db['name'],
+        $config->db['login'],
+        $config->db['password'],
+        $config->db['host'],
+        'mysql',
+        $dumpSettings
+    );
 
     $time = time();
 
@@ -34,14 +40,18 @@ if (isset($_POST['createMysqlDump'])) {
     // Запускаем процесс выгрузки
     $tes = $dump->start($backupPart . DIRECTORY_SEPARATOR . $dumpName);
 
-    $dumpName = $backupPart . '/' . $dumpName . '.gz';
+    $dumpName = $backupPart . DIRECTORY_SEPARATOR . $dumpName . '.gz';
 
     // Формируем строку с новым файлом
-    echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' . $dumpName . '\')"> ' .
-            date('d.m.Y - H:i:s', $time)
+    echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' . addslashes(
+            $dumpName
+        ) . '\')"> ' .
+        date('d.m.Y - H:i:s', $time)
         . '</a></td>';
-    echo '<td><button class="btn btn-danger btn-mini" title="Удалить" onclick="delDump(\'' . $dumpName . '\'); false;"> <i class="icon-remove icon-white"></i> </button></td>';
+    echo '<td><button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' . addslashes(
+            $dumpName
+        ) . '\'); false;">'
+        . '<span class="glyphicon glyphicon-remove"></span></button></td>';
     echo '</tr>';
-
 }
 exit(false);

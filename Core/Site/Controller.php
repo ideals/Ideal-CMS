@@ -3,73 +3,53 @@ namespace Ideal\Core\Site;
 
 use Ideal\Core;
 use Ideal\Core\Config;
-use Ideal\Core\View;
 use Ideal\Core\Request;
+use Ideal\Core\View;
 
 class Controller
 {
-    /* @var $model Model Модель соответствующая этому контроллеру */
-    protected $model;
-    /* @var $path array Путь к этой странице, включая и её саму */
-    protected $path;
-    /* @var $view View Объект вида — twig-шаблонизатор */
-    protected $view;
+
     /** @var bool Включение листалки (пагинации) */
     protected $isPager = true;
 
+    /* @var $model Model Модель соответствующая этому контроллеру */
+    protected $model;
+
+    /* @var $path array Путь к этой странице, включая и её саму */
+    protected $path;
+
+    /** @var string Имя файла с нестандартным шаблоном view */
+    protected $tplName = '';
+
+    /* @var $view View Объект вида — twig-шаблонизатор */
+    protected $view;
+
     /**
-     * Отображение структуры в браузере
-     * @param Router $router
-     * @return string Содержимое отображаемой страницы
+     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
      */
-    function run(Router $router)
+    public function error404Action()
     {
-        $this->model = $router->getModel();
+        $name = $title = 'Страница не найдена';
+        $this->templateInit('404.twig');
 
-        $this->model->initPageData();
+        // Добавляем в path пустой элемент
+        $path = $this->model->getPath();
+        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
+        $this->model->setPath($path);
 
-        // Определяем и вызываем требуемый action у контроллера
-        if ($router->is404()) {
-            $actionName = 'error404';
-        } else {
-            $request = new Request();
-            $actionName = $request->action;
-            if ($actionName == '') {
-                $actionName = 'index';
-            }
-        }
-
-        $actionName = $actionName . 'Action';
-        $this->$actionName();
-
-        $config = Config::getInstance();
-
-        $this->view->domain = strtoupper($config->domain);
-        $this->view->startUrl = $config->startUrl;
-
-        $this->view->breadCrumbs = $this->model->getBreadCrumbs();
-
-        $this->view->year = date('Y');
-
-        $helper = new Helper();
-        $helpers = $helper->getVariables($this->model);
-        foreach($helpers as $k => $v) {
-            $this->view->$k = $v;
-        }
-
-        $this->view->title = $this->model->getTitle();
-        $this->view->metaTags = $this->model->getMetaTags($helper->xhtml);
-
-        $this->finishMod($actionName);
-
-        return $this->view->render();
+        // Устанавливаем нужный нам title
+        $pageData = $this->model->getPageData();
+        $pageData['title'] = $title;
+        $this->model->setPageData($pageData);
     }
 
     /**
      * Инициализация twig-шаблона сайта
-     * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     *
+     * @param string $tplName    Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     * @param array  $tplFolders Список дополнительных папок с файлами шаблонов
      */
-    public function templateInit($tplName = '')
+    public function templateInit($tplName = '', $tplFolders = array())
     {
         // Инициализация общего шаблона страницы
         $gblName = 'site.twig';
@@ -86,7 +66,11 @@ class Controller
 
         // Инициализация шаблона страницы
         if ($tplName == '') {
-            $tplName = $moduleName . 'Structure/' . $structureName . '/Site/index.twig';
+            if ($this->tplName == '') {
+                $tplName = $moduleName . 'Structure/' . $structureName . '/Site/index.twig';
+            } else {
+                $tplName = $this->tplName;
+            }
         }
         if (!stream_resolve_include_path($tplName)) {
             echo 'Нет файла шаблона ' . $tplName;
@@ -95,8 +79,20 @@ class Controller
         $tplRoot = dirname(stream_resolve_include_path($tplName));
         $tplName = basename($tplName);
 
+        // Построение полных путей для дополнительных папок шаблонов
+        if (count($tplFolders) > 0) {
+            foreach ($tplFolders as $k => $v) {
+                $tplFolders[$k] = stream_resolve_include_path($v);
+            }
+        }
+
+        // Определяем корневую папку системы для подключение шаблонов из любой вложенной папки через их путь
         $config = Config::getInstance();
-        $this->view = new View(array($gblRoot, $tplRoot), $config->isTemplateCache);
+        $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
+
+        $config = Config::getInstance();
+        $folders = array_merge(array($tplRoot, $gblRoot, $cmsFolder), $tplFolders);
+        $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
 
@@ -121,14 +117,6 @@ class Controller
             // 'Cache-Control' => 'post-check=0, pre-check=0',
             // 'Cache-Control' => 'Pragma: no-cache',
         );
-    }
-
-    /**
-     * Внесение финальных изменений в шаблон, после всех-всех-всех
-     * @param string $actionName
-     */
-    public function finishMod($actionName)
-    {
     }
 
     /**
@@ -163,21 +151,69 @@ class Controller
     }
 
     /**
-     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
+     * Отображение структуры в браузере
+     *
+     * @param Router $router
+     * @return string Содержимое отображаемой страницы
      */
-    public function error404Action()
+    function run(Router $router)
     {
-        $name = $title = 'Страница не найдена';
-        $this->templateInit('404.twig');
+        $this->model = $router->getModel();
 
-        // Добавляем в path пустой элемент
-        $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
-        $this->model->setPath($path);
+        // Определяем и вызываем требуемый action у контроллера
+        if ($router->is404()) {
+            $actionName = 'error404';
+        } else {
+            $request = new Request();
+            $actionName = $request->action;
+            if ($actionName == '') {
+                $actionName = 'index';
+            }
+        }
 
-        // Устанавливаем нужный нам title
-        $pageData = $this->model->getPageData();
-        $pageData['title'] = $title;
-        $this->model->setPageData($pageData);
+        $actionName = $actionName . 'Action';
+        $this->$actionName();
+
+        $config = Config::getInstance();
+
+        $this->view->domain = strtoupper($config->domain);
+        $this->view->startUrl = $config->cms['startUrl'];
+        $this->view->minifier = $config->cache['jsAndCss']; // флаг включения минификации js и css
+
+        $this->view->breadCrumbs = $this->model->getBreadCrumbs();
+
+        $this->view->year = date('Y');
+
+        $helper = new Helper();
+        $helpers = $helper->getVariables($this->model);
+        foreach ($helpers as $k => $v) {
+            $this->view->$k = $v;
+        }
+
+        $this->view->title = $this->model->getTitle();
+        $this->view->metaTags = $this->model->getMetaTags($helper->xhtml);
+
+        $this->finishMod($actionName);
+
+        return $this->view->render();
+    }
+
+    /**
+     * Внесение финальных изменений в шаблон, после всех-всех-всех
+     *
+     * @param string $actionName
+     */
+    public function finishMod($actionName)
+    {
+    }
+
+    /**
+     * Установка нестандартного шаблона View
+     *
+     * @param string $tplName Путь к файлу шаблона от Ideal или от Mods (не включая эти папки)
+     */
+    public function setTemplate($tplName)
+    {
+        $this->tplName = $tplName;
     }
 }

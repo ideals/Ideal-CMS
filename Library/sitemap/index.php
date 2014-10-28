@@ -8,16 +8,21 @@ require_once(dirname(__FILE__) . '/GsgXml.class.php');
 
 class myCrawler
 {
+
     public $config; // конфигурация, считываемая из .ini-файла
+
     public $status = 'cron'; // статус запуска скрипта
-    private $code; // код состояния после завершения работы паука
-    private $textError = ''; // страница на которой возникает ошибка
-    public $url = array(); // список файлов(ссылок)
+
+    public $url = array(); // код состояния после завершения работы паука
+
+    private $code; // страница на которой возникает ошибка
+
+    private $textError = ''; // список файлов(ссылок)
 
     /**
      * Считывание и инициализация настроек
      */
-    function __construct()
+    public function __construct()
     {
         // Запоминаем путь до скрипта от корня сайта
         $home = dirname($_SERVER['SCRIPT_FILENAME']);
@@ -28,22 +33,22 @@ class myCrawler
         }
 
         // Проверяем статус запуска - тестовый или по расписанию
-        if ($_SERVER['argv'][1] == 'w' OR isset($_GET['w'])) {
+        if ($_SERVER['argv'][1] == 'w' || isset($_GET['w'])) {
             $this->status = 'test';
         }
 
         // Проверяем, есть ли ini-файл рядом со скриптом
-        $iniFile = $home . '/sitemap.ini';
-        $message = 'Working with ini-file from local directory';
+        $iniFile = $home . '/site_map.php';
+        $message = 'Working with settings php-file from local directory';
 
         if (!file_exists($iniFile)) {
             // Проверяем, есть ли ini-файл в корневой папке Ideal CMS
             $iniFile = substr($home, 0, stripos($home, '/Ideal/Library/sitemap'))
-                . '/sitemap.ini';
-            $message = 'Working with ini-file from config directory';
+                . '/site_map.php';
+            $message = 'Working with settings php-file from config directory';
             if (!file_exists($iniFile)) {
                 // Ini-файла нигде не нашли :(
-                $message = 'Ini-files not found. Path: ' . $iniFile;
+                $message = 'Settings php-files not found. Path: ' . $iniFile;
                 $iniFile = '';
             }
         }
@@ -51,8 +56,11 @@ class myCrawler
         $this->info('', $message . "\n");
 
         if ($iniFile != '') {
-            $this->config = parse_ini_file($iniFile, true);
-            rtrim($this->config['website'], '/');
+            $this->config = include($iniFile);
+            $this->config['website'] = rtrim($this->config['website'], '/');
+            $this->config['disallow_regexp'] = explode('\n', $this->config['disallow_regexp']);
+            $this->config['disallow_key'] = explode('\n', $this->config['disallow_key']);
+            $this->config['seo_urls'] = explode('\n', $this->config['seo_urls']);
         } else {
             $this->code = 'error';
         }
@@ -77,6 +85,10 @@ class myCrawler
         }
     }
 
+    function info($param, $msg = '')
+    {
+        echo "\n{$param}\n{$msg}\n";
+    }
 
     function checkUrl($checkUrl)
     {
@@ -90,161 +102,16 @@ class myCrawler
         }
 
         // Running crawler engine from last point
-        $crawler = new Crawler($urlToCrawl, $this->config['script_timeout'], $this->config['load_timeout'], $this->config['delay']);
+        $crawler = new Crawler(
+            $urlToCrawl,
+            $this->config['script_timeout'],
+            $this->config['load_timeout'],
+            $this->config['delay']
+        );
         $res = $crawler->_getFilesForURL(array($urlToCrawl, ''));
 
         return $crawler->todo;
     }
-
-    /**
-     * Запуск паука
-     * @return array список всех страниц сайта
-     */
-    function runCrawler()
-    {
-
-        $urlToCrawl = $this->config['website'] . $this->config['crawler_url'];
-
-        $url = parse_url($urlToCrawl);
-        $path = $url['path'];
-        if ((substr($urlToCrawl, -1) != '/') && ($url['path'] == '')) {
-            $path .= '/';
-            $urlToCrawl .= '/';
-        }
-
-        // TODO check if we have a already started scan
-
-        // Running crawler engine from last point
-        $crawler = new Crawler($urlToCrawl, $this->config['script_timeout'], $this->config['load_timeout'], $this->config['delay']);
-
-        // Если существует файл хранения временных данных сканирования,
-        // Считываем их и запускаем сканирование с последней точки
-        // Если нет - запускаем как обычно
-        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
-        if (file_exists($tmpFile)) {
-            $this->info('', 'Продолжаем сканирование с точки');
-            $SETTINGS = unserialize(file_get_contents($tmpFile));
-            $crawler->setDone($SETTINGS[PSNG_TIMEOUT_DONE]);
-            $crawler->setFiles($SETTINGS[PSNG_TIMEOUT_FILE]);
-            $crawler->setTodo($SETTINGS[PSNG_TIMEOUT_TODO]);
-            $crawler->beforeTimeout = $SETTINGS['beforeTimeout'];
-        } else {
-            $crawler->beforeTimeout = 1;
-            // $crawler->setDone($SETTINGS[PSNG_TIMEOUT_DONE]);
-            // $crawler->setFiles($SETTINGS[PSNG_TIMEOUT_FILE]);
-        }
-        $crawler->setForbiddenKeys($this->config['disallow_key']);
-        $crawler->setForbiddenDirectories($this->config['disallow_dir']);
-        $crawler->setForbiddenFiles($this->config['disallow_file']);
-        $crawler->setForbiddenPages($this->config['disallowPage']);
-
-        //Set the directory to forbid the crawler to follow below it
-        $crawler->setDirectory($path);
-
-        $rcs = $crawler->start();
-        if ($rcs === false) {
-            $this->code = 'error';
-            // Записываем описание ошибки для отправки их на почту
-            $this->textError = $crawler->textError;
-            // Удаляем временный файл
-            unlink($tmpFile);
-            return false;
-        }
-        if (!$crawler->hasFinished()) {
-            // store current data into session
-            $SETTINGS[PSNG_TIMEOUT_TODO] = $crawler->getTodo();
-            $SETTINGS[PSNG_TIMEOUT_DONE] = $crawler->getDone();
-            $SETTINGS[PSNG_TIMEOUT_FILE] = $crawler->getFiles();
-            $SETTINGS[PSNG_TIMEOUT_ACTION] = PSNG_TIMEOUT_ACTION_WEBSITE;
-            $SETTINGS['beforeTimeout'] = $crawler->beforeTimeout;
-            $this->code = 'timeout';
-            // Записываем текущие результаты в файл
-            $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
-            $result = file_put_contents($tmpFile, serialize($SETTINGS));
-            if (!$result) {
-                $this->info('', 'TMP file not found: ' . $tmpFile);
-            }
-            return false;
-        } else {
-            while ($crawler->hasNext()) {
-                $fileinfo = $crawler->getNext(); // returns an array
-
-                if (!isset($fileinfo['http_status'])) $fileinfo['http_status'] = '';
-                if (!isset($fileinfo['file'])) $fileinfo['file'] = '';
-                if (!isset($fileinfo['lastmod'])) $fileinfo['lastmod'] = '';
-                if (!isset($fileinfo['changefreq'])) $fileinfo['changefreq'] = '';
-                if (!isset($fileinfo['priority'])) $fileinfo['priority'] = '';
-
-                $http_status = $fileinfo['http_status'];
-                // create and setup valid values
-                $fileinfo = $this->handleURL($fileinfo['file'], $fileinfo['lastmod'], $fileinfo['changefreq'], $fileinfo['priority']);
-
-                //$fileinfo = handleURLCached($FILES_CACHE, $fileinfo);
-
-                // handle some website specific stuff
-                if ($http_status == '404') {
-                    $fileinfo['file_enabled'] = '';
-                    $fileinfo['http_status'] = 'class="notfound"';
-                }
-
-                $FILE[$fileinfo['file_url']] = $fileinfo;
-
-                // Создаем список ссылок
-                array_push($this->url, $fileinfo['file_url']);
-            }
-
-            // Сканирование завершено, удаляем временный файл
-            unlink($tmpFile);
-
-            $SETTINGS[PSNG_TIMEOUT_ACTION] = '';
-            if (count($this->url) == 1) {
-                $this->code = 'onePage';
-                return false;
-            }
-            $this->compare();
-        }
-
-        return $FILE;
-    }
-
-
-    /**
-     * returns a correct entry for a fileinfo with given information and settings
-     */
-    function handleURL($url, $lastmod = '', $changefreq = '', $priority = '')
-    {
-        $res = array();
-
-        $res['file_url'] = $url;
-
-        // default: file is enabled and will be handled
-        $res['file_enabled'] = 'checked';
-
-        // handle lastmod
-        $res['lastmod'] = $lastmod;
-
-        // format timestamp appropriate to settings
-        if ($res['lastmod'] != '') {
-            if ($this->config['time_format'] == 'short') {
-                $res['lastmod'] = $this->getDateTimeISO_short($res['lastmod']);
-            } else {
-                $res['lastmod'] = $this->getDateTimeISO($res['lastmod']);
-            }
-        }
-
-        // handle changefreq
-        // $changefreq - никак не используется, т.к. в классе паука она определяется неправильно
-        $res['changefreq'] = $this->getFrequency($lastmod);
-
-
-        // handle priority
-        if ($this->config['priority'] != '') {
-            $res['priority'] = $this->getPriority($url);
-        }
-
-        return $res;
-    }
-
 
     /**
      * checks, if there is an entry in filelist cache;
@@ -272,108 +139,42 @@ class myCrawler
         return $fileInfo;
     }
 
-
-    function debug($param, $msg)
+    public function run()
     {
-        return;
-        //echo "\n{$param}\n{$msg}";
-    }
+        if ($this->code != '') {
+            return $this->code;
+        }
 
-    function info($param, $msg = '')
-    {
-        echo "\n{$param}\n{$msg}\n";
-    }
+        if (!$this->checkXmlFile()) {
+            return 'error';
+        }
 
-    function compare()
-    {
-        $file = $this->config['pageroot'] . $this->config['old_sitemap'];
+        $file = $this->runCrawler();
 
-        $new = $this->url;
-        $old = unserialize(file_get_contents($file));
-        $text = "";
-        file_put_contents($file, serialize($new)); // сохраним новый массив ссылок, что бы в следующий раз взять его как старый
-
-
-        if (empty($old)) {
-            $text = "Добавлены ссылки(первичная генерация карты) \n";
-            foreach ($new as $v) {
-                $text .= $v;
-                $text .= "\n";
-            }
-
+        if ($file !== false) {
+            $this->writeSitemap($file);
         } else {
-
-            // Находим добавленные и удаленные страницы
-            $del = array_diff($old, $new);
-            $add = array_diff($new, $old);
-
-            if (!empty($add)) {
-                $text .= "Добавлены ссылки \n";
-                foreach ($add as $v) {
-                    $text .= $v;
-                    $text .= "\n";
-                }
-            } else {
-                $text .= "Ничего не добавлено\n";
-            }
-            if (!empty($del)) {
-                $text .= "Удалены ссылки \n";
-                foreach ($del as $v) {
-                    $text .= $v;
-                    $text .= "\n";
-                }
-            } else {
-                $text .= "Ничего не удалено\n";
+            switch ($this->code) {
+                case 'timeout':
+                    $this->info('', 'Выход по таймауту');
+                    break;
+                case 'done':
+                    break;
+                case 'onePage':
+                    $this->info('', 'В sitemap доступна только одна ссылка на запись');
+                    $this->sendEmail("Попытка записи в sitemap вместо списка ссылок:\n" .  print_r($this->url, true));
+                    break;
+                default:
+                    $sitemap_file = $this->config['pageroot'] . $this->config['sitemap_file'];
+                    $file = file_get_contents($sitemap_file);
+                    unlink($sitemap_file);
+                    file_put_contents($sitemap_file, $file);
+                    $this->sendEmail($this->textError);
+                    $this->info('', 'Webserver has an error. Scanner shutdown.');
+                    break;
             }
         }
-        $this->sendEmail($text);
-    }
-
-
-    /**
-     * writes sitemap to file
-     */
-    function writeSitemap($FILE)
-    {
-        global $SETTINGS, $openFile_error, $LAYOUT;
-
-        $gsg = new GsgXml($this->config['website'] . '/');
-
-        $numb = 0;
-        $txtfilehandle = null;
-
-        foreach ($FILE as $numb => $value) {
-            if ($value[PSNG_FILE_ENABLED] != '') {
-                $this->debug($value, "Adding file " . $value[PSNG_FILE_URL]);
-                if (isset($txtfilehandle)) fputs($txtfilehandle, $value[PSNG_FILE_URL] . "\n");
-                if ($gsg->addUrl($value['file_url'], false, $value['lastmod'], false, $value['changefreq'], $value['priority']) === false) {
-                    $this->info($value[PSNG_FILE_URL], 'Could not add file to sitemap' . $gsg->errorMsg);
-                }
-            } else {
-                $this->debug($value[PSNG_FILE_URL], 'Not enabled, so not writing file to sitemap');
-            }
-        }
-
-        $sitemap_file = $this->config['pageroot'] . $this->config['sitemap_file'];
-        $filehandle = $this->openFile($sitemap_file, true);
-        if ($filehandle === false) {
-            $this->info($openFile_error, 'Could not write sitemap');
-            return false;
-        }
-        $xml = $gsg->output(true, $SETTINGS[PSNG_COMPRESS_SITEMAP], false);
-
-        fputs($filehandle, $xml);
-        fclose($filehandle);
-        if (isset($txtfilehandle)) fclose($txtfilehandle);
-
-        if ($numb > 50000) {
-            $this->info('Not implemented: split result into files with only 50000 entries', 'Only 50000 entries are allowed in one sitemap file at the moment!');
-        }
-        $sitemap_url = $this->config['website'] . $this->config['sitemap_file'];
-        $this->info('Sitemap successfuly created and saved to ' . $sitemap_url . '.', 'Count of pages: ' . count($FILE));
-
-
-        return true;
+        return $this->code;
     }
 
     /**
@@ -418,83 +219,180 @@ class myCrawler
         return true;
     }
 
-
     /**
-     * returns a filehandle if file is accessable
+     * Запуск паука
+     *
+     * @return array список всех страниц сайта
      */
-    function openFile($filename, $writable = false)
+    function runCrawler()
     {
-        global $openFile_error;
-        $openFile_error = "";
-        // check if file exists - if yes, perform tests:
-        if (file_exists($filename)) {
-            // check if file is accessable
-            if (!is_readable($filename)) {
-                $openFile_error = "File $filename is not readable";
-                return false;
-            }
-            if ($writable && !is_writable($filename)) {
-                $openFile_error = "File $filename is not writable";
-                return false;
-            }
+
+        $urlToCrawl = $this->config['website'] . $this->config['crawler_url'];
+
+        $url = parse_url($urlToCrawl);
+        $path = $url['path'];
+        if ((substr($urlToCrawl, -1) != '/') && ($url['path'] == '')) {
+            $path .= '/';
+            $urlToCrawl .= '/';
+        }
+
+        // TODO check if we have a already started scan
+
+        // Running crawler engine from last point
+        $crawler = new Crawler(
+            $urlToCrawl,
+            $this->config['script_timeout'],
+            $this->config['load_timeout'],
+            $this->config['delay']
+        );
+
+        // Если существует файл хранения временных данных сканирования,
+        // Считываем их и запускаем сканирование с последней точки
+        // Если нет - запускаем как обычно
+        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+        if (file_exists($tmpFile)) {
+            $this->info('', 'Продолжаем сканирование с точки');
+            $SETTINGS = unserialize(file_get_contents($tmpFile));
+            $crawler->setDone($SETTINGS[PSNG_TIMEOUT_DONE]);
+            $crawler->setFiles($SETTINGS[PSNG_TIMEOUT_FILE]);
+            $crawler->setTodo($SETTINGS[PSNG_TIMEOUT_TODO]);
+            $crawler->beforeTimeout = $SETTINGS['beforeTimeout'];
         } else {
-            // file does not exist, try to create file
+            $crawler->beforeTimeout = 1;
+            // $crawler->setDone($SETTINGS[PSNG_TIMEOUT_DONE]);
+            // $crawler->setFiles($SETTINGS[PSNG_TIMEOUT_FILE]);
         }
-        $accessLevel = 'r+';
-        if ($writable === true) {
-            $accessLevel = 'w+';
-        }
+        $crawler->setForbiddenKeys($this->config['disallow_key']);
+        $crawler->setForbiddenPages($this->config['disallow_regexp']);
 
-        // Проверяем, можно ли записывать в xml-файл
-        $filehandle = @fopen($filename, $accessLevel);
-        if ($filehandle === false) {
-            $openFile_error = "File $filename could not be opened, don't know why";
-            @fclose($filehandle);
+        //Set the directory to forbid the crawler to follow below it
+        $crawler->setDirectory($path);
 
-            if (!file_exists($filename)) {
-                $openFile_error = "File $filename does not exist and I do not have the rights to create it!";
-            }
+        $rcs = $crawler->start();
+        if ($rcs === false) {
+            $this->code = 'error';
+            // Записываем описание ошибки для отправки их на почту
+            $this->textError = $crawler->textError;
+            // Удаляем временный файл
+            unlink($tmpFile);
             return false;
         }
-        return $filehandle;
+        if (!$crawler->hasFinished()) {
+            // store current data into session
+            $SETTINGS[PSNG_TIMEOUT_TODO] = $crawler->getTodo();
+            $SETTINGS[PSNG_TIMEOUT_DONE] = $crawler->getDone();
+            $SETTINGS[PSNG_TIMEOUT_FILE] = $crawler->getFiles();
+            $SETTINGS[PSNG_TIMEOUT_ACTION] = PSNG_TIMEOUT_ACTION_WEBSITE;
+            $SETTINGS['beforeTimeout'] = $crawler->beforeTimeout;
+            $this->code = 'timeout';
+            // Записываем текущие результаты в файл
+            $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+            $result = file_put_contents($tmpFile, serialize($SETTINGS));
+            if (!$result) {
+                $this->info('', 'TMP file not found: ' . $tmpFile);
+            }
+            return false;
+        } else {
+            while ($crawler->hasNext()) {
+                $fileinfo = $crawler->getNext(); // returns an array
+
+                if (!isset($fileinfo['http_status'])) {
+                    $fileinfo['http_status'] = '';
+                }
+                if (!isset($fileinfo['file'])) {
+                    $fileinfo['file'] = '';
+                }
+                if (!isset($fileinfo['lastmod'])) {
+                    $fileinfo['lastmod'] = '';
+                }
+                if (!isset($fileinfo['changefreq'])) {
+                    $fileinfo['changefreq'] = '';
+                }
+                if (!isset($fileinfo['priority'])) {
+                    $fileinfo['priority'] = '';
+                }
+
+                $http_status = $fileinfo['http_status'];
+                // create and setup valid values
+                $fileinfo = $this->handleURL(
+                    $fileinfo['file'],
+                    $fileinfo['lastmod'],
+                    $fileinfo['changefreq'],
+                    $fileinfo['priority']
+                );
+
+                //$fileinfo = handleURLCached($FILES_CACHE, $fileinfo);
+
+                // handle some website specific stuff
+                if ($http_status == '404') {
+                    $fileinfo['file_enabled'] = '';
+                    $fileinfo['http_status'] = 'class="notfound"';
+                }
+
+                $FILE[$fileinfo['file_url']] = $fileinfo;
+
+                // Создаем список ссылок
+                array_push($this->url, $fileinfo['file_url']);
+            }
+
+            // Сканирование завершено, удаляем временный файл
+            unlink($tmpFile);
+
+            $SETTINGS[PSNG_TIMEOUT_ACTION] = '';
+            if (count($this->url) < 2) {
+                $this->code = 'onePage';
+                return false;
+            }
+            $this->compare();
+        }
+
+        return $FILE;
     }
 
-    public function run()
+    /**
+     * returns a correct entry for a fileinfo with given information and settings
+     */
+    function handleURL($url, $lastmod = '', $changefreq = '', $priority = '')
     {
-        if ($this->code != '') {
-            return $this->code;
-        }
+        $res = array();
 
-        if (!$this->checkXmlFile()) {
-            return 'error';
-        }
+        $res['file_url'] = $url;
 
-        $file = $this->runCrawler();
+        // default: file is enabled and will be handled
+        $res['file_enabled'] = 'checked';
 
-        if ($file !== false) {
-            $this->writeSitemap($file);
-        } else {
-            switch ($this->code) {
-                case 'timeout':
-                    $this->info('', 'Выход по таймауту');
-                    break;
-                case 'done':
-                    break;
-                case 'onePage':
-                    $this->info('', 'В sitemap доступна только одна ссылка на запись');
-                    $this->sendEmail('Попытка записи только одной страницы в sitemap');
-                    break;
-                default:
-                    $sitemap_file = $this->config['pageroot'] . $this->config['sitemap_file'];
-                    $file = file_get_contents($sitemap_file);
-                    unlink($sitemap_file);
-                    file_put_contents($sitemap_file, $file);
-                    $this->sendEmail($this->textError);
-                    $this->info('', 'Webserver has an error. Scanner shutdown.');
-                    break;
+        // handle lastmod
+        $res['lastmod'] = $lastmod;
+
+        // format timestamp appropriate to settings
+        if ($res['lastmod'] != '') {
+            if ($this->config['time_format'] == 'short') {
+                $res['lastmod'] = $this->getDateTimeISO_short($res['lastmod']);
+            } else {
+                $res['lastmod'] = $this->getDateTimeISO($res['lastmod']);
             }
         }
-        return $this->code;
+
+        // handle changefreq
+        // $changefreq - никак не используется, т.к. в классе паука она определяется неправильно
+        $res['changefreq'] = $this->getFrequency($lastmod);
+
+        // handle priority
+        if ($this->config['priority'] != '') {
+            $res['priority'] = $this->getPriority($url);
+        }
+
+        return $res;
+    }
+
+    function getDateTimeISO_short($timestamp)
+    {
+        return date("Y-m-d", $timestamp);
+    }
+
+    function getDateTimeISO($timestamp)
+    {
+        return date("Y-m-d\TH:i:s", $timestamp) . substr(date("O"), 0, 3) . ":" . substr(date("O"), 3);
     }
 
     function getFrequency($lastmod)
@@ -544,18 +442,55 @@ class myCrawler
         return $priority;
     }
 
-    function getDateTimeISO($timestamp)
+    function compare()
     {
-        return date("Y-m-d\TH:i:s", $timestamp) . substr(date("O"), 0, 3) . ":" . substr(date("O"), 3);
-    }
+        $file = $this->config['pageroot'] . $this->config['old_sitemap'];
 
-    function getDateTimeISO_short($timestamp)
-    {
-        return date("Y-m-d", $timestamp);
+        $new = $this->url;
+        $old = unserialize(file_get_contents($file));
+        $text = "";
+        file_put_contents(
+            $file,
+            serialize($new)
+        ); // сохраним новый массив ссылок, что бы в следующий раз взять его как старый
+
+        if (empty($old)) {
+            $text = "Добавлены ссылки(первичная генерация карты) \n";
+            foreach ($new as $v) {
+                $text .= $v;
+                $text .= "\n";
+            }
+        } else {
+
+            // Находим добавленные и удаленные страницы
+            $del = array_diff($old, $new);
+            $add = array_diff($new, $old);
+
+            if (!empty($add)) {
+                $text .= "Добавлены ссылки \n";
+                foreach ($add as $v) {
+                    $text .= $v;
+                    $text .= "\n";
+                }
+            } else {
+                $text .= "Ничего не добавлено\n";
+            }
+            if (!empty($del)) {
+                $text .= "Удалены ссылки \n";
+                foreach ($del as $v) {
+                    $text .= $v;
+                    $text .= "\n";
+                }
+            } else {
+                $text .= "Ничего не удалено\n";
+            }
+        }
+        $this->sendEmail($text);
     }
 
     /**
      * Функция отправки сообщение с отчетом о создании карты сайта
+     *
      * @param string $text Сообщение(отчет)
      */
     private function sendEmail($text)
@@ -569,19 +504,125 @@ class myCrawler
         $header .= 'From: sitemap@' . $host;
 
         // Отправляем письма об изменениях
-        $to = implode(',', $this->config['email']);
-        mail($to, $this->config['website'], $text, $header);
+        mail($this->config['email_notify'], $this->config['website'], $text, $header);
     }
 
+    /**
+     * writes sitemap to file
+     */
+    function writeSitemap($FILE)
+    {
+        global $SETTINGS, $openFile_error, $LAYOUT;
+
+        $gsg = new GsgXml($this->config['website'] . '/');
+
+        $numb = 0;
+        $txtfilehandle = null;
+
+        foreach ($FILE as $numb => $value) {
+            if ($value[PSNG_FILE_ENABLED] != '') {
+                $this->debug($value, "Adding file " . $value[PSNG_FILE_URL]);
+                if (isset($txtfilehandle)) {
+                    fputs($txtfilehandle, $value[PSNG_FILE_URL] . "\n");
+                }
+                if ($gsg->addUrl(
+                        $value['file_url'],
+                        false,
+                        $value['lastmod'],
+                        false,
+                        $value['changefreq'],
+                        $value['priority']
+                    ) === false
+                ) {
+                    $this->info($value[PSNG_FILE_URL], 'Could not add file to sitemap' . $gsg->errorMsg);
+                }
+            } else {
+                $this->debug($value[PSNG_FILE_URL], 'Not enabled, so not writing file to sitemap');
+            }
+        }
+
+        $sitemap_file = $this->config['pageroot'] . $this->config['sitemap_file'];
+        $filehandle = $this->openFile($sitemap_file, true);
+        if ($filehandle === false) {
+            $this->info($openFile_error, 'Could not write sitemap');
+            return false;
+        }
+        $xml = $gsg->output(true, $SETTINGS[PSNG_COMPRESS_SITEMAP], false);
+
+        fputs($filehandle, $xml);
+        fclose($filehandle);
+        if (isset($txtfilehandle)) {
+            fclose($txtfilehandle);
+        }
+
+        if ($numb > 50000) {
+            $this->info(
+                'Not implemented: split result into files with only 50000 entries',
+                'Only 50000 entries are allowed in one sitemap file at the moment!'
+            );
+        }
+        $sitemap_url = $this->config['website'] . $this->config['sitemap_file'];
+        $this->info(
+            'Sitemap successfuly created and saved to ' . $sitemap_url . '.',
+            'Count of pages: ' . count($FILE)
+        );
+
+        return true;
+    }
+
+    function debug($param, $msg)
+    {
+        return;
+        //echo "\n{$param}\n{$msg}";
+    }
+
+    /**
+     * returns a filehandle if file is accessable
+     */
+    function openFile($filename, $writable = false)
+    {
+        global $openFile_error;
+        $openFile_error = "";
+        // check if file exists - if yes, perform tests:
+        if (file_exists($filename)) {
+            // check if file is accessable
+            if (!is_readable($filename)) {
+                $openFile_error = "File $filename is not readable";
+                return false;
+            }
+            if ($writable && !is_writable($filename)) {
+                $openFile_error = "File $filename is not writable";
+                return false;
+            }
+        } else {
+            // file does not exist, try to create file
+        }
+        $accessLevel = 'r+';
+        if ($writable === true) {
+            $accessLevel = 'w+';
+        }
+
+        // Проверяем, можно ли записывать в xml-файл
+        $filehandle = @fopen($filename, $accessLevel);
+        if ($filehandle === false) {
+            $openFile_error = "File $filename could not be opened, don't know why";
+            @fclose($filehandle);
+
+            if (!file_exists($filename)) {
+                $openFile_error = "File $filename does not exist and I do not have the rights to create it!";
+            }
+            return false;
+        }
+        return $filehandle;
+    }
 }
 
 $sitemap = new myCrawler();
 
-
 // Проверяем, нужно ли кешировать вывод для ручной отправки письма с результатами
 $manualSend = 0;
 
-if ($sitemap->status == 'cron' AND $sitemap->config['sendmail']['send']) {
+if ($sitemap->status == 'cron' && ($sitemap->config['email_cron'] != '')) {
     $manualSend = 1;
     ob_start();
 }
@@ -601,10 +642,12 @@ echo '</pre>';
 if ($manualSend) {
     $text = ob_get_contents();
     ob_end_clean();
-    mail($sitemap->config['sendmail']['address'],
+    mail(
+        $sitemap->config['email_cron'],
         str_replace('http://', '', $sitemap->config['website']) . ' sitemap',
         $text,
-        "From: Sitemap Maker <sitemap@" . str_replace('http://', '', $sitemap->config['website']) . ">\r\n");
+        "From: Sitemap Maker <sitemap@" . str_replace('http://', '', $sitemap->config['website']) . ">\r\n"
+    );
     echo $text;
 }
 
