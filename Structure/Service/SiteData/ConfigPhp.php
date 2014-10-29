@@ -153,6 +153,7 @@ DONE;
         // Проходимся по всем строчкам php-файла и заполняем массив $params
         for ($i = 0; $i < $c; $i++) {
             $v = $cfg[$i];
+            $v = preg_replace("/[\t]+/", '    ', $v);
             if (in_array(trim($v), $skip)) {
                 continue;
             }
