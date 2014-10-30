@@ -181,7 +181,7 @@ class Controller
         $this->view->minifier = $config->cache['jsAndCss']; // флаг включения минификации js и css
 
         $this->view->breadCrumbs = $this->model->getBreadCrumbs();
-
+        $this->view->minificator = $config->cms['enabledMin'];
         $this->view->year = date('Y');
 
         $helper = new Helper();
