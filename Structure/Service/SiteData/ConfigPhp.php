@@ -137,6 +137,15 @@ DONE;
         }
 
         $cfg = file($fileName);
+
+        // Убираем служебные символы (пробелы, табуляцию) из начала и из конца строк
+        array_walk(
+            $cfg,
+            function (&$value) {
+                $value = trim($value);
+            }
+        );
+
         $skip = array(
             '<?php',
             '// @codingStandardsIgnoreFile',
@@ -153,7 +162,7 @@ DONE;
         // Проходимся по всем строчкам php-файла и заполняем массив $params
         for ($i = 0; $i < $c; $i++) {
             $v = $cfg[$i];
-            if (in_array(trim($v), $skip)) {
+            if (in_array($v, $skip)) {
                 continue;
             }
             $cols = explode("', // ", $v);
@@ -167,7 +176,7 @@ DONE;
                     exit;
                 }
                 $array = array();
-                while (trim($cfg[++$i]) != '),') {
+                while ($cfg[++$i] != '),') {
                     $v = $cfg[$i];
                     $param = $this->parseStr($v);
                     $array = array_merge($array, $param);
