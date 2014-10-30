@@ -5,8 +5,8 @@
 
 namespace Ideal\Structure\Part\Widget;
 
-use Ideal\Core\Db;
 use Ideal\Core\Config;
+use Ideal\Core\Db;
 use Ideal\Field;
 
 class MainMenu extends \Ideal\Core\Widget
@@ -20,11 +20,13 @@ class MainMenu extends \Ideal\Core\Widget
 
         // Считываем главное меню
         $par = array(
-            'is_active' => 1,
-            'is_not_menu' => 0,
-            'lvl' => 1);
+            'active' => 1,
+            'menu' => 0,
+            'lvl' => 1
+        );
         $table = strtolower($config->db['prefix'] . 'ideal_structure_part');
-        $menu = $db->select($table, $par, 'cid');
+        $_sql = "SELECT * FROM {$table} WHERE is_active=:active AND is_not_menu=:menu AND lvl=:lvl ORDER BY cid";
+        $menu = $db->select($_sql, $par);
 
         $path = $this->model->getPath();
         $end = end($path);
@@ -34,9 +36,10 @@ class MainMenu extends \Ideal\Core\Widget
 
             // Определяем активен ли данный пункт меню
             $menu[$k]['isActivePage'] = 0;
-            if (isset($path[1]['ID']) and ($v['ID'] == $path[1]['ID'])) {
-                if (($end['ID'] == $v['ID']) AND isset($end['lvl']) AND ($end['lvl'] == 1)
-                        AND ($end['prev_structure'] == $path[1]['prev_structure'])) {
+            if (isset($path[1]['ID']) && ($v['ID'] == $path[1]['ID'])) {
+                if (($end['ID'] == $v['ID']) && isset($end['lvl']) && ($end['lvl'] == 1)
+                    && ($end['prev_structure'] == $path[1]['prev_structure'])
+                ) {
                     $menu[$k]['link'] = '';
                 }
                 $menu[$k]['isActivePage'] = 1;
@@ -44,5 +47,4 @@ class MainMenu extends \Ideal\Core\Widget
         }
         return $menu;
     }
-
 }

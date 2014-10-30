@@ -4,14 +4,14 @@
 return array(
     'params' => array(
         'in_structures' => array('Ideal_Part'),
-        'structures'    => array('Ideal_Part', 'Ideal_News'), // типы, которые можно создавать в этом разделе
-        'elements_cms'  => 10, // количество элементов в списке в CMS
+        'structures' => array('Ideal_Part', 'Ideal_News'), // типы, которые можно создавать в этом разделе
+        'elements_cms' => 10, // количество элементов в списке в CMS
         'elements_site' => 15, // количество элементов в списке на сайте
-        'field_name'    => 'name', // поля для вывода информации по объекту
-        'field_sort'    => 'cid', // поле, по которому проводится сортировка в CMS
-        'field_list'    => array('cid!40', 'ID', 'name', 'date_mod', 'url'),
-        'levels'        => 6, // количество уровней вложенности
-        'digits'        => 3 // //кол-во разрядов
+        'field_name' => 'name', // поля для вывода информации по объекту
+        'field_sort' => 'cid', // поле, по которому проводится сортировка в CMS
+        'field_list' => array('cid!40', 'ID', 'name', 'date_mod', 'url'),
+        'levels' => 6, // количество уровней вложенности
+        'digits' => 3 // //кол-во разрядов
     ),
     'fields' => array(
         // label   - название поля в админке
@@ -21,104 +21,104 @@ return array(
         // default - значение по-умолчанию (пока не реализовано)
         'ID' => array(
             'label' => 'Идентификатор',
-            'sql'   => 'int(8) unsigned not null auto_increment primary key',
-            'type'  => 'Ideal_Hidden'
+            'sql' => 'int(8) unsigned not null auto_increment primary key',
+            'type' => 'Ideal_Hidden'
         ),
         'prev_structure' => array(
             'label' => 'ID родительских структур',
-            'sql'   => 'char(15)',
-            'type'  => 'Ideal_Hidden'
+            'sql' => 'char(15)',
+            'type' => 'Ideal_Hidden'
         ),
         'cid' => array(
             'label' => '№',
-            'sql'   => 'char(' . (6 * 3) . ') not null',
-            'type'  => 'Ideal_Cid'
+            'sql' => 'char(' . (6 * 3) . ') not null',
+            'type' => 'Ideal_Cid'
         ),
         'lvl' => array(
             'label' => 'Уровень вложенности объекта',
-            'sql'   => 'int(1) unsigned not null',
-            'type'  => 'Ideal_Hidden'
+            'sql' => 'int(1) unsigned not null',
+            'type' => 'Ideal_Hidden'
         ),
         'structure' => array(
             'label' => 'Тип раздела',
-            'sql'   => 'varchar(20) not null',
-            'type'  => 'Ideal_Select',
-            'class' => '\\Ideal\\Structure\\Part\\Getters\\StructureList'
+            'sql' => 'varchar(30) not null',
+            'type' => 'Ideal_Select',
+            'medium' => '\\Ideal\\Medium\\StructureList\\Model'
         ),
         'template' => array(
-            'label'     => 'Тип документа',
-            'sql'       => "varchar(20) not null default 'Page'",
-            'type'      => 'Ideal_Template',
-            'class'     => '\\Ideal\\Structure\\Part\\Getters\\TemplateList',
-            'templates' =>  array('Ideal_Page', 'Ideal_PhpFile', 'Ideal_SiteMap'),
+            'label' => 'Тип документа',
+            'sql' => "varchar(30) not null default 'Page'",
+            'type' => 'Ideal_Template',
+            'medium' => '\\Ideal\\Medium\\TemplateList\\Model',
+            'templates' => array('Ideal_Page', 'Ideal_PhpFile', 'Ideal_SiteMap'),
         ),
         'name' => array(
             'label' => 'Название',
-            'sql'   => 'varchar(255) not null',
-            'type'  => 'Ideal_Text'
+            'sql' => 'varchar(255) not null',
+            'type' => 'Ideal_Text'
         ),
         'url' => array(
             'label' => 'URL',
-            'sql'   => 'varchar(255) not null',
-            'type'  => 'Ideal_UrlAuto'
+            'sql' => 'varchar(255) not null',
+            'type' => 'Ideal_UrlAuto'
         ),
         'annot' => array(
             'label' => 'Описание',
-            'sql'   => 'text',
-            'type'  => 'Ideal_Area'
+            'sql' => 'text',
+            'type' => 'Ideal_Area'
         ),
         'img' => array(
             'label' => 'Картинка',
-            'sql'   => 'varchar(255)',
-            'type'  => 'Ideal_Image'
+            'sql' => 'varchar(255)',
+            'type' => 'Ideal_Image'
         ),
         'date_create' => array(
             'label' => 'Дата создания',
-            'sql'   => 'int(11) not null',
-            'type'  => 'Ideal_DateSet'
+            'sql' => 'int(11) not null',
+            'type' => 'Ideal_DateSet'
         ),
         'date_mod' => array(
             'label' => 'Дата модификации',
-            'sql'   => 'int(11) not null',
-            'type'  => 'Ideal_DateAuto'
+            'sql' => 'int(11) not null',
+            'type' => 'Ideal_DateAuto'
         ),
         'is_active' => array(
             'label' => 'Отображать на сайте',
-            'sql'   => "bool DEFAULT '0' NOT NULL",
-            'type'  => 'Ideal_Checkbox'
+            'sql' => "bool DEFAULT '0' NOT NULL",
+            'type' => 'Ideal_Checkbox'
         ),
         'is_not_menu' => array(
             'label' => 'Не выводить в меню',
-            'sql'   => "bool DEFAULT '0' NOT NULL",
-            'type'  => 'Ideal_Checkbox'
+            'sql' => "bool DEFAULT '0' NOT NULL",
+            'type' => 'Ideal_Checkbox'
         ),
-        'is_self_menu'=> array(
+        'is_self_menu' => array(
             'label' => 'Не выводить своё подменю',
-            'sql'   => "bool DEFAULT '0' NOT NULL",
-            'type'  => 'Ideal_Checkbox'
+            'sql' => "bool DEFAULT '0' NOT NULL",
+            'type' => 'Ideal_Checkbox'
         ),
         'is_skip' => array(
             'label' => 'Пропускать уровень',
-            'sql'   => "bool DEFAULT '0' NOT NULL",
-            'type'  => 'Ideal_Checkbox'
+            'sql' => "bool DEFAULT '0' NOT NULL",
+            'type' => 'Ideal_Checkbox'
         ),
         'title' => array(
-            'tab'   => 'SEO',
+            'tab' => 'SEO',
             'label' => 'Title',
-            'sql'   => 'text',
-            'type'  => 'Ideal_Area'
+            'sql' => 'text',
+            'type' => 'Ideal_Area'
         ),
         'keywords' => array(
-            'tab'   => 'SEO',
+            'tab' => 'SEO',
             'label' => 'Keywords tag',
-            'sql'   => 'text',
-            'type'  => 'Ideal_Area'
+            'sql' => 'text',
+            'type' => 'Ideal_Area'
         ),
         'description' => array(
-            'tab'   => 'SEO',
+            'tab' => 'SEO',
             'label' => 'Description tag',
-            'sql'   => 'text',
-            'type'  => 'Ideal_Area'
+            'sql' => 'text',
+            'type' => 'Ideal_Area'
         ),
     )
 );

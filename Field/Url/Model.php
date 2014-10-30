@@ -1,126 +1,40 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Field\Url;
 
 use Ideal\Core\Config;
 use Ideal\Core\PluginBroker;
 
+/**
+ * Модель для работы с основными задачами по URL
+ *
+ * * Установка родительского URL
+ * * Определение URL элемента
+ * * Транслитерация URL
+ * * Транслитерация файловых имён
+ *
+ */
 class Model
 {
-    protected $fieldName; // TODO сделать возможность определять url Не только по полю url
+    // TODO сделать возможность определять url Не только по полю url
+
+    /** @var string Родительский URL, используемый для построения URL элементов на этом уровне */
     protected $parentUrl;
-
-    public function __construct($fieldName = 'url')
-    {
-        // TODO доработать тут и в контроллере возможность указывать кастомное название поля url
-        $this->fieldName = $fieldName;
-    }
-
-
-    public function setParentUrl($path)
-    {
-        // Обратиться к модели для получения своей части url, затем обратиться
-        // к более старшим структурам пока не доберёмся до конца
-
-        if (count($path) > 2 AND $path[1]['url'] == '/') {
-            // Мы находимся внутри главной - в ней url не работают
-            return '---';
-        };
-
-        // TODO если первая структура не стартовая, то нужно определить путь от стартовой структуры
-
-        // Если первая структура в пути — стартовая структура, то просто объединяем url
-
-        if (!isset($path[0]['url'])) {
-            // Путь может быть не задан в случае установки parentUrl для главной странице
-            $this->parentUrl = '';
-            return '';
-        }
-
-        $url = $path[0]['url'];
-        unset($path[0]);
-
-        // Объединяем все участки пути
-        foreach($path as $v) {
-            if (strpos($v['url'], 'http:') === 0
-                OR strpos($v['url'], '/') === 0) {
-                // Если в одном из элементов пути есть ссылки на другие страницы, то путь построить нельзя
-                return '---';
-            }
-            if (isset($v['is_skip']) AND $v['is_skip']) continue;
-            $url .= '/' . $v['url'];
-        }
-
-        $this->parentUrl = $url;
-
-        return $url;
-    }
-
-
-    public function getUrl($lastUrlPart)
-    {
-        return $this->getUrlWithPrefix($lastUrlPart, $this->parentUrl);
-    }
-
-
-    static function getUrlWithPrefix($lastPart, $parentUrl = '')
-    {
-        $lastUrlPart = $lastPart['url'];
-
-        if ($parentUrl == '---') {
-            // В случае, когда родительский url неопределён
-            return '---';
-        }
-
-        $config = Config::getInstance();
-        if ($lastUrlPart == '/' || $lastUrlPart == '') {
-            $lastUrlPart = '/';
-            // Ссылка на главную обрабатывается особым образом
-            if ($config->startUrl != '') {
-                $lastUrlPart = $config->startUrl . '/';
-            }
-            return $lastUrlPart;
-        }
-
-        $pluginBroker = PluginBroker::getInstance();
-        $arr = array('last' => $lastPart, 'parent' => $parentUrl);
-        $arr = $pluginBroker->makeEvent('onGetUrl', $arr);
-        $lastUrlPart = $arr['last']['url'];
-
-        if (strpos($lastUrlPart, 'http:') === 0
-            OR strpos($lastUrlPart, '/') === 0) {
-            // Если это уже сформированная ссылка, её и возвращаем
-            return $lastUrlPart;
-        }
-
-        if ($parentUrl == '' || $parentUrl == '/') {
-            $parentUrl = $config->startUrl;
-        } elseif (is_array($parentUrl)) {
-            $parentUrl = implode('/', $parentUrl);
-        }
-
-        $url = $parentUrl;
-
-        // Если URL предка нельзя составить
-        if ($url == '---') return '---';
-
-        $url .= '/';
-
-        // Добавляем дочерний url
-        if ($url != $lastUrlPart) {
-            // Сработает только для всех ссылок, кроме главной '/'
-            $url .= $lastUrlPart . $config->urlSuffix;
-        }
-
-        return $url;
-    }
-
 
     /**
      * Удаление символов, неприменимых в URL
+     *
      * @param string $nm исходная ссылка
      * @return string преобразованная ссылка
      */
-    static function translitUrl($nm)
+    public static function translitUrl($nm)
     {
         $nm = Model::translit($nm);
         $nm = strtolower($nm);
@@ -141,58 +55,20 @@ class Model
             '?' => '',
             ' ' => '-',
             '&' => '',
-            ',' => ''
+            ',' => '',
+            '%' => ''
         );
         $nm = strtr($nm, $arr);
         return $nm;
     }
 
-
-    /**
-     * Транслитерация файлов, с оставлением расширения неизменным
-     * @param string $nm - исходное название файла
-     * @return string преобразованное название файла
-     */
-    static function translit_file($nm)
-    {
-        $ext = '';
-        $posDot = mb_strrpos($nm, '.');
-        if ($posDot != 0) {
-            $name = mb_substr($nm, 0, $posDot);
-            $ext = '.' . mb_substr($nm, $posDot + 1);
-        }
-        $nm = Model::translit($name);
-        $nm = strtolower($nm);
-        $arr = array(
-            '*' => '',
-            '(' => '',
-            ')' => '',
-            '!' => '',
-            '#' => 'N',
-            '—' => '',
-            '/' => '-',
-            '«' => '',
-            '»' => '',
-            '.' => '',
-            '№' => 'N',
-            '"' => '',
-            '\'' => '',
-            '?' => '',
-            ' ' => '-',
-            '&' => '',
-            ',' => ''
-        );
-        $nm = strtr($nm, $arr);
-        return $nm . $ext;
-    }
-
-
     /**
      * Транслитерация русских букв в латинские
+     *
      * @param string $nm - исходная строка
      * @return string преобразованная строка
      */
-    static function translit($nm)
+    public static function translit($nm)
     {
         $arr = array(
             'а' => 'a',
@@ -268,6 +144,7 @@ class Model
 
     /**
      * Отрезает стандартный суффикс от ссылки
+     *
      * @param $link
      * @return string
      */
@@ -278,4 +155,167 @@ class Model
         return $link;
     }
 
+    /**
+     * Получение url для элемента $lastPart на основании ранее установленного пути или префикса $parentUrl
+     *
+     * @param array $lastPart Массив с основными данными об элементе
+     * @return string Сгенерированный URL этого элемента
+     */
+    public function getUrl($lastPart)
+    {
+        return $this->getUrlWithPrefix($lastPart, $this->parentUrl);
+    }
+
+    /**
+     * Получение url для элемента $lastPart на основании ранее установленного пути или префикса $parentUrl
+     *
+     * Метод генерирует событие onGetUrl, которое могут перехватывать плагины ддя создания специальных правил
+     * получения URL.
+     *
+     * @param array  $lastPart Массив с основными данными об элементе
+     * @param string $parentUrl
+     * @return string Сгенерированный URL этого элемента
+     */
+    public static function getUrlWithPrefix($lastPart, $parentUrl = '')
+    {
+        $lastUrlPart = $lastPart['url'];
+
+        if ($parentUrl == '---') {
+            // В случае, когда родительский url неопределён
+            return '---';
+        }
+
+        $config = Config::getInstance();
+        if ($lastUrlPart == '/' || $lastUrlPart == '') {
+            $lastUrlPart = '/';
+            // Ссылка на главную обрабатывается особым образом
+            if ($config->cms['startUrl'] != '') {
+                $lastUrlPart = $config->cms['startUrl'] . '/';
+            }
+            return $lastUrlPart;
+        }
+
+        $pluginBroker = PluginBroker::getInstance();
+        $arr = array('last' => $lastPart, 'parent' => $parentUrl);
+        $arr = $pluginBroker->makeEvent('onGetUrl', $arr);
+        $lastUrlPart = $arr['last']['url'];
+
+        if (strpos($lastUrlPart, 'http:') === 0
+            || strpos($lastUrlPart, '/') === 0
+        ) {
+            // Если это уже сформированная ссылка, её и возвращаем
+            return $lastUrlPart;
+        }
+
+        if ($parentUrl == '' || $parentUrl == '/') {
+            $parentUrl = $config->cms['startUrl'];
+        } elseif (is_array($parentUrl)) {
+            $parentUrl = implode('/', $parentUrl);
+        }
+
+        $url = $parentUrl;
+
+        // Если URL предка нельзя составить
+        if ($url == '---') {
+            return '---';
+        }
+
+        $url .= '/';
+
+        // Добавляем дочерний url
+        if ($url != $lastUrlPart) {
+            // Сработает только для всех ссылок, кроме главной '/'
+            $url .= $lastUrlPart . $config->urlSuffix;
+        }
+
+        return $url;
+    }
+
+    /**
+     * Установка родительского URL ($this->parentUrl) на основании $path
+     *
+     * @param array $path Путь до элемента, для которого нужно определить URL
+     * @return string Родительский URL, который можно использовать для построения URL
+     */
+    public function setParentUrl($path)
+    {
+        // Обратиться к модели для получения своей части url, затем обратиться
+        // к более старшим структурам пока не доберёмся до конца
+
+        if (count($path) > 2 && $path[1]['url'] == '/') {
+            // Мы находимся внутри главной - в ней url не работают
+            return '---';
+        };
+
+        // TODO если первая структура не стартовая, то нужно определить путь от стартовой структуры
+
+        // Если первая структура в пути — стартовая структура, то просто объединяем url
+
+        if (!isset($path[0]['url'])) {
+            // Путь может быть не задан в случае установки parentUrl для главной странице
+            $this->parentUrl = '';
+            return '';
+        }
+
+        $url = $path[0]['url'];
+        unset($path[0]);
+
+        // Объединяем все участки пути
+        foreach ($path as $v) {
+            if (strpos($v['url'], 'http:') === 0
+                || strpos($v['url'], '/') === 0
+            ) {
+                // Если в одном из элементов пути есть ссылки на другие страницы, то путь построить нельзя
+                return '---';
+            }
+            if (isset($v['is_skip']) && $v['is_skip']) {
+                continue;
+            }
+            $url .= '/' . $v['url'];
+        }
+
+        $this->parentUrl = $url;
+
+        return $url;
+    }
+
+    /**
+     * Транслитерация файлов без изменения букв в расширении
+     *
+     * @param string $name Исходное название файла
+     * @return string Преобразованное название файла
+     */
+    public function translitFileName($name)
+    {
+        $ext = '';
+        $posDot = mb_strrpos($name, '.');
+        if ($posDot != 0) {
+            $name = mb_substr($name, 0, $posDot);
+            $ext = '.' . mb_substr($name, $posDot + 1);
+        }
+        $name = Model::translit($name);
+        $name = strtolower($name);
+        $arr = array(
+            '*' => '',
+            '(' => '',
+            ')' => '',
+            '!' => '',
+            '#' => 'N',
+            '—' => '',
+            '/' => '-',
+            '«' => '',
+            '»' => '',
+            '.' => '',
+            '№' => 'N',
+            '"' => '',
+            '\'' => '',
+            '?' => '',
+            ' ' => '-',
+            '&' => '',
+            ',' => '',
+            '%' => ''
+        );
+        $name = strtr($name, $arr);
+        return $name . $ext;
+    }
 }
