@@ -68,8 +68,8 @@ if ($width == 0 && $height == 0) {
 
 /** @var string $resizedImgPath Путь к новому изображению */
 $resizedImgPath = $_SERVER['DOCUMENT_ROOT']
-                . '/images/resized/'
-                . str_replace('/' . $imgName, '', $_GET['img']);
+    . '/images/resized/'
+    . str_replace('/' . $imgName, '', $_GET['img']);
 
 /** @var array $color Цвет фона изображения */
 $color = array();

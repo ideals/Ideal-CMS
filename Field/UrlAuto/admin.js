@@ -1,9 +1,10 @@
 var AUTO_URL_OFF = 'auto url off';
 var AUTO_URL_ON = 'auto url on';
 
-$('body').on('windowOpen', '#modalContent',function (e) {
-    if ($("#UrlAuto") != null) {
-        loadUrlAuto($("#UrlAuto"));
+$('body').on('windowOpen', '#modalContent', function () {
+    var element = $("#UrlAuto");
+    if (element != null) {
+        loadUrlAuto(element);
     }
 });
 
@@ -60,7 +61,7 @@ function translit(str) {
         'я': 'ya',
         'ь': '',
         'ъ': ''
-    }
+    };
     var transURL = '';
     for (var i = 0; i < str.length; i++) {
         var x = str.charAt(i);
@@ -74,7 +75,7 @@ function translit(str) {
  * @param e
  */
 function setTranslit(e) {
-    var input = $(e).parent().find('input');
+    var input = $(e).parent().parent().find('input');
     var butt = $(e);
 
     if (input.attr("readonly")) {
@@ -97,8 +98,8 @@ function setTranslit(e) {
  * @param e
  */
 function loadUrlAuto(e) {
-    var input = $(e).parent().find('input');
-    var butt = $(e).parent().find('button');
+    var input = $(e).parent().parent().parent().find('input');
+    var butt = $(e).parent().parent().find('button');
     var name = $("#general_name").val();
     name = translit(name);
     var url = $("#general_url").val();
@@ -111,10 +112,11 @@ function loadUrlAuto(e) {
 
 $(document).ready(function () {
     $('body').on("keyup", "#general_name", function () {
-        if ($('#general_url').attr("readonly")) {
+        var element = $('#general_url');
+        if (element.attr("readonly")) {
             var name = $(this).val();
             var tran = translit(name);
-            $('#general_url').val(tran);
+            element.val(tran);
         }
     });
 });

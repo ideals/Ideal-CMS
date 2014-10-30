@@ -9,38 +9,8 @@ use Ideal\Structure\User;
 
 class ModelAbstract extends \Ideal\Core\Site\Model
 {
+
     public $cid;
-
-
-    public function getWhere($where)
-    {
-        $where = 'WHERE ' . $where . ' AND is_active=1 AND date_create < ' . time();
-        return $where;
-    }
-
-
-    /**
-     * @param int $page Номер отображаемой страницы
-     * @return array Полученный список элементов
-     */
-    public function getList($page)
-    {
-        $config = Config::getInstance();
-        $news = parent::getList($page);
-
-        $parentUrl = $this->getParentUrl();
-        foreach ($news as $k => $v) {
-            if ($v['content'] == '') {
-                $news[$k]['link'] = '';
-            } else {
-                $news[$k]['link'] = $parentUrl . '/' . $v['url'] . $config->urlSuffix;
-            }
-            $news[$k]['date_create'] = Util::dateReach($v['date_create']);
-        }
-
-        return $news;
-    }
-
 
     public function detectPageByUrl($path, $url)
     {
@@ -50,10 +20,10 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $user = new User\Model();
         $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
 
-        $url = mysql_real_escape_string($url[0]);
-        $_sql = "SELECT * FROM {$this->_table} WHERE url='{$url}' {$checkActive} AND date_create < " . time();
+        $_sql = "SELECT * FROM {$this->_table} WHERE url=:url {$checkActive} AND date_create < :time";
+        $par = array('url' => $url[0], 'time' => time());
 
-        $news = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
+        $news = $db->select($_sql, $par); // запрос на получение всех страниц, соответствующих частям url
 
         // Страницу не нашли, возвращаем 404
         if (!isset($news[0]['ID'])) {
@@ -73,6 +43,33 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         return $this;
     }
 
+    public function getStructureElements()
+    {
+        $list = $this->getList(0, 9999);
+        return $list;
+    }
+
+    /**
+     * @param int $page Номер отображаемой страницы
+     * @return array Полученный список элементов
+     */
+    public function getList($page = null)
+    {
+        $config = Config::getInstance();
+        $news = parent::getList($page);
+
+        $parentUrl = $this->getParentUrl();
+        foreach ($news as $k => $v) {
+            if ($v['content'] == '') {
+                $news[$k]['link'] = '';
+            } else {
+                $news[$k]['link'] = $parentUrl . '/' . $v['url'] . $config->urlSuffix;
+            }
+            $news[$k]['date_create'] = Util::dateReach($v['date_create']);
+        }
+
+        return $news;
+    }
 
     public function getText()
     {
@@ -86,7 +83,8 @@ class ModelAbstract extends \Ideal\Core\Site\Model
             // TODO проработать ситуацию, когда текст в шаблоне (сейчас нет определения модуля)
             $table = $config->db['prefix'] . 'Template_' . $end['template'];
             $prevStructure = $end['prev_structure'] . '-' . $end['ID'];
-            $text = $db->select($table, $prevStructure, '', 'prev_structure');
+            $_sql = "SELECT * FROM {$table} WHERE prev_structure=:ps";
+            $text = $db->select($_sql, array('ps' => $prevStructure));
             $text = $text[0]['content'];
         }
 
@@ -98,11 +96,9 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         return $text;
     }
 
-
-    public function getStructureElements()
+    public function getWhere($where)
     {
-        $list = $this->getList(0, 9999);
-        return $list;
+        $where = 'WHERE ' . $where . ' AND is_active=1 AND date_create < ' . time();
+        return $where;
     }
-
 }

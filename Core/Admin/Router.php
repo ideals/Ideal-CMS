@@ -2,16 +2,18 @@
 namespace Ideal\Core\Admin;
 
 use Ideal\Core\Config;
-use Ideal\Core\Util;
 use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
+use Ideal\Core\Util;
 
 class Router
 {
-    /** @var Model Модель активной страницы */
-    protected $model = null;
+
     /** @var string Название контроллера активной страницы */
     protected $controllerName = '';
+
+    /** @var Model Модель активной страницы */
+    protected $model = null;
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -22,6 +24,13 @@ class Router
      */
     public function __construct()
     {
+        // Проверка на простой AJAX-запрос
+        $request = new Request();
+        if ($request->mode == 'ajax') {
+            $this->controllerName = $request->controller . '\\AjaxController';
+            return;
+        }
+
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
 
@@ -30,25 +39,12 @@ class Router
         }
 
         $pluginBroker->makeEvent('onPostDispatch', $this);
-    }
 
-    /**
-     * Возвращает название контроллера для активной страницы
-     *
-     * @return string Название контроллера
-     */
-    public function getControllerName()
-    {
-        if ($this->controllerName != '') {
-            return $this->controllerName;
-        }
+        // Инициализируем данные модели
+        $this->model->initPageData();
 
-        $path = $this->model->getPath();
-        $end = end($path);
-
-        $controllerName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Controller';
-
-        return $controllerName;
+        // Определяем корректную модель на основании поля structure
+        $this->model = $this->model->detectActualModel();
     }
 
     /**
@@ -89,13 +85,34 @@ class Router
     }
 
     /**
-     * Возвращает объект модели активной страницы
+     * Возвращает название контроллера для активной страницы
      *
-     * @return Model Инициализированный объект модели активной страницы
+     * @return string Название контроллера
      */
-    public function getModel()
+    public function getControllerName()
     {
-        return $this->model;
+        if ($this->controllerName != '') {
+            return $this->controllerName;
+        }
+
+        $request = new Request();
+        if ($request->mode == 'ajax-model' && $request->controller != '') {
+            // Если это ajax-вызов с явно указанным namespace класса ajax-контроллера
+            return $request->controller . '\\AjaxController';
+        }
+
+        $path = $this->model->getPath();
+        $end = end($path);
+
+        if ($request->mode == 'ajax-model' && $request->controller == '') {
+            // Если это ajax-вызов без указанного namespace класса ajax-контроллера,
+            // то используем namespace модели
+            return Util::getClassName($end['structure'], 'Structure') . '\\Admin\\AjaxController';
+        }
+
+        $controllerName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Controller';
+
+        return $controllerName;
     }
 
     /**
@@ -108,6 +125,16 @@ class Router
     public function setControllerName($name)
     {
         $this->controllerName = $name;
+    }
+
+    /**
+     * Возвращает объект модели активной страницы
+     *
+     * @return Model Инициализированный объект модели активной страницы
+     */
+    public function getModel()
+    {
+        return $this->model;
     }
 
     /**

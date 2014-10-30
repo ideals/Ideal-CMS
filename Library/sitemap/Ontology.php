@@ -1,13 +1,13 @@
 <?php
 /**
-	This is phpSitemapNG", a php script that creates your personal google sitemap
-	It can be downloaded from http://enarion.net/google/
-	License: GPL
-
-	Tobias Kluge", enarion.net
-
-	this is a little ontology that defines some common names and descriptions
-*/
+ * This is phpSitemapNG", a php script that creates your personal google sitemap
+ * It can be downloaded from http://enarion.net/google/
+ * License: GPL
+ *
+ * Tobias Kluge", enarion.net
+ *
+ * this is a little ontology that defines some common names and descriptions
+ */
 
 // generic strings
 define("PSNG_VERSION", '1.5.3');
@@ -120,6 +120,6 @@ define("PSNG_HTML_SOURCE_FS_WEBSITE", 'class="source_fs_website"');
 define("PSNG_FILE_SETTINGS", 'settings_file');
 define("PSNG_FILE_FILES", 'files_file');
 
-define("PSNG_URL_UPDATESTATUS", 'http://enarion.net/google/phpsitemapng/status.php?version='.PSNG_VERSION);
+define("PSNG_URL_UPDATESTATUS", 'http://enarion.net/google/phpsitemapng/status.php?version=' . PSNG_VERSION);
 define("PSNG_URL_DOWNLOAD", 'http://enarion.net/google/phpsitemapng/download/');
 ?>

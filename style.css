@@ -37,3 +37,14 @@ table.table-hover tbody tr:hover td div.button-edit {
 .nav-tabs li a.error {
     color: red!important;
 }
+/* -------------- */
+#tabs-content {padding-top: 15px;}
+
+div.checkbox {
+    margin-bottom: 20px;
+}
+
+.form-horizontal div.checkbox {
+    margin-left: 25%;
+    margin-bottom: 10px;
+}

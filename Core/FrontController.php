@@ -7,34 +7,6 @@ use Ideal\Core\Site;
 class FrontController
 {
     /**
-     * Формирование заголовков (отдаются браузерам, паукам и проч.)
-     *
-     * @param array $httpHeaders
-     */
-    function sendHttpHeaders($httpHeaders)
-    {
-        $isContentType = false;
-        foreach ($httpHeaders as $k => $v) {
-            if ($k == intval($k)) {
-                // Ключ не указан, значит выводим только значение
-                header ($v . "\r\n");
-            } else {
-                // Ключ указан, значит выводим и ключ и значение
-                header ($k . ': ' . $v . "\r\n");
-            }
-            // Проверяем, не переопределён ли Content-Type
-            if (strtolower($k) == 'content-type') {
-                $isContentType = true;
-            }
-        }
-
-        if (!$isContentType) {
-            // Content-Type пользователем не изменён, отображаем стандартный
-            header("Content-Type: text/html; charset=utf-8");
-        }
-    }
-
-    /**
      * Запуск FrontController'а
      *
      * Проводится роутинг, определяется контроллер страницы и отображаемый текст.
@@ -72,4 +44,31 @@ class FrontController
         echo $content; // отображение страницы
     }
 
+    /**
+     * Формирование заголовков (отдаются браузерам, паукам и проч.)
+     *
+     * @param array $httpHeaders
+     */
+    function sendHttpHeaders($httpHeaders)
+    {
+        $isContentType = false;
+        foreach ($httpHeaders as $k => $v) {
+            if ($k == intval($k)) {
+                // Ключ не указан, значит выводим только значение
+                header($v . "\r\n");
+            } else {
+                // Ключ указан, значит выводим и ключ и значение
+                header($k . ': ' . $v . "\r\n");
+            }
+            // Проверяем, не переопределён ли Content-Type
+            if (strtolower($k) == 'content-type') {
+                $isContentType = true;
+            }
+        }
+
+        if (!$isContentType) {
+            // Content-Type пользователем не изменён, отображаем стандартный
+            header("Content-Type: text/html; charset=utf-8");
+        }
+    }
 }
