@@ -55,7 +55,7 @@ class Versions
             $this->log = false;
             return false;
         }
-        if (file_put_contents($log, '', FILE_APPEND) == false) {
+        if (file_put_contents($log, '', FILE_APPEND) === false) {
             $this->addAnswer('Не удалось записать данные в файл ' . $log, 'error');
         }
         $this->log = $log;
@@ -74,15 +74,17 @@ class Versions
 
         // Ищем файлы README.md в модулях
         $modDirName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Mods';
-        // Получаем разделы
-        $modDirs = array_diff(scandir($modDirName), array('.', '..')); // получаем массив папок модулей
-        foreach ($modDirs as $dir) {
-            // Исключаем разделы, явно не содержащие модули
-            if ((stripos($dir, '.') === 0) || (is_file($modDirName . '/' . $dir))) {
-                unset($mods[$dir]);
-                continue;
+        if (file_exists($modDirName)) {
+            // Получаем разделы
+            $modDirs = array_diff(scandir($modDirName), array('.', '..')); // получаем массив папок модулей
+            foreach ($modDirs as $dir) {
+                // Исключаем разделы, явно не содержащие модули
+                if ((stripos($dir, '.') === 0) || (is_file($modDirName . '/' . $dir))) {
+                    unset($mods[$dir]);
+                    continue;
+                }
+                $mods[$dir] = $modDirName . '/' . $dir;
             }
-            $mods[$dir] = $modDirName . '/' . $dir;
         }
         // Получаем версии для каждого модуля и CMS из update.log
         $versions = $this->getVersionFromFile($mods);
