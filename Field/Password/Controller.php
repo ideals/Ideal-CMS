@@ -78,6 +78,8 @@ class Controller extends AbstractController
             $item['message'] = 'необходимо заполнить это поле';
         }
 
+        $item['sqlAdd'] = $this->sqlAdd;
+
         return $item;
     }
 }
