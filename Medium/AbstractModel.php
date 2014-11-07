@@ -92,6 +92,9 @@ class AbstractModel
         // Удаляем все существующие связи владельца и элементов
         $_sql = "DELETE FROM {$this->table} WHERE {$ownerField}='{{ objectId }}';";
 
+        if (count($newValue)) {
+            return $_sql;
+        }
         // Добавляем связи владельца и элементов сделанные пользователем
         foreach ($newValue as $v) {
             $_sql .= "INSERT INTO {$this->table} SET {$ownerField}='{{ objectId }}', {$elementsField}='{$v}';";
