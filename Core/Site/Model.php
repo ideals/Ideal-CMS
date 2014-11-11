@@ -7,6 +7,8 @@ use Ideal\Field;
 abstract class Model extends Core\Model
 {
 
+    protected $pageNum = 0;
+
     public $metaTags = array(
         'robots' => 'index, follow'
     );
@@ -81,13 +83,13 @@ abstract class Model extends Core\Model
         $xhtml = ($xhtml) ? '/' : '';
         $end = end($this->path);
 
-        if (isset($end['description']) AND $end['description'] != '') {
+        if (isset($end['description']) AND $end['description'] != '' AND 1 === $this->pageNum) {
             $meta .= '<meta name="description" content="'
                 . str_replace('"', '&quot;', $end['description'])
                 . '" ' . $xhtml . '>';
         }
 
-        if (isset($end['keywords']) AND $end['keywords'] != '') {
+        if (isset($end['keywords']) AND $end['keywords'] != '' AND 1 === $this->pageNum) {
             $meta .= '<meta name="keywords" content="'
                 . str_replace('"', '&quot;', $end['keywords'])
                 . '" ' . $xhtml . '>';
@@ -104,10 +106,20 @@ abstract class Model extends Core\Model
     public function getTitle()
     {
         $end = $this->pageData;
+        $concat = ($this->pageNum > 1) ? " | Страница {$this->pageNum}" : '';
         if (isset($end['title']) AND $end['title'] != '') {
-            return $end['title'];
+            return $end['title'] . $concat;
         } else {
-            return $end['name'];
+            return $end['name'] . $concat;
         }
+    }
+
+    public function setPageNum($page_num)
+    {
+        $page_num = intval($page_num);
+        if (0 === $page_num) {
+            $page_num = 1;
+        }
+        $this->pageNum = $page_num;
     }
 }
