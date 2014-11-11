@@ -109,7 +109,7 @@ abstract class Model extends Core\Model
      * @param bool   $isCreate
      * @return array
      */
-    function saveAddData($result, $groups, $groupName, $isCreate = false)
+    public function saveAddData($result, $groups, $groupName, $isCreate = false)
     {
         $config = Config::getInstance();
 
@@ -263,8 +263,9 @@ abstract class Model extends Core\Model
      * Если всё правильно - возвращает массив для сохранения,
      * если неправильно - массив с сообщениями об ошибках.
      *
-     * @param $isCreate
-     * @return array | bool
+     * @param bool $isCreate
+     * @return array|bool
+     * @throws \Exception
      */
     public function parseInputParams($isCreate = false)
     {
@@ -312,6 +313,11 @@ abstract class Model extends Core\Model
                     $result['isCorrect'] = false;
                 }
                 unset($item['items']);
+            }
+
+            if (!isset($item['sqlAdd'])) {
+                // Свойство sqlAdd должно быть обязательно определено для каждого редактируемого поля
+                throw new \Exception('Отсутствует свойство sqlAdd в поле ' . print_r($item, true));
             }
 
             $result['sqlAdd'][$this->fieldsGroup] .= $item['sqlAdd'];
