@@ -156,7 +156,7 @@ class Controller
      * @param Router $router
      * @return string Содержимое отображаемой страницы
      */
-    function run(Router $router)
+    public function run(Router $router)
     {
         $request = new Request();
         $this->model = $router->getModel();
