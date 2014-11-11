@@ -156,15 +156,15 @@ class Controller
      * @param Router $router
      * @return string Содержимое отображаемой страницы
      */
-    function run(Router $router)
+    public function run(Router $router)
     {
         $this->model = $router->getModel();
+        $request = new Request();
 
         // Определяем и вызываем требуемый action у контроллера
         if ($router->is404()) {
             $actionName = 'error404';
         } else {
-            $request = new Request();
             $actionName = $request->action;
             if ($actionName == '') {
                 $actionName = 'index';
@@ -179,6 +179,7 @@ class Controller
         $this->view->domain = strtoupper($config->domain);
         $this->view->startUrl = $config->cms['startUrl'];
         $this->view->minifier = $config->cache['jsAndCss']; // флаг включения минификации js и css
+        $this->model->setPageNum($request->page);
 
         $this->view->breadCrumbs = $this->model->getBreadCrumbs();
 
