@@ -11,14 +11,14 @@ abstract class Model extends Core\Model
         'robots' => 'index, follow'
     );
 
-    abstract function detectPageByUrl($path, $url);
+    abstract public function detectPageByUrl($path, $url);
 
     public function getBreadCrumbs()
     {
         $path = $this->path;
         $path[0]['name'] = $path[0]['startName'];
 
-        if (isset($this->path[1]['url']) AND ($this->path[1]['url'] == '/') AND count($path) == 2) {
+        if (isset($this->path[1]['url']) && ($this->path[1]['url'] == '/') && count($path) == 2) {
             // На главной странице хлебные крошки отображать не надо
             return '';
         }
@@ -81,13 +81,13 @@ abstract class Model extends Core\Model
         $xhtml = ($xhtml) ? '/' : '';
         $end = end($this->path);
 
-        if (isset($end['description']) AND $end['description'] != '') {
+        if (isset($end['description']) && $end['description'] != '' && $this->pageNum === 1) {
             $meta .= '<meta name="description" content="'
                 . str_replace('"', '&quot;', $end['description'])
                 . '" ' . $xhtml . '>';
         }
 
-        if (isset($end['keywords']) AND $end['keywords'] != '') {
+        if (isset($end['keywords']) && $end['keywords'] != '' && $this->pageNum === 1) {
             $meta .= '<meta name="keywords" content="'
                 . str_replace('"', '&quot;', $end['keywords'])
                 . '" ' . $xhtml . '>';
@@ -101,13 +101,24 @@ abstract class Model extends Core\Model
         return $meta;
     }
 
+    /**
+     * Получение тайтла (<title>) для страницы
+     *
+     * Тайтл может быть либо задан через параметр title в $this->pageDate, а если title отсутствует или пуст,
+     * то тайтл генерируется из параметра name.
+     * Кроме того, в случае, если запрашивается не первая страница листалки (новости, статьи и т.п.), то
+     * этот метод добавляет суффикс листалки с указанием номера страницы
+     *
+     * @return string Тайтл для страницы
+     */
     public function getTitle()
     {
         $end = $this->pageData;
-        if (isset($end['title']) AND $end['title'] != '') {
-            return $end['title'];
+        $concat =  ($this->pageNum > 1) ? str_replace($this->pageNumTitle, '[N]', $this->pageNum) : '';
+        if (isset($end['title']) && $end['title'] != '') {
+            return $end['title'] . $concat;
         } else {
-            return $end['name'];
+            return $end['name'] . $concat;
         }
     }
 }

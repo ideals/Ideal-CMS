@@ -1,6 +1,9 @@
 <?php
 namespace Ideal\Core;
 
+/**
+ * @property string page Зарезервировано для листалки, в переменной содержится номер запрашиваемой страницы
+ */
 class Request
 {
     public function __get($name)

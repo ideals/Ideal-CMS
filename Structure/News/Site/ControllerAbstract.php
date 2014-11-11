@@ -27,8 +27,7 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
         parent::indexAction();
 
         $request = new Request();
-        $page = intval($request->{'page'});
-        $page = ($page == 0) ? 1 : $page;
+        $page = intval($request->page);
 
         $this->view->parts = $this->model->getList($page);
         $this->view->pager = $this->model->getPager('page');

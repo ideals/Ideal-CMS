@@ -19,6 +19,10 @@ abstract class Model
 
     protected $pageData;
 
+    protected $pageNum = 0;
+
+    protected $pageNumTitle = ' | Страница [N]';
+
     protected $parentUrl;
 
     protected $path = array();
@@ -42,7 +46,7 @@ abstract class Model
             $type = 'Home';
         }
 
-        switch ($type):
+        switch ($type) {
             case 'Home':
                 // Находим начальную структуру
                 $structures = $config->structures;
@@ -64,7 +68,7 @@ abstract class Model
             default:
                 throw new \Exception('Неизвестный тип: ' . $type);
                 break;
-        endswitch;
+        }
 
         $this->params = $structure['params'];
         $this->fields = $structure['fields'];
@@ -77,7 +81,7 @@ abstract class Model
      *
      * @return string Сокращённое имя структуры, используемое в БД
      */
-    static function getStructureName()
+    public static function getStructureName()
     {
         $parts = explode('\\', get_called_class());
         return $parts[0] . '_' . $parts[2];
@@ -222,9 +226,7 @@ abstract class Model
             $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
             $onPage = $this->params[$nameParam];
 
-            if ($page == 0) {
-                $page = 1;
-            }
+            $page = $this->setPageNum($page);
             $start = ($page - 1) * $onPage;
 
             $_sql .= " LIMIT {$start}, {$onPage}";
@@ -442,6 +444,29 @@ abstract class Model
             // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
             $this->setPageData($pageData[0]);
         }
+    }
+
+    /**
+     * Установка номера отображаемой страницы
+     *
+     * С номером страницы всё понятно, а вот $pageNumTitle позволяет изменить стандартный шаблон
+     * суффикса для листалки " | Страница [N]" на любой другой суффикс, где
+     * вместе [N] будет подставляться номер страницы.
+     *
+     * @param int  $pageNum      Номер отображаемой страницы
+     * @param null $pageNumTitle Строка для замены стандартного суффикса листалки в тайтле
+     * @return int Безопасный номер страницы
+     */
+    public function setPageNum($pageNum, $pageNumTitle = null)
+    {
+        $pageNum = intval(substr($pageNum, 0, 10)); // отсекаем всякую ерунду и слишком большие числа в листалке
+        $this->pageNum = ($pageNum == 0) ? 1 : $pageNum;
+
+        if (!is_null($pageNumTitle)) {
+            $this->pageNumTitle = $pageNumTitle;
+        }
+
+        return $this->pageNum;
     }
 
     /**
