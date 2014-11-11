@@ -13,7 +13,7 @@ abstract class Model extends Core\Model
         'robots' => 'index, follow'
     );
 
-    public abstract function detectPageByUrl($path, $url);
+    abstract public function detectPageByUrl($path, $url);
 
     public function getBreadCrumbs()
     {
