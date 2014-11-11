@@ -25,5 +25,8 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -l
 RewriteRule ^(.*)$ - [NC,L]
 
+# Если картинки с изменёнными размерами нет, то создаём
+RewriteRule ^images/resized/(.*) /[[CMS]]/Ideal/Library/Resize/image.php?img=$1 [L,QSA]
+
 # Если файла на диске нет, вызывается скрипт
 RewriteRule ^.*$ [[SUBFOLDER_START_SLASH]]/_.php [NC,L]
