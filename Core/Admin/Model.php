@@ -109,7 +109,7 @@ abstract class Model extends Core\Model
      * @param bool   $isCreate
      * @return array
      */
-    function saveAddData($result, $groups, $groupName, $isCreate = false)
+    public function saveAddData($result, $groups, $groupName, $isCreate = false)
     {
         $config = Config::getInstance();
 
@@ -314,7 +314,7 @@ abstract class Model extends Core\Model
                 unset($item['items']);
             }
 
-            $result['sqlAdd'][$this->fieldsGroup] .= $item['sqlAdd'];
+            $result['sqlAdd'][$this->fieldsGroup] .= (isset($item['sqlAdd'])) ? $item['sqlAdd'] : '';
 
             $item['realTab'] = $field['realTab'];
             $result['items'][$item['fieldName']] = $item;
