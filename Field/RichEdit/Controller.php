@@ -56,7 +56,7 @@ class Controller extends AbstractController
                 // но будет доступен в режиме редактирования исходного кода HTML
                 CKEDITOR.config.protectedSource.push(/<div[\\s\\S]*?class="protected"[\\s\\S]*?<\\/div>/g);
                 // Разрешаем использовать для всех тегов — атрибуты style и class
-                CKEDITOR.config.extraAllowedContent = '*(*)[style]{*}; *(*)[class]{*}; span(*)';
+                CKEDITOR.config.extraAllowedContent = '*(*)[style]{*}; *(*)[class]{*}; span(*); style';
                 CKEDITOR.replace("{$this->htmlName}");
             </script>
 HTML;
