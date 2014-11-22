@@ -1,16 +1,36 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru/)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Core;
 
+/**
+ * Класс вида View, обеспечивающий отображение переданных в него данных
+ * в соответствии с указанным twig-шаблоном
+ */
 class View
 {
 
+    /** @var \Twig_TemplateInterface */
     protected $template;
 
-    /* @var $twig \Twig_Environment */
+    /** @var \Twig_Environment * */
     protected $templater;
 
+    /** @var array Массив для хранения переменных, передаваемых во View */
     protected $vars = array();
 
+    /**
+     * Инициализация шаблонизатора
+     *
+     * @param string|array $pathToTemplates Путь или массив путей к папкам, где лежат используемые шаблоны
+     * @param bool $isCache
+     */
     public function __construct($pathToTemplates, $isCache = false)
     {
         // Подгружаем Twig
@@ -32,23 +52,48 @@ class View
         $this->templater = new \Twig_Environment($loader, $params);
     }
 
-    public function __get($name)
+    /**
+     * Получение переменной View
+     *
+     * Передача по ссылке используется для того, чтобы в коде была возможность изменять значения
+     * элементов массива, хранящегося во View. Например:
+     *
+     * $view->template['content'] = 'something new';
+     *
+     * @param string $name Название переменной
+     * @return mixed Переменная
+     */
+    public function &__get($name)
     {
-        if (isset($this->vars[$name])) {
-            return $this->vars[$name];
+        if (is_scalar($this->vars[$name])) {
+            $property = $this->vars[$name];
+        } else {
+            $property = &$this->vars[$name];
         }
-        return '';
+        return $property;
     }
 
+    /**
+     * Установка значения элемента, передаваемого во View
+     *
+     * @param string $name Название переменной
+     * @param mixed $value Значение переменной
+     */
     public function __set($name, $value)
     {
         $this->vars[$name] = $value;
     }
 
+    /**
+     * Загрузка в шаблонизатор файла с twig-шаблоном
+     *
+     * @param string $fileName Название twig-файла
+     */
     public function loadTemplate($fileName)
     {
         $this->template = $this->templater->loadTemplate($fileName);
     }
+
 
     public function render()
     {
