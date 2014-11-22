@@ -156,7 +156,7 @@ class Controller
      * @param Router $router
      * @return string Содержимое отображаемой страницы
      */
-    function run(Router $router)
+    public function run(Router $router)
     {
         $this->model = $router->getModel();
 
@@ -193,9 +193,18 @@ class Controller
         $this->view->title = $this->model->getTitle();
         $this->view->metaTags = $this->model->getMetaTags($helper->xhtml);
 
+        // Проводим финальные модификации контента в контроллере отображаемой структуры
         $this->finishMod($actionName);
 
-        return $this->view->render();
+        // Twig рендерит текст странички из шаблона
+        $text = $this->view->render();
+
+        // Проводим финальные модификации страницы, общие для всех страниц
+        if (method_exists($helper, 'finishMod')) {
+            $text = $helper->finishMod($text);
+        }
+
+        return $text;
     }
 
     /**
