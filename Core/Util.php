@@ -7,15 +7,15 @@ namespace Ideal\Core;
  */
 class Util
 {
-
-    static $errorArray;
+    /** @var array Массив для хранения списка ошибок, возникших при выполнении скрипта */
+    public static $errorArray = array();
 
     /**
      * Вывод сообщения об ошибке
      *
      * @param string $txt Текст сообщения об ошибке
      */
-    static function addError($txt)
+    public static function addError($txt)
     {
         $config = Config::getInstance();
         switch ($config->cms['errorLog']) {
@@ -60,7 +60,7 @@ class Util
      * @param string $text - строка в кодировке сайта (обычно cp1251)
      * @return string строка в кодировке базы (обычно UTF8)
      */
-    static function convertFromDb($text)
+    public static function convertFromDb($text)
     {
         $config = Config::getInstance();
         $siteCharset = 'UTF-8';
@@ -81,7 +81,7 @@ class Util
      * @param string $text - строка в кодировке сайта (обычно UTF8)
      * @return string строка в кодировке базы (обычно cp1251)
      */
-    static function convertToDb($text)
+    public static function convertToDb($text)
     {
         $config = Config::getInstance();
         $siteCharset = 'UTF-8';
@@ -102,7 +102,7 @@ class Util
      * @param $date - дата в формате timestamp
      * @return string строка с отформатированной датой
      */
-    static function dateReach($date)
+    public static function dateReach($date)
     {
         $months = array(
             '',
@@ -130,7 +130,7 @@ class Util
      * @param $date - дата в текстовом формате
      * @return string строка с отформатированной датой
      */
-    static function dateStrReach($date)
+    public static function dateStrReach($date)
     {
         $months = array(
             '',
@@ -154,36 +154,7 @@ class Util
         return $date;
     }
 
-    static function detect_utf($Str)
-    {
-        for ($i = 0; $i < strlen($Str); $i++) {
-            if (ord($Str[$i]) < 0x80) {
-                $n = 0; # 0bbbbbbb
-            } else {
-                if ((ord($Str[$i]) & 0xE0) == 0xC0) {
-                    $n = 1; # 110bbbbb
-                } else {
-                    if ((ord($Str[$i]) & 0xF0) == 0xE0) {
-                        $n = 2; # 1110bbbb
-                    } else {
-                        if ((ord($Str[$i]) & 0xF0) == 0xF0) {
-                            $n = 3; # 1111bbbb
-                        } else {
-                            return false; # Does not match any model
-                        }
-                    }
-                }
-            }
-            for ($j = 0; $j < $n; $j++) { # n octets that match 10bbbbbb follow ?
-                if ((++$i == strlen($Str)) || ((ord($Str[$i]) & 0xC0) != 0x80)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    static function getClassName($module, $type)
+    public static function getClassName($module, $type)
     {
         list($module, $structure) = explode('_', $module);
         $name = '\\' . $module . '\\' . $type . '\\' . $structure;
@@ -196,7 +167,7 @@ class Util
      * @param string $mail - адрес электронной почты
      * @return bool - истина, если ящик написан правильно
      */
-    static function is_email($mail)
+    public static function isEmail($mail)
     {
         // Проверяем правильно ли в мыле поставлены знаки @ и .
         $posAT = strpos($mail, '@');
@@ -216,70 +187,13 @@ class Util
     }
 
     /**
-     * Функция проверяет, нет ли в строке символов, отличных от букв и пробелов
-     *
-     * @param string $str - исходная строка
-     * @return boolean
-     */
-    static function is_no_spec_symbols($str)
-    {
-        $is_stop = false; // флаг наличия спецсимволов
-
-        // Находим коды начальных и конечных букв алфавитов
-        $Abig = ord('A');
-        $Zbig = ord('Z');
-        $Asml = ord('a');
-        $Zsml = ord('z');
-        $Arbig = ord('А');
-        $Yabig = ord('Я');
-        $Arsml = ord('а');
-        $Yasml = ord('я');
-
-        // Определяем длину строки, чтобы не высчитывать её в цикле
-        $strlen = strlen($str);
-
-        for ($i = 0; $i < $strlen; $i++) {
-            if ($str[$i] == '-') {
-                continue;
-            }
-            if ($str[$i] == ' ') {
-                continue;
-            }
-            if ($str[$i] == 'ё' or $str[$i] == 'Ё') {
-                continue;
-            }
-            $j = ord($str[$i]);
-            if ($j < $Abig) {
-                $is_stop = true;
-            }
-            if ($j > $Zbig and $j < $Asml) {
-                $is_stop = true;
-            }
-            if ($j > $Zsml and $j < $Arbig) {
-                $is_stop = true;
-            }
-            if ($j > $Yabig and $j < $Arsml) {
-                $is_stop = true;
-            }
-            if ($j > $Yasml) {
-                $is_stop = true;
-            }
-            if ($is_stop) {
-                break;
-            }
-        }
-
-        return !$is_stop;
-    }
-
-    /**
      * Обрабатываем блок текста, переданный из браузера
      *
      * @param string $str строка
      * @param int    $len Максимальная длина строки (по умолчанию 3072)
      * @return string Безопасный блок текста
      */
-    static function parse_webarea($str, $len = 3072)
+    public static function parseWebArea($str, $len = 3072)
     {
         // Обрезаем строку до нужного размера
         $str = mb_substr($str, 0, $len);
@@ -303,9 +217,9 @@ class Util
      * @param int    $len Максимальная длина строки (по умолчанию 255)
      * @return string Безопасная строка
      */
-    static function parse_webstr($str, $len = 255)
+    public static function parseWebStr($str, $len = 255)
     {
-        $str = Util::parse_webmail($str, $len);
+        $str = Util::parseWebMail($str, $len);
         // Заменяем @ на собаку, в обычном тексте этот символ совершенно не нужен
         $str = str_replace('@', '[собака]', $str);
         return $str;
@@ -318,7 +232,7 @@ class Util
      * @param int    $len Максимальная длина строки (по умолчанию 255)
      * @return string Безопасный и валидный адрес
      */
-    static function parse_webmail($str, $len = 255)
+    public static function parseWebMail($str, $len = 255)
     {
         // Cчитается, что передаётся одна строка, поэтому всё,
         // Что идёт за переводом строки - это хакеры
@@ -356,7 +270,7 @@ class Util
      * @param int    $len максимальное количество символов в строке
      * @return string
      */
-    static function smartTrim($str, $len)
+    public static function smartTrim($str, $len)
     {
         $firstLen = mb_strlen($str);
         $str = mb_substr($str, 0, $len);
@@ -371,7 +285,7 @@ class Util
      *
      * @param string $link Ссылка на страницу авторизации
      */
-    function goUrl($link)
+    public function goUrl($link)
     {
         $_SESSION['prev_post'] = serialize($_POST);
         $_SESSION['prev_uri'] = $_SERVER['REQUEST_URI'];
@@ -386,7 +300,7 @@ class Util
      *
      * @return string Латинская буква - большая или маленькая
      */
-    function randomChar($len = 1)
+    public function randomChar($len = 1)
     {
         $str = '';
         for ($i = 0; $i < $len; $i++) {
