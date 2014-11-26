@@ -257,7 +257,7 @@ class Util
                 . implode("\n", self::$errorArray);
             $mail = new \Mail\Sender();
             $mail->setSubj("Сообщение об ошибке на сайте " . $config->domain);
-            $mail->setBody($text, '');
+            $mail->setPlainBody($text);
             $mail->sent($config->robotEmail, $config->cms['adminEmail']);
         }
     }
