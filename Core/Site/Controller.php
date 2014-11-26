@@ -184,6 +184,11 @@ class Controller
 
         $this->view->year = date('Y');
 
+        $this->view->isProduction = 0;
+        if ($config->domain == $_SERVER['HTTP_HOST']) {
+            $this->view->isProduction = 1;
+        };
+
         $helper = new Helper();
         $helpers = $helper->getVariables($this->model);
         foreach ($helpers as $k => $v) {
