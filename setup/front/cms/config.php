@@ -4,9 +4,9 @@ return array(
     // Параметры подключения к БД
     'db' => array(
         'host' => getenv('DB_HOST') ? getenv('DB_HOST') : '[[DBHOST]]',
-        'login' => '[[DBLOGIN]]',
-        'password' => '[[DBPASS]]',
-        'name' => '[[DBNAME]]',
+        'login' => getenv('DB_LOGIN') ? getenv('DB_LOGIN') : '[[DBLOGIN]]',
+        'password' => getenv('DB_PASSWORD') ? getenv('DB_PASSWORD') : '[[DBPASS]]',
+        'name' => getenv('DB_NAME') ? getenv('DB_NAME') : '[[DBNAME]]',
         'charset' => 'UTF-8',
         'prefix' => '[[DBPREFIX]]'
     ),
