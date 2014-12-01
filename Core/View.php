@@ -74,10 +74,21 @@ class View
     }
 
     /**
-     * Установка значения элемента, передаваемого во View
+     * Магический метод для проверки наличия запрашиваемой переменной
      *
      * @param string $name Название переменной
-     * @param mixed $value Значение переменной
+     * @return bool Инициализирована эта переменная или нет
+     */
+    public function __isset($name)
+    {
+        return isset($this->vars[$name]);
+    }
+
+    /**
+     * Установка значения элемента, передаваемого во View
+     *
+     * @param string $name  Название переменной
+     * @param mixed  $value Значение переменной
      */
     public function __set($name, $value)
     {
@@ -93,7 +104,6 @@ class View
     {
         $this->template = $this->templater->loadTemplate($fileName);
     }
-
 
     public function render()
     {
