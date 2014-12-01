@@ -172,7 +172,15 @@ class Controller
         }
 
         $actionName = $actionName . 'Action';
-        $this->$actionName();
+
+        if (method_exists($this, $actionName)) {
+            // Вызываемый action существует, запускаем его
+            $this->$actionName();
+        } else {
+            // Вызываемый action отсутствует, запускаем 404 ошибку
+            $this->error404Action();
+            $this->model->is404 = true;
+        }
 
         $config = Config::getInstance();
 
