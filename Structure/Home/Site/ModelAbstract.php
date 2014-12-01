@@ -43,4 +43,21 @@ class ModelAbstract extends Part\Site\Model
 
         return $this;
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getBreadCrumbs()
+    {
+        /**
+         * Этот метод вызывается для главной страницы только тогда, когда генерируется 404-ошибка.
+         * И для создания правильных хлебных крошек, нужно исключить второй элемент массива,
+         * т.к. в нём также содержится ссылка на главную, как и в первом.
+         */
+        $tmpPath = $this->path;
+        unset($this->path[1]);
+        $breadCrumbs = parent::getBreadCrumbs();
+        $this->path = $tmpPath;
+        return $breadCrumbs;
+    }
 }
