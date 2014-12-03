@@ -16,7 +16,9 @@ abstract class Model extends Core\Model
     public function getBreadCrumbs()
     {
         $path = $this->path;
-        $path[0]['name'] = $path[0]['startName'];
+        if (isset($path[0]['startName'])) {
+            $path[0]['name'] = $path[0]['startName'];
+        }
 
         if (isset($this->path[1]['url']) && ($this->path[1]['url'] == '/') && count($path) == 2) {
             // На главной странице хлебные крошки отображать не надо
@@ -27,24 +29,19 @@ abstract class Model extends Core\Model
         $pars = array();
         $breadCrumbs = array();
         $url = new Field\Url\Model();
-        foreach ($path as $v) {
-            if (isset($v['is_skip']) && $v['is_skip']) {
+        while (count($path)) {
+            $tmp = array_shift($path);
+            if (count($path) && isset($tmp['is_skip']) && $tmp['is_skip']) {
                 continue;
             }
             $url->setParentUrl($pars);
-            $link = $url->getUrl($v);
-            $pars[] = $v;
-            if ($link == '/') {
-                $breadCrumbs[] = array(
-                    'link' => $link,
-                    'name' => $v['startName']
-                );
-            } else {
-                $breadCrumbs[] = array(
-                    'link' => $link,
-                    'name' => $v['name']
-                );
-            }
+            $link = $url->getUrl($tmp);
+            $pars[] = $tmp;
+            $breadCrumbs[] = array(
+                'link' => (count($path)) ? $link : '',
+                'name' => (isset($tmp['startName'])) ? $tmp['startName'] : $tmp['name']
+            );
+
         }
         return $breadCrumbs;
     }
