@@ -24,6 +24,7 @@ class ModelAbstract extends Site\Model
             }
             $_sql .= ' OR url="' . $db->real_escape_string($v) . '"';
         }
+        $_sql .= ' OR url="/" ';
 
         // Для авторизированных в админку пользователей отображать скрытые страницы
         $user = new User\Model();
@@ -132,7 +133,11 @@ class ModelAbstract extends Site\Model
             return $this;
         }
 
-        $this->path = array_merge($path, $newPath);
+        if ($newPath[0]['ID'] != '1') {
+            $this->path = array_merge($path, $newPath);
+        } else {
+            $this->path = $newPath;
+        }
 
         // Определяем количество совпадений сегментов найденного пути и запрошенного url
         $count = $this->checkDetectedUrlCount($url, $newPath);
@@ -180,13 +185,25 @@ class ModelAbstract extends Site\Model
         // Подсчитываем кол-во элементов пути, без учёта пропущенных сегментов
         // и составляем строку найденной части URL
         $count = 0;
+        $countSkip = 0;
         $parsedUrl = $sep = '';
         foreach ($newPath as $v) {
             if ($v['is_skip'] == 0) {
                 $parsedUrl .= $sep . $v['url'];
                 $sep = '/';
+                if ($v['url'] == '/') {
+                    $countSkip++;
+                }
                 $count++;
+            } else {
+                $countSkip++;
             }
+        }
+        $parsedUrl = trim($parsedUrl, '/');
+
+        // В случае, если новый путь состоит из элементов, которые пропускаются
+        if (($countSkip != 0) && ($countSkip >= count($newPath))) {
+            return 1;
         }
 
         // Вырезаем из переданного URL найденное количество сегментов и склеиваем их в строку
@@ -300,7 +317,7 @@ class ModelAbstract extends Site\Model
         $lvl = 0;
         foreach ($list as $k => $v) {
             if ($v['lvl'] > $lvl) {
-                if (($v['url'] != '/') AND ($k > 0)) {
+                if (($v['url'] != '/') && ($k > 0)) {
                     $url[] = $list[$k - 1];
                 }
                 $urlModel->setParentUrl($url);
@@ -330,7 +347,7 @@ class ModelAbstract extends Site\Model
             // Считываем все элементы последнего уровня из пути
             $c = count($this->path);
             $end = end($this->path);
-            if (isset($this->path[$c - 2]) AND ($end['structure'] == $this->path[$c - 2]['structure'])) {
+            if (isset($this->path[$c - 2]) && ($end['structure'] == $this->path[$c - 2]['structure'])) {
                 $lvl = $end['lvl'] + 1;
                 $cidModel = new Field\Cid\Model($this->params['levels'], $this->params['digits']);
                 $cid = $cidModel->getCidByLevel($end['cid'], $end['lvl'], false);
