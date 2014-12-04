@@ -103,6 +103,12 @@ class ModelAbstract extends Site\Model
 
             $end = end($branch['branch']);
             if ($end['is_skip'] == 1) {
+                if (end($url) == $end['url']) {
+                    // Если в URL запрошен элемент с is_skip=1
+                    $newPath = $branch['branch'];
+                    unset($url[(count($url)-1)]);
+                    break;
+                }
                 // Если последний элемент в максимальной цепочке — пропущенный, проверяем не хранится
                 // ли в нём другая структура
                 $structureName = $this->getStructureName();
@@ -114,11 +120,6 @@ class ModelAbstract extends Site\Model
                     $url = array_slice($url, count($newPath) - 2);
                     $model = $structure->detectPageByUrl($newPath, $url);
                     return $model;
-                } elseif (end($url) == $end['url']) {
-                    // Если в URL запрошен элемент с is_skip=1
-                    $newPath = $branch['branch'];
-                    unset($url[(count($url)-1)]);
-                    break;
                 }
                 continue;
             }
@@ -194,6 +195,9 @@ class ModelAbstract extends Site\Model
         $parsedUrlPart = implode('/', $parsedUrlPart);
         if ($parsedUrl != $parsedUrlPart) {
             $count = 0;
+        } elseif ($parsedUrl == '' && $parsedUrlPart == '') {
+            // Если весь путь состоит из пропущенных элементов (is_skip=1)
+            $count = 1;
         }
 
         return $count;
@@ -300,7 +304,7 @@ class ModelAbstract extends Site\Model
         $lvl = 0;
         foreach ($list as $k => $v) {
             if ($v['lvl'] > $lvl) {
-                if (($v['url'] != '/') AND ($k > 0)) {
+                if (($v['url'] != '/') && ($k > 0)) {
                     $url[] = $list[$k - 1];
                 }
                 $urlModel->setParentUrl($url);
@@ -330,7 +334,7 @@ class ModelAbstract extends Site\Model
             // Считываем все элементы последнего уровня из пути
             $c = count($this->path);
             $end = end($this->path);
-            if (isset($this->path[$c - 2]) AND ($end['structure'] == $this->path[$c - 2]['structure'])) {
+            if (isset($this->path[$c - 2]) && ($end['structure'] == $this->path[$c - 2]['structure'])) {
                 $lvl = $end['lvl'] + 1;
                 $cidModel = new Field\Cid\Model($this->params['levels'], $this->params['digits']);
                 $cid = $cidModel->getCidByLevel($end['cid'], $end['lvl'], false);
