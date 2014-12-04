@@ -28,7 +28,7 @@ abstract class Model extends Core\Model
         $breadCrumbs = array();
         $url = new Field\Url\Model();
         foreach ($path as $v) {
-            if (isset($v['is_skip']) && $v['is_skip']) {
+            if (isset($v['is_skip']) && $v['is_skip'] && isset($v['is_not_menu']) && $v['is_not_menu']) {
                 continue;
             }
             $url->setParentUrl($pars);
