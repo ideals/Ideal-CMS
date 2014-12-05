@@ -348,4 +348,55 @@ class Util
         }
         return $resultInfo;
     }
+
+
+    /**
+     * Проверка минимального времени заполнения формы
+     *
+     * @param $validTime // Время появления формы на странице пользователя
+     * @param $timeSend // Время отправки формы
+     * @return bool // Результат проверки полученного времени на корректность
+     */
+
+    /*
+    Пример js скрипта
+    ****************************
+    $(document).ready(function () {
+    date = new Date();
+    var time = date.getTime() * 42;
+    $('form').append('<input class="form-name" name="form-name" hidden="hidden" value="' + time + '"/>');
+
+    $f = function(e) {
+        date = new Date();
+        var time = date.getTime() * 42;
+        $('.form-send').remove();
+        $(e).after('<input class="form-send" name="form-send" hidden="hidden" value="' + time + '"/>');
+    };
+
+    $('form .submit-none-ajax').bind('click', $f($('form .submit-none-ajax')));
+    });
+     */
+    public static function isValidTime($validTime, $timeSend)
+    {
+        if (!is_numeric($validTime) || !is_numeric($timeSend) || ($validTime == 0) || ($timeSend == 0)) {
+            return false;
+        }
+
+        $validTime /= 42000;
+        $timeSend /= 42000;
+
+        // Примерное число секунд в дне
+        $d = 60 * 60 * 24;
+        // Примерное число секунд в месяце
+        $m = $d * 30;
+
+        $time = time();
+
+        // Используя проверочное время проверяем его корректность,
+        // а также проверяем былали форма заполнена более чем за 5 секунд
+        if (($validTime < ($time - $m)) || ($validTime > ($time + $d)) || (($timeSend - $validTime) < 5)) {
+            return false;
+        }
+        return true;
+    }
 }
