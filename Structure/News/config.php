@@ -4,6 +4,7 @@
 return array(
     'params' => array(
         'in_structures' => array('Ideal_Part'), // в каких структурах можно создавать эту структуру
+        'structures' => array('Ideal_News'), // типы, которые можно создавать в этом разделе
         'elements_cms' => 10, // количество элементов в списке в CMS
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_name' => '', // поле для входа в список потомков
@@ -40,6 +41,12 @@ return array(
             'label' => 'Аннотация',
             'sql' => 'text',
             'type' => 'Ideal_Area'
+        ),
+        'structure' => array(
+            'label' => 'Тип раздела',
+            'sql' => 'varchar(30) not null',
+            'type' => 'Ideal_Select',
+            'medium' => '\\Ideal\\Medium\\StructureList\\Model'
         ),
         'date_create' => array(
             'label' => 'Дата создания',
