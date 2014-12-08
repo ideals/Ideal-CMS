@@ -32,6 +32,12 @@ class ModelAbstract extends \Ideal\Core\Site\Model
             return $this;
         }
 
+        if (count($news) > 1) {
+            $c = count($news);
+            Util::addError("В базе несколько ({$c}) новостей с одинаковым url: " . implode('/', $url));
+            $news = array($news[0]); // оставляем для отображения первую новость
+        }
+
         $news[0]['structure'] = 'Ideal_News';
         $news[0]['url'] = $url[0];
 
