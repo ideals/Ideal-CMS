@@ -24,6 +24,13 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $par = array('url' => $url[0], 'time' => time());
 
         $news = $db->select($_sql, $par); // запрос на получение всех страниц, соответствующих частям url
+        if (count($news) > 1) {
+            Util::addError('Очень много новостей с урлом ' . implode('/', $url));
+            $tmp = $news[0];
+            unset($news);
+            $news[0] = $tmp;
+            unset($tmp);
+        }
 
         // Страницу не нашли, возвращаем 404
         if (!isset($news[0]['ID'])) {
