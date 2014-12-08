@@ -262,14 +262,14 @@ class Model
 
         // Объединяем все участки пути
         foreach ($path as $v) {
+            if (isset($v['is_skip']) && $v['is_skip']) {
+                continue;
+            }
             if (strpos($v['url'], 'http:') === 0
                 || strpos($v['url'], '/') === 0
             ) {
                 // Если в одном из элементов пути есть ссылки на другие страницы, то путь построить нельзя
                 return '---';
-            }
-            if (isset($v['is_skip']) && $v['is_skip']) {
-                continue;
             }
             $url .= '/' . $v['url'];
         }
