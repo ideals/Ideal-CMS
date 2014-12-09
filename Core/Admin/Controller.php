@@ -181,7 +181,7 @@ class Controller
                 $fieldModel = $fieldClassName::getInstance();
                 $fieldModel->setModel($this->model, $key);
                 $value = $fieldModel->getValueForList($v, $key);
-                if ($key == $this->model->params['field_name']) {
+                if (isset($this->model->params['field_name']) && $key == $this->model->params['field_name']) {
                     // На активный элемент ставим ссылку
                     $par = $request->par . '-' . $v['ID'];
                     $value = '<a href="index.php?par=' . $par . '">' . $value . '</a>';
@@ -253,7 +253,7 @@ class Controller
 
         $this->view->toolbar = $this->model->getToolbar();
 
-        $this->view->hideToolbarForm = !is_array($request->toolbar) OR (count($request->toolbar) == 0);
+        $this->view->hideToolbarForm = !is_array($request->toolbar) || (count($request->toolbar) == 0);
 
         $this->finishMod($actionName);
 
@@ -296,7 +296,8 @@ class Controller
         $num = 0;
         foreach ($tabs as $tabName => $tab) {
             $num++;
-            $tabLine .= '<li class="' . $isActive . '"><a href="#tab' . $num . '" data-toggle="tab">' . $tabName . '</a></li>';
+            $tabLine .= '<li class="' . $isActive . '"><a href="#tab' . $num . '" data-toggle="tab">' . $tabName
+                . '</a></li>';
             $tabsContent .= '<div class="tab-pane' . $isActive . '" id="tab' . $num . '">';
             $tabsContent .= $model->getFieldsList($tab);
             $tabsContent .= '</div>';
