@@ -114,7 +114,7 @@ abstract class Model extends Core\Model
     public function getTitle()
     {
         $end = $this->pageData;
-        $concat =  ($this->pageNum > 1) ? str_replace($this->pageNumTitle, '[N]', $this->pageNum) : '';
+        $concat = ($this->pageNum > 1) ? str_replace('[N]', $this->pageNum, $this->pageNumTitle) : '';
         if (isset($end['title']) && $end['title'] != '') {
             return $end['title'] . $concat;
         } else {
