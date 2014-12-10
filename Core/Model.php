@@ -19,7 +19,7 @@ abstract class Model
 
     protected $pageData;
 
-    protected $pageNum = 0;
+    protected $pageNum = 1;
 
     protected $pageNumTitle = ' | Страница [N]';
 
@@ -219,7 +219,9 @@ abstract class Model
 
         $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} ORDER BY e.{$this->params['field_sort']}";
 
-        if (!is_null($page)) {
+        if (is_null($page)) {
+            $this->setPageNum($page);
+        } else {
             // Определяем кол-во отображаемых элементов на основании названия класса
             $class = strtolower(get_class($this));
             $class = explode('\\', trim($class, '\\'));
@@ -459,8 +461,11 @@ abstract class Model
      */
     public function setPageNum($pageNum, $pageNumTitle = null)
     {
-        $pageNum = intval(substr($pageNum, 0, 10)); // отсекаем всякую ерунду и слишком большие числа в листалке
-        $this->pageNum = ($pageNum == 0) ? 1 : $pageNum;
+        $this->pageNum = 0;
+        if ($pageNum !== null) {
+            $pageNum = intval(substr($pageNum, 0, 10)); // отсекаем всякую ерунду и слишком большие числа в листалке
+            $this->pageNum = ($pageNum == 0) ? 1 : $pageNum;
+        }
 
         if (!is_null($pageNumTitle)) {
             $this->pageNumTitle = $pageNumTitle;
