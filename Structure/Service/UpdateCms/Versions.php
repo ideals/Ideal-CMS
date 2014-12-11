@@ -38,9 +38,9 @@ class Versions
         if (!file_exists($log)) {
             $this->addAnswer('Файл лога обновлений не существует ' . $log, 'info');
             $path = dirname($log);
-            // Если нет прав на запись в раздел, и не удалось их получить, завершаем скрипт
+            // Если нет прав на запись в папку, и не удалось их получить, завершаем скрипт
             if (!is_writable($path) && !chmod($path, intval($config->cms['dirMode'], 8))) {
-                $this->addAnswer('Нет удалось получить права на запись в раздел ' . $path, 'error');
+                $this->addAnswer('Нет удалось получить права на запись в папку ' . $path, 'error');
                 $this->log = false;
                 return false;
             }
@@ -77,10 +77,10 @@ class Versions
         // Ищем файлы README.md в модулях
         $modDirName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Mods';
         if (file_exists($modDirName)) {
-            // Получаем разделы
+            // Получаем папки
             $modDirs = array_diff(scandir($modDirName), array('.', '..')); // получаем массив папок модулей
             foreach ($modDirs as $dir) {
-                // Исключаем разделы, явно не содержащие модули
+                // Исключаем папки, явно не содержащие модули
                 if ((stripos($dir, '.') === 0) || (is_file($modDirName . '/' . $dir))) {
                     unset($mods[$dir]);
                     continue;
