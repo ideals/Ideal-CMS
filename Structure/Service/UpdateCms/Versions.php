@@ -35,28 +35,30 @@ class Versions
         // Файл лога обновлений
         $log = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . 'update.log';
         // Проверяем существует ли файл лога
-        $fileNotExists = false;
         if (!file_exists($log)) {
             $this->addAnswer('Файл лога обновлений не существует ' . $log, 'info');
-            $fileNotExists = true;
-        }
-        $path =  dirname($log);
-        if (!is_writable($path)) {
-            // Если файл лога не существует и создать его не удалось
-            if ($fileNotExists) {
-                $this->addAnswer('Не удалось создать файл лога ' . $log, 'error');
+            $path = dirname($log);
+            // Если нет прав на запись в раздел, и не удалось их получить, завершаем скрипт
+            if (!is_writable($path) && !chmod($path, intval($config->cms['dirMode'], 8))) {
+                $this->addAnswer('Нет удалось получить права на запись в раздел ' . $path, 'error');
                 $this->log = false;
                 return false;
-            } else {
-                Util::chmod($log, $config->cms['dirMode'], $config->cms['fileMode']);
-                $this->addAnswer('Файл лога обновлений создан ', 'info');
             }
-            $this->addAnswer('Файл ' . $log . ' недоступен для записи', 'error');
-            $this->log = false;
-            return false;
-        }
-        if (file_put_contents($log, '', FILE_APPEND) === false) {
-            $this->addAnswer('Не удалось записать данные в файл ' . $log, 'error');
+            // Пытаемся создать файл
+            if (file_put_contents($log, '') !== false) {
+                $this->addAnswer('Файл лога обновлений создан ', 'info');
+            } else {
+                $this->addAnswer('Не удалось создать файл лога обновлений ' . $log, 'error');
+                $this->log = false;
+                return false;
+            }
+        } else {
+            // Если нет прав на запись в файл лога обновлений и получить их не удалось
+            if (!is_writable($log) && !chmod($log, intval($config->cms['fileMode'], 8))) {
+                $this->addAnswer('Файл ' . $log . ' недоступен для записи', 'error');
+                $this->log = false;
+                return false;
+            }
         }
         $this->log = $log;
     }
