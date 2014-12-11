@@ -40,7 +40,7 @@ class Versions
             $this->addAnswer('Файл лога обновлений не существует ' . $log, 'info');
             $fileNotExists = true;
         }
-        $path =  realpath($log);
+        $path =  dirname($log);
         if (!is_writable($path)) {
             // Если файл лога не существует и создать его не удалось
             if ($fileNotExists) {
@@ -100,15 +100,14 @@ class Versions
      */
     protected function getVersionFromFile($mods)
     {
-        // Файл лога обновлений
-        $log = $this->log;
-
         // Получаем версии
-        if (filesize($log) == 0) {
+        if (filesize($this->log) == 0) {
             $version = $this->getVersionFromReadme($mods);
-            $this->putVersionLog($version, $log);
+            if ($this->log) {
+                $this->putVersionLog($version, $this->log);
+            }
         } else {
-            $version = $this->getVersionFromLog($log);
+            $version = $this->getVersionFromLog($this->log);
         }
         return $version;
     }
