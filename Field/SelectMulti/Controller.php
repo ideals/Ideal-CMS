@@ -50,9 +50,23 @@ class Controller extends AbstractController
 <!-- Initialize the bootstrap multiselect plugin: -->
 <script type="text/javascript">
     $(document).ready(function() {
-        $('#general_size_multi').multiselect();
+        $('#{$this->htmlName}').multiselect({
+        'onDropdownShown':function(event) {
+        $('.modal-body').height($('.modal-body').height() + $('.multiselect-container.dropdown-menu').height())
+        }
+        });
     });
 </script>
+<style>
+.btn-group{
+width:100%;
+}
+.multiselect.dropdown-toggle{width: 100%;text-align: left}
+.multiselect-container li {
+padding: 0;
+float: left;
+}
+</style>
 HTML;
         $html .= '<select multiple="multiple" class="form-control" name="' . $this->htmlName
             . '[]" id="' . $this->htmlName . '">';
