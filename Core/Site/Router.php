@@ -27,8 +27,15 @@ class Router
         // Проверка на простой AJAX-запрос
         $request = new Request();
         if ($request->mode == 'ajax') {
-            $this->controllerName = $request->controller . '\\AjaxController';
-            return;
+            $controllerName = $request->controller . '\\AjaxController';
+            if ($request->controller != '' && class_exists($controllerName)) {
+                // Если контроллер в запросе указан И запрошенный класс существует
+                // то устанавливаем контроллер и завершаем роутинг
+                $this->controllerName = $controllerName;
+                return;
+            }
+            // Если параметры ajax-вызова неправильные, то обрабатываем запрос как не-ajax
+            unset($_REQUEST['mode']);
         }
 
         $pluginBroker = PluginBroker::getInstance();
