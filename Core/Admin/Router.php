@@ -74,6 +74,13 @@ class Router
             unset($par[0]); // убираем первый элемент - ID начальной структуры
         }
 
+        if (!isset($path[0]['structure'])) {
+            // По par ничего не нашлось, берём стартовую структуру из списка структуру
+            $path = array($config->getStartStructure());
+            $prevStructureId = $path[0]['ID'];
+            $par = array();
+        }
+
         $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Admin\\Model';
         /* @var $structure Model */
         $structure = new $modelClassName('0-' . $prevStructureId);
