@@ -92,7 +92,7 @@ class AbstractModel
         // Удаляем все существующие связи владельца и элементов
         $_sql = "DELETE FROM {$this->table} WHERE {$ownerField}='{{ objectId }}';";
 
-        if (!is_array($newValue)) {
+        if (!is_array($newValue) || (count($newValue) == 0)) {
             // Если $newValue не массив, значит ни один элемент не задан
             return $_sql;
         }
