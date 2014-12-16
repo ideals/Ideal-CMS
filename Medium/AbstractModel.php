@@ -97,9 +97,11 @@ class AbstractModel
             return $_sql;
         }
 
-        // Добавляем связи владельца и элементов сделанные пользователем
-        foreach ($newValue as $v) {
-            $_sql .= "INSERT INTO {$this->table} SET {$ownerField}='{{ objectId }}', {$elementsField}='{$v}';";
+        if (is_array($newValue) && (count($newValue) > 0)) {
+            // Добавляем связи владельца и элементов сделанные пользователем
+            foreach ($newValue as $v) {
+                $_sql .= "INSERT INTO {$this->table} SET {$ownerField}='{{ objectId }}', {$elementsField}='{$v}';";
+            }
         }
 
         return $_sql;
