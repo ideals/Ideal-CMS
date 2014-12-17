@@ -66,7 +66,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
 
         $parentUrl = $this->getParentUrl();
         foreach ($news as $k => $v) {
-            if ($v['content'] == '') {
+            if (!isset($v['content']) || ($v['content'] == '')) {
                 $news[$k]['link'] = '';
             } else {
                 $news[$k]['link'] = $parentUrl . '/' . $v['url'] . $config->urlSuffix;
