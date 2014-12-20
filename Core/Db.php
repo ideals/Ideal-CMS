@@ -156,6 +156,10 @@ class Db extends \mysqli
         $sqlFields = array();
 
         foreach ($fields as $key => $value) {
+            if (!isset($value['sql']) || ($value['sql'] == '')) {
+                // Пропускаем поля, которые не нужно создавать в БД
+                continue;
+            }
             $sqlFields[] = "`{$key}` {$value['sql']} COMMENT '{$value['label']}'";
         }
 
