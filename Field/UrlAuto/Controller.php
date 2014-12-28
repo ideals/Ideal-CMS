@@ -22,7 +22,8 @@ use Ideal\Field\Url;
  *     'url' => array(
  *         'label' => 'URL',
  *         'sql'   => 'varchar(255) not null',
- *         'type'  => 'Ideal_UrlAuto'
+ *         'type'  => 'Ideal_UrlAuto',
+ *         'nameField' => 'name' // имя поля по которому происходит генерация url
  *     ),
  */
 class Controller extends Url\Controller
@@ -47,11 +48,15 @@ class Controller extends Url\Controller
             $path = substr($link, 0, strrpos($link, '/'));
             $addOn = '<span class="input-group-addon">' . $path . '/</span>';
         }
+        $nameField = 'name';
+        if (isset($this->field['nameField'])) {
+            $nameField = $this->field['nameField'];
+        }
         return
             '<script type="text/javascript" src="Ideal/Field/UrlAuto/admin.js" />'
             . '<div class="input-group">' . $addOn
             . '<input type="text" class="form-control" name="' . $this->htmlName . '" id="' . $this->htmlName
-            . '" value="' . $value['url'] . '"><span class="input-group-btn">'
+            . '" value="' . $value['url'] . '" data-field="' . $nameField . '"><span class="input-group-btn">'
             . '<button id="UrlAuto" type="button" class="btn btn-danger" onclick="setTranslit(this)">'
             . 'auto url off</button>'
             . '</span></div>';
