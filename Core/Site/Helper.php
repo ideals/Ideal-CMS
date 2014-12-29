@@ -3,6 +3,7 @@ namespace Ideal\Core\Site;
 
 use Ideal\Core\Config;
 use Ideal\Structure\Part\Widget\MainMenu;
+use Ideal\Core\Form;
 
 class Helper
 {
@@ -18,6 +19,10 @@ class Helper
         // Получаем телефон из конфига site_data.php
         $config = Config::getInstance();
         $vars['phone'] = $config->phone;
+
+        // Получаем поле c токен для проверки форм
+        $form = new Form('/');
+        $vars['tokenInput'] = $form->getTokenInput();
 
         return $vars;
     }
