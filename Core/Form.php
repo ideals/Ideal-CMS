@@ -60,7 +60,7 @@ class Form
             // Токен не установлен
             return false;
         }
-        if (crypt(crypt(session_id()), $_REQUEST['_token']) != $_REQUEST['_token']) {
+        if (crypt(session_id(), $_REQUEST['_token']) != $_REQUEST['_token']) {
             // Токен не сопадает с сессией
             return false;
         }
