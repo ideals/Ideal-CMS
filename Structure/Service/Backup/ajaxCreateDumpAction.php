@@ -17,11 +17,11 @@ if (isset($_POST['createMysqlDump'])) {
     $dumpSettings = array(
         'compress' => 'GZIP',
         'no-data' => false,
-        'add-drop-table' => false,
+        'add-drop-table' => true,
         'single-transaction' => false,
         'lock-tables' => false,
         'add-locks' => true,
-        'extended-insert' => true
+        'extended-insert' => false
     );
     $dump = new Mysqldump(
         $config->db['name'],
@@ -43,15 +43,14 @@ if (isset($_POST['createMysqlDump'])) {
     $dumpName = $backupPart . DIRECTORY_SEPARATOR . $dumpName . '.gz';
 
     // Формируем строку с новым файлом
-    echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' . addslashes(
-            $dumpName
-        ) . '\')"> ' .
+    echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' .
+        addslashes($dumpName) . '\')"> ' .
         date('d.m.Y - H:i:s', $time)
         . '</a></td>';
-    echo '<td><button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' . addslashes(
-            $dumpName
-        ) . '\'); false;">'
+    echo '<td><button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' .
+        addslashes($dumpName) . '\'); return false;">'
         . '<span class="glyphicon glyphicon-remove"></span></button></td>';
     echo '</tr>';
 }
+
 exit(false);
