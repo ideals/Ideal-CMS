@@ -1,56 +1,41 @@
 <?php
+namespace Mail;
+
 /**
  * Класс отправки почтовых сообщений
  *
  * Письма отправляются только в UTF-8, на все входящие параметры
  * (тема письма, содержание письма) должны быть тоже в UTF-8
  *
+ * Пример использования:
+ *
+ *     $mail = new Sender();
+ *     $mail->setSubj('Это тема письма'); // устанавливаем тему письма
+ *     $mail->setHtmlBody($htmlText); // письмо отправляем в html-формате
+ *     // Прикрепляем файл /var/tmp/bla-bla.jpg под именем picture.jpg
+ *     $mail->fileAttach('/var/tmp/bla-bla.jpg', 'image/jpg', 'picture.jpg');
+ *     // Отправляем письмо с ящика my@email.com на ящики other@email.com, second@email.com
+ *     $mail->sent('my@emai.com', 'other@email.com, second@email.com');
  */
-
-namespace Mail;
-
 class Sender
 {
-
-    protected $attach; // вложенные файлы
-
-    protected $attach_type; // типы (форматы) вложенных файлов
+    /** @var array Прикреплённые файлы */
+    protected $attach = array();
 
     /** @var string Набор заголовков письма */
     protected $header = '';
 
-    protected $body; // все письмо целиком
+    /** @var string Все письмо целиком */
+    protected $body = null;
 
-    protected $body_html = null; // html-формат письма
+    /** @var string Html-формат письма */
+    protected $body_html = null;
 
-    protected $body_plain = null; // plain-text -- обычный текст письма
+    /** @var string Текстовый формат письма */
+    protected $body_plain = null;
 
-    protected $boundary;
-
-    protected $boundary2;
-
-    protected $charset; // Кодировка письма
-
-    protected $from;  // отправитель
-
-    protected $header_txt;
-
-    protected $priority = 3; // приоритет письма
-
-    protected $subj; // тема письма
-
-    protected $to; // получатель
-
-    public function __construct()
-    {
-        // Установка разделителей письма псевдослучайным образом
-        $this->boundary = md5(mt_rand());
-        $this->boundary2 = md5(mt_rand());
-        // Установка кодировки по умолчанию
-        $this->charset = 'utf-8';
-
-        $this->body = null;
-    }
+    /** @var string Тема письма */
+    protected $subj;
 
     /**
      * Прикрепляем файл к письму, если файл существует
@@ -67,22 +52,13 @@ class Sender
         if (!$r = fopen($path, 'r')) {
             return false;
         }
-        $this->attach($name, $type, fread($r, filesize($path)));
+        // TODO преобразование $name из любой кодировки в UTF8
+        $this->attach[$name] = array(
+            'type' => $type,
+            'data' => fread($r, filesize($path))
+        );
         fclose($r);
         return true;
-    }
-
-    /**
-     * Добавление вложения в письмо
-     *
-     * @param $name
-     * @param $type
-     * @param $data
-     */
-    protected function attach($name, $type, $data)
-    {
-        $this->attach_type[$name] = $type;
-        $this->attach[$name] = $data;
     }
 
     /**
@@ -94,10 +70,7 @@ class Sender
     public function isEmail($mail)
     {
         $filter = filter_var($mail, FILTER_VALIDATE_EMAIL);
-        if ($filter == $mail) {
-            return true;
-        }
-        return false;
+        return ($filter == $mail);
     }
 
     /**
@@ -109,12 +82,8 @@ class Sender
      */
     public function sent($from, $to)
     {
-        $this->from = $this->convIn($from);
-        $this->to = $this->convIn($to);
-
         if ($this->body === null) {
             list($this->header, $this->body) = $this->render();
-            $this->body = $this->convIn($this->body);
 
             // Разрезаем строчки, длиннее 2020 символов (это ограничение почтовиков)
             $body = explode("\n", $this->body);
@@ -128,23 +97,7 @@ class Sender
             }
             $this->body = implode("\n", $body);
         }
-        return mail($this->to, $this->subj, $this->body, 'From: ' . $this->from . "\n" . $this->header);
-    }
-
-    /**
-     * Устанавливает кодировку текста
-     *
-     * @param $text
-     * @return string
-     */
-    protected function convIn($text)
-    {
-        $code = mb_detect_encoding($text);
-        if (strnatcasecmp($this->charset, $code) === 0) {
-            return $text;
-        }
-        $text = mb_convert_encoding($text, $this->charset, $code);
-        return $text;
+        return mail($to, $this->subj, $this->body, 'From: ' . $from . "\n" . $this->header);
     }
 
     /**
@@ -172,7 +125,8 @@ class Sender
         }
 
         // Если выбрана отправка письма и в html и в plain виде
-        $body = 'Content-Type: multipart/alternative; boundary="' . $this->boundary . '"' . "\n\n";
+        $boundary = md5(mt_rand()); // установка разделителей письма псевдослучайным образом
+        $body = 'Content-Type: multipart/alternative; boundary="' . $boundary . '"' . "\n\n";
 
         // Требуется ли сгенерировать plain-версию из html
         if (is_null($this->body_plain) && !empty($this->body_html)) {
@@ -185,19 +139,19 @@ class Sender
         }
 
         // Добавляем plain-версию
-        $body .= '--' . $this->boundary . "\n";
+        $body .= '--' . $boundary . "\n";
         $body .= "Content-Type: text/plain; charset=utf-8\n";
         $body .= "Content-Transfer-Encoding: 8bit\n\n";
         $body .= $this->body_plain . "\n\n";
 
         // Добавляем html-версию
-        $body .= '--' . $this->boundary . "\n";
+        $body .= '--' . $boundary . "\n";
         $body .= "Content-Type: text/html; charset=utf-8\n";
         $body .= "Content-Transfer-Encoding: 8bit\n\n";
         $body .= $this->body_html . "\n\n";
 
         // Завершение блока alternative
-        $body .= '--' . $this->boundary . "--\n\n";
+        $body .= '--' . $boundary . "--\n\n";
 
         return $body;
     }
@@ -210,30 +164,30 @@ class Sender
      */
     protected function render()
     {
-        if (!isset($this->attach_type)) {
+        if (!empty($this->attach)) {
             // Если аттач отсутствует, генерируем только текст
             $body = $this->getTextPart();
             // Вырезаем из текста заголовок
             list($header, $body) = explode("\n\n", $body, 2);
         } else {
             // Если добавлен аттач
+            $boundary = md5(mt_rand()); // установка разделителей письма псевдослучайным образом
             $header = 'Content-Type: multipart/mixed; '
-                . 'boundary="' . $this->boundary2 . '"' . "\n";
-            $body = '--' . $this->boundary2 . "\n";
-            $body .= $this->getTextPart();
-            reset($this->attach_type);
+                . 'boundary="' . $boundary . '"' . "\n";
+            $body = '--' . $boundary . "\n";
+            $body .= $this->getTextPart(); // ставим собственно текст письма
+
             // Добавляем все прикреплённые файлы
-            while (list($name, $content_type) = each($this->attach_type)) {
-                // $this->body .= '--' . $this->boundary . "--\n"; -- вот это нафига тут?
-                $body .= '--' . $this->boundary2 . "\n";
-                $body .= "Content-Type: {$content_type}\n";
+            foreach ($this->attach as $name => $attach) {
+                $body .= '--' . $boundary . "\n";
+                $body .= "Content-Type: {$attach['type']}\n";
                 $body .= "Content-Transfer-Encoding: base64\n";
                 $body .= "Content-Disposition: attachment;";
-                // TODO тут надо сделать преобразование $name из любой кодировки в UTF8
                 $body .= "filename*0*=UTF8''" . rawurlencode($name) . ";\n\n";
-                $body .= chunk_split(base64_encode($this->attach[$name])) . "\n\n";
+                $body .= chunk_split(base64_encode($attach['data'])) . "\n\n";
             }
-            $body .= '--' . $this->boundary2 . '--';
+
+            $body .= '--' . $boundary . '--';  // завершитель блоков mixed
         }
 
         $header = "MIME-Version: 1.0\n" . $header;
@@ -275,16 +229,6 @@ class Sender
     {
         $this->body_html = $text;
         $this->body = null;
-    }
-
-    /**
-     * Установка кодировки письма
-     *
-     * @param $code
-     */
-    public function setCharset($code)
-    {
-        $this->charset = strtoupper($code);
     }
 
     /**
