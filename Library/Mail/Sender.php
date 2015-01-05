@@ -16,6 +16,9 @@ class Sender
 
     protected $attach_type; // типы (форматы) вложенных файлов
 
+    /** @var string Набор заголовков письма */
+    protected $header = '';
+
     protected $body; // все письмо целиком
 
     protected $body_html = null; // html-формат письма
@@ -41,8 +44,8 @@ class Sender
     public function __construct()
     {
         // Установка разделителей письма псевдослучайным образом
-        $this->boundary = '----_=_' . md5(mt_rand());
-        $this->boundary2 = '----_=_' . md5(mt_rand());
+        $this->boundary = md5(mt_rand());
+        $this->boundary2 = md5(mt_rand());
         // Установка кодировки по умолчанию
         $this->charset = 'utf-8';
 
@@ -108,10 +111,9 @@ class Sender
     {
         $this->from = $this->convIn($from);
         $this->to = $this->convIn($to);
-        $header = $this->convIn($this->header());
 
         if ($this->body === null) {
-            $this->bodyCreate();
+            list($this->header, $this->body) = $this->render();
             $this->body = $this->convIn($this->body);
 
             // Разрезаем строчки, длиннее 2020 символов (это ограничение почтовиков)
@@ -126,8 +128,7 @@ class Sender
             }
             $this->body = implode("\n", $body);
         }
-
-        return mail($this->to, $this->subj, $this->body, 'From: ' . $this->from . "\r\n" . $header);
+        return mail($this->to, $this->subj, $this->body, 'From: ' . $this->from . "\n" . $this->header);
     }
 
     /**
@@ -142,105 +143,102 @@ class Sender
         if (strnatcasecmp($this->charset, $code) === 0) {
             return $text;
         }
-        if (function_exists('mb_convert_encoding')) {
-            $text = mb_convert_encoding($text, $this->charset, $code);
-        } else {
-            if (function_exists('iconv')) {
-                $text = iconv(iconv, $this->charset, $text);
-            }
-        }
+        $text = mb_convert_encoding($text, $this->charset, $code);
         return $text;
     }
 
     /**
-     * Создание заголовка письма
+     * Создание основного текста письма вместе с заголовками
      *
      * @return string
+     * @throws \Exception
      */
-    protected function header()
+    protected function getTextPart()
     {
-        $header = "MIME-Version: 1.0\n";
-
-        $header_cnt = '';
-        if ($this->body_plain != "") {
-            // Если выбрана отправка письма только в текстовом виде,
-            $header_cnt = "Content-type: text/plain; charset=utf-8\n"
-                . "Content-transfer-encoding: 8bit";
-        } elseif ($this->body_html != "") {
-            // Если выбрана отправка письма только в текстовом виде,
-            $header_cnt = "Content-type: text/html; charset=utf-8\n"
-                . "Content-transfer-encoding: 8bit";
+        // Если выбрана отправка письма только в html-виде
+        if (!empty($this->body_html) && ($this->body_plain === '')) {
+            $body = "Content-type: text/html; charset=utf-8\n"
+                . "Content-transfer-encoding: 8bit\n\n";
+            $body .= $this->body_html . "\n\n";
+            return $body;
         }
 
-        // Если добавлен аттач
-        if (isset($this->attach_type)) {
-            $header_cnt = 'Content-Type: multipart/mixed; '
-                . 'boundary="' . $this->boundary2 . '"';
+        // Если выбрана отправка письма только в текстовом виде
+        if (!empty($this->body_plain) && ($this->body_html === '')) {
+            $body = "Content-type: text/plain; charset=utf-8\n"
+                . "Content-transfer-encoding: 8bit\n\n";
+            $body .= $this->body_plain . "\n\n";
+            return $body;
         }
 
-        $header .= $header_cnt;
+        // Если выбрана отправка письма и в html и в plain виде
+        $body = 'Content-Type: multipart/alternative; boundary="' . $this->boundary . '"' . "\n\n";
 
-        return $header;
-    }
-
-    /**
-     * Подготавливаем и добавляем версию письма без разметки
-     *
-     *
-     */
-    protected function bodyCreate()
-    {
-        if (isset($this->attach_type)) {
-            // Если есть аттач
-            $this->body .= '--' . $this->boundary2 . "\n";
-            if (($this->body_html != '') || ($this->body_html != null)) {
-                $this->body .= 'Content-Type: multipart/alternative; boundary="' . $this->boundary . '"' . "\n\n";
-            } else {
-                $this->body .= "Content-Type: text/plain; charset=utf-8\n";
-                $this->body .= "Content-Transfer-Encoding: 8bit\n\n";
-            }
-        }
-
-        if ($this->body_plain !== '' && $this->body_html != '') {
-            // Если HTML
-            $this->body .= '--' . $this->boundary . "\n";
-            $this->body .= "Content-Type: text/plain; charset=utf-8\n";
-            $this->body .= "Content-Transfer-Encoding: 8bit\n\n";
-        }
-
-        if ($this->body_html != '' && $this->body_plain === null) {
-            // Если в html-режиме не задан обычный вид письма - сгенерировать его из html
+        // Требуется ли сгенерировать plain-версию из html
+        if (is_null($this->body_plain) && !empty($this->body_html)) {
             $this->body_plain = strip_tags($this->body_html);
         }
 
-        if ($this->body_plain !== '') {
-            $this->body .= $this->body_plain . "\n\n";
+        // На данном этапе и plain и html-версии должны быть непустые, иначе — ошибка
+        if (empty($this->body_plain) || empty($this->body_html)) {
+            throw new \Exception('Для отправки письма с двумя версиями текст должен быть и в plain и html-версии ');
         }
 
-        // Если html-версия текста письма есть!
-        if (strlen($this->body_html) > 0 && (($this->body_plain !== '') || ($this->attach_type))) {
-            $this->body .= '--' . $this->boundary . "\n";
-            $this->body .= "Content-Type: text/html; charset=utf-8\n";
-            $this->body .= "Content-Transfer-Encoding: quoted-printable\n\n";
-            $this->body .= $this->body_html . "\n\n";
-        } elseif (strlen($this->body_html) > 0) {
-            $this->body .= $this->body_html . "\n\n";
-        }
+        // Добавляем plain-версию
+        $body .= '--' . $this->boundary . "\n";
+        $body .= "Content-Type: text/plain; charset=utf-8\n";
+        $body .= "Content-Transfer-Encoding: 8bit\n\n";
+        $body .= $this->body_plain . "\n\n";
 
-        if (isset($this->attach_type)) {
+        // Добавляем html-версию
+        $body .= '--' . $this->boundary . "\n";
+        $body .= "Content-Type: text/html; charset=utf-8\n";
+        $body .= "Content-Transfer-Encoding: 8bit\n\n";
+        $body .= $this->body_html . "\n\n";
+
+        // Завершение блока alternative
+        $body .= '--' . $this->boundary . "--\n\n";
+
+        return $body;
+    }
+
+    /**
+     * Формирование заголовков и текста письма
+     *
+     * @return array
+     * @throws \Exception
+     */
+    protected function render()
+    {
+        if (!isset($this->attach_type)) {
+            // Если аттач отсутствует, генерируем только текст
+            $body = $this->getTextPart();
+            // Вырезаем из текста заголовок
+            list($header, $body) = explode("\n\n", $body, 2);
+        } else {
+            // Если добавлен аттач
+            $header = 'Content-Type: multipart/mixed; '
+                . 'boundary="' . $this->boundary2 . '"' . "\n";
+            $body = '--' . $this->boundary2 . "\n";
+            $body .= $this->getTextPart();
             reset($this->attach_type);
+            // Добавляем все прикреплённые файлы
             while (list($name, $content_type) = each($this->attach_type)) {
-                $this->body .= '--' . $this->boundary . "--\n";
-                $this->body .= '--' . $this->boundary2 . "\n";
-                $this->body .= "Content-Type: {$content_type}\n";
-                $this->body .= "Content-Transfer-Encoding: base64\n";
-                $this->body .= "Content-Disposition: attachment;";
+                // $this->body .= '--' . $this->boundary . "--\n"; -- вот это нафига тут?
+                $body .= '--' . $this->boundary2 . "\n";
+                $body .= "Content-Type: {$content_type}\n";
+                $body .= "Content-Transfer-Encoding: base64\n";
+                $body .= "Content-Disposition: attachment;";
                 // TODO тут надо сделать преобразование $name из любой кодировки в UTF8
-                $this->body .= "filename*0*=UTF8''" . rawurlencode($name) . ";\n\n";
-                $this->body .= chunk_split(base64_encode($this->attach[$name])) . "\n\n";
+                $body .= "filename*0*=UTF8''" . rawurlencode($name) . ";\n\n";
+                $body .= chunk_split(base64_encode($this->attach[$name])) . "\n\n";
             }
-            $this->body .= '--' . $this->boundary2 . '--';
+            $body .= '--' . $this->boundary2 . '--';
         }
+
+        $header = "MIME-Version: 1.0\n" . $header;
+
+        return array($header, $body);
     }
 
     /**
