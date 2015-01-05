@@ -45,12 +45,13 @@ return array(
             'type' => 'Ideal_Select',
             'medium' => '\\Ideal\\Medium\\StructureList\\Model'
         ),
-        'template' => array(
-            'label' => 'Тип документа',
-            'sql' => "varchar(30) not null default 'Page'",
-            'type' => 'Ideal_Template',
-            'medium' => '\\Ideal\\Medium\\TemplateList\\Model',
-            'templates' => array('Ideal_Page', 'Ideal_PhpFile', 'Ideal_SiteMap'),
+        'addon' => array(
+            'label' => 'Аддоны',
+            'sql' => "varchar(30) not null default '{\"1\":\"Ideal_Page\"}'",
+            'type' => 'Ideal_Addon',
+            'medium'    => '\\Ideal\\Medium\\AddonList\\Model',
+            'available' =>  array('Ideal_Page', 'Ideal_PhpFile', 'Ideal_SiteMap'),
+            'default'   => '{"1":"Ideal_Page"}',
         ),
         'name' => array(
             'label' => 'Название',
