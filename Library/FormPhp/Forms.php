@@ -18,6 +18,9 @@ class Forms
     /** @var array Список полей ввода в форме */
     protected $fields = array();
 
+    /** @var string Название формы  */
+    protected $formName;
+
     /** @var string Метод передачи данных формы (POST||GET) */
     protected $method = 'POST';
 
@@ -30,9 +33,10 @@ class Forms
     /**
      * Инициализируем сессии, если это нужно
      *
+     * @param string $formName Название формы (используется в html-теге form)
      * @param bool $xhtml Если истина, то код полей ввода будет отображается в xhtml-стиле
      */
-    public function __construct($xhtml = true)
+    public function __construct($formName, $xhtml = true)
     {
         /**  Будет работать только на PHP 5.4, здесь можно проверить не запрещены ли сессии PHP_SESSION_DISABLED
         if(session_status() != PHP_SESSION_ACTIVE) {
@@ -45,6 +49,7 @@ class Forms
         }
 
         $this->xhtml = $xhtml;
+        $this->formName = $formName;
     }
 
     /**

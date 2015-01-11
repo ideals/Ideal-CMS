@@ -1,7 +1,7 @@
 <?php
 require_once 'autoloader.php';
 
-$form = new FormPhp\Forms();
+$form = new FormPhp\Forms('myForm');
 
 $form->add('name', 'text'); // добавляем одно текстовое поле ввода
 $form->setValidator('name', 'required'); // к полю ввода добавляем валидатор, требующий заполнить это поле
@@ -16,7 +16,7 @@ if ($form->isPostRequest()) {
 }
 ?>
 
-<form method="post">
+<form method="post" name="myForm">
     <?= $form->getTokenInput() ?>
     <label for="name">
         Просто текст
