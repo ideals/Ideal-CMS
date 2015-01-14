@@ -21,7 +21,7 @@ class Resize
     /** @var string $fullNameOriginal Полное имя изображения с исходным размером */
     protected $fullNameOriginal;
 
-    /** @var string $fullNameResized Полное имя изображения с исходным размером */
+    /** @var string $fullNameResized Полное имя изображения с изменённым размером */
     protected $fullNameResized;
 
     /**
@@ -119,7 +119,22 @@ class Resize
      */
     protected function resizeImage()
     {
-        $src = imagecreatefromjpeg($this->fullNameOriginal);
+        $imageInfo = getimagesize($this->fullNameOriginal);
+        $src = null;
+
+        switch ($imageInfo['mime']) {
+            case "image/jpeg":
+                $src = imagecreatefromjpeg($this->fullNameOriginal);
+                break;
+            case "image/png":
+                $src = imagecreatefrompng($this->fullNameOriginal);
+                break;
+        }
+
+        // Если тип изображения не соответствует необходимому
+        if (is_null($src)) {
+            $this->exit404();
+        }
 
         // Пропорциональное изменение изображения по ширине и высоте
         if ($this->width == 0) {
@@ -139,7 +154,7 @@ class Resize
         $resSrc = imagesx($src) / imagesy($src);
         if ($resDest < $resSrc) {
             $destWidth = round(imagesx($src) * $this->height / imagesy($src));
-            $dest2 = imagecreatetruecolor($this->width, $this->height);
+            $dest2 = $this->imageCreate($this->width, $this->height, $imageInfo['mime']);
 
             if ($isSetColor) {
                 // Изменение размера изображения с добавлением цвета фона
@@ -164,14 +179,14 @@ class Resize
                 );
             } else {
                 // Изменение размера изображения и обрезка по ширине
-                $dest = imagecreatetruecolor($destWidth, $this->height);
+                $dest = $this->imageCreate($destWidth, $this->height, $imageInfo['mime']);
                 $destWidth2 = ($destWidth - $this->width) / 2;
                 imageCopyResampled($dest, $src, 0, 0, 0, 0, $destWidth, $this->height, imagesx($src), imagesy($src));
                 imagecopy($dest2, $dest, 0, 0, $destWidth2, 0, imagesx($dest), imagesy($dest));
             }
         } else {
             $destHeight = round(imagesy($src) * $this->width / imagesx($src));
-            $dest2 = imagecreatetruecolor($this->width, $this->height);
+            $dest2 = $this->imageCreate($this->width, $this->height, $imageInfo['mime']);
 
             if ($isSetColor) {
                 // Изменение размера изображения с добавлением цвета фона
@@ -196,7 +211,7 @@ class Resize
                 );
             } else {
                 // Изменение размера изображения и обрезка по высоте
-                $dest = imagecreatetruecolor($this->width, $destHeight);
+                $dest = $this->imageCreate($this->width, $destHeight, $imageInfo['mime']);
                 $destHeight2 = ($destHeight - $this->height) / 2;
                 imageCopyResampled($dest, $src, 0, 0, 0, 0, $this->width, $destHeight, imagesx($src), imagesy($src));
                 imagecopy($dest2, $dest, 0, 0, 0, $destHeight2, imagesx($dest), imagesy($dest));
@@ -205,11 +220,42 @@ class Resize
         }
 
         ob_start();
-        imagejpeg($dest2);
+        switch ($imageInfo['mime']) {
+            case "image/jpeg":
+                imagejpeg($dest2);
+                break;
+            case "image/png":
+                imagepng($dest2);
+                break;
+        }
         $image = ob_get_contents();
         ob_end_clean();
 
+        // Если не удалось создать изображение
+        if ($image == '') {
+            $this->exit404();
+        }
+
         return $image;
+    }
+
+    /**
+     * Создание нового полноцветного изображения
+     *
+     * @param int $width Ширина нового изображения
+     * @param int $height Высота нового изображения
+     * @param string $mime Тип файла
+     * @return mixed Идентификатор изображения
+     */
+    protected function imageCreate($width, $height, $mime)
+    {
+        $img = imagecreatetruecolor($width, $height);
+        if ($mime == "image/png") {
+            imagecolortransparent($img, imagecolorallocatealpha($img, 0, 0, 0, 127));
+            imagealphablending($img, false);
+            imagesavealpha($img, true);
+        }
+        return $img;
     }
 
     /**
@@ -245,8 +291,8 @@ class Resize
         touch($this->fullNameResized, $time);
 
         // Вывод изображения
-        $getInfo = getimagesize($image);
-        $time = filemtime($image);
+        $getInfo = getimagesize($this->fullNameResized);
+        $time = filemtime($this->fullNameResized);
 
         header('Content-type: ' . $getInfo['mime']);
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $time) . ' GMT');
