@@ -55,8 +55,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         // Проверка найденных элементов из БД на соответствие последовательности ID в par
         // и последовательности cid адресов
         $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
-        $start = reset($result);
-        $cidPrev = $cidModel->getBlock($start['cid'], $start['lvl'] - 1); // находим блок cid предыдущего уровня
+        $cidPrev = $cidModel->reconstruct('0'); // вначале разбора параметров не существует никакого сида
         $trueResult = array();
         $parElement = reset($par);
         foreach ($result as $v) {
@@ -103,15 +102,19 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
      * @param int    $lvl Уровень, на котором нужно получить макс. cid
      * @return string Максимальный cid на уровне $lvl
      */
-    function getNewCid($cid, $lvl)
+    public function getNewCid($cid, $lvl)
     {
         /* @var Db $db */
         $db = Db::getInstance();
 
         $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
         $parentCid = $cidModel->getCidByLevel($cid, $lvl - 1, false);
-        $_sql = "SELECT cid FROM {$this->_table} WHERE cid LIKE '{$parentCid}%' AND lvl={$lvl} ORDER BY cid DESC LIMIT 1";
-        $cidArr = $db->select($_sql);
+        $par = array(
+            'parentCid' => $parentCid . '%',
+            'lvl' => $lvl,
+        );
+        $_sql = "SELECT cid FROM {$this->_table} WHERE cid LIKE :parentCid AND lvl=:lvl ORDER BY cid DESC LIMIT 1";
+        $cidArr = $db->select($_sql, $par);
         if (count($cidArr) > 0) {
             // Если элементы на этом уровне есть, берём cid последнего
             $cid = $cidArr[0]['cid'];
@@ -131,7 +134,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $path = $this->getPath();
         $c = count($path);
         $end = end($path);
-        if ($c < 2 OR ($c > 1 AND $path[$c - 2]['structure'] != $end['structure'])) {
+        if ($c < 2 || ($c > 1 && $path[$c - 2]['structure'] != $end['structure'])) {
             $prevStructure = $this->prevStructure;
             $lvl = 1;
         } else {
@@ -149,7 +152,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $path = $this->getPath();
         $c = count($path);
         $end = end($path);
-        if ($c == 1 OR ($c > 1 AND $end['structure'] != $path[$c - 2]['structure'])) {
+        if ($c == 1 || ($c > 1 && $end['structure'] != $path[$c - 2]['structure'])) {
             // Считываем все элементы первого уровня
             $where .= " AND lvl=1";
         } else {
