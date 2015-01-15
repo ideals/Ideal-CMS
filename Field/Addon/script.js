@@ -4,7 +4,7 @@ $(document).ready(function() {
     addons = $.parseJSON($('#' + addonField).val());
 
     // Получаем список доступных для добавления аддонов
-    available = $.parseJSON($('#available_addons'));
+    available = $.parseJSON($('#available_addons').val());
 
     // Строим список подключённых аддонов в html-виде
     addonsHtml = '<div class="list-group">';
