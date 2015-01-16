@@ -89,7 +89,8 @@ class Forms
     {
         $arr = array();
         foreach ($this->fields as $name => $field) {
-            $arr[$name] = '';
+            /** @var $field \FormPhp\Field\AbstractField */
+            $arr[$name] = $field->getValidators();
         }
         $xhtml = ($this->xhtml) ? '/' : '';
         return '<input type="hidden" name="_validators" value="' . json_encode($arr) . '" ' . $xhtml . '>' . "\n";

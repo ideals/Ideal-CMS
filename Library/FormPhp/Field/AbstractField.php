@@ -33,6 +33,21 @@ class AbstractField
     }
 
     /**
+     * Получение списка валидаторов, привязанных к этому полю
+     *
+     * @return array Список валидаторов
+     */
+    public function getValidators()
+    {
+        $arr = array();
+        foreach ($this->validators as $validator) {
+            /** @var $validator \FormPhp\Validator\AbstractValidator */
+            $arr[] = $validator->getName();
+        }
+        return $arr;
+    }
+
+    /**
      * Получение значения, введённого пользователем
      *
      * @return mixed

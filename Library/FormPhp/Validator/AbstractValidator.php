@@ -15,4 +15,13 @@ abstract class AbstractValidator
      * @return bool
      */
     abstract public function checkValue($value);
+
+    /**
+     * Получение имени валидатора для последующего вызова в js-функциях
+     * @return string
+     */
+    public function getName()
+    {
+        return '';
+    }
 }
