@@ -18,7 +18,7 @@ if ($form->isPostRequest()) {
 $text = <<<TEXT
 
 <form method="post" name="myForm">
-    <?= $form->getTokenInput() ?>
+    {$form->getTokenInput()}
     <label for="name">
         Просто текст
         <input type="text" name="name"/>
