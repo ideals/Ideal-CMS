@@ -22,4 +22,18 @@ class Controller extends AbstractValidator
     {
         return !empty($value);
     }
+
+    /**
+     * Получение javascript для валидации на стороне клиента
+     * @return string
+     */
+    public function getCheckJs()
+    {
+
+        return <<<JS
+        function validatorRequired(e, formName, inputName) {
+            return $(e).val() == ''
+        }
+JS;
+    }
 }

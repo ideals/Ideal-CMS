@@ -27,6 +27,9 @@ class Forms
     /** @var string Html-текст формы */
     protected $text = '';
 
+    /** @var string javascript формы */
+    protected $js = '';
+
     /** @var array Массив валидаторов, применённых к элементам формы */
     protected $validators = array();
 
@@ -93,7 +96,8 @@ class Forms
             $arr[$name] = $field->getValidators();
         }
         $xhtml = ($this->xhtml) ? '/' : '';
-        return '<input type="hidden" name="_validators" value="' . json_encode($arr) . '" ' . $xhtml . '>' . "\n";
+        return '<input type="hidden" name="_validators" value="' . htmlspecialchars(json_encode($arr)) . '" ' . $xhtml
+            . '>' . "\n";
     }
 
     /**
@@ -214,6 +218,17 @@ class Forms
     }
 
     /**
+     * Ручная установка общего javascript формы
+     *
+     * @param string $js
+     */
+    public function setJs($js)
+    {
+        $this->js = $js;
+    }
+
+
+    /**
      * Установка валидатора на элемент формы
      *
      * @param string       $name Название элемента формы
@@ -261,6 +276,17 @@ class Forms
      */
     protected function renderJs()
     {
-        return '';
+        $validJS = [];
+        foreach ($this->validators as $v) {
+            /** @var $v \FormPhp\Validator\AbstractValidator */
+            $validJS[] = $v->getCheckJs();
+        }
+
+        $this->js = '$(document).ready(function () {';
+        $this->js .= file_get_contents('form.js');
+        $this->js .= "$('#{$this->formName}').submit(fc); \n";
+        $this->js .= implode("\n", $validJS) . '})';
+
+        return $this->js;
     }
 }

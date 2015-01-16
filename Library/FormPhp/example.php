@@ -16,8 +16,9 @@ if ($form->isPostRequest()) {
 }
 
 $text = <<<TEXT
-
-<form method="post" name="myForm">
+<script type="text/javascript" src="http://gradodel/js/jquery/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="http://gradodel/grad/Ideal/Library/FormPhp/example.php?mode=js"></script>
+<form method="post" id="myForm">
     {$form->getTokenInput()}
     {$form->getValidatorsInput()}
     <label for="name">
