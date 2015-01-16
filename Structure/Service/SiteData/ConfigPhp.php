@@ -83,8 +83,8 @@ class ConfigPhp
                 $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;
                 $values = ($param['type'] == 'Ideal_Select') ? ' | ' . json_encode($param['values'], $options) : '';
 
-                $file .= str_repeat(' ', $pad) . "'" . $field . "' => '" . $param['value']
-                    . "', // " . $param['label'] . ' | ' . $param['type'] . $values . "\n";
+                $file .= str_repeat(' ', $pad) . "'" . $field . "' => " . '"' . $param['value'] . '", '
+                    . "// " . $param['label'] . ' | ' . $param['type'] . $values . "\n";
             }
             if ($tabId != 'default') {
                 $file .= "    ),\n";
@@ -165,7 +165,11 @@ DONE;
             if (in_array($v, $skip)) {
                 continue;
             }
-            $cols = explode("', // ", $v);
+            if (strpos($v, "', // ")) {
+                $cols = explode("', // ", $v);
+            } else {
+                $cols = explode('", // ', $v);
+            }
             $other = $cols[0];
             $label = isset($cols[1]) ? $cols[1] : null;
             if (is_null($label)) {
@@ -205,7 +209,11 @@ DONE;
      */
     protected function parseStr($str)
     {
-        list ($other, $label) = explode("', // ", $str);
+        if (strpos($str, "', // ")) {
+            list ($other, $label) = explode("', // ", $str);
+        } else {
+            list ($other, $label) = explode('", // ', $str);
+        }
         $label = chop($label);
         $fields = explode(' | ', $label);
         $label = $fields[0];
@@ -213,7 +221,11 @@ DONE;
         if ($type == '') {
             $type = 'Ideal_Text';
         }
-        list ($name, $value) = explode(" => '", $other);
+        if (strpos($other, " => '")) {
+            list ($name, $value) = explode(" => '", $other);
+        } else {
+            list ($name, $value) = explode(' => "', $other);
+        }
         $fieldName = trim($name, ' \''); // убираем стартовые пробелы и кавычку у названия поля
         $param[$fieldName] = array(
             'label' => $label,
