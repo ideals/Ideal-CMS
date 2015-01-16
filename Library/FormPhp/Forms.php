@@ -230,7 +230,7 @@ class Forms
             if (!class_exists($fieldName)) {
                 throw new \Exception('Не найден класс ' . $fieldName . ' для валидатора');
             }
-            $this->validators[$name] = new $fieldName($name);
+            $this->validators[$name] = new $fieldName();
             /** @var \FormPhp\Field\AbstractField $field */
             $field = $this->fields[$name];
             $field->setValidator($this->validators[$name]);
