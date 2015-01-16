@@ -19,6 +19,7 @@ $text = <<<TEXT
 
 <form method="post" name="myForm">
     {$form->getTokenInput()}
+    {$form->getValidatorsInput()}
     <label for="name">
         Просто текст
         <input type="text" name="name"/>

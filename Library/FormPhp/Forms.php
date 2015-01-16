@@ -81,6 +81,21 @@ class Forms
     }
 
     /**
+     * Отображение поля ввода с json-массивом полей с валидаторами
+     *
+     * @return string
+     */
+    public function getValidatorsInput()
+    {
+        $arr = array();
+        foreach ($this->fields as $name => $field) {
+            $arr[$name] = '';
+        }
+        $xhtml = ($this->xhtml) ? '/' : '';
+        return '<input type="hidden" name="_validators" value="' . json_encode($arr) . '" ' . $xhtml . '>' . "\n";
+    }
+
+    /**
      * Проверка на передачу данных формы методом POST
      *
      * @return bool
