@@ -14,7 +14,8 @@ if ($form->isPostRequest()) {
         echo 'Форма заполнена неправильно<br />';
     }
 }
-?>
+
+$text = <<<TEXT
 
 <form method="post" name="myForm">
     <?= $form->getTokenInput() ?>
@@ -24,3 +25,9 @@ if ($form->isPostRequest()) {
     </label>
     <input type="submit">
 </form>
+
+TEXT;
+
+$form->setText($text);
+
+$form->render();

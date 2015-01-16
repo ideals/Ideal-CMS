@@ -24,6 +24,9 @@ class Forms
     /** @var string Метод передачи данных формы (POST||GET) */
     protected $method = 'POST';
 
+    /** @var string Html-текст формы */
+    protected $text = '';
+
     /** @var array Массив валидаторов, применённых к элементам формы */
     protected $validators = array();
 
@@ -143,6 +146,25 @@ class Forms
     }
 
     /**
+     * Отображение формы, css- или js-скриптов
+     */
+    public function render()
+    {
+        if (!isset($_REQUEST['mode']) || ($_REQUEST['mode'] == 'form')) {
+            echo $this->text;
+        }
+
+        switch ($_REQUEST['mode']) {
+            case 'css':
+                echo $this->renderCss();
+                break;
+            case 'js':
+                echo $this->renderJs();
+                break;
+        }
+    }
+
+    /**
      * Установка метода передачи данных формы
      *
      * @param string $method Метод передачи данных формы (POST||GET)
@@ -163,6 +185,16 @@ class Forms
         }
 
         $this->method = $method;
+    }
+
+    /**
+     * Ручная установка текста формы
+     *
+     * @param string $text Текст формы
+     */
+    public function setText($text)
+    {
+        $this->text = $text;
     }
 
     /**
@@ -188,5 +220,31 @@ class Forms
             $field->setValidator($this->validators[$name]);
         }
 
+    }
+
+    /**
+     * Генерирование css-скрипта, общего для всей формы
+     *
+     * Css генерируется на основе общего скрипта для формы, плюс css-скрипты для полей ввода
+     * и валидаторов
+     *
+     * @return string
+     */
+    protected function renderCss()
+    {
+        return '';
+    }
+
+    /**
+     * Генерирование js-скрипта, общего для всей формы
+     *
+     * Js генерируется на основе общих js-скриптов для формы, плюс js-скрипты для полей ввода
+     * и валидаторов
+     *
+     * @return string
+     */
+    protected function renderJs()
+    {
+        return '';
     }
 }
