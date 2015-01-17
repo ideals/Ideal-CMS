@@ -22,6 +22,12 @@ abstract class AbstractValidator
      */
     public function getName()
     {
-        return strtolower(array_slice(explode('\\', get_class($this)), -2, 1));
+        return strtolower(end(array_slice(explode('\\', get_class($this)), -2, 1)));
     }
+
+    /**
+     * Получение javascript для валидации на стороне клиента
+     * @return string
+     */
+    abstract public function getCheckJs();
 }
