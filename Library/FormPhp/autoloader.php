@@ -18,7 +18,11 @@ spl_autoload_register(
         $prefix = 'FormPhp\\';
 
         // base directory for the namespace prefix
-        $base_dir = $_SERVER['DOCUMENT_ROOT'] . '/lib/FormPhp/';
+        if (defined('PATHFORMPHP')) {
+            $base_dir = $_SERVER['DOCUMENT_ROOT'] . '/' . trim(PATHFORMPHP, '/') . '/FormPhp/';
+        } else {
+            $base_dir = '';
+        }
 
         // does the class use the namespace prefix?
         $len = strlen($prefix);

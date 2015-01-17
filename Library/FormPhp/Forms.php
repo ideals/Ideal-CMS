@@ -172,6 +172,7 @@ class Forms
     {
         if (!isset($_REQUEST['mode']) || ($_REQUEST['mode'] == 'form')) {
             echo $this->text;
+            return;
         }
 
         switch ($_REQUEST['mode']) {

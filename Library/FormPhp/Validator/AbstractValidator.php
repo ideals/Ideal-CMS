@@ -22,7 +22,8 @@ abstract class AbstractValidator
      */
     public function getName()
     {
-        return strtolower(end(array_slice(explode('\\', get_class($this)), -2, 1)));
+        $class = array_slice(explode('\\', get_class($this)), -2, 1);
+        return strtolower(end($class));
     }
 
     /**

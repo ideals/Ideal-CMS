@@ -10,4 +10,5 @@ fc = function()
         alert(k + check);
     }
 
+    return false;
 };

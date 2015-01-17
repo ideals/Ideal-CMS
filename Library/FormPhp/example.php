@@ -1,4 +1,7 @@
 <?php
+// Указание папки, где находится папка FormPhp
+// define('PATHFORMPHP', '/cms-folder/Ideal/Library');
+
 require_once 'autoloader.php';
 
 $form = new FormPhp\Forms('myForm');
@@ -16,8 +19,8 @@ if ($form->isPostRequest()) {
 }
 
 $text = <<<TEXT
-<script type="text/javascript" src="http://gradodel/js/jquery/jquery-1.8.3.min.js"></script>
-<script type="text/javascript" src="http://gradodel/grad/Ideal/Library/FormPhp/example.php?mode=js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+<script type="text/javascript" src="example.php?mode=js"></script>
 <form method="post" id="myForm">
     {$form->getTokenInput()}
     {$form->getValidatorsInput()}
