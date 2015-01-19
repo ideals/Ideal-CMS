@@ -64,3 +64,27 @@ div.checkbox {
     margin-top: 16px;
     display: none;
 }
+#addon-confirm-modal {
+    display: none;
+    z-index: 10000;
+}
+#addonsList.full-form{
+    width: 100%;
+}
+#addonsList{
+    width: 300px;
+}
+#addonsList .list-group-item {
+    padding: 0;
+}
+#addonsList span.form-control {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+}
+#addonsList span.input-group-btn.remove-addon > button {
+    padding-top: 8px;
+    border: 0;
+    border-left: 1px solid #CCC;
+    z-index: 99999;
+}
