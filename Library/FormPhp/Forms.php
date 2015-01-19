@@ -264,7 +264,7 @@ class Forms
      */
     protected function renderCss()
     {
-        return '';
+        return file_get_contents('form.css');
     }
 
     /**
@@ -283,10 +283,10 @@ class Forms
             $validJS[] = $v->getCheckJs();
         }
 
-        $this->js = '$(document).ready(function () {';
+        $this->js = "$(document).ready(function () {\n";
+        $this->js .= implode("\n", $validJS);
         $this->js .= file_get_contents('form.js');
-        $this->js .= "$('#{$this->formName}').submit(fc); \n";
-        $this->js .= implode("\n", $validJS) . '})';
+        $this->js .= "$('#{$this->formName}').submit(fc); \n"  . '})';
 
         return $this->js;
     }
