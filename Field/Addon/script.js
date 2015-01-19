@@ -83,7 +83,7 @@ function onAddNewTab(data) {
     $('#add-addon').toggleClass('hide');
 
     // Добавляем в список вкладок для редактирования
-    $('div#addonsList > ul').append('<a class="list-group-item">' + data['name'] + '</a>');
+    $('div#addonsList > div.list-group').append('<a class="list-group-item">' + data['name'] + '</a>');
 
     // Добавляем вкладку к списку вкладок
     $('#tabs').append(data['header']);
