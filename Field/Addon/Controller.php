@@ -96,17 +96,4 @@ class Controller extends AbstractController
 HTML;
         return $html;
     }
-
-    /**
-     * Переопределил, чтобы на начальном этапе с бд не возиться
-     * @return string
-     */
-    public function getValue()
-    {
-        // todo убрать, когда заработает редактирование аддонов
-        return json_encode(array(
-            array(1, 'Ideal_Page', 'Текст'),
-            array(2, 'Ideal_PhpFile', 'Php-файл'),
-        ));
-    }
 }
