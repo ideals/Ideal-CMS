@@ -9,6 +9,7 @@
 
 namespace Ideal\Field\Addon;
 
+use Ideal\Core\Util;
 use Ideal\Field\AbstractController;
 
 /**
@@ -94,5 +95,33 @@ class Controller extends AbstractController
             <script type="text/javascript" src="Ideal/Field/Addon/script.js"></script>
 HTML;
         return $html;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getValue()
+    {
+        $value = parent::getValue();
+
+        // Восстановление названия подключённых аддонов, т.к. по умолчанию текстовое название
+        // аддона не указывается.
+
+        $arr = json_decode($value);
+
+        foreach ($arr as $k => $v) {
+            $addonVar = $v[1];
+            $addonName = $v[2];
+
+            $class = Util::getClassName($addonVar, 'Addon') . '\\Model';
+
+            /** @var \Ideal\Core\Admin\Model $model */
+            $model = new $class('');
+            $arr[$k][2] = ($addonName == '') ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
+        }
+
+        $value = json_encode($arr);
+
+        return $value;
     }
 }
