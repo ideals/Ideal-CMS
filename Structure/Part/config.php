@@ -51,7 +51,7 @@ return array(
             'type' => 'Ideal_Addon',
             'medium'    => '\\Ideal\\Medium\\AddonList\\Model',
             'available' =>  array('Ideal_Page', 'Ideal_PhpFile', 'Ideal_SiteMap'),
-            'default'   => '{"1":"Ideal_Page"}',
+            'default'   => '[["1","Ideal_Page",""]]',
         ),
         'name' => array(
             'label' => 'Название',
