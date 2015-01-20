@@ -58,8 +58,7 @@ class Controller extends AbstractController
         // Формируем содержание выпадающего окна редактирования вкладок
         $editHtml = '<div id="addonsList"></div>'
             . $addonModel->getAvailableAddonsList()
-            . '<button class="btn btn-primary">Сохранить</button>'
-            . '<button class="btn btn-default" onclick="$(\'#tabsModal\').toggle()">Закрыть</button>';
+            . '<button class="btn btn-link" onclick="$(\'#tabsModal\').toggle()">Закрыть</button>';
 
         $editHtml = strtr($editHtml, array("\n" => ''));
         $editHtml = addcslashes($editHtml, "'");
