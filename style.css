@@ -68,9 +68,6 @@ div.checkbox {
     display: none;
     z-index: 10000;
 }
-#addonsList.full-form{
-    width: 100%;
-}
 #addonsList{
     width: 300px;
 }
@@ -87,4 +84,7 @@ div.checkbox {
     border: 0;
     border-left: 1px solid #CCC;
     z-index: 99999;
+}
+#add-addon {
+    width: 300px;
 }
