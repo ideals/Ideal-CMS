@@ -37,8 +37,8 @@ class Model
     public function getAvailableAddonsList()
     {
         // Скрываем выбор добавляемого аддона за кнопкой +
-        $html = '<button id="add-addon-button" class="btn btn-default">+</button>'
-            . '<div id="add-addon" class="input-group hide">'
+        $html = '<button id="add-addon-button" class="btn btn-info">Добавить аддон</button>'
+            . '<div id="add-addon" class="list-group input-group hide">'
             . '<select class="form-control" name="add-addon-select" id="add-addon-select">';
 
         // Получаем список доступных для добавления аддонов для этого элемента
@@ -167,5 +167,4 @@ class Model
         $this->groupName = $groupName;
         $this->htmlName = $this->groupName . '_' . $this->name;
     }
-
 }
