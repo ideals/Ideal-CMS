@@ -19,9 +19,10 @@ fc = function()
 
     if (!isValid) {
         alert('Поля, выделенные красным, заполнены не верно!');
+        return false;
     }
 
-    return false;
+    send(values);
 };
 
 function ucfirst(str)

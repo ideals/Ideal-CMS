@@ -264,7 +264,7 @@ class Forms
      */
     protected function renderCss()
     {
-        return file_get_contents('form.css');
+        return file_get_contents(__DIR__ .'/form.css');
     }
 
     /**
@@ -285,7 +285,7 @@ class Forms
 
         $this->js = "$(document).ready(function () {\n";
         $this->js .= implode("\n", $validJS);
-        $this->js .= file_get_contents('form.js');
+        $this->js .= file_get_contents(__DIR__ .'/form.js');
         $this->js .= "$('#{$this->formName}').submit(fc); \n"  . '})';
 
         return $this->js;
