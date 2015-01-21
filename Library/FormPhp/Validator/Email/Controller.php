@@ -1,6 +1,6 @@
 <?php
 
-namespace FormPhp\Validator\Required;
+namespace FormPhp\Validator\Email;
 
 
 use FormPhp\Validator\AbstractValidator;
@@ -20,7 +20,11 @@ class Controller extends AbstractValidator
      */
     public function checkValue($value)
     {
-        return !empty($value);
+        if ($value == '') {
+            return true;
+        }
+        $filter = filter_var($value, FILTER_VALIDATE_EMAIL);
+        return ($filter == $value);
     }
 
     /**
@@ -29,18 +33,19 @@ class Controller extends AbstractValidator
      */
     public function getCheckJs()
     {
-
         return <<<JS
-        function validateRequired(e, formId, input) {
-            if ($(e).val() == '') {
-                input.addClass('error-required error');
-                return false;
-            } else {
-                input.removeClass('error-required');
-                input.removeClass('error');
-                return true;
+            function validateEmail(e, formId, input) {
+                var pattern = new RegExp(/^[\w-\.]+@[\w-]+\.[a-z]{2,4}$/i);
+                var r = pattern.test(e);
+                if (!r) {
+                    input.addClass('error-email error');
+                    return false;
+                } else {
+                    input.removeClass('error-email');
+                    input.removeClass('error');
+                    return true;
+                }
             }
-        }
 JS;
     }
 }
