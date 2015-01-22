@@ -24,7 +24,7 @@ class Controller extends AbstractValidator
             return true;
         }
         preg_match_all('/[0-9]/i', $value, $result);
-        if (count($result) < 7) {
+        if (isset($result[0]) && (count($result[0]) < 7)) {
             return false;
         }
         return true;

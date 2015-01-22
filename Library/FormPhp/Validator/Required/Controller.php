@@ -32,7 +32,7 @@ class Controller extends AbstractValidator
 
         return <<<JS
         function validateRequired(e, formId, input) {
-            if ($(e).val() == '') {
+            if ((e) == '') {
                 input.addClass('error-required error');
                 return false;
             } else {
