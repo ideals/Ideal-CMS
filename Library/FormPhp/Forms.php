@@ -177,9 +177,11 @@ class Forms
 
         switch ($_REQUEST['mode']) {
             case 'css':
+                header('Content-type: text/css');
                 echo $this->renderCss();
                 break;
             case 'js':
+                header('Content-type: text/javascript');
                 echo $this->renderJs();
                 break;
         }
@@ -225,7 +227,7 @@ class Forms
      */
     public function setJs($js)
     {
-        $this->js = $js;
+        $this->js .= $js . "\n";
     }
 
 
@@ -246,10 +248,10 @@ class Forms
             if (!class_exists($fieldName)) {
                 throw new \Exception('Не найден класс ' . $fieldName . ' для валидатора');
             }
-            $this->validators[$name] = new $fieldName();
+            $this->validators[$validator] = new $fieldName();
             /** @var \FormPhp\Field\AbstractField $field */
             $field = $this->fields[$name];
-            $field->setValidator($this->validators[$name]);
+            $field->setValidator($this->validators[$validator]);
         }
 
     }
@@ -283,7 +285,7 @@ class Forms
             $validJS[] = $v->getCheckJs();
         }
 
-        $this->js = "$(document).ready(function () {\n";
+        $this->js = "$(document).ready(function () {\n" . $this->js;
         $this->js .= implode("\n", $validJS);
         $this->js .= file_get_contents(__DIR__ .'/form.js');
         $this->js .= "$('#{$this->formName}').submit(fc); \n"  . '})';
