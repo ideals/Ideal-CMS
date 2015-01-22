@@ -40,9 +40,10 @@ if ($file->getError() > 1) {
 ?>
 <table id="redirect" class="table table-hover table-striped">
     <tr>
-        <th class="col-xs-5">Откуда</th>
-        <th class="col-xs-5">Куда</th>
-        <th class="col-xs-2"></th>
+        <th class="">№</th>
+        <th class="col-xs-6">Откуда</th>
+        <th class="col-xs-6">Куда</th>
+        <th>&nbsp;&nbsp;</th>
     </tr>
     <?php
     echo $table;
@@ -80,10 +81,12 @@ if ($file->getError() > 1) {
         var to = $('#line' + (i - 1) + ' > .to').children().val();
         if (from !== '' && to !== '') {
             $('#redirect > tbody:last').append('<tr id="line' + i + '" class="element">'
+            + '<td></td>' // заготовка для номера редиректа
             + '<td class="from"><input type="text" name="from" class="form-control input-sm"></td>'
             + '<td class="to"><input type="text" name="to" class="form-control input-sm"></td>'
-            + '<td><div class="button-edit btn-group btn-group-sm"> '
-            + '<button type="button" style="width: 47px;" onclick="saveLine(' + i + ')" title="Сохранить" class="btn btn-success">'
+            + '<td><div class="button-edit btn-group btn-group-sm "> '
+            + '<button type="button" style="width: 47px;" onclick="saveLine(' + i + ')" title="Сохранить"'
+            + ' class="btn btn-success">'
             + '<span class="glyphicon glyphicon-ok"></span></button>'
             + '<button onclick="delLine(' + i + ')" title="Удалить" class="btn btn-danger">'
             + '<span class="glyphicon glyphicon-remove"></i></button></div>'

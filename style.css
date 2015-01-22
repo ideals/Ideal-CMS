@@ -24,6 +24,7 @@ table.table tr.not-menu td a {
 }
 tr.element td div.button-edit {
     display: none;
+    margin-left: -60px;
 }
 table.table-hover tbody tr:hover td {
     background-color: #D9EDF7;

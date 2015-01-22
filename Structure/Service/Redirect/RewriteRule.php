@@ -114,7 +114,8 @@ class RewriteRule
         }
 
         if (isset($this->redirects[$to]['to'])) {
-            $answer['text'] = "Организуется множественный редирект с {$from} на {$to}, а потом на {$this->redirects[$to]['to']}";
+            $answer['text'] = "Организуется множественный редирект с {$from} на {$to},"
+                . " а потом на {$this->redirects[$to]['to']}";
             $answer['error'] = true;
         }
 
@@ -180,9 +181,11 @@ class RewriteRule
 
         if (isset($this->redirects[$to]) && !$answer['error']) {
             if ($this->redirects[$to]['to'] == $from) {
-                $answer['text'] = "Организуется бесконечный редирект с {$from} на {$to} потом {$from}. Бесконечный цикл";
+                $answer['text'] = "Организуется бесконечный редирект с {$from} на {$to} потом {$from}."
+                    . " Бесконечный цикл";
             } else {
-                $answer['text'] = "Организуется множественный редирект с {$from} на {$to}, а потом на {$this->redirects[$to]['to']}";
+                $answer['text'] = "Организуется множественный редирект с {$from} на {$to},"
+                    . " а потом на {$this->redirects[$to]['to']}";
             }
             $answer['error'] = true;
         }
@@ -287,7 +290,8 @@ class RewriteRule
             endswitch;
             */
             $str .= <<<RULE
-            <tr id="line{$i}" class="element {$class}">
+<tr id="line{$i}" class="element {$class}">
+<td>{$i}</td>
 <td class="from" {$defaultFrom}>{$from}</td><td><div class="to" {$defaultTo}>{$v['to']}</div>{$info}</td>
 <td><div class="button-edit btn-group btn-group-xs">
     <button style="width: 47px;" onclick="editLine({$i})" title="Изменить" class="btn btn-info">
@@ -329,7 +333,9 @@ RULE;
         }
 
         // Проверим, инициализировался ли массив $redirectHtaccess
-        if (!is_array($redirectHtaccess)) return;
+        if (!is_array($redirectHtaccess)) {
+            return;
+        }
 
         // Проходимся по редиректам из .htaccess и добавляем недостающие в основной список
         foreach ($redirectHtaccess as $from => $v) {
@@ -341,7 +347,8 @@ RULE;
             if ($this->redirects[$from] != $v) {
                 // Если в htaccess не такой редирект, то добавляем информацию о нём
                 $this->redirects[$from]['htaccess'] = $v;
-                $this->msg .= '<div class="alert alert-error">Редиректы в redirect.txt и .htaccess отличаются. Необходимо срочно решить конфликты, иначе данные могут затереться.</div>';
+                $this->msg .= '<div class="alert alert-error">Редиректы в redirect.txt и .htaccess отличаются."
+                    . " Необходимо срочно решить конфликты, иначе данные могут затереться.</div>';
             }
         }
     }
@@ -386,7 +393,8 @@ RULE;
         if ($countTags > 2) {
             // Если больше двух тегов #redirect, прекращаем обработку и выходим записав ошибку
             $this->error = 2;
-            $this->msg .= "<div class='alert alert-block'>В файле {$file} больше двух тегов #redirect#, а должно быть только два</div>";
+            $this->msg .= "<div class='alert alert-block'>В файле {$file} больше двух тегов #redirect#,"
+                . " а должно быть только два</div>";
             return false;
         }
 
@@ -401,7 +409,7 @@ RULE;
             if ($val == '') {
                 continue;
             }
-            // Между "откуда" и "куда" присутствует единственный пробел, больше их быть не может, смело по нему разбиваем
+            // Между "откуда" и "куда" присутствует единственный пробел, больше их быть не может, по нему и разбиваем
             list($from, $to) = explode(' ', $val, 2);
 
             // Проверяем, нет ли каких ошибок при парсинге редиректов
