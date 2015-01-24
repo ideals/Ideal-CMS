@@ -41,6 +41,7 @@ class FrontController
 
         if ($router->is404()) {
             $httpHeaders = array('HTTP/1.0 404 Not Found');
+            $this->emailError404();
         } else {
             $httpHeaders = $controller->getHttpHeaders();
         }
@@ -76,5 +77,35 @@ class FrontController
             // Content-Type пользователем не изменён, отображаем стандартный
             header("Content-Type: text/html; charset=utf-8");
         }
+    }
+
+    /**
+     * Отправка письма о 404-ой ошибке, если url не зарегистрирован в $config->cms['known404']
+     */
+    protected function emailError404()
+    {
+        $config = Config::getInstance();
+
+        if (isset($config->cms['known404']) && !empty($config->cms['known404'])) {
+            $known404 = explode("\n", $config->cms['known404']);
+
+            $result = array_reduce(
+                $known404,
+                function (&$res, $rule) {
+                    if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
+                        return 1;
+                    }
+                    return $res;
+                },
+                $_SERVER['REQUEST_URI']
+            );
+
+            if ($result === 1) {
+                // Если в массиве известных битых ссылок наш url найден, то не регистрируем ошибку
+                return;
+            }
+        }
+        $from = empty($_SERVER['HTTP_REFERER']) ? 'Прямой переход.' : 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
+        Util::addError('Страница не найдена (404). ' . $from);
     }
 }
