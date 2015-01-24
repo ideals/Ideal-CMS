@@ -4,6 +4,12 @@ namespace Ideal\Core;
 use Ideal\Core\Admin;
 use Ideal\Core\Site;
 
+/**
+ * Front Controller объединяет всю обработку запросов, пропуская запросы через единственный объект-обработчик.
+ *
+ * После обработки запроса в роутере, фронт-контроллер запускает финальный контроллер, название которого,
+ * вместе с моделью данных, определяется в роутере.
+ */
 class FrontController
 {
     /**
@@ -14,7 +20,7 @@ class FrontController
      *
      * @param string $mode Режим работы admin или site
      */
-    function run($mode)
+    public function run($mode)
     {
         // Запускаем роутер, для получения навигационной цепочки
         if ($mode == 'admin') {
@@ -49,7 +55,7 @@ class FrontController
      *
      * @param array $httpHeaders
      */
-    function sendHttpHeaders($httpHeaders)
+    protected function sendHttpHeaders($httpHeaders)
     {
         $isContentType = false;
         foreach ($httpHeaders as $k => $v) {
