@@ -254,7 +254,7 @@ class Util
         if ($config->cms['errorLog'] == 'email' && count(self::$errorArray) > 0) {
             $text = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"
-                . implode("\n", self::$errorArray);
+                . implode("\n\n", self::$errorArray);
             $mail = new \Mail\Sender();
             $mail->setSubj("Сообщение об ошибке на сайте " . $config->domain);
             $mail->setPlainBody($text);
