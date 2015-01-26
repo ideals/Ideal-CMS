@@ -279,7 +279,7 @@ class Forms
      */
     protected function renderJs()
     {
-        $validJS = [];
+        $validJS = array();
         foreach ($this->validators as $v) {
             /** @var $v \FormPhp\Validator\AbstractValidator */
             $validJS[] = $v->getCheckJs();
