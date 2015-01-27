@@ -199,8 +199,8 @@
 
 
 
+jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
 
-$('input, textarea').placeholder({customClass: 'form-placeholder'});
 
 
 fc = function()
@@ -212,11 +212,14 @@ fc = function()
     var check = $.parseJSON(values.filter('[name = "_validators"]').val());
 
     var isValid = true;
-    for (var k in check) {
-        var input = values.filter('[name = "' + k + '"]');
-        var fn = 'validate' + ucfirst(check[k][0]);
-        if (eval(fn)(input.val(), $form.attr('id'), input) == false) {
-            isValid = false;
+    for (var field in check) {
+        var input = values.filter('[name = "' + field + '"]');
+        for (var k in check[field]) {
+            var fn = 'validate' + ucfirst(check[field][k]);
+            var value = (typeof input.val() == 'undefined') ? '' : input.val();
+            if (eval(fn)(value, $form.attr('id'), input) == false) {
+                isValid = false;
+            }
         }
     }
 
