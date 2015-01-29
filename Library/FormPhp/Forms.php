@@ -94,9 +94,13 @@ class Forms
         foreach ($this->fields as $name => $field) {
             /** @var $field \FormPhp\Field\AbstractField */
             $arr[$name] = $field->getValidators();
+            if (count($arr[$name]) == 0) {
+                unset($arr[$name]);
+            }
         }
         $xhtml = ($this->xhtml) ? '/' : '';
-        return '<input type="hidden" name="_validators" value="' . htmlspecialchars(json_encode($arr)) . '" ' . $xhtml
+        return '<input type="hidden" name="_validators" value="'
+            . htmlspecialchars(json_encode($arr, JSON_FORCE_OBJECT)) . '" ' . $xhtml
             . '>' . "\n";
     }
 
@@ -285,10 +289,10 @@ class Forms
             $validJS[] = $v->getCheckJs();
         }
 
-        $this->js = "$(document).ready(function () {\n" . $this->js;
+        $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;" . $this->js;
         $this->js .= implode("\n", $validJS);
         $this->js .= file_get_contents(__DIR__ .'/form.js');
-        $this->js .= "$('#{$this->formName}').submit(fc); \n"  . '})';
+        $this->js .= "jQuery('#{$this->formName}').submit(fc); \n"  . '})';
 
         return $this->js;
     }
