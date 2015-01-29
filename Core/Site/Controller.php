@@ -193,7 +193,7 @@ class Controller
         $this->view->year = date('Y');
 
         // Определение места выполнения скрипта (на сайте в production, или локально в development)
-        $this->view->isProduction = $config->domain == $_SERVER['HTTP_HOST'];
+        $this->view->isProduction = $config->domain == str_replace('www.', '', $_SERVER['HTTP_HOST']);
 
         $helper = new Helper();
         $helpers = $helper->getVariables($this->model);
