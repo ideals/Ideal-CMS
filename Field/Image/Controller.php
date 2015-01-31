@@ -115,4 +115,25 @@ class Controller extends AbstractController
         }
         return '';
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getValueForList($values, $fieldName)
+    {
+        $result = '';
+        if ($values[$fieldName] != '') {
+            $result = <<<HTML
+<span
+    class="has-popover"
+    data-placement="top"
+    data-content="<img src='{$values[$fieldName]}' width='200'>"
+    data-html="true"
+    data-trigger="hover">
+        <span class="glyphicon glyphicon-camera text-muted"></span>
+</span>
+HTML;
+        }
+        return $result;
+    }
 }
