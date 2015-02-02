@@ -89,15 +89,21 @@ class FrontController
         if (isset($config->cms['known404']) && !empty($config->cms['known404'])) {
             $known404 = explode("\n", $config->cms['known404']);
 
+            $url = ltrim($_SERVER['REQUEST_URI'], '/'); // убираем ведущий слэш, для соответствия .htaccess
+
             $result = array_reduce(
                 $known404,
                 function (&$res, $rule) {
+                    if (strpos($rule, '/') !== 0) {
+                        // Если правило не оформлено, как regexp, то оформляем его
+                        $rule = '/' . $rule . '/';
+                    }
                     if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
                         return 1;
                     }
                     return $res;
                 },
-                $_SERVER['REQUEST_URI']
+                $url
             );
 
             if ($result === 1) {
