@@ -226,10 +226,11 @@ DONE;
         } else {
             list ($name, $value) = explode(' => "', $other);
         }
+        $value = str_replace('\n', "\n", $value); // заменяем переводы строки на правильные символы
         $fieldName = trim($name, ' \''); // убираем стартовые пробелы и кавычку у названия поля
         $param[$fieldName] = array(
             'label' => $label,
-            'value' => ($type == 'Ideal_Area') ? str_replace('\n', "\n", $value) : $value,
+            'value' => $value,
             'type' => $type
         );
         if ($type == 'Ideal_Select') {
