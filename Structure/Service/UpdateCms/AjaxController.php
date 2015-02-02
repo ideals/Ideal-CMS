@@ -113,7 +113,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     public function ajaxGetUpdateScriptAction()
     {
         // Запускаем выполнение скриптов и запросов
-        $_SESSION['scripts'] = $this->updateModel->getUpdateScripts();
+        $_SESSION['update']['scripts'] = $this->updateModel->getUpdateScripts();
         exit;
     }
 
@@ -122,8 +122,8 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function ajaxSwapAction()
     {
-        $_SESSION['scripts'] = $this->updateModel->runOldScript($_SESSION['scripts']);
-        $_SESSION['oldFolder'] = $this->updateModel->swapUpdate();
+        $_SESSION['update']['scripts'] = $this->updateModel->runOldScript($_SESSION['update']['scripts']);
+        $_SESSION['update']['oldFolder'] = $this->updateModel->swapUpdate();
         exit;
     }
 
@@ -132,11 +132,11 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function ajaxRunScriptAction()
     {
-        if (!isset($_SESSION['scripts'])) {
+        if (!isset($_SESSION['update']['scripts'])) {
             exit;
         }
         // Получаем скрипт, выполняемый в текущем ajax запросе
-        $script = array_shift($_SESSION['scripts']);
+        $script = array_shift($_SESSION['update']['scripts']);
         // Если все скрипты были выполнены ранее, возвращаем false
         if (!$script) {
             exit;
