@@ -53,10 +53,6 @@ class ConfigPhp
                 // Получаем данные от пользователя
                 $value = $fieldModel->pickupNewValue();
 
-                // Экранируем переводы строки для сохранения в файле
-                $value = str_replace("\r", '', $value);
-                $value = str_replace("\n", '\n', $value);
-
                 $this->params[$tabId]['arr'][$field]['value'] = $value;
             }
         }
@@ -82,6 +78,10 @@ class ConfigPhp
             foreach ($tab['arr'] as $field => $param) {
                 $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;
                 $values = ($param['type'] == 'Ideal_Select') ? ' | ' . json_encode($param['values'], $options) : '';
+
+                // Экранируем переводы строки для сохранения в файле
+                $param['value'] = str_replace("\r", '', $param['value']);
+                $param['value'] = str_replace("\n", '\n', $param['value']);
 
                 $file .= str_repeat(' ', $pad) . "'" . $field . "' => " . '"' . $param['value'] . '", '
                     . "// " . $param['label'] . ' | ' . $param['type'] . $values . "\n";
