@@ -317,7 +317,7 @@ class Crawler
         $urls_count = count($urls[1]);
 
         if (preg_match("/<[Bb][Aa][Ss][Ee][^>]*[Hh][Rr][Ee][Ff]=['\"]?([^\"'>]+)[^>]*>/", $res, $matches)) {
-            $this->base = $matches[1];
+            $this->base = $this->_absolute($matches[1], $url);
         }
 
         $ts_begin = $this->microtime_float();
@@ -763,7 +763,7 @@ class Crawler
 
     function _absolute($relative, $absolute)
     {
-        // Link ist schon absolut
+        // Проверяем, не является ли ссылка уже абсолютной
         if (preg_match(',^(https?://|ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:|tel:),i', $relative)) {
             // hostname is not the same (with/without www) than the one used in the link
             if (substr($relative, 0, 4) == 'http') {
