@@ -21,15 +21,26 @@ if ($form->isPostRequest()) {
         echo 'Форма заполнена неправильно<br />';
     }
 }
+// todo перенести прикрепление формы к плагину и здание опций в класс Form
+$script = <<<JS
+$('#myForm').form({ajaxUrl : "/example.php"});
+JS;
+$form->setJs($script);
 
+$mailTitle = 'Заявка';
+$ymOnClick = 'SEND-FORM';
+$ymOnSend = 'SENT-FORM';
+$yaCounter = 'yaCounter17315254';
 $text = <<<TEXT
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
 <script type="text/javascript" src="jquery.placeholder.min.js"></script>
 <script type="text/javascript" src="example.php?mode=js"></script>
 <link media="all" rel="stylesheet" type="text/css" href="example.php?mode=css"/>
-<form method="post" id="myForm">
+<form method="post" id="myForm" data-click="{$ymOnClick}" data-send="{$ymOnSend}">
     {$form->getTokenInput()}
     {$form->getValidatorsInput()}
+    <input type="hidden" value="{$mailTitle}" name="mailTitle">
+    <input type="hidden" value="{$yaCounter}" name="_yaCounter">
     <label for="name">
         Просто текст
         <input type="text" name="name" placeholder="123"/>
