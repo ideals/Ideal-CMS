@@ -289,10 +289,10 @@ class Forms
             $validJS[] = $v->getCheckJs();
         }
 
-        $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;" . $this->js;
-        $this->js .= implode("\n", $validJS);
-        $this->js .= file_get_contents(__DIR__ .'/form.js');
-        $this->js .= "jQuery('#{$this->formName}').submit(fc); \n"  . '})';
+        $js = "jQuery(document).ready(function () {\n var $ = jQuery;";
+        $js .= implode("\n", $validJS);
+        $js .= file_get_contents(__DIR__ .'/form.js');
+        $this->js = $js . $this->js . "\n"  . '})';
 
         return $this->js;
     }

@@ -45,11 +45,10 @@ class Controller extends AbstractValidator
                     r = 0;
                 }
                 if (r < 7) {
-                    input.addClass('error-phone error');
+                    input.addClass('error-phone');
                     return false;
                 } else {
                     input.removeClass('error-phone');
-                    input.removeClass('error');
                     return true;
                 }
             }
