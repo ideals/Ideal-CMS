@@ -255,8 +255,12 @@ class Util
             $text = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"
                 . implode("\n\n", self::$errorArray);
+            $subject = "Сообщение об ошибке на сайте " . $config->domain;
+            if ((mb_stripos($text, 'Страница не найдена (404)') !== false) && (count(self::$errorArray) == 1)) {
+                $subject = "Страница не найдена (404) на сайте " . $config->domain;
+            }
             $mail = new \Mail\Sender();
-            $mail->setSubj("Сообщение об ошибке на сайте " . $config->domain);
+            $mail->setSubj($subject);
             $mail->setPlainBody($text);
             $mail->sent($config->robotEmail, $config->cms['adminEmail']);
         }
