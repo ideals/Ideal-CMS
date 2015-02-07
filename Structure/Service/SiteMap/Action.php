@@ -107,7 +107,6 @@ if (isset($_POST['edit'])) {
     </div>
 </div>
 
-
 <script type="application/javascript">
     function startSiteMap() {
         var param = '';
@@ -115,7 +114,23 @@ if (isset($_POST['edit'])) {
             param = '?w=1';
         }
         $('#loading').html('Идёт составление карты сайта. Ждите.');
-        $('#iframe').html('<iframe src="Ideal/Library/sitemap/index.php' + param + '" onLoad="finishLoad()" />');
+        $('#iframe').html('');
+        getSitemapAjaxify(param);
+    }
+
+    function getSitemapAjaxify(param) {
+        $.ajax({
+            url: 'Ideal/Library/sitemap/index.php' + param,
+            success: function (data) {
+                $('#iframe').append(data);
+                if (/Выход по таймауту/gim.test(data)) {
+                    getSitemapAjaxify(param)
+                } else {
+                    finishLoad();
+                }
+            },
+            type: 'get'
+        });
     }
 
     function finishLoad() {
