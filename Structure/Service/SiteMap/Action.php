@@ -124,10 +124,18 @@ if (isset($_POST['edit'])) {
             success: function (data) {
                 $('#iframe').append(data);
                 if (/Выход по таймауту/gim.test(data)) {
-                    getSitemapAjaxify(param)
+                    getSitemapAjaxify(param);
                 } else {
                     finishLoad();
                 }
+            },
+            error: function(xhr){
+                $('#iframe').append('<pre> Не удалось завершить сканирование. Статус: ' + xhr.statusCode().status + '\n Попытка продолжить сканирование через 10 секунд.</pre>');
+                setTimeout(
+                    function(){
+                        getSitemapAjaxify(param);
+                    }, 10000);
+
             },
             type: 'get'
         });
