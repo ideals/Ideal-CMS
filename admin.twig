@@ -196,12 +196,12 @@
               <!-- Modal Login-->
         <div class="modal fade" id="myModalModal" role="dialog"
              aria-labelledby="myModalModalLabel" aria-hidden="true">
-            <div class="modal-dialog" style="width: 100%;">
+            <div class="modal-dialog" style="width: 35%;">
                 <div class="modal-content">
                     <div class="modal-body" style="overflow: auto;">
                         <div id="modalModalContent">
                             <form method="post" action=""
-                                  class="well col-md-3 col-md-offset-4"
+                                  class="well col-md-8 col-md-offset-2"
                                   role="form" id="ajaxLogin">
                                 <div class="form-group">
                                     <label for="user">Логин:</label>
@@ -210,19 +210,17 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="pass">Пароль:</label>
-                                    <input type="password" class="form-control"
+                                    <input type="password"
+                                           class="form-control"
                                            id="pass" name="pass"/>
                                 </div>
-                                <button type="submit" class="btn btn-primary"
+                                <button type="submit"
+                                        class="btn btn-primary"
                                         onclick="onSubmitLogin(); return false;">
                                     Вход
                                 </button>
                             </form>
                         </div>
-                    </div>
-                    <div class="modal-footer" style="margin-top: 0;">
-                        <span class="hide alert col-md-3 col-md-offset-4"
-                              id="loginMessage"></span>
                     </div>
                 </div>
             </div>
@@ -364,12 +362,12 @@
                     {
                         // При успешной авторизации инициализируем сохранение данных с формы редактирования
                         if (data['login'] == 'true') {
-                            onSubmit(true);
+                            $('#myModalModal').modal('hide');
+                            $('#myModal').css('z-index', '1050');
+                            onSubmit(window.idObject['closeWindow']);
                         }
                         else {
-                            $('#loginMessage').addClass('alert-warning');
-                            $('#loginMessage').removeClass('hide');
-                            $('#loginMessage').html(data['errorResponse']);
+                            $('#ajaxLogin').before('<div class="alert alert-danger col-md-8 col-md-offset-2" style="padding-right: 24px;">' + data['errorResponse'] + '</div>');
                         }
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown)
