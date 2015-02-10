@@ -193,35 +193,26 @@
             <!-- /.modal-dialog -->
         </div><!-- /.modal -->
 
-              <!-- Modal Login-->
+        <!-- Modal Login-->
         <div class="modal fade" id="myModalModal" role="dialog"
              aria-labelledby="myModalModalLabel" aria-hidden="true">
             <div class="modal-dialog" style="width: 35%;">
-                <div class="modal-content">
-                    <div class="modal-body" style="overflow: auto;">
-                        <div id="modalModalContent">
-                            <form method="post" action=""
-                                  class="well col-md-8 col-md-offset-2"
-                                  role="form" id="ajaxLogin">
-                                <div class="form-group">
-                                    <label for="user">Логин:</label>
-                                    <input type="text" class="form-control"
-                                           id="user" name="user"/>
-                                </div>
-                                <div class="form-group">
-                                    <label for="pass">Пароль:</label>
-                                    <input type="password"
-                                           class="form-control"
-                                           id="pass" name="pass"/>
-                                </div>
-                                <button type="submit"
-                                        class="btn btn-primary"
-                                        onclick="onSubmitLogin(); return false;">
-                                    Вход
-                                </button>
-                            </form>
+                <div id="modalModalContent">
+                    <form method="post" action="" class="well col-md-8 col-md-offset-2"
+                          role="form" id="ajaxLogin">
+                        <div class="form-group">
+                            <label for="user">Логин:</label>
+                            <input type="text" class="form-control" id="user" name="user"/>
                         </div>
-                    </div>
+                        <div class="form-group">
+                            <label for="pass">Пароль:</label>
+                            <input type="password" class="form-control" id="pass" name="pass"/>
+                        </div>
+                        <button type="submit" class="btn btn-primary"
+                                onclick="onSubmitLogin(); return false;">
+                            Вход
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
