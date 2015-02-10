@@ -100,7 +100,7 @@ function setTranslit(e) {
 function loadUrlAuto(e) {
     var input = $(e).parent().parent().parent().find('input');
     var butt = $(e).parent().parent().find('button');
-    var name = $("#general_name").val();
+    var name = $("#general_" + input.attr('data-field')).val();
     name = translit(name);
     var url = $("#general_url").val();
     if ((name !== url) || (butt.text() === AUTO_URL_ON)) return;
