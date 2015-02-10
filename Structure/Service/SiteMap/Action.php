@@ -102,7 +102,6 @@ if (isset($_POST['edit'])) {
                     echo DOCUMENT_ROOT . '/' . $config->cmsFolder; ?>/Ideal/Library/sitemap/index.php</code></pre>
             <p>Эта инструкция означает запуск скрипта каждые три минуты с двух до четырёх ночи.
                 Если этого времени не хватает для составления карты сайта, то можно увеличить диапазон часов.</p>
-
         </div>
     </div>
 </div>
@@ -129,13 +128,14 @@ if (isset($_POST['edit'])) {
                     finishLoad();
                 }
             },
-            error: function(xhr){
-                $('#iframe').append('<pre> Не удалось завершить сканирование. Статус: ' + xhr.statusCode().status + '\n Попытка продолжить сканирование через 10 секунд.</pre>');
+            error: function (xhr) {
+                $('#iframe').append('<pre> Не удалось завершить сканирование. Статус: '
+                + xhr.statusCode().status +
+                '\n Попытка продолжить сканирование через 10 секунд.</pre>');
                 setTimeout(
-                    function(){
+                    function () {
                         getSitemapAjaxify(param);
                     }, 10000);
-
             },
             type: 'get'
         });
