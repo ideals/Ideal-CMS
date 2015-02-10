@@ -77,12 +77,12 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
                         'login' => 'false'
                     ));
                 }
+                exit;
             } else {
                 if ($user->login($_POST['user'], $_POST['pass'])) {
                     header('Location: ' . $_SERVER['REQUEST_URI']);
                 }
             }
-            exit;
         }
 
         // Если запрашивается json при не авторизованном пользователе
