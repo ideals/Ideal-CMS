@@ -193,6 +193,41 @@
             <!-- /.modal-dialog -->
         </div><!-- /.modal -->
 
+              <!-- Modal Login-->
+        <div class="modal fade" id="myModalModal" role="dialog"
+             aria-labelledby="myModalModalLabel" aria-hidden="true">
+            <div class="modal-dialog" style="width: 100%;">
+                <div class="modal-content">
+                    <div class="modal-body" style="overflow: auto;">
+                        <div id="modalModalContent">
+                            <form method="post" action=""
+                                  class="well col-md-3 col-md-offset-4"
+                                  role="form" id="ajaxLogin">
+                                <div class="form-group">
+                                    <label for="user">Логин:</label>
+                                    <input type="text" class="form-control"
+                                           id="user" name="user"/>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pass">Пароль:</label>
+                                    <input type="password" class="form-control"
+                                           id="pass" name="pass"/>
+                                </div>
+                                <button type="submit" class="btn btn-primary"
+                                        onclick="onSubmitLogin(); return false;">
+                                    Вход
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="margin-top: 0;">
+                        <span class="hide alert col-md-3 col-md-offset-4"
+                              id="loginMessage"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {% if pager.pages|length > 1 %}
         <div style="text-align:center;">
             <ul class="pagination pagination-lg">
@@ -225,25 +260,38 @@
                 // Скрываем статусное сообщение (может остаться от предыдущего окна)
                 $('#message').addClass('hide');
 
-                // Переданные параметры нужно записать в глобальную переменную idObject
-                window.idObject['par'] = par;
-                window.idObject['id'] = id;
-                window.idObject['action'] = action;
+                // Формируем данные для запроса в зависимости от условия авторизованности пользователя
+                if (action == 'login') {
+                    dataToAjax = {action: action}
+                }
+                else {
+                    // Переданные параметры нужно записать в глобальную переменную idObject
+                    window.idObject['par'] = par;
+                    window.idObject['id'] = id;
+                    window.idObject['action'] = action;
 
-                window.idObject['changeTemplate'] = 0;
+                    window.idObject['changeTemplate'] = 0;
+                    dataToAjax = {action: action, par: par, id: id}
 
-                // В случае удачного получения данных от сервереа - отображаем окно редактирования
-            $.get(
-                    "index.php",
+                }
+
+                $.ajax({
+                    url: 'index.php',
+                    data: dataToAjax,
+                    success: function (data)
                     {
-                        action: action,
-                        par: par,
-                        id: id
+                        if (action == 'login') { // если пользователь не авторизован показываем окно авторизации
+                            onShowModalLogin()
+                        }
+                        else { // В случае удачного получения данных от сервереа - отображаем окно редактирования
+                            onShowModalSuccess(data)
+                        }
                     },
-                    onShowModalSuccess,
-                    "json"
-            );
-        }
+                    type: 'GET',
+                    dataType: "json"
+                });
+
+            }
 
             // Отображает модальное окно редактирования для указанного объекта
             function onShowModalSuccess(data)
@@ -280,6 +328,58 @@
                 })
             }
 
+            // Отображает модальное окно авторизации
+            function onShowModalLogin()
+            {
+                $('#modalModalContent').trigger('windowOpen');
+                $('#myModalModal')
+                    .modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    })
+                    .on('shown.bs.modal', function (e)
+                    {
+                        // Навешиваем событие на показ окна — выставляем высоту прокручиваемой части — контента редактирования
+                        mh = $(window).height() * 0.95 - 40;
+                        $('#myModalModal .modal-body').css('max-height', mh);
+                    })
+                    .modal('show');
+                // Если меняется размера окна браузера то модальное окно тоже меняет свой размер
+                $(window).on('resize', function ()
+                {
+                    mh = $(window).height() * 0.95 - 40;
+                    $('#myModalModal .modal-body').css('max-height', mh);
+                })
+                $('#myModal').css('z-index', '1040');
+            }
+
+
+            // Обрабатываем нажатие кнопки "вход" на форме авторизации
+            function onSubmitLogin()
+            {
+                $.ajax({
+                    url: 'index.php',
+                    data: $('#ajaxLogin').serialize(),
+                    success: function (data)
+                    {
+                        // При успешной авторизации инициализируем сохранение данных с формы редактирования
+                        if (data['login'] == 'true') {
+                            onSubmit(true);
+                        }
+                        else {
+                            $('#loginMessage').addClass('alert-warning');
+                            $('#loginMessage').removeClass('hide');
+                            $('#loginMessage').html(data['errorResponse']);
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown)
+                    {
+                        alert(errorThrown + "\n\nResponse:\n" + XMLHttpRequest.responseText);
+                    },
+                    type: 'POST',
+                    dataType: "json"
+                });
+            }
 
             // Обрабатывает нажатие на кнопки Сохранить/Применить
             function onSubmit(closeWindow)
@@ -404,6 +504,12 @@
             // В случае ошибки в форме - выводит сообщения об ошибке для элементов
             function showErrorFields(data)
             {
+                if (data['errorResponse'] == 'not Login') {
+                    // Если пользователь не авторизован инициируем показ формы авторизации
+                    showModal('', '', 'login');
+                    return;
+                }
+
                 errorText = 'Внимание!\nПри сохранении произошла ошибка. Элемент не сохранён.\nИсправьте ошибку и повторите сохранение';
 
                 if ((data['errorText'] != null) && (data['errorText'] != '')) {
