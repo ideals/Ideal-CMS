@@ -46,6 +46,12 @@ if (is_dir($backupPart)) {
         echo '<a href="" onClick="return downloadDump(\'' . addslashes($file) . '\')"> ';
         echo "$day.$month.$year - $hour:$minute:$second" . '</a></td>';
         echo '<td>';
+        echo '<button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' . addslashes(
+                $file
+            ) . '\'); false;">';
+        echo ' <span class="glyphicon glyphicon-upload"></span> ';
+        echo '</button> ';
+
         echo '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' . addslashes(
                 $file
             ) . '\'); false;">';
@@ -114,6 +120,37 @@ function getDir($tmpFolder, $backupFolder)
 ?>
 
 <script type="text/javascript">
+
+
+    // Импорт дампа БД
+    function importDump(nameFile) {
+        if (confirm('Импортировать дамп БД:\n\n' + nameFile.split(/[\\/]/).pop() + '\n\n?')) {
+          $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт импорт дампа БД');
+            var path = window.location.href;
+            $.ajax({
+                url: path + "&action=ajaxImport",
+                type: 'POST',
+                data: {
+                    name: nameFile
+                },
+                success: function(data){
+                    //Выводим сообщение
+                    var message = data;
+                    if (message == true) {
+                        $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Дамп БД успешно импортирован');
+                    } else {
+                        $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при импорте дампа БД');
+                    }
+                    $('#textDumpStatus').prepend(data);
+                },
+                error: function() {
+                    $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Не удалось импортировать файл');
+                }
+            })
+        } else {
+            // Do nothing!
+        }
+    }
 
     // Удаление файла
     function delDump(nameFile) {
