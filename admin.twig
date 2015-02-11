@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns="http://www.w3.org/1999/html">
 <head>
-    <meta name="robots" content="noindex,nofollow" />
+    <meta name="robots" content="noindex,nofollow">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>{{ title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,11 +14,15 @@
 
 <body>
 
-<script type="text/javascript" src="Ideal/Library/jquery/jquery.min.js"></script>
-<script type="text/javascript" src="Ideal/Library/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript"
+        src="Ideal/Library/jquery/jquery.min.js"></script>
+<script type="text/javascript"
+        src="Ideal/Library/bootstrap/js/bootstrap.min.js"></script>
 
-<script type="text/javascript" src="Ideal/Library/ckeditor/ckeditor.js"></script>
-<script type="text/javascript" src="Ideal/Library/ckfinder/ckfinder.js"></script>
+<script type="text/javascript"
+        src="Ideal/Library/ckeditor/ckeditor.js"></script>
+<script type="text/javascript"
+        src="Ideal/Library/ckfinder/ckfinder.js"></script>
 
 {% block jsAdmin %}
 {% endblock %}
@@ -27,13 +31,15 @@
 
     <div class="navbar navbar-default" role="navigation">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-main-navbar-collapse-1">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-main-navbar-collapse-1">
                 <span class="sr-only">Меню</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="{{ cmsFolder }}/index.php">{{ domain }}</a>
+            <a class="navbar-brand"
+               href="{{ cmsFolder }}/index.php">{{ domain }}</a>
         </div>
         <div class="navbar-collapse collapse" id="bs-main-navbar-collapse-1">
             {% if user.ID %}
@@ -47,9 +53,15 @@
 
                 <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="glyphicon glyphicon-user"></i> <strong>{{ user.email }}</strong><b class="caret"></b></a>
+                        <a href="#" class="dropdown-toggle"
+                           data-toggle="dropdown"><i
+                                class="glyphicon glyphicon-user"></i>
+                            <strong>{{ user.email }}</strong><b
+                                class="caret"></b></a>
                         <ul class="dropdown-menu">
-                            <li><a onClick="showModal('{{ user.par }}', {{ user.ID }}, 'showEdit'); return false;" href="#">Профиль</a></li>
+                            <li>
+                                <a onClick="showModal('{{ user.par }}', {{ user.ID }}, 'showEdit'); return false;"
+                                   href="#">Профиль</a></li>
                             <li><a href="index.php?action=logout">Выход</a></li>
                         </ul>
                     </li>
@@ -59,24 +71,27 @@
     </div>
 
     {% if breadCrumbs != '' %}
-    <ul class="breadcrumb">
-        {% for item in breadCrumbs %}
-        <li>
-            {% if loop.last %}
-                {{ item.name }}
-            {% else %}
-                <a href="index.php?par={{ item.link }}">{{ item.name }}</a>
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
+        <ul class="breadcrumb">
+            {% for item in breadCrumbs %}
+                <li>
+                    {% if loop.last %}
+                        {{ item.name }}
+                    {% else %}
+                        <a href="index.php?par={{ item.link }}">{{ item.name }}</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
     {% endif %}
 
     {% if toolbar != '' %}
-        <a href="" class="pull-right" style="margin: -53px 28px 0 0; padding: 5px;" onClick="$('#toolbar-form').toggleClass('hide'); return false;">
+        <a href="" class="pull-right"
+           style="margin: -53px 28px 0 0; padding: 5px;"
+           onClick="$('#toolbar-form').toggleClass('hide'); return false;">
             <i class="glyphicon glyphicon-cog"></i>
         </a>
-        <form class="form-inline well {% if hideToolbarForm %}hide{% endif %}" action="" method="get" id="toolbar-form">
+        <form class="form-inline well {% if hideToolbarForm %}hide{% endif %}"
+              action="" method="get" id="toolbar-form">
             <input type="hidden" name="par" value="{{ par }}">
             {{ toolbar|raw }}
             <button type="submit" class="btn btn-default">Фильтр</button>
@@ -85,372 +100,509 @@
 
     <h1>{{ header }}</h1>
 
-{% block content %}
+    {% block content %}
 
-    <table class="table table-striped table-hover">
-        <thead>
-        <tr>
-            <th width="27">
-                <input type="checkbox" name="toggleAll" title="Выделить все" onclick="$('input.chk:checkbox').each(function(){this.checked = !this.checked;});">
-            </th>
-            {% for header in headers %}
-                <th>{{ header }}</th>
-            {% endfor %}
-            <th style="width: 93px; text-align: right;">
-                <a onClick="showModal('{{ par }}', 0, 'showCreate'); return false;" href="#myModal" class="btn btn-default btn-xs">
-                    <i class="glyphicon glyphicon-plus"></i>&nbsp;Создать
-                </a>
-            </th>
-        </tr>
-        </thead>
-
-        <tbody>
-        {% for item in rows %}
-            <tr class="element {% if item.is_active == 0 %}inactive{% endif %} {% if item.is_not_menu == 1 %}not-menu{% endif %}" id="row{{ item.ID }}">
-                <td>
-                    <input type="checkbox" name="chk{{ item.ID }}" class="chk">
-                    <input type="hidden" name="list_del[]" value="{{ item.ID }}">
-                </td>
-                {{ item.row | raw }}
-                <td style="vertical-align: middle;">
-                <div class="btn-group btn-group-xs button-edit" style="position: absolute; margin-top: -11px;">
-                    <button class="btn btn-info" title="Изменить" onClick="showModal('{{ par }}', {{ item.ID }}, 'showEdit');" style="width: 47px;">
-                        <span class="glyphicon glyphicon-pencil"></span>
-                    </button>
-                    <button class="btn btn-danger" title="Удалить" onclick="showDeleteConfirm('{{ par }}', {{ item.ID }});">
-                        <span class="glyphicon glyphicon-remove"></span>
-                    </button>
-                </div>
-                </td>
+        <table class="table table-striped table-hover">
+            <thead>
+            <tr>
+                <th width="27">
+                    <input type="checkbox" name="toggleAll" title="Выделить все"
+                           onclick="$('input.chk:checkbox').each(function(){this.checked = !this.checked;});">
+                </th>
+                {% for header in headers %}
+                    <th>{{ header }}</th>
+                {% endfor %}
+                <th style="width: 93px; text-align: right;">
+                    <a onClick="showModal('{{ par }}', 0, 'showCreate'); return false;"
+                       href="#myModal" class="btn btn-default btn-xs">
+                        <i class="glyphicon glyphicon-plus"></i>&nbsp;Создать
+                    </a>
+                </th>
             </tr>
-        {% endfor %}
-        </tbody>
+            </thead>
 
-    </table>
+            <tbody>
+            {% for item in rows %}
+                <tr class="element {% if item.is_active == 0 %}inactive{% endif %} {% if item.is_not_menu == 1 %}not-menu{% endif %}"
+                    id="row{{ item.ID }}">
+                    <td>
+                        <input type="checkbox" name="chk{{ item.ID }}"
+                               class="chk">
+                        <input type="hidden" name="list_del[]"
+                               value="{{ item.ID }}">
+                    </td>
+                    {{ item.row | raw }}
+                    <td style="vertical-align: middle;">
+                        <div class="btn-group btn-group-xs button-edit"
+                             style="position: absolute; margin-top: -11px;">
+                            <button class="btn btn-info" title="Изменить"
+                                    onClick="showModal('{{ par }}', {{ item.ID }}, 'showEdit');"
+                                    style="width: 47px;">
+                                <span class="glyphicon glyphicon-pencil"></span>
+                            </button>
+                            <button class="btn btn-danger" title="Удалить"
+                                    onclick="showDeleteConfirm('{{ par }}', {{ item.ID }});">
+                                <span class="glyphicon glyphicon-remove"></span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
 
-    <!-- Modal -->
-    <div class="modal fade" id="myModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog" style="width: 80%;">
-            <div class="modal-content">
-                <div class="modal-header" id="myModal-header" style="padding: 15px 0 0; border-bottom: none;">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" style="padding-right:13px;">&times;</button>
-                    <h4 class="modal-title" style="float:left; padding: 6px 25px 0 25px;" id="myModalLabel">Редактирование</h4>
-                    <div id="modalTabs"></div>
-                </div>
-                <div class="modal-body" style="overflow: auto;">
-                    <form class="form-horizontal" id="editForm">
-                        <div id="modalContent"></div>
-                    </form>
-                </div>
-                <div class="modal-footer" style="margin-top: 0;">
-                    <span class="hide alert" style="margin-right: 10px; padding-top: 4px; padding-bottom: 4px;" id="message"></span>
+        </table>
 
-                    <div id="sendButtons">
-                        <a href="" onclick="onSubmit(true); return false;" class="btn btn-primary">Сохранить</a>
-                        <a href="" onclick="onSubmit(false); return false;" class="btn btn-info">Применить</a>
-                        <a href="" class="btn btn-default" data-dismiss="modal">Отменить</a>
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" role="dialog"
+             aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog" style="width: 80%;">
+                <div class="modal-content">
+                    <div class="modal-header" id="myModal-header"
+                         style="padding: 15px 0 0; border-bottom: none;">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true"
+                                style="padding-right:13px;">&times;</button>
+                        <h4 class="modal-title"
+                            style="float:left; padding: 6px 25px 0 25px;"
+                            id="myModalLabel">Редактирование</h4>
+
+                        <div id="modalTabs"></div>
+                    </div>
+                    <div class="modal-body" style="overflow: auto;">
+                        <form class="form-horizontal" id="editForm">
+                            <div id="modalContent"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer" style="margin-top: 0;">
+                        <span class="hide alert"
+                              style="margin-right: 10px; padding-top: 4px; padding-bottom: 4px;"
+                              id="message"></span>
+
+                        <div id="sendButtons">
+                            <a href="" onclick="onSubmit(true); return false;"
+                               class="btn btn-primary">Сохранить</a>
+                            <a href="" onclick="onSubmit(false); return false;"
+                               class="btn btn-info">Применить</a>
+                            <a href="" class="btn btn-default"
+                               data-dismiss="modal">Отменить</a>
+                        </div>
                     </div>
                 </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div><!-- /.modal -->
 
-    {%if pager.pages|length > 1 %}
-    <div style="text-align:center;">
-        <ul class="pagination pagination-lg">
-        {% if pager.pagePrev != '' %}
-            <li><a href="{{ pagePrev }}">← назад</a></li>
+        <!-- Modal Login-->
+        <div class="modal fade" id="myModalModal" role="dialog"
+             aria-labelledby="myModalModalLabel" aria-hidden="true">
+            <div class="modal-dialog" style="width: 35%;">
+                <div id="modalModalContent">
+                    <div class="alert alert-danger col-md-8 col-md-offset-2 hide"
+                         style="padding-right: 24px;"></div>
+                    <form method="post" action="" class="well col-md-8 col-md-offset-2"
+                          role="form" id="ajaxLogin">
+                        <div class="form-group">
+                            <label for="user">Логин:</label>
+                            <input type="text" class="form-control" id="user" name="user"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="pass">Пароль:</label>
+                            <input type="password" class="form-control" id="pass" name="pass"/>
+                        </div>
+                        <button type="submit" class="btn btn-primary"
+                                onclick="onSubmitLogin(); return false;">
+                            Вход
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if pager.pages|length > 1 %}
+        <div style="text-align:center;">
+            <ul class="pagination pagination-lg">
+                {% if pager.pagePrev != '' %}
+                    <li><a href="{{ pagePrev }}">← назад</a></li>
+                {% endif %}
+
+                {% for page in pager.pages %}
+                    {% if page.current == 1 %}
+                        <li class="active"><a>{{ page.num }}</a></li>
+                    {% else %}
+                        <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pager.pageNext != '' %}
+                    <li><a href="{{ pageNext }}">вперёд →</a></li>
+                {% endif %}
+            </ul>
+        </div>
         {% endif %}
 
-        {% for page in pager.pages %}
-            {% if page.current == 1 %}
-                <li class="active"><a>{{ page.num }}</a></li>
-            {% else %}
-                <li><a href="{{ page.url }}">{{ page.num }}</a></li>
-            {% endif %}
-        {% endfor %}
+        <script>
+            // Инициализируем глобальную переменную, где будут хранится параметры редактируемого объекта
+            window.idObject = [];
 
-        {% if pager.pageNext != '' %}
-            <li><a href="{{ pageNext }}">вперёд →</a></li>
-        {% endif %}
-        </ul>
-    </div>
-    {% endif %}
+            // Делает AJAX-запрос для получения html-данных модального окна
+            function showModal(par, id, action)
+            {
+                // Скрываем статусное сообщение (может остаться от предыдущего окна)
+                $('#message').addClass('hide');
 
-    <script>
-        // Инициализируем глобальную переменную, где будут хранится параметры редактируемого объекта
-        window.idObject = [];
+                // Формируем данные для запроса в зависимости от условия авторизованности пользователя
+                if (action == 'login') {
+                    dataToAjax = {action: action}
+                }
+                else {
+                    // Переданные параметры нужно записать в глобальную переменную idObject
+                    window.idObject['par'] = par;
+                    window.idObject['id'] = id;
+                    window.idObject['action'] = action;
 
-        // Делает AJAX-запрос для получения html-данных модального окна
-        function showModal(par, id, action)
-        {
-            // Скрываем статусное сообщение (может остаться от предыдущего окна)
-            $('#message').addClass('hide');
+                    window.idObject['changeTemplate'] = 0;
+                    dataToAjax = {action: action, par: par, id: id}
 
-            // Переданные параметры нужно записать в глобальную переменную idObject
-            window.idObject['par'] = par;
-            window.idObject['id'] = id;
-            window.idObject['action'] = action;
+                }
 
-            window.idObject['changeTemplate'] = 0;
-
-            // В случае удачного получения данных от сервереа - отображаем окно редактирования
-            $.get(
-                    "index.php",
+                $.ajax({
+                    url: 'index.php',
+                    data: dataToAjax,
+                    success: function (data)
                     {
-                        action: action,
-                        par: par,
-                        id: id
+                        if (action == 'login') { // если пользователь не авторизован показываем окно авторизации
+                            onShowModalLogin()
+                        }
+                        else { // В случае удачного получения данных от сервереа - отображаем окно редактирования
+                            onShowModalSuccess(data)
+                        }
                     },
-                    onShowModalSuccess,
-                    "json"
-            );
-        }
+                    type: 'GET',
+                    dataType: "json"
+                });
 
-        // Отображает модальное окно редактирования для указанного объекта
-        function onShowModalSuccess(data)
-        {
-            if (window.idObject['action'] == 'showCreate') {
-                $('#myModalLabel').html('Создание');
-            } else {
-                $('#myModalLabel').html('Редактирование');
             }
-            $('#modalTabs').html(data['tabs']);
-            $('#modalContent').html(data['content']).trigger('windowOpen');
-            $('#myModal')
-                .modal({
-                    backdrop: 'static',
-                    keyboard: false
-                })
-                .on('shown.bs.modal', function (e) {
-                    // Навешиваем событие на показ окна — выставляем высоту прокручиваемой части — контента редактирования
-                    // Формула: Высота страницы - 10% отступы сверху-снизу, - 30px отступы modal-body, - высота modal-header, - высота modal-footer
+
+            // Отображает модальное окно редактирования для указанного объекта
+            function onShowModalSuccess(data)
+            {
+                if (window.idObject['action'] == 'showCreate') {
+                    $('#myModalLabel').html('Создание');
+                } else {
+                    $('#myModalLabel').html('Редактирование');
+                }
+                $('#modalTabs').html(data['tabs']);
+                $('#modalContent').html(data['content']).trigger('windowOpen');
+                $('#myModal')
+                    .modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    })
+                    .on('shown.bs.modal', function (e)
+                    {
+                        // Навешиваем событие на показ окна — выставляем высоту прокручиваемой части — контента редактирования
+                        // Формула: Высота страницы - 10% отступы сверху-снизу, - 30px отступы modal-body, - высота modal-header, - высота modal-footer
+                        mh = $(window).height() * 0.95 - 40
+                        - $('.modal-header').outerHeight()
+                        - $('.modal-footer').outerHeight();
+                        $('.modal-body').css('max-height', mh);
+                    })
+                    .modal('show');
+                // Если меняется размера окна браузера то модальное окно тоже меняет свой размер
+                $(window).on('resize', function ()
+                {
                     mh = $(window).height() * 0.95 - 40
-                            - $('.modal-header').outerHeight()
-                            - $('.modal-footer').outerHeight();
-                    $('.modal-body').css('max-height', mh);
-                })
-                .modal('show');
-            // Если меняется размера окна браузера то модальное окно тоже меняет свой размер
-            $(window).on('resize', function(){
-                mh = $(window).height() * 0.95 - 40
                     - $('.modal-header').outerHeight()
                     - $('.modal-footer').outerHeight();
-                $('.modal-body').css('max-height', mh);
-            })
-        }
+                    $('.modal-body').css('max-height', mh);
+                })
+            }
 
-
-        // Обрабатывает нажатие на кнопки Сохранить/Применить
-        function onSubmit(closeWindow)
-        {
-            window.idObject['closeWindow'] = closeWindow;
-
-            // Обновляем текст в textarea из редакторов
-            for ( instance in CKEDITOR.instances )
-                CKEDITOR.instances[instance].updateElement();
-
-            // Получаем все данные из формы
-            formValues = $('#editForm').serialize();
-
-            // Убираем слово show из названия экшена
-            switch (window.idObject['action']) {
-                case 'showCreate':
-                    action = 'create';
-                    break;
-                case 'showEdit':
-                    action = 'edit';
-                    break;
-                default:
-                    action = '';
+            // Отображает модальное окно авторизации
+            function onShowModalLogin()
+            {
+                $('#modalModalContent').trigger('windowOpen');
+                $('#myModalModal')
+                    .modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    })
+                    .on('shown.bs.modal', function (e)
+                    {
+                        // Навешиваем событие на показ окна — выставляем высоту прокручиваемой части — контента редактирования
+                        mh = $(window).height() * 0.95 - 40;
+                        $('#myModalModal .modal-body').css('max-height', mh);
+                    })
+                    .modal('show');
+                // Если меняется размера окна браузера то модальное окно тоже меняет свой размер
+                $(window).on('resize', function ()
+                {
+                    mh = $(window).height() * 0.95 - 40;
+                    $('#myModalModal .modal-body').css('max-height', mh);
+                })
+                $('#myModal').css('z-index', '1040');
             }
 
 
-            // Делаем AJAX-запрос с этими данными
-            $.ajax({
-                url: 'index.php',
-                type: 'POST',
-                dataType: "json",
-                data: {
-                    par: window.idObject['par'],
-                    id: window.idObject['id'],
-                    action: action,
-                    changeTemplate: window.idObject['changeTemplate'],
-                    formValues: formValues
-                },
-                beforeSend: function(){
-                    message = $('#message');
-                    message.show();
-                    message.addClass('alert-info');
-                    message.html('В процессе...');
-                    $("#sendButtons").hide();
-                },
-                success: function (data) {
-
-                    if (!closeWindow) {
-                        $("#sendButtons").show();
-                    }
-                    message.removeClass('alert-info');
-                    // В случае, если запрос удалось выполнить
-                    resetErrorFields();
-                    message = $('#message');
-                    if (data['isCorrect'] == '1') {
-                        message.addClass('alert-success');
-                        message.html('Элемент успешно сохранён.');
-                        // Если нажата кнопка "Сохранить" - нужно перезагрузить окно
-                        if (window.idObject['closeWindow']) {
-                            // TODO сделать, чтобы окно всегда перегружалось при закрытии после создания элемента
-                            document.location.reload(); // обновляем страницу
-                            return true;
-                        }
-
-                        // Прописываем полученный ID для созданного элемента
-                        $.each(data.items, function (i, item) {
-                            if (item.fieldName.lastIndexOf('_ID') != -1
-                                    || item.fieldName.lastIndexOf('_prev_structure') != -1) {
-                                fieldName = '#' + item.fieldName;
-                                $(fieldName).val(item.value);
-                            }
-                        });
-
-                        // Если всё прошло успешно переименовываем заголовок
-                        if (window.idObject['action'] == 'showCreate') {
-                            window.idObject['action'] = 'showEdit';
-                            $('#modal-header').html('Редактирование');
-                        }
-                    } else if (data['isCorrect'] == '2') {
-                        // Собираем сообщения со всех полей в одно
-                        text = 'Вы действительно хотите изменить:';
-                        $.each(data.items, function (i, item) {
-                            if (item.confirm == '') return true;
-                            text = text + "\n" + item.confirm;
-                        });
-                        text = text + "\n" + 'данные изменённых параметров будут удалены!!!';
-                        // Если требуется подтверждение на смену шаблона
-                        if (confirm(text)) {
-                            window.idObject['changeTemplate'] = 1;
-                            // Даём команду на стирание старых данных
+            // Обрабатываем нажатие кнопки "вход" на форме авторизации
+            function onSubmitLogin()
+            {
+                $.ajax({
+                    url: 'index.php',
+                    data: $('#ajaxLogin').serialize(),
+                    success: function (data)
+                    {
+                        // При успешной авторизации инициализируем сохранение данных с формы редактирования
+                        if (data['login'] == 'true') {
+                            $('#myModalModal').modal('hide');
+                            $('#myModal').css('z-index', '1050');
                             onSubmit(window.idObject['closeWindow']);
-                        } else {
-                            // Ничего не делаем
                         }
-                    } else {
+                        else {
+                            $('#modalModalContent div.alert-danger').removeClass('hide');
+                            $('#modalModalContent div.alert-danger').html(data['errorResponse']);
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown)
+                    {
+                        alert(errorThrown + "\n\nResponse:\n" + XMLHttpRequest.responseText);
+                    },
+                    type: 'POST',
+                    dataType: "json"
+                });
+            }
+
+            // Обрабатывает нажатие на кнопки Сохранить/Применить
+            function onSubmit(closeWindow)
+            {
+                window.idObject['closeWindow'] = closeWindow;
+
+                // Обновляем текст в textarea из редакторов
+                for (instance in CKEDITOR.instances) {
+                    CKEDITOR.instances[instance].updateElement();
+                }
+
+                // Получаем все данные из формы
+                formValues = $('#editForm').serialize();
+
+                // Убираем слово show из названия экшена
+                switch (window.idObject['action']) {
+                    case 'showCreate':
+                        action = 'create';
+                        break;
+                    case 'showEdit':
+                        action = 'edit';
+                        break;
+                    default:
+                        action = '';
+                }
+
+                // Делаем AJAX-запрос с этими данными
+                $.ajax({
+                    url: 'index.php',
+                    type: 'POST',
+                    dataType: "json",
+                    data: {
+                        par: window.idObject['par'],
+                        id: window.idObject['id'],
+                        action: action,
+                        changeTemplate: window.idObject['changeTemplate'],
+                        formValues: formValues
+                    },
+                    beforeSend: function ()
+                    {
+                        message = $('#message');
+                        message.show();
+                        message.addClass('alert-info');
+                        message.html('В процессе...');
+                        $("#sendButtons").hide();
+                    },
+                    success: function (data)
+                    {
+
+                        if (!closeWindow) {
+                            $("#sendButtons").show();
+                        }
+                        message.removeClass('alert-info');
+                        // В случае, если запрос удалось выполнить
+                        resetErrorFields();
+                        message = $('#message');
+                        if (data['isCorrect'] == '1') {
+                            message.addClass('alert-success');
+                            message.html('Элемент успешно сохранён.');
+                            // Если нажата кнопка "Сохранить" - нужно перезагрузить окно
+                            if (window.idObject['closeWindow']) {
+                                // TODO сделать, чтобы окно всегда перегружалось при закрытии после создания элемента
+                                document.location.reload(); // обновляем страницу
+                                return true;
+                            }
+
+                            // Прописываем полученный ID для созданного элемента
+                            $.each(data.items, function (i, item)
+                            {
+                                if (item.fieldName.lastIndexOf('_ID') != -1
+                                    || item.fieldName.lastIndexOf('_prev_structure') != -1) {
+                                    fieldName = '#' + item.fieldName;
+                                    $(fieldName).val(item.value);
+                                }
+                            });
+
+                            // Если всё прошло успешно переименовываем заголовок
+                            if (window.idObject['action'] == 'showCreate') {
+                                window.idObject['action'] = 'showEdit';
+                                $('#modal-header').html('Редактирование');
+                            }
+                        } else {
+                            if (data['isCorrect'] == '2') {
+                                // Собираем сообщения со всех полей в одно
+                                text = 'Вы действительно хотите изменить:';
+                                $.each(data.items, function (i, item)
+                                {
+                                    if (item.confirm == '') {
+                                        return true;
+                                    }
+                                    text = text + "\n" + item.confirm;
+                                });
+                                text = text + "\n" + 'данные изменённых параметров будут удалены!!!';
+                                // Если требуется подтверждение на смену шаблона
+                                if (confirm(text)) {
+                                    window.idObject['changeTemplate'] = 1;
+                                    // Даём команду на стирание старых данных
+                                    onSubmit(window.idObject['closeWindow']);
+                                } else {
+                                    // Ничего не делаем
+                                }
+                            } else {
+                                message.addClass('alert-error');
+                                message.html('Ошибка: элемент не сохранён.');
+                                // Если не успешно - выводим сообщения об ошибках
+                                showErrorFields(data);
+                                $("#sendButtons").show();
+                            }
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown)
+                    {
+                        alert(errorThrown + "\n\nResponse:\n" + XMLHttpRequest.responseText);
+                        $("#sendButtons").show();
+                        message.removeClass('alert-info');
                         message.addClass('alert-error');
                         message.html('Ошибка: элемент не сохранён.');
-                        // Если не успешно - выводим сообщения об ошибках
-                        showErrorFields(data);
-                        $("#sendButtons").show();
                     }
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert(errorThrown + "\n\nResponse:\n" + XMLHttpRequest.responseText);
-                    $("#sendButtons").show();
-                    message.removeClass('alert-info');
-                    message.addClass('alert-error');
-                    message.html('Ошибка: элемент не сохранён.');
+                });
+            }
+
+            // В случае ошибки в форме - выводит сообщения об ошибке для элементов
+            function showErrorFields(data)
+            {
+                if (data['errorResponse'] == 'not Login') {
+                    // Если пользователь не авторизован инициируем показ формы авторизации
+                    showModal('', '', 'login');
+                    return;
                 }
-            });
-        }
 
-        // В случае ошибки в форме - выводит сообщения об ошибке для элементов
-        function showErrorFields(data)
-        {
-            errorText = 'Внимание!\nПри сохранении произошла ошибка. Элемент не сохранён.\nИсправьте ошибку и повторите сохранение';
+                errorText = 'Внимание!\nПри сохранении произошла ошибка. Элемент не сохранён.\nИсправьте ошибку и повторите сохранение';
 
-            if ((data['errorText'] != null) && (data['errorText'] != '')) {
-                errorText = data['errorText'];
+                if ((data['errorText'] != null) && (data['errorText'] != '')) {
+                    errorText = data['errorText'];
+                }
+                alert(errorText);
+                // Подсвечиваем вкладки с ошибками
+                $.each(data.errorTabs, function (i, item)
+                {
+                    $('a[href="#' + item + '"]').addClass('error');
+                });
+                // Добавляем к соотв. полям сообщения об ошибке
+                /* TODO сделать переключение на таб с ошибками ввода */
+                $.each(data.items, function (i, item)
+                {
+                    if (item.message == '') {
+                        return true;
+                    }
+                    errorMsg = '<p class="help-block">' + item.message + '</p>';
+                    helpIdName = '#' + item.fieldName + '-help';
+                    controlIdName = '#' + item.fieldName + '-control-group';
+                    $(helpIdName).html(errorMsg);
+                    $(controlIdName).toggleClass('error');
+                });
             }
-            alert(errorText);
-            // Подсвечиваем вкладки с ошибками
-            $.each(data.errorTabs, function(i, item){
-                $('a[href="#' + item + '"]').addClass('error');
-            });
-            // Добавляем к соотв. полям сообщения об ошибке
-            /* TODO сделать переключение на таб с ошибками ввода */
-            $.each(data.items, function(i, item){
-                if (item.message == '') return true;
-                errorMsg = '<p class="help-block">' + item.message + '</p>';
-                helpIdName = '#' + item.fieldName + '-help';
-                controlIdName = '#' + item.fieldName + '-control-group';
-                $(helpIdName).html(errorMsg);
-                $(controlIdName).toggleClass('error');
-            });
-        }
 
-        // Удаление сообщений об ошибках со всех полей
-        function resetErrorFields()
-        {
-            // Снимаем подсветку с полей ввода
-            $('.error').attr('class', 'control-group');
-            // Удаляем сообщения об ошибках
-            $('.help-block').remove();
-            // Скрываем статус сохранения данных из подвала формы
-            $('#message').removeClass('hide alert-success alert-error')
-            // Снимаем подсветку с вкладок
-            $('.nav-tabs > li > a').removeClass('error');
-            // Сбрасываем флаг разрешения на изменение шаблона
-            window.idObject['changeTemplate'] = 0;
-        }
-
-        //
-        function showFinder(fieldName)
-        {
-            window.idObject['fieldName'] = '#' + fieldName;
-            var finder = new CKFinder();
-            finder.basePath = '{{ cmsFolder }}/Ideal/Library/ckfinder/';
-            finder.selectActionFunction = setFileField;
-            finder.popup();
-        }
-
-        //
-        function setFileField(fileUrl)
-        {
-            text = window.idObject['fieldName'];
-            $(text).prop('value', fileUrl);
-            $(text).trigger('change'); // запуск события изменения
-        }
-
-        function showDeleteConfirm(par, id)
-        {
-            if (confirm('Удалить этот элемент?')) {
-                // Если пользователь подтвердил удаление — отправляем ajax-запрос на удаление
-                $.getJSON(
-                    "index.php",
-                    {
-                        action: 'delete',
-                        par: par,
-                        id: id
-                    },
-                    onDeleteSuccess
-                );
-
+            // Удаление сообщений об ошибках со всех полей
+            function resetErrorFields()
+            {
+                // Снимаем подсветку с полей ввода
+                $('.error').attr('class', 'control-group');
+                // Удаляем сообщения об ошибках
+                $('.help-block').remove();
+                // Скрываем статус сохранения данных из подвала формы
+                $('#message').removeClass('hide alert-success alert-error')
+                // Снимаем подсветку с вкладок
+                $('.nav-tabs > li > a').removeClass('error');
+                // Сбрасываем флаг разрешения на изменение шаблона
+                window.idObject['changeTemplate'] = 0;
             }
-        }
 
-        function onDeleteSuccess(data)
-        {
-            switch (data['isCorrect']) {
-                case 1:
-                    $('#row' + data['ID']).remove();
-                    alert('Элемент удалён');
-                    break;
-                case 2:
-                    alert('Ошибка. Нельзя удалить раздел со вложенными элементами.');
-                    break;
-                case 3:
-                    alert('Ошибка: ' + data);
-                    break;
+            //
+            function showFinder(fieldName)
+            {
+                window.idObject['fieldName'] = '#' + fieldName;
+                var finder = new CKFinder();
+                finder.basePath = '{{ cmsFolder }}/Ideal/Library/ckfinder/';
+                finder.selectActionFunction = setFileField;
+                finder.popup();
             }
-        }
 
-        // Инициализация поповеров на элементах с классом has-popover
-        $(document).ready(function () {
-            $('.has-popover').popover();
-        });
-    </script>
+            //
+            function setFileField(fileUrl)
+            {
+                text = window.idObject['fieldName'];
+                $(text).prop('value', fileUrl);
+                $(text).trigger('change'); // запуск события изменения
+            }
+
+            function showDeleteConfirm(par, id)
+            {
+                if (confirm('Удалить этот элемент?')) {
+                    // Если пользователь подтвердил удаление — отправляем ajax-запрос на удаление
+                    $.getJSON(
+                        "index.php",
+                        {
+                            action: 'delete',
+                            par: par,
+                            id: id
+                        },
+                        onDeleteSuccess
+                    );
+
+                }
+            }
+
+            function onDeleteSuccess(data)
+            {
+                switch (data['isCorrect']) {
+                    case 1:
+                        $('#row' + data['ID']).remove();
+                        alert('Элемент удалён');
+                        break;
+                    case 2:
+                        alert('Ошибка. Нельзя удалить раздел со вложенными элементами.');
+                        break;
+                    case 3:
+                        alert('Ошибка: ' + data);
+                        break;
+                }
+            }
+
+            // Инициализация поповеров на элементах с классом has-popover
+            $(document).ready(function ()
+            {
+                $('.has-popover').popover();
+            });
+        </script>
 
 
-{% endblock %}
+    {% endblock %}
 
 </div>
 
