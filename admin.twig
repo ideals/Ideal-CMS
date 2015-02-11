@@ -198,6 +198,8 @@
              aria-labelledby="myModalModalLabel" aria-hidden="true">
             <div class="modal-dialog" style="width: 35%;">
                 <div id="modalModalContent">
+                    <div class="alert alert-danger col-md-8 col-md-offset-2 hide"
+                         style="padding-right: 24px;"></div>
                     <form method="post" action="" class="well col-md-8 col-md-offset-2"
                           role="form" id="ajaxLogin">
                         <div class="form-group">
@@ -358,7 +360,8 @@
                             onSubmit(window.idObject['closeWindow']);
                         }
                         else {
-                            $('#ajaxLogin').before('<div class="alert alert-danger col-md-8 col-md-offset-2" style="padding-right: 24px;">' + data['errorResponse'] + '</div>');
+                            $('#modalModalContent div.alert-danger').removeClass('hide');
+                            $('#modalModalContent div.alert-danger').html(data['errorResponse']);
                         }
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown)
