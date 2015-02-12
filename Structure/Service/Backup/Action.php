@@ -129,6 +129,7 @@ function getDir($tmpFolder, $backupFolder)
 ?>
 
 
+<link href="Ideal/Library/jqueryFileUpload/css/jquery.fileupload.css" rel="stylesheet">
 <script src="Ideal/Library/jqueryFileUpload/js/vendor/jquery.ui.widget.js"></script>
 <script src="Ideal/Library/jqueryFileUpload/js/jquery.iframe-transport.js"></script>
 <script src="Ideal/Library/jqueryFileUpload/js/jquery.fileupload.js"></script>
