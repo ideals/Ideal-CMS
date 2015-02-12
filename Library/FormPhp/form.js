@@ -294,6 +294,10 @@ jQuery.fn.form = function(options, messages){
     var make = function(form){
         $(this)
             .submit(function(){
+                if ($(this).disableSubmit == true) {
+                    return false;
+                }
+                $(this).disableSubmit = true;
                 if (!methods.validate.apply(this)) {
                     alert(messages.notValid);
                     return false;
@@ -302,10 +306,15 @@ jQuery.fn.form = function(options, messages){
             })
             .on('form.buttonClick', function() {
                 methods.metrikaOnButtonClick.apply(this);
+                $(this).disableSubmit = false;
             })
             .on('form.successSend', function() {
                 methods.metrikaOnSuccessSend.apply(this);
-            });
+            })
+            .on('form.errorSend', function() {
+                $(this).disableSubmit = false;
+            })
+            .disableSubmit = false;
         methods.initYaCounter.apply(this);
     };
 
