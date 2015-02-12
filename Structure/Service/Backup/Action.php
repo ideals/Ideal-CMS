@@ -141,7 +141,6 @@ function getDir($tmpFolder, $backupFolder)
                     } else {
                         $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при импорте дампа БД');
                     }
-                    $('#textDumpStatus').prepend(data);
                 },
                 error: function() {
                     $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Не удалось импортировать файл');

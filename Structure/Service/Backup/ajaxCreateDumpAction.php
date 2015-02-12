@@ -47,7 +47,12 @@ if (isset($_POST['createMysqlDump'])) {
         addslashes($dumpName) . '\')"> ' .
         date('d.m.Y - H:i:s', $time)
         . '</a></td>';
-    echo '<td><button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' .
+    echo '<td>'
+    . '<button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' .
+        addslashes($dumpName) . '\'); return false;">'
+        . '<span class="glyphicon glyphicon-upload"></span></button> '
+
+    . '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' .
         addslashes($dumpName) . '\'); return false;">'
         . '<span class="glyphicon glyphicon-remove"></span></button></td>';
     echo '</tr>';
