@@ -50,7 +50,7 @@ if (isset($_POST['createMysqlDump'])) {
     echo '<td>'
     . '<button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' .
         addslashes($dumpName) . '\'); return false;">'
-        . '<span class="glyphicon glyphicon-upload"></span></button> '
+        . '<span class="glyphicon glyphicon-upload"></span></button>&nbsp;'
 
     . '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' .
         addslashes($dumpName) . '\'); return false;">'
