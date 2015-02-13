@@ -5,7 +5,56 @@ $config = Config::getInstance();
 
 try {
     // Пытаемся определить полный путь к папке бэкапов, если это возможно
-    $backupPart = getDir($config->cms['tmpFolder'], '/backup/');
+    // Проверяем временную папку и папку для бэкапов на существование, возможность создания и записи
+
+    // Временная папка
+    $tmpFolder = $config->cms['tmpFolder'];
+
+    // Название папки бэкапа относительно временной папки
+    $backupFolder = '/backup/';
+
+    if ($tmpFolder == '') {
+        throw new Exception('Не задана временная папка tmpDir в файле site_data.php');
+    }
+
+    // Определяем доступность временной папки
+    $tmpFolder = DOCUMENT_ROOT . $tmpFolder;
+    $tmpFull = stream_resolve_include_path($tmpFolder);
+
+    // Проверяем существует ли временная папка и если нет, то пытаемся её создать
+    if ($tmpFull === false) {
+        if (mkdir($tmpFolder, 0755)) {
+            $tmpFull = stream_resolve_include_path($tmpFolder);
+        }
+    }
+
+    if ($tmpFull === false) {
+        throw new Exception("Не удалось создать папку $tmpFolder для сохранения дампа базы");
+    }
+
+    if (!is_writable($tmpFull)) {
+        throw new Exception("Папка $tmpFull недоступна для записи");
+    }
+
+    // Проверяем существует ли папка для создания бэкапов и если нет, то пытаемся её создать
+    $backupFolder = $tmpFull . $backupFolder;
+    $backupPart = stream_resolve_include_path($backupFolder);
+    if ($backupPart === false) {
+        if (mkdir($backupFolder, 0755)) {
+            $backupPart = stream_resolve_include_path($backupFolder);
+        }
+    }
+
+    if ($backupPart === false) {
+        throw new Exception("Не удалось создать папку $backupFolder для сохранения дампа базы");
+    }
+
+    if (!is_writable($backupPart)) {
+        throw new Exception("Папка $backupPart недоступна для записи");
+    }
+
+    // В результате $backupPart содержит полный путь к папке бэкапа
+
 } catch (Exception $e) {
     echo '<div class="alert">' . $e->getMessage() . '</div>';
     return;
@@ -13,6 +62,11 @@ try {
 ?>
 
 <form class="form-inline">
+    <span class="btn btn-success fileinput-button pull-right" style="margin-left:5px;">
+        <i class="glyphicon glyphicon-plus"></i>
+        <span>Загрузить файл</span>
+        <input id="fileupload" type="file" name="file">
+    </span>
     <button type="submit" name="createMysqlDump" id="createMysqlDump" onclick="createDump(); return false;"
             class="btn btn-primary pull-right">
         Создать резервную копию БД
@@ -44,11 +98,20 @@ if (is_dir($backupPart)) {
 
         echo '<tr id="' . $file . '"><td>';
         echo '<a href="" onClick="return downloadDump(\'' . addslashes($file) . '\')"> ';
-        echo "$day.$month.$year - $hour:$minute:$second" . '</a></td>';
+        echo "$day.$month.$year - $hour:$minute:$second";
+        // если загруженный сторонний файл, дописываем в названии "(upload)"
+        if (preg_match("/_upload/", $file)) {
+            echo ' (upload)';
+        }
+        echo '</a></td>';
         echo '<td>';
-        echo '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' . addslashes(
-                $file
-            ) . '\'); false;">';
+        echo '<button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\''
+            . addslashes($file) . '\'); false;">';
+        echo ' <span class="glyphicon glyphicon-upload"></span> ';
+        echo '</button>&nbsp;';
+
+        echo '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\''
+            . addslashes($file) . '\'); false;">';
         echo ' <span class="glyphicon glyphicon-remove"></span> ';
         echo '</button></td>';
         echo '</tr>';
@@ -56,64 +119,108 @@ if (is_dir($backupPart)) {
     echo '</table>';
 }
 
-
-/**
- * Функция получения полного пути к папке бэкапа
- * Проверяем временную папку и папку для бэкапов на существование, возможность создания и записи
- *
- * @param string $tmpFolder Временная папка
- * @param string $backupFolder Название папки бэкапа относительно временной папки
- * @return string Полный путь к папке бэкапа
- * @throws Exception Исключение, содержащее текст возникшей ошибки
- */
-function getDir($tmpFolder, $backupFolder)
-{
-    if ($tmpFolder == '') {
-        throw new Exception('Не задана временная папка tmpDir в файле site_data.php');
-    }
-
-    // Определяем доступность временной папки
-    $tmpFolder = DOCUMENT_ROOT . $tmpFolder;
-    $tmpFull = stream_resolve_include_path($tmpFolder);
-
-    // Проверяем существует ли временная папка и если нет, то пытаемся её создать
-    if ($tmpFull === false) {
-        if (mkdir($tmpFolder, 0755)) {
-            $tmpFull = stream_resolve_include_path($tmpFolder);
-        }
-    }
-
-    if ($tmpFull === false) {
-        throw new Exception("Не удалось создать папку $tmpFolder для сохранения дампа базы");
-    }
-
-    if (!is_writable($tmpFull)) {
-        throw new Exception("Папка $tmpFull недоступна для записи");
-    }
-
-    // Проверяем существует ли папка для создания бэкапов и если нет, то пытаемся её создать
-    $backupFolder = $tmpFull . $backupFolder;
-    $backupFull = stream_resolve_include_path($backupFolder);
-    if ($backupFull === false) {
-        if (mkdir($backupFolder, 0755)) {
-            $backupFull = stream_resolve_include_path($backupFolder);
-        }
-    }
-
-    if ($backupFull === false) {
-        throw new Exception("Не удалось создать папку $backupFolder для сохранения дампа базы");
-    }
-
-    if (!is_writable($backupFull)) {
-        throw new Exception("Папка $backupFull недоступна для записи");
-    }
-
-    return $backupFull;
-}
-
 ?>
 
+<link href="Ideal/Library/jqueryFileUpload/css/jquery.fileupload.css" rel="stylesheet">
+<script src="Ideal/Library/jqueryFileUpload/js/vendor/jquery.ui.widget.js"></script>
+<script src="Ideal/Library/jqueryFileUpload/js/jquery.iframe-transport.js"></script>
+<script src="Ideal/Library/jqueryFileUpload/js/jquery.fileupload.js"></script>
+
 <script type="text/javascript">
+
+    // Загрузка файла
+    $(function () {
+        'use strict';
+        var url =  window.location.href + "&action=ajaxUploadFile&bf=<?php echo addslashes($backupPart)?>";
+        $('#fileupload').fileupload({
+            url: url,
+            dataType: 'json',
+            start: function () {
+                $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт загрузка файла...');
+            },
+            done: function (e, data) {
+                if (data.result.error == 0) {
+                    $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Файл успешно загружен');
+                    $('#dumpTable').prepend(data.result.html);
+                } else {
+                    switch (data.result.error) {
+                        case 1:
+                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                                .html('Ошибка: не удалось загрузить файл');
+                            break;
+                        case 2:
+                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                                .html('Ошибка: расширение файла должно быть .gz или .sql');
+                            break;
+                        case 3:
+                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                                .html('Ошибка: не удалось переместить загруженный файл в указанную директорию');
+                            break;
+                    }
+                }
+            }
+        });
+    });
+
+    // Импорт дампа БД
+    function importDump(nameFile) {
+        if (confirm('Импортировать дамп БД:\n\n' + nameFile.split(/[\\/]/).pop() + '\n\n?')) {
+            $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт импорт дампа БД');
+            var path = window.location.href;
+            $.ajax({
+                url: path + "&action=ajaxImport",
+                type: 'POST',
+                data: {
+                    name: nameFile
+                },
+                success: function(data){
+                    // Выводим сообщение
+                    if (data == true) {
+                        $('#textDumpStatus').removeClass().addClass('alert alert-success')
+                            .html('Дамп БД успешно импортирован');
+                    } else {
+                        $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                            .html('Ошибка при импорте дампа БД');
+                    }
+                },
+                error: function() {
+                    $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                        .html('Не удалось импортировать файл');
+                }
+            })
+        } else {
+            // Do nothing!
+        }
+    }
+
+    // Загрузка файла дампа
+    function uploadFile() {
+        $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт импорт дампа БД');
+        var path = window.location.href;
+        var btnUpload = $('#uploadDump');
+
+        new AjaxUpload(btnUpload, {
+            action: path + "&action=ajaxUploadDump",
+            name: 'uploadfile',
+            onSubmit: function(file, ext) {
+                 /*
+                if (! (ext && /^(jpg|png|jpeg|gif)$/.test(ext))) {
+                    $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Только GZIP и SQL файлы');
+                    return false;
+                }
+                */
+            },
+            onComplete: function(file, response) {
+                if (response==="success") {
+                    $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Файл успешно загружен');
+                    $('#dumpTable').prepend(data);
+                } else {
+                    $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при загрузке файла');
+                }
+            }
+        });
+
+    }
 
     // Удаление файла
     function delDump(nameFile) {
@@ -127,13 +234,14 @@ function getDir($tmpFolder, $backupFolder)
                 },
                 success: function (data) {
                     //Выводим сообщение
-                    var message = data;
-                    if (message == true) {
+                    if (data == true) {
                         var el = document.getElementById(nameFile);
                         el.parentNode.removeChild(el);
-                        $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Файл успешно удалён');
+                        $('#textDumpStatus').removeClass().addClass('alert alert-success')
+                            .html('Файл успешно удалён');
                     } else {
-                        $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при удалении файла');
+                        $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                            .html('Ошибка при удалении файла');
                     }
                 },
                 error: function () {
@@ -158,12 +266,13 @@ function getDir($tmpFolder, $backupFolder)
             },
             success: function (data) {
                 //Выводим сообщение
-                var message = data;
-                if (message.length > 1) {
-                    $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Копия БД создана');
+                if (data.length > 1) {
+                    $('#textDumpStatus').removeClass().addClass('alert alert-success')
+                        .html('Копия БД создана');
                     $('#dumpTable').prepend(data);
                 } else {
-                    $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при создании копии БД');
+                    $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                        .html('Ошибка при создании копии БД');
                 }
             },
             error: function () {
@@ -175,7 +284,7 @@ function getDir($tmpFolder, $backupFolder)
     function downloadDump(data) {
         var url = window.location.href;
         data = window.location.search.substr(1).split('?') + '&file=' + data + "&action=ajaxDownload";
-        method = 'get';
+        var method = 'get';
 
         // Разрезаем параметры в input'ы
         var inputs = '';
