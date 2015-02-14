@@ -24,8 +24,7 @@ if (isset($_FILES['file']['name'])) {
     $dumpNameGz = $dumpNameFull . '.gz';
 
     if (in_array($ext, array('gz', 'zip', 'sql'))) {
-        if (move_uploaded_file($_FILES['file']['tmp_name'], $dumpNameFull)) {
-            
+        if (move_uploaded_file($_FILES['file']['tmp_name'], $dumpNameFull)) {           
             // Если GZIP, переименовывем в .gz
             if ($ext == 'gz') {
                 rename($dumpNameFull, $dumpNameGz);
@@ -33,7 +32,7 @@ if (isset($_FILES['file']['name'])) {
             // Если SQL, запаковывем в архив GZIP                
             if ($ext == 'sql') {
                 rename($dumpNameFull, $dumpNameGz); 
-                $contents = file_get_contents($dumpNameFull);
+                $contents = file_get_contents($dumpNameGz);
                 $gz = gzopen($dumpNameGz, 'w');
                 gzwrite($gz, $contents);
                 gzclose($gz);                   
@@ -65,9 +64,7 @@ if (isset($_FILES['file']['name'])) {
                                     // Пакуем в .gz
                                     $gz = gzopen($dumpNameGz, 'w');
                                     gzwrite($gz, $contents);
-                                    gzclose($gz);   
-                                    // Удаляем загруженный файл
-                                    unlink($dumpNameFull);
+                                    gzclose($gz);                                       
                                     // Удаляем распакованный файл
                                     unlink($sqlName);                                      
                                 } else {
@@ -89,7 +86,9 @@ if (isset($_FILES['file']['name'])) {
                 } else {
                     // Ошибка: не удалось получить список файлов в ZIP-архиве
                     $error = 31;
-                }                           
+                }  
+                // Удаляем загруженный файл
+                unlink($dumpNameFull);
             }
             
             // Формируем строку с новым файлом

@@ -156,6 +156,10 @@ if (is_dir($backupPart)) {
                             $('#textDumpStatus').removeClass().addClass('alert alert-error')
                                 .html('Ошибка: не удалось переместить загруженный файл в указанную директорию');
                             break;
+                        default:
+                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                                .html('Ошибка: '+data.result.error);
+                            break;                            
                     }
                 }
             }
@@ -179,8 +183,13 @@ if (is_dir($backupPart)) {
                         $('#textDumpStatus').removeClass().addClass('alert alert-success')
                             .html('Дамп БД успешно импортирован');
                     } else {
-                        $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                            .html('Ошибка при импорте дампа БД');
+                        if (data == false) {
+                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                                .html('Ошибка при импорте дампа БД');
+                        } else {
+                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                                .html('При импорте дампа БД возникли ошибки: ' + data);                            
+                        }
                     }
                 },
                 error: function() {
@@ -191,35 +200,6 @@ if (is_dir($backupPart)) {
         } else {
             // Do nothing!
         }
-    }
-
-    // Загрузка файла дампа
-    function uploadFile() {
-        $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт импорт дампа БД');
-        var path = window.location.href;
-        var btnUpload = $('#uploadDump');
-
-        new AjaxUpload(btnUpload, {
-            action: path + "&action=ajaxUploadDump",
-            name: 'uploadfile',
-            onSubmit: function(file, ext) {
-                 /*
-                if (! (ext && /^(jpg|png|jpeg|gif)$/.test(ext))) {
-                    $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Только GZIP и SQL файлы');
-                    return false;
-                }
-                */
-            },
-            onComplete: function(file, response) {
-                if (response==="success") {
-                    $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Файл успешно загружен');
-                    $('#dumpTable').prepend(data);
-                } else {
-                    $('#textDumpStatus').removeClass().addClass('alert alert-error').html('Ошибка при загрузке файла');
-                }
-            }
-        });
-
     }
 
     // Удаление файла
