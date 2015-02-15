@@ -62,16 +62,17 @@ try {
 ?>
 
 <form class="form-inline">
-    <span class="btn btn-success fileinput-button pull-right" style="margin-left:5px;">
+    <button type="button" class="btn btn-success fileinput-button pull-right" style="margin-left:5px;" 
+        onclick="document.querySelector('input#uploadfile').click()">  
         <i class="glyphicon glyphicon-plus"></i>
-        <span>Загрузить файл</span>
-        <input id="fileupload" type="file" name="file">
-    </span>
+        <span>Загрузить файл</span>                
+    </button>    
     <button type="submit" name="createMysqlDump" id="createMysqlDump" onclick="createDump(); return false;"
             class="btn btn-primary pull-right">
         Создать резервную копию БД
     </button>
     <span id='textDumpStatus'></span>
+    <input id="uploadfile" style="visibility: collapse; width: 0px;" type="file" name="file" onchange="upload(this.files[0])">
 </form>
 
 <div style="clear:right;"></div>
@@ -121,50 +122,40 @@ if (is_dir($backupPart)) {
 
 ?>
 
-<link href="Ideal/Library/jqueryFileUpload/css/jquery.fileupload.css" rel="stylesheet">
-<script src="Ideal/Library/jqueryFileUpload/js/vendor/jquery.ui.widget.js"></script>
-<script src="Ideal/Library/jqueryFileUpload/js/jquery.iframe-transport.js"></script>
-<script src="Ideal/Library/jqueryFileUpload/js/jquery.fileupload.js"></script>
-
 <script type="text/javascript">
-
+      
     // Загрузка файла
-    $(function () {
-        'use strict';
+    function upload(file) {
+        // FormData
+        var fd = new FormData(); 
+        fd.append('file', file);        
+        // Url
         var url =  window.location.href + "&action=ajaxUploadFile&bf=<?php echo addslashes($backupPart)?>";
-        $('#fileupload').fileupload({
+        // Сообщение о процессе загрузки
+        $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт загрузка файла...');
+        // Загрузка
+        $.ajax({ 
             url: url,
-            dataType: 'json',
-            start: function () {
-                $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт загрузка файла...');
-            },
-            done: function (e, data) {
-                if (data.result.error == 0) {
-                    $('#textDumpStatus').removeClass().addClass('alert alert-success').html('Файл успешно загружен');
-                    $('#dumpTable').prepend(data.result.html);
-                } else {
-                    switch (data.result.error) {
-                        case 1:
-                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                                .html('Ошибка: не удалось загрузить файл');
-                            break;
-                        case 2:
-                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                                .html('Ошибка: расширение файла должно быть .gz или .sql');
-                            break;
-                        case 3:
-                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                                .html('Ошибка: не удалось переместить загруженный файл в указанную директорию');
-                            break;
-                        default:
-                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                                .html('Ошибка: '+data.result.error);
-                            break;                            
-                    }
-                }
+            type: 'POST', 
+            dataType: 'json', 
+            data: fd,
+            cache : false,
+            processData: false,
+            contentType: false             
+        }).done(function(data) {
+            if (data.error === false) {
+                $('#textDumpStatus').removeClass().addClass('alert alert-success')
+                    .html('Файл успешно загружен');
+                $('#dumpTable').prepend(data.html);                   
+            } else {
+                $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                    .html(data.error);
             }
-        });
-    });
+        }).fail(function(data) {
+            $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                    .html('Ошибка при загрузке файла');
+        });     
+    }
 
     // Импорт дампа БД
     function importDump(nameFile) {
