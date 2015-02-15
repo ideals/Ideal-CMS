@@ -62,17 +62,18 @@ try {
 ?>
 
 <form class="form-inline">
-    <button type="button" class="btn btn-success fileinput-button pull-right" style="margin-left:5px;" 
-        onclick="document.querySelector('input#uploadfile').click()">  
+    <button type="button" class="btn btn-success fileinput-button pull-right" style="margin-left:5px;"
+            onclick="document.querySelector('input#uploadfile').click()">
         <i class="glyphicon glyphicon-plus"></i>
-        <span>Загрузить файл</span>                
-    </button>    
+        <span>Загрузить файл</span>
+    </button>
     <button type="submit" name="createMysqlDump" id="createMysqlDump" onclick="createDump(); return false;"
             class="btn btn-primary pull-right">
         Создать резервную копию БД
     </button>
     <span id='textDumpStatus'></span>
-    <input id="uploadfile" style="visibility: collapse; width: 0px;" type="file" name="file" onchange="upload(this.files[0])">
+    <input id="uploadfile" style="visibility: collapse; width: 0;" type="file" name="file"
+           onchange="upload(this.files[0])">
 </form>
 
 <div style="clear:right;"></div>
@@ -123,38 +124,38 @@ if (is_dir($backupPart)) {
 ?>
 
 <script type="text/javascript">
-      
+
     // Загрузка файла
     function upload(file) {
         // FormData
-        var fd = new FormData(); 
-        fd.append('file', file);        
+        var fd = new FormData();
+        fd.append('file', file);
         // Url
-        var url =  window.location.href + "&action=ajaxUploadFile&bf=<?php echo addslashes($backupPart)?>";
+        var url = window.location.href + "&action=ajaxUploadFile&bf=<?php echo addslashes($backupPart)?>";
         // Сообщение о процессе загрузки
         $('#textDumpStatus').removeClass().addClass('alert alert-info').html('Идёт загрузка файла...');
         // Загрузка
-        $.ajax({ 
+        $.ajax({
             url: url,
-            type: 'POST', 
-            dataType: 'json', 
+            type: 'POST',
+            dataType: 'json',
             data: fd,
-            cache : false,
+            cache: false,
             processData: false,
-            contentType: false             
-        }).done(function(data) {
+            contentType: false
+        }).done(function (data) {
             if (data.error === false) {
                 $('#textDumpStatus').removeClass().addClass('alert alert-success')
                     .html('Файл успешно загружен');
-                $('#dumpTable').prepend(data.html);                   
+                $('#dumpTable').prepend(data.html);
             } else {
                 $('#textDumpStatus').removeClass().addClass('alert alert-error')
                     .html(data.error);
             }
-        }).fail(function(data) {
+        }).fail(function () {
             $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                    .html('Ошибка при загрузке файла');
-        });     
+                .html('Ошибка при загрузке файла');
+        });
     }
 
     // Импорт дампа БД
@@ -168,7 +169,7 @@ if (is_dir($backupPart)) {
                 data: {
                     name: nameFile
                 },
-                success: function(data){
+                success: function (data) {
                     // Выводим сообщение
                     if (data == true) {
                         $('#textDumpStatus').removeClass().addClass('alert alert-success')
@@ -179,11 +180,11 @@ if (is_dir($backupPart)) {
                                 .html('Ошибка при импорте дампа БД');
                         } else {
                             $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                                .html('При импорте дампа БД возникли ошибки: ' + data);                            
+                                .html('При импорте дампа БД возникли ошибки: ' + data);
                         }
                     }
                 },
-                error: function() {
+                error: function () {
                     $('#textDumpStatus').removeClass().addClass('alert alert-error')
                         .html('Не удалось импортировать файл');
                 }
