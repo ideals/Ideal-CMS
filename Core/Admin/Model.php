@@ -300,10 +300,12 @@ abstract class Model extends Core\Model
         foreach ($this->fields as $fieldName => $field) {
             // TODO добавить валидаторы
 
+            // Определеям класс контроллера для соответствующего поля
             $fieldClass = Util::getClassName($field['type'], 'Field') . '\\Controller';
             /* @var $fieldModel \Ideal\Field\AbstractController */
             $fieldModel = $fieldClass::getInstance();
             $fieldModel->setModel($this, $fieldName, $this->fieldsGroup);
+            // Получаем данные, введённые пользователем
             $item = $fieldModel->parseInputValue($isCreate);
 
             if (isset($item['items'])) {
