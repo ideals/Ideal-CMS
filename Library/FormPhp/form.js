@@ -241,7 +241,8 @@ jQuery.fn.form = function(options, messages){
             }
             var yaCounterName = $(this).find('[name = "_yaCounter"]').val();
             this.yaCounter = {};
-            if (typeof yaCounterName != 'undefined') {
+            eval("var yaCounterName = typeof " + yaCounterName + " == 'undefined' ? false : yaCounterName");
+            if (yaCounterName !== false) {
                 this.yaCounter.reachGoal = function(metka) {
                     eval("var yaCounter = " + yaCounterName);
                     yaCounter.reachGoal(metka);
@@ -267,7 +268,6 @@ jQuery.fn.form = function(options, messages){
         //Отправка формы
         submit : function() {
             var $form = $(this);
-            $form.trigger('form.buttonClick');
             var data = $form.serialize();
             $.ajax({
                 type: 'post',
@@ -298,6 +298,7 @@ jQuery.fn.form = function(options, messages){
                     return false;
                 }
                 $(this).disableSubmit = true;
+                $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
                     alert(messages.notValid);
                     return false;
