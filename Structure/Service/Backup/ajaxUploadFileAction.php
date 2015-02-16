@@ -6,8 +6,13 @@
 $error = false;  // код ошибки
 $html = '';      // html код строки с загруженным файлом
 
-if (isset($_FILES['file']['name'])) {
+// Функция для выхода из скрипта
+$exitScript = function($html, $error) {
+    echo json_encode(array('html' => $html, 'error' => $error));
+    exit;
+};
 
+if (isset($_FILES['file']['name'])) {
     // Расширение загружаемого файла (без точки)
     $ext = substr($_FILES['file']['name'], strrpos($_FILES['file']['name'], '.') + 1);
 

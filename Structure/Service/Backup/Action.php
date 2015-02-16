@@ -171,17 +171,12 @@ if (is_dir($backupPart)) {
                 },
                 success: function (data) {
                     // Выводим сообщение
-                    if (data == true) {
+                    if (data.length == 0) {
                         $('#textDumpStatus').removeClass().addClass('alert alert-success')
                             .html('Дамп БД успешно импортирован');
                     } else {
-                        if (data == false) {
-                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                                .html('Ошибка при импорте дампа БД');
-                        } else {
-                            $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                                .html('При импорте дампа БД возникли ошибки: ' + data);
-                        }
+                        $('#textDumpStatus').removeClass().addClass('alert alert-error')
+                            .html(data);
                     }
                 },
                 error: function () {
