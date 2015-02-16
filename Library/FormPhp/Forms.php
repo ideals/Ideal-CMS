@@ -181,11 +181,11 @@ class Forms
 
         switch ($_REQUEST['mode']) {
             case 'css':
-                header('Content-type: text/css');
+                header('Content-type: text/css; charset=utf-8');
                 echo $this->renderCss();
                 break;
             case 'js':
-                header('Content-type: text/javascript');
+                header('Content-Type: text/javascript; charset=utf-8');
                 echo $this->renderJs();
                 break;
         }
