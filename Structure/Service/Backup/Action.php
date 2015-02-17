@@ -119,6 +119,9 @@ if (is_dir($backupPart)) {
         $minute = substr($file, 19, 2);
         $second = substr($file, 22, 2);
 
+        // Версия админки
+        preg_match("/(v.*)(\.sql|_)/U", $file, $ver);
+
         $file = $backupPart . DIRECTORY_SEPARATOR . $file;
 
         // Текст и кнопка комментария
@@ -137,7 +140,7 @@ if (is_dir($backupPart)) {
 
         echo '<tr id="' . $file . '"><td>';
         echo '<a href="" onClick="return downloadDump(\'' . addslashes($file) . '\')"> ';
-        echo "$day.$month.$year - $hour:$minute:$second";
+        echo "$day.$month.$year - $hour:$minute:$second $ver[1]";
         // если загруженный сторонний файл, дописываем в названии "(upload)"
         if (preg_match("/_upload/", $file)) {
             echo ' (upload)';
@@ -238,7 +241,6 @@ if (is_dir($backupPart)) {
 
     // Загрузка файла
     function upload(file) {
-        alert(file.name);
         // FormData
         var fd = new FormData();
         fd.append('file', file);

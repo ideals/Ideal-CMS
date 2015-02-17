@@ -34,8 +34,13 @@ if (isset($_POST['createMysqlDump'])) {
 
     $time = time();
 
+    // Получаем версию админки
+    $versions = new \Ideal\Structure\Service\UpdateCms\Versions();
+    $nowVersions = $versions->getVersions();
+    $version = 'v' . $nowVersions['Ideal-CMS'];
+
     // Имя файла дампа
-    $dumpName = 'dump_' . date('Y.m.d_H.i.s', $time) . '.sql';
+    $dumpName = 'dump_' . date('Y.m.d_H.i.s', $time) . $version . '.sql';
 
     // Запускаем процесс выгрузки
     $tes = $dump->start($backupPart . DIRECTORY_SEPARATOR . $dumpName);
@@ -45,7 +50,7 @@ if (isset($_POST['createMysqlDump'])) {
     // Формируем строку с новым файлом
     echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' .
         addslashes($dumpName) . '\')"> ' .
-        date('d.m.Y - H:i:s', $time)
+        date('d.m.Y - H:i:s', $time) . ' ' . $version
         . '</a></td>';
     echo '<td>'
     . '<button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' .

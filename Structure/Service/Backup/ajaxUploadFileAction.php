@@ -21,8 +21,13 @@ $ext = substr($_FILES['file']['name'], strrpos($_FILES['file']['name'], '.') + 1
 // Папка сохранения дампов
 $backupPart = stream_resolve_include_path($_GET['bf']);
 
+// Получаем версию админки
+$versions = new \Ideal\Structure\Service\UpdateCms\Versions();
+$nowVersions = $versions->getVersions();
+$version = 'v' . $nowVersions['Ideal-CMS'];
+
 // Имя файла дампа
-$dumpName = 'dump_' . date('Y.m.d_H.i.s', $time) . '_upload.sql';
+$dumpName = 'dump_' . date('Y.m.d_H.i.s', $time) . $version . '_upload.sql';
 // Полный путь до дампа
 $dumpNameFull = $backupPart . DIRECTORY_SEPARATOR . $dumpName;
 // Полный путь до архива .gz
@@ -102,7 +107,7 @@ switch ($ext) {
 // Формируем строку с новым файлом
 $html = '<tr id="' . $dumpNameGz . '"><td><a href="" onClick="return downloadDump(\'' .
     addslashes($dumpNameGz) . '\')"> ' .
-    date('d.m.Y - H:i:s', $time) . ' (upload)'
+    date('d.m.Y - H:i:s', $time) . ' ' . $version . ' (upload)'
     . '</a></td>'
     . '<td><button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' .
     addslashes($dumpNameGz) . '\'); return false;">'
