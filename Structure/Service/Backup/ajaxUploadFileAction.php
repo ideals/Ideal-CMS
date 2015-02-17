@@ -58,7 +58,7 @@ switch ($ext) {
         // Получаем список файлов в архиве
         $file_list = $archive->listContent();
 
-        if ($file_list !== 0 || count($file_list) != 1) {
+        if ($file_list == 0 || count($file_list) != 1) {
             unlink($dumpNameFull);  // удаляем загруженный файл
             $exitScript('', 'Ошибка: в архиве должен быть один .sql файл');
         }

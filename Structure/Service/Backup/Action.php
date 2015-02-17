@@ -130,6 +130,7 @@ if (is_dir($backupPart)) {
         // FormData
         var fd = new FormData();
         fd.append('file', file);
+        $('#uploadfile').val('');
         // Url
         var url = window.location.href + "&action=ajaxUploadFile&bf=<?php echo addslashes($backupPart)?>";
         // Сообщение о процессе загрузки
