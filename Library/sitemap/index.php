@@ -61,6 +61,13 @@ class myCrawler
             $this->config['disallow_regexp'] = explode("\n", $this->config['disallow_regexp']);
             $this->config['disallow_key'] = explode("\n", $this->config['disallow_key']);
             $this->config['seo_urls'] = explode("\n", $this->config['seo_urls']);
+            foreach ($this->config['seo_urls'] as $v => $k) {
+                $a = explode("=", trim($k));
+                $url = trim($a[0]);
+                $priority = trim($a[1]);
+                $seo[$url] = $priority;
+            }
+            $this->config['seo_urls'] = $seo;
         } else {
             $this->code = 'error';
         }
