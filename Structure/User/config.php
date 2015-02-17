@@ -8,7 +8,7 @@ return array(
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_sort' => 'reg_date DESC', // поле, по которому проводится сортировка в CMS
         'field_name' => '', // поле для входа в список потомков
-        'field_list' => array('email', 'fio', 'reg_date', 'last_visit')
+        'field_list' => array('email', 'fio', 'reg_date', 'last_visit','count_login')
     ),
     'fields' => array(
         'ID' => array(
@@ -65,6 +65,11 @@ return array(
             'label' => 'Активирован',
             'sql' => "bool not null default '0'",
             'type' => 'Ideal_Checkbox'
+        ),
+        'count_login' => array(
+            'label' => 'Число попыток входа',
+            'sql'   => "int(11) DEFAULT '0'",
+            'type'  => 'Ideal_Hidden'
         ),
     ),
 );

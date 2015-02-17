@@ -102,9 +102,18 @@ protected $_session = array();
         // Получаем пользователя с указанным логином
         $db = Db::getInstance();
         $_sql = "SELECT * FROM {$this->_table} WHERE is_active = 1 AND {$this->loginRow} = :login";
+        $delayTime = $user['count_login'] * 5;
+        if ($delayTime>60) {$delayTime = 60;}
         $user = $db->select($_sql, array('login' => $login));
+        
         if (count($user) == 0) {
             $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
+            $delayTime = $user['count_login'] * 5;
+            if ($delayTime>60) {$delayTime = 60;}
+            sleep($delayTime);
+            $user['count_login'] += 1;
+            $db->update($this->_table)->set($user);
+            $db->where('ID=:id', array('id' => $user['ID']))->exec();
             return false;
         }
         $user = $user[0];
@@ -115,6 +124,12 @@ protected $_session = array();
         ) {
             $this->logout();
             $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
+            $delayTime = $user['count_login'] * 5;
+            if ($delayTime>60) {$delayTime = 60;}
+            sleep($delayTime);
+            $user['count_login'] += 1;
+            $db->update($this->_table)->set($user);
+            $db->where('ID=:id', array('id' => $user['ID']))->exec();
             return false;
         }
 
@@ -126,7 +141,9 @@ protected $_session = array();
 
         $user['last_visit'] = time();
         $this->data = $user;
-
+        $delayTime = ($user['count_login']-1) * 5;
+        sleep($delayTime);
+        $user['count_login'] = 0;
         // Обновляем запись о последнем визите пользователя
         $db->update($this->_table)->set($user);
         $db->where('ID=:id', array('id' => $user['ID']))->exec();
