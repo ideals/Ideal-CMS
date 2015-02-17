@@ -8,34 +8,31 @@ use Ideal\Field\Cid;
 
 class ModelAbstract extends \Ideal\Core\Admin\Model
 {
+
     public $cid;
 
-    protected function getWhere($where)
+    public function delete()
     {
-        $path = $this->getPath();
-        $c = count($path);
-        $end = end($path);
-        if ($c == 1 OR ($c > 1 AND $end['structure'] != $path[$c - 2]['structure'])) {
-            // Считываем все элементы первого уровня
-            $where .= " AND lvl=1";
-        } else {
-            // Считываем все элементы последнего уровня из пути
-            $lvl = $end['lvl'] + 1;
-            $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
-            $cid = $cidModel->getCidByLevel($end['cid'], $end['lvl'], false);
-            $where .= "AND lvl={$lvl} AND cid LIKE '{$cid}%'";
+        $lvl = $this->pageData['lvl'] + 1;
+        $cid = new Cid\Model($this->params['levels'], $this->params['digits']);
+        $cid = $cid->getCidByLevel($this->pageData['cid'], $this->pageData['lvl'], false);
+        $_sql = "SELECT ID FROM {$this->_table} WHERE lvl={$lvl} AND cid LIKE '{$cid}%'";
+        $db = Db::getInstance();
+        $res = $db->select($_sql);
+        if (count($res) > 0) {
+            return 2;
         }
-
-        if ($where != '') {
-            $where = 'WHERE ' . $where;
-        }
-        return $where;
+        $db->delete($this->_table)->where('ID=:id', array('id' => $this->pageData['ID']));
+        $db->exec();
+        // TODO сделать проверку успешности удаления
+        return 1;
     }
 
     /**
      * Определение пути по ID элементов пути
+     *
      * @param array $path Начальная, уже найденная часть пути
-     * @param $par
+     * @param       $par
      * @return $this
      */
     public function detectPageByIds($path, $par)
@@ -51,15 +48,14 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $ids = implode(',', $par);
         $_sql = "SELECT * FROM {$this->_table}
                           WHERE ID IN ({$ids}) AND prev_structure='{$this->prevStructure}' ORDER BY cid";
-        $result = $db->queryArray($_sql);
+        $result = $db->select($_sql);
 
         // TODO обработка случая, когда ничего не нашлось — 404
 
         // Проверка найденных элементов из БД на соответствие последовательности ID в par
         // и последовательности cid адресов
         $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
-        $start = reset($result);
-        $cidPrev = $cidModel->getBlock($start['cid'], $start['lvl'] - 1); // находим блок cid предыдущего уровня
+        $cidPrev = $cidModel->reconstruct('0'); // вначале разбора параметров не существует никакого сида
         $trueResult = array();
         $parElement = reset($par);
         foreach ($result as $v) {
@@ -85,7 +81,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         if (0 != count($par)) {
             // Ещё остались неопределённые элементы пути. Запускаем вложенную структуру.
             $trueResult = $this->path;
-            $end  = array_pop($trueResult);
+            $end = array_pop($trueResult);
             $prev = array_pop($trueResult);
             $structure = $config->getStructureByName($prev['structure']);
             $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Model';
@@ -99,22 +95,26 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         return $this;
     }
 
-
     /**
      * Считываем наибольший cid на уровне $lvl для родительского $cid
+     *
      * @param string $cid Родительский cid
-     * @param int $lvl Уровень, на котором нужно получить макс. cid
+     * @param int    $lvl Уровень, на котором нужно получить макс. cid
      * @return string Максимальный cid на уровне $lvl
      */
-    function getNewCid($cid, $lvl)
+    public function getNewCid($cid, $lvl)
     {
         /* @var Db $db */
         $db = Db::getInstance();
 
         $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
         $parentCid = $cidModel->getCidByLevel($cid, $lvl - 1, false);
-        $_sql = "SELECT cid FROM {$this->_table} WHERE cid LIKE '{$parentCid}%' AND lvl={$lvl} ORDER BY cid DESC LIMIT 1";
-        $cidArr = $db->queryArray($_sql);
+        $par = array(
+            'parentCid' => $parentCid . '%',
+            'lvl' => $lvl,
+        );
+        $_sql = "SELECT cid FROM {$this->_table} WHERE cid LIKE :parentCid AND lvl=:lvl ORDER BY cid DESC LIMIT 1";
+        $cidArr = $db->select($_sql, $par);
         if (count($cidArr) > 0) {
             // Если элементы на этом уровне есть, берём cid последнего
             $cid = $cidArr[0]['cid'];
@@ -125,7 +125,6 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         return $cidModel->setBlock($cid, $lvl, '+1', true);
     }
 
-
     /**
      * Инициализирует переменную $pageData данными по умолчанию для нового элемента
      */
@@ -135,7 +134,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $path = $this->getPath();
         $c = count($path);
         $end = end($path);
-        if ($c < 2 OR ($c > 1 AND $path[$c - 2]['structure'] != $end['structure'])) {
+        if ($c < 2 || ($c > 1 && $path[$c - 2]['structure'] != $end['structure'])) {
             $prevStructure = $this->prevStructure;
             $lvl = 1;
         } else {
@@ -148,21 +147,25 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $this->setPageData($pageData);
     }
 
-
-    public function delete()
+    protected function getWhere($where)
     {
-        $lvl = $this->pageData['lvl'] + 1;
-        $cid = new Cid\Model($this->params['levels'], $this->params['digits']);
-        $cid = $cid->getCidByLevel($this->pageData['cid'], $this->pageData['lvl'], false);
-        $_sql = "SELECT ID FROM {$this->_table} WHERE lvl={$lvl} AND cid LIKE '{$cid}%'";
-        $db = Db::getInstance();
-        $res = $db->queryArray($_sql);
-        if (count($res) > 0) {
-            return 2;
+        $path = $this->getPath();
+        $c = count($path);
+        $end = end($path);
+        if ($c == 1 || ($c > 1 && $end['structure'] != $path[$c - 2]['structure'])) {
+            // Считываем все элементы первого уровня
+            $where .= " AND lvl=1";
+        } else {
+            // Считываем все элементы последнего уровня из пути
+            $lvl = $end['lvl'] + 1;
+            $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
+            $cid = $cidModel->getCidByLevel($end['cid'], $end['lvl'], false);
+            $where .= "AND lvl={$lvl} AND cid LIKE '{$cid}%'";
         }
-        $db->delete($this->_table, $this->pageData['ID']);
-        // TODO сделать проверку успешности удаления
-        return 1;
 
+        if ($where != '') {
+            $where = 'WHERE ' . $where;
+        }
+        return $where;
     }
 }

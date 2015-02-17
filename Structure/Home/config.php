@@ -2,8 +2,6 @@
 
 // Главная страница
 return array(
-    'params' => array(
-    ),
-    'fields' => array(
-    )
+    'params' => array(),
+    'fields' => array()
 );

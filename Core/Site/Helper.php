@@ -1,11 +1,12 @@
 <?php
 namespace Ideal\Core\Site;
 
-use Ideal\Structure\Part\Widget\MainMenu;
 use Ideal\Core\Config;
+use Ideal\Structure\Part\Widget\MainMenu;
 
 class Helper
 {
+
     public $xhtml = false;
 
     public function getVariables($model)
@@ -21,4 +22,14 @@ class Helper
         return $vars;
     }
 
+    /**
+     * Метод предназначен для проведения финальных модификаций над текстом страницы
+     *
+     * @param string $text Окончательно сформированная страница
+     * @return string Модифицированная страница
+     */
+    public function finishMod($text)
+    {
+        return $text;
+    }
 }

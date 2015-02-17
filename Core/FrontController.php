@@ -4,36 +4,14 @@ namespace Ideal\Core;
 use Ideal\Core\Admin;
 use Ideal\Core\Site;
 
+/**
+ * Front Controller объединяет всю обработку запросов, пропуская запросы через единственный объект-обработчик.
+ *
+ * После обработки запроса в роутере, фронт-контроллер запускает финальный контроллер, название которого,
+ * вместе с моделью данных, определяется в роутере.
+ */
 class FrontController
 {
-    /**
-     * Формирование заголовков (отдаются браузерам, паукам и проч.)
-     *
-     * @param array $httpHeaders
-     */
-    function sendHttpHeaders($httpHeaders)
-    {
-        $isContentType = false;
-        foreach ($httpHeaders as $k => $v) {
-            if ($k == intval($k)) {
-                // Ключ не указан, значит выводим только значение
-                header ($v . "\r\n");
-            } else {
-                // Ключ указан, значит выводим и ключ и значение
-                header ($k . ': ' . $v . "\r\n");
-            }
-            // Проверяем, не переопределён ли Content-Type
-            if (strtolower($k) == 'content-type') {
-                $isContentType = true;
-            }
-        }
-
-        if (!$isContentType) {
-            // Content-Type пользователем не изменён, отображаем стандартный
-            header("Content-Type: text/html; charset=utf-8");
-        }
-    }
-
     /**
      * Запуск FrontController'а
      *
@@ -42,7 +20,7 @@ class FrontController
      *
      * @param string $mode Режим работы admin или site
      */
-    function run($mode)
+    public function run($mode)
     {
         // Запускаем роутер, для получения навигационной цепочки
         if ($mode == 'admin') {
@@ -63,6 +41,7 @@ class FrontController
 
         if ($router->is404()) {
             $httpHeaders = array('HTTP/1.0 404 Not Found');
+            $this->emailError404();
         } else {
             $httpHeaders = $controller->getHttpHeaders();
         }
@@ -72,4 +51,67 @@ class FrontController
         echo $content; // отображение страницы
     }
 
+    /**
+     * Формирование заголовков (отдаются браузерам, паукам и проч.)
+     *
+     * @param array $httpHeaders
+     */
+    protected function sendHttpHeaders($httpHeaders)
+    {
+        $isContentType = false;
+        foreach ($httpHeaders as $k => $v) {
+            if ($k == intval($k)) {
+                // Ключ не указан, значит выводим только значение
+                header($v . "\r\n");
+            } else {
+                // Ключ указан, значит выводим и ключ и значение
+                header($k . ': ' . $v . "\r\n");
+            }
+            // Проверяем, не переопределён ли Content-Type
+            if (strtolower($k) == 'content-type') {
+                $isContentType = true;
+            }
+        }
+
+        if (!$isContentType) {
+            // Content-Type пользователем не изменён, отображаем стандартный
+            header("Content-Type: text/html; charset=utf-8");
+        }
+    }
+
+    /**
+     * Отправка письма о 404-ой ошибке, если url не зарегистрирован в $config->cms['known404']
+     */
+    protected function emailError404()
+    {
+        $config = Config::getInstance();
+
+        if (isset($config->cms['known404']) && !empty($config->cms['known404'])) {
+            $known404 = explode("\n", $config->cms['known404']);
+
+            $url = ltrim($_SERVER['REQUEST_URI'], '/'); // убираем ведущий слэш, для соответствия .htaccess
+
+            $result = array_reduce(
+                $known404,
+                function (&$res, $rule) {
+                    if (strpos($rule, '/') !== 0) {
+                        // Если правило не оформлено, как regexp, то оформляем его
+                        $rule = '/' . $rule . '/';
+                    }
+                    if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
+                        return 1;
+                    }
+                    return $res;
+                },
+                $url
+            );
+
+            if ($result === 1) {
+                // Если в массиве известных битых ссылок наш url найден, то не регистрируем ошибку
+                return;
+            }
+        }
+        $from = empty($_SERVER['HTTP_REFERER']) ? 'Прямой переход.' : 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
+        Util::addError('Страница не найдена (404). ' . $from);
+    }
 }

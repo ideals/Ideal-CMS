@@ -1,158 +1,95 @@
 <?php
 /**
- * Сервис обновления IdealCMS
- * Должен присутствовать на каждом сайте, отвечает за представление информации об обновлении
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru/)
+ * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-use Ideal\Core\Config;
-
+/**
+ * Сервис обновления IdealCMS и модулей
+ *
+ * ЧАСТЬ ПЕРВАЯ. ОТОБРАЖЕНИЕ УСТАНОВЛЕННЫХ ВЕРСИЙ И ВОЗМОЖНОСТЕЙ ОБНОВЛЕНИЯ
+ * 1. Проверка файла update.log на возможность записи
+ * 2. Считываем номера версий CMS и модулей из update.log
+ * 3. Если update.log пуст или не содержит обновлений о каком-либо модуле вносим в него данные из README.md
+ *    в формате
+ *      Installed Наименование-папки-модуля v. Версия
+ * 4. С сервера обновлений считываем доступные обновления и отображаем их в виде кнопок обновления по отдельности
+ *    для каждого модуля
+ *
+ * ЧАСТЬ ВТОРАЯ. ОБНОВЛЕНИЕ МОДУЛЯ
+ * 1. По нажатию на кнопку обновления у CMS или модуля скачиваем и распаковываем новую версию модуля
+ * 2. Из update.log считываем последнюю установленную версию и последний установленный скрипт модуля
+ * 3. Читаем список папок скриптов обновления, сортируем их по номеру версии
+ * 4. В цикле по папкам читаем их содержимое, сортируем
+ * 5. Выполняем скрипты в этих папках начиная со следующего после установленного скрипта
+ */
 ?>
 
 <p id="message">
-    Внимание! Обновление в рамках одинакового первого номера происходит автоматически.<br />
-    Обновление на другой первый номер версии требует ручного вмешательства.<br />
-    <hr />
+    Внимание! Обновление в рамках одинакового первого номера происходит автоматически.<br/>
+    Обновление на другой первый номер версии требует ручного вмешательства.<br/>
+<hr/>
 </p>
-<div id="form-input">
-</div>
 
 <?php
 // Сервер обновлений
 $getVersionScript = 'http://idealcms.ru/update/version.php';
 
 $config = \Ideal\Core\Config::getInstance();
+$versions = new \Ideal\Structure\Service\UpdateCms\Versions();
 
-// todo Хранение версий
-
-// Установленные версии CMS и модулей
-$nowVersions = getVersions();
+// Получаем установленные версии CMS и модулей
+$nowVersions = $versions->getVersions();
 
 $domain = urlencode($config->domain);
+
 // Сервер обновлений
-$url = $getVersionScript . '?domain=' . $domain . '&ver=' .  urlencode(serialize($nowVersions));
+$url = $getVersionScript . '?domain=' . $domain . '&ver=' . urlencode(serialize($nowVersions));
+
 // Переводим информацию о версиях в формат json для передачи в JS
 $nowVersions = json_encode($nowVersions);
 
-// Подключаем библиотеку для использования jsonp
-echo '<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/jquery.jsonp-2.4.0.min.js"> </script>';
+// Подключаем диалоговое окно
+include('modalUpdate.html');
 
-function getVersions()
-{
-    // Получаем файл README.md для cms
-    $config = Config::getInstance();
-    $mdFile = 'README.md';
-    // Путь к файлу README.md для cms
-    $cmsMdFileName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/' . $mdFile;
-    // Получаем версию cms
-    $versions['Ideal-CMS'] = getVersionFromFile($cmsMdFileName);
-
-    // Ищем файлы README.md в модулях
-    $modDirName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Mods';
-    // Получаем версии модулей
-    $modDirs = array_diff(scandir($modDirName), array('.', '..')); // получаем массив папок модулей
-    foreach ($modDirs as $dir) {
-        $modDir  = $modDirName . '/' . $dir  . '/' . $mdFile;
-        $version = getVersionFromFile($modDir); // пытаемся извлечь номер версии из файла README.md
-        if ($version) {
-            $versions[$dir] = $version;
+$msg = $versions->getAnswer();
+if (count($msg['message'])) {
+    foreach ($msg['message'] as $m) {
+        switch ($m[1]) {
+            case ('error'):
+                $classBlock = 'alert alert-danger fade in';
+                break;
+            case ('info'):
+                $classBlock = 'alert alert-info fade in';
+                break;
+            case ('success'):
+                $classBlock = 'alert alert-success fade in';
+                break;
+            case ('warning'):
+                $classBlock = 'alert alert-warning fade in';
+                break;
+            default:
+                $classBlock = 'alert alert-info fade in';
         }
+        echo "<div class=\"{$classBlock}\">{$m[0]}</div>\n";
     }
-    return $versions;
 }
-
-function getVersionFromFile($cmsMdFileName)
-{
-    if (!file_exists($cmsMdFileName)) return false;
-
-    // Получаем первую строку файла с наименованием и версией
-    $file = fopen($cmsMdFileName, "r");
-    $firstLine = trim(fgets($file));
-    fclose($file);
-
-    // Получаем номер версии из первой строки. Формат номера: пробел+v.+пробел+номер-версии+пробел-или-конец-строки
-    preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $firstLine, $ver);
-
-    // Если номер версии не удалось определить — выходим
-    if (!isset($ver[2][0]) || ($ver[2][0] == '')) return false;
-
-    return $ver[2][0];
-}
-
 ?>
 
+<div id="form-input"></div>
 
+<!-- Подключаем библиотеку для использования JSONP -->
+<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/jquery.jsonp-2.4.0.min.js"> </script>
+
+<!-- Передаём в JS необходимые переменные -->
 <script type="text/javascript">
-/**
- * Скрипт получения новых версий и создания представления
- */
-    $.jsonp({
-        url: '<?php echo $url ?>',
-        callbackParameter: 'callback',
-        dataType: 'jsonp',
-        success: function(versions){
-            var nowVersions = '<?php echo  $nowVersions ?>';
-                    nowVersions = $.parseJSON(nowVersions);
-
-                    if (versions['message'] !== undefined) {
-                        $('<h4>').appendTo('#form-input').html(versions['message']);
-                        nowVersions = null;
-                    };
-
-                    $.each(nowVersions, function(key,value) {
-                        // Выводим заголовок с именем обновляемого модуля
-                        var buf = key + " " + value;
-                        $('<h4>').appendTo('#form-input').text(buf);
-                        var update = versions[key];
-
-                        if ((update == undefined) || (update == "")){
-                            $('<p>').appendTo('#form-input').text("Обновление не требуется.");
-                            return true;
-                        }
-                        if (update['message'] !== undefined){
-                            $('<p>').appendTo('#form-input').text(update['message']);
-                            return true;
-                        }
-
-                        $('<form>').appendTo('#form-input').attr('class','update-form form-inline').attr('action','javascript:void(0)').attr('method','post');
-
-                        $.each(update, function(keyLine, line){
-                            buf = 'updateModule("' + key + '","' + line['version'] + '")';
-                            $('<button>').appendTo('form:last').attr('class','btn').attr('onClick', buf).attr('class','btn').text('Обновить на версию ' + line['version'] + ' (' + line['date'] + ')');
-                            if (line['danger']) {
-                                $('button:last').attr('class','btn btn-danger')
-                            }
-                            $('button:last').after('&nbsp; &nbsp;');
-                        });
-                    });
-        },
-        error: function(){
-            $('#message').after('<p><b>Не удалось соединиться с сервером</b></p>');
-        }
-    });
-
-
-/*
- * Скрипт обновления cms и модулей
- * */
-    function updateModule(moduleName, version)
-    {
-        $.ajax({
-            url: 'Ideal/Structure/Service/UpdateCms/ajaxUpdate.php',
-            type: 'POST',
-            data: {
-                name: moduleName,
-                version: version,
-                config: '<?php echo $config->cmsFolder; ?>'
-            },
-            success: function(data){
-                // Выводим сообщение и обновляем страницу
-                var message = $.parseJSON(data);
-                alert(message['message']);
-                location.reload();
-            },
-            error: function() {
-                alert('Не удалось произвести обновление');
-            }
-        })
-    }
+    var urlSrv = '<?php echo $url; ?>';
+    var nowVersions = '<?php echo  $nowVersions ?>';
+    var url = '<?php echo $_GET['par']; ?>';
 </script>
+
+<!-- Подключаем ajax скрипты -->
+<script type="text/javascript" src="Ideal/Structure/Service/UpdateCms/js.js"> </script>

@@ -538,7 +538,7 @@ class FirePHP {
     public function group($name, $options = null)
     {
     
-        if (!$name) {
+        if ( !isset($name) ) {
             throw $this->newException('You must specify a label for the group!');
         }
 
@@ -1294,7 +1294,8 @@ class FirePHP {
 
         $return = array();
     
-        if (is_resource($object)) {
+        //#2801 is_resource reports false for closed resources https://bugs.php.net/bug.php?id=28016
+        if (is_resource($object) || gettype($object) === "unknown type") {
     
             return '** ' . (string) $object . ' **';
     
@@ -1413,7 +1414,13 @@ class FirePHP {
 
                 $return[$key] = $this->encodeObject($val, 1, $arrayDepth + 1, $maxDepth + 1);
             }
-        } else {
+		} elseif ( is_bool($object) ) {
+			return $object;
+		} elseif ( is_null($object) ) {
+			return $object;
+		} elseif ( is_numeric($object) ) {
+			return $object;
+		} else {
             if ($this->is_utf8($object)) {
                 return $object;
             } else {

@@ -1,66 +1,73 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Field\Cid;
 
-use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
+use Ideal\Field\AbstractController;
 
+/**
+ * Cid — поле используемое для сортировки элементов на своём уровне
+ *
+ * Поле cid должно использоваться в паре с полем lvl, определяющим на каком уровне
+ * вложенности находится этот элемент.
+ * Пример объявления в конфигурационном файле структуры:
+ *     'cid' => array(
+ *         'label' => '№',
+ *         'sql'   => 'char(' . (6 * 3) . ') not null',
+ *         'type'  => 'Ideal_Cid'
+ *     ),
+ * При определении размера поля учитывается количество уровней вложенности (в примере это 6) и количество разрядов
+ * на каждом уровне (в примере это 3, т.е. на каждом уровне может быть до 999 элементов)
+ */
 class Controller extends AbstractController
 {
+
+    /** {@inheritdoc} */
     protected static $instance;
 
-
-    public function showEdit()
+    /**
+     * {@inheritdoc}
+     */
+    public function getInputText()
     {
-        $this->htmlName = $this->groupName . '_' . $this->name;
         $value = $this->getValue();
 
-        if ($value == '') {
-            $input = '<input type="hidden" id="' . $this->htmlName
-                   . '" name="' . $this->htmlName
-                   . '" value="' . $value . '">';
-        } else {
-            $cid = new Model($this->model->params['levels'], $this->model->params['digits']);
-            $pageData = $this->model->getPageData();
-            $value = $cid->getBlock($value, $pageData['lvl']);
+        $cid = new Model($this->model->params['levels'], $this->model->params['digits']);
+        $pageData = $this->model->getPageData();
+        $value = $cid->getBlock($value, $pageData['lvl']);
 
-            $input = '<input type="text" class="input ' . $this->widthEditField
-                . '" name="' . $this->htmlName
-                . '" id="' . $this->htmlName
-                .'" value="' . $value .'">';
-            $label = $this->getLabelText();
+        $input = '<input type="text" class="form-control" name="' . $this->htmlName
+            . '" id="' . $this->htmlName
+            . '" value="' . $value . '">';
 
-            $input = <<<HTML
-        <div id="{$this->htmlName}-control-group" class="control-group">
-            <label class="control-label" for="{$this->htmlName}">{$label}</label>
-            <div class="controls {$this->htmlName}-controls">
-                {$input}
-                <div id="{$this->htmlName}-help"></div>
-            </div>
-        </div>
-HTML;
-        }
         return $input;
     }
 
-
-    public function getInputText()
-    {
-        // Заглушка для абстрактного метода
-    }
-
-
+    /**
+     * {@inheritdoc}
+     */
     public function getValueForList($values, $fieldName)
     {
         $cid = new Model($this->model->params['levels'], $this->model->params['digits']);
         return $cid->getBlock($values['cid'], $values['lvl']);
     }
 
-
+    /**
+     * {@inheritdoc}
+     */
     public function pickupNewValue()
     {
         $request = new Request();
         $fieldName = $this->groupName . '_' . $this->name;
         $this->newValue = $request->$fieldName;
+        /** @var \Ideal\Structure\Part\Admin\Model $model */
         $model = $this->model;
 
         if ($this->newValue == '') {
@@ -68,7 +75,7 @@ HTML;
             $path = $model->getPath();
             $c = count($path);
             $end = $path[$c - 1];
-            if ($c > 1 AND ($path[$c - 2]['structure'] != $end['structure'])) {
+            if ($c < 2 || ($path[$c - 2]['structure'] != $end['structure'])) {
                 $end['cid'] = '';
                 $end['lvl'] = 0;
             }
@@ -87,4 +94,21 @@ HTML;
         return $this->newValue;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function showEdit()
+    {
+        $value = $this->getValue();
+
+        if ($value == '') {
+            // При создании элемента cid нельзя указать, он прописывается автоматически в конец списка
+            $html = '<input type="hidden" id="' . $this->htmlName
+                . '" name="' . $this->htmlName
+                . '" value="' . $value . '">';
+        } else {
+            $html = parent::showEdit();
+        }
+        return $html;
+    }
 }

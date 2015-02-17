@@ -16,28 +16,42 @@ define("PSNG_CRAWLER_MAX_GETFILE_TIME", 10); //timeout in seconds as a float val
 
 class Crawler
 {
-    public $urlError = '';
-    public $textError = '';
-    var $host = '';
-    var $protocol = '';
-    var $forbiddenKeys = array();
-    var $forbidden_dir = array();
-    var $forbidden_files = array();
-    var $forbiddenPage = array();
+
+    var $base = '';
+
+    var $beforeTimeout;
+
+    var $cookies = array();
+
+    var $cur_item = 0;
+
+    var $error = false;
 
     var $fileCounter = 0;
-    var $url = '';
-    var $withWWW = false;
-    var $cur_item = 0;
-    var $keys = array();
 
     var $files = array();
-    var $visitedUrls = array();
-    var $beforeTimeout;
+
+    var $forbiddenKeys = array();
+
+    var $forbiddenPage = array();
+
+    var $host = '';
+
+    var $keys = array();
+
+    var $protocol = '';
+
+    public $textError = '';
+
     var $todo = array();
-    var $base = '';
-    var $cookies = array();
-    var $error = false;
+
+    var $url = '';
+
+    public $urlError = '';
+
+    var $visitedUrls = array();
+
+    var $withWWW = false;
 
     function __construct($host, $deadline, $timeout, $delay)
     {
@@ -52,8 +66,9 @@ class Crawler
                 $this->protocol = "http";
             }
             $this->host = $url['host'];
-            if (substr($this->host, 0, 3) == 'www')
+            if (substr($this->host, 0, 3) == 'www') {
                 $this->withWWW = true;
+            }
         }
 
         $this->url = $this->protocol . '://' . $this->host . '/';
@@ -68,8 +83,127 @@ class Crawler
         } else {
             $this->deadline = (ini_get("max_execution_time") + $MET) + $this->microtime_float();
         }
-
 //		debug('', 'Crawler created for host '.$this->host.' with protocol '.$this->protocol);
+    }
+
+    function microtime_float()
+    {
+        list ($usec, $sec) = explode(" ", microtime());
+        return ((float)$usec + (float)$sec);
+    }
+
+    function _fl_contains($key, $array)
+    {
+        if (is_array($array) && count($array) > 0) {
+            foreach ($array as $id => $val) {
+                $pos = @ strpos($key, $val);
+                if ($pos === false) {
+                    continue;
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function getDone()
+    {
+        return $this->visitedUrls;
+    }
+
+    function getFiles()
+    {
+        return $this->files;
+    }
+
+    function setFiles($files)
+    {
+        if (is_array($files)) {
+            $this->files = $files;
+        }
+    }
+
+    /**
+     * returns the current item
+     * behaves like in java
+     */
+    function getNext()
+    {
+        if (count($this->keys) == 0) {
+            $this->keys = array_keys($this->files);
+        }
+        if ($this->hasNext()) {
+            $tmp = $this->files[$this->keys[$this->cur_item]];
+            $this->cur_item++;
+            return $tmp;
+        }
+        return null;
+    }
+
+    /**
+     * returns TRUE when the current item is not the last item
+     * behaves like in java
+     */
+    function hasNext()
+    {
+        if ($this->size() > $this->cur_item) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * returns number of files
+     */
+    function size()
+    {
+        if (!isset($this->countFiles)) {
+            $this->countFiles = count($this->files);
+        }
+
+        return $this->countFiles;
+    }
+
+    function getTodo()
+    {
+        return $this->todo;
+    }
+
+    function setTodo($todo)
+    {
+        $this->todo = $todo;
+    }
+
+    function hasFinished()
+    {
+        return (count($this->todo) == 0);
+    }
+
+    function setDirectory($dir)
+    {
+        $this->path = $dir;
+    }
+
+    function setDone($done)
+    {
+        $this->done = $done;
+    }
+
+    function setForbiddenKeys($keys)
+    {
+        $this->forbiddenKeys = $keys;
+        //    	if(!in_array($key, $this->forbiddenKeys)) $this->forbiddenKeys[] = $key;
+    }
+
+    /**
+     * Страницы которые не нужны в карте сайта
+     *
+     * @param array $page
+     */
+    function setForbiddenPages($page = array())
+    {
+        $this->forbiddenPage = $page;
     }
 
     /**
@@ -83,8 +217,9 @@ class Crawler
 
             // Пока не будут обработаны все url сайта
             $url = array_pop($this->todo);
-            if (is_null($url) || $url == '')
+            if (is_null($url) || $url == '') {
                 break;
+            }
             $res = $this->_getFilesForURL($url);
             if ($res === false) {
                 $this->urlError = $url;
@@ -101,92 +236,6 @@ class Crawler
         ksort($this->files);
         reset($this->files);
         return count($this->files);
-    }
-
-    function microtime_float()
-    {
-        list ($usec, $sec) = explode(" ", microtime());
-        return ((float)$usec + (float)$sec);
-    }
-
-    function getTodo()
-    {
-        return $this->todo;
-    }
-
-    function getFiles()
-    {
-        return $this->files;
-    }
-
-    function getDone()
-    {
-        return $this->visitedUrls;
-    }
-
-    function setTodo($todo)
-    {
-        $this->todo = $todo;
-    }
-
-    function setFiles($files)
-    {
-        if (is_array($files))
-            $this->files = $files;
-    }
-
-    function setDone($done)
-    {
-        $this->done = $done;
-    }
-
-    function setDirectory($dir)
-    {
-        $this->path = $dir;
-    }
-
-    /**
-     * returns number of files
-     */
-    function size()
-    {
-        if (!isset($this->countFiles)) {
-            $this->countFiles = count($this->files);
-        }
-
-        return $this->countFiles;
-    }
-
-    function hasFinished()
-    {
-        return (count($this->todo) == 0);
-    }
-
-    /**
-     * returns TRUE when the current item is not the last item
-     * behaves like in java
-     */
-    function hasNext()
-    {
-        if ($this->size() > $this->cur_item)
-            return true;
-        return false;
-    }
-
-    /**
-     * returns the current item
-     * behaves like in java
-     */
-    function getNext()
-    {
-        if (count($this->keys) == 0)
-            $this->keys = array_keys($this->files);
-        if ($this->hasNext()) {
-            $tmp = $this->files[$this->keys[$this->cur_item]];
-            $this->cur_item++;
-            return $tmp;
-        }
-        return NULL;
     }
 
     /**
@@ -268,15 +317,24 @@ class Crawler
         $urls_count = count($urls[1]);
 
         if (preg_match("/<[Bb][Aa][Ss][Ee][^>]*[Hh][Rr][Ee][Ff]=['\"]?([^\"'>]+)[^>]*>/", $res, $matches)) {
-            $this->base = $matches[1];
+            $this->base = $this->_absolute($matches[1], $url);
         }
 
         $ts_begin = $this->microtime_float();
-        while ((($ts_middle = ($this->microtime_float() - $ts_begin)) < PSNG_CRAWLER_MAX_GETFILE_TIME) && ($urls_count > 0)) {
+        while ((($ts_middle = ($this->microtime_float(
+                    ) - $ts_begin)) < PSNG_CRAWLER_MAX_GETFILE_TIME) && ($urls_count > 0)) {
             $thisurl = trim(str_replace('&amp;', '&', $urls[1][--$urls_count]));
-            if ($thisurl == '' || (strcasecmp(substr($thisurl, 0, strlen('javascript:')), 'javascript:') == 0)) continue;
+            if ($thisurl == '' || (strcasecmp(
+                        substr($thisurl, 0, strlen('javascript:')),
+                        'javascript:'
+                    ) == 0)
+            ) {
+                continue;
+            }
             // filter out links to fragment ids (same resource) - added mk/2005-11-13
-            if ('#' == $thisurl{0}) continue;
+            if ('#' == $thisurl{0}) {
+                continue;
+            }
             // debug('_'.$thisurl.'_','Extracted url');
             //print '_'.$thisurl.'_'." Extracted url\n";
 
@@ -288,8 +346,14 @@ class Crawler
             // remove "//"
             $start = (strpos($absUrl2, '//') + 3);
             $end = strpos($absUrl2, '?', $start);
-            if ($end === false) $end = strlen($absUrl2);
-            $absUrl = substr($absUrl2, 0, $start) . str_replace('//', '/', substr($absUrl2, $start, ($end - $start))) . substr($absUrl2, $end);
+            if ($end === false) {
+                $end = strlen($absUrl2);
+            }
+            $absUrl = substr($absUrl2, 0, $start) . str_replace(
+                    '//',
+                    '/',
+                    substr($absUrl2, $start, ($end - $start))
+                ) . substr($absUrl2, $end);
             //debug($absUrl, "Computed absUrl");
 
             if ($this->_isLocal($absUrl)) {
@@ -301,9 +365,9 @@ class Crawler
         foreach ($result as $id => $file) {
             if (!in_array($file, $this->visitedUrls) && !array_key_exists($file, $this->files)) {
                 // check forbidden files
-                if ($this->checkFileName($file)) continue;
-                // check forbidden directories
-                if ($this->checkDirectoryName($file)) continue;
+                if ($this->checkFileName($file)) {
+                    continue;
+                }
                 //debug($file, 'Adding URL to todo list');
 
                 // add file to todo list
@@ -311,300 +375,24 @@ class Crawler
             } // else: file already in list
         }
 
-
         return true;
     }
 
     function _isLocal($givenURL)
     {
-        if (preg_match(',^(ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:),i', $givenURL)) return false;
+        if (preg_match(',^(ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:|tel:),i', $givenURL)) {
+            return false;
+        }
 
         $url = parse_url($givenURL);
 
         $startDir = $this->host . $this->path;
         $curentDir = $url["host"] . $url["path"];
 
-
         $retproto = (substr($curentDir, 0, strlen($startDir)) == $startDir);
 
         // debug if (!$retproto) echo ($url["host"] . $url["path"] . "!=" . $this->host . $this->path . "<br>");
         return $retproto;
-    }
-
-    /**
-     * WAS: only allowed masking char: * (before and/or after search string)
-     *
-     * TODO check this with more data
-     */
-    function checkFileName($filename)
-    {
-        $filename = substr($filename, strrpos($filename, '/') + 1);
-        if (is_array($this->forbidden_files) && count($this->forbidden_files) > 0) {
-            foreach ($this->forbidden_files as $id => $file) {
-                if ($file == '') continue;
-                $pos = strpos($filename, $file);
-                /*	    		$file_search = '';
-                                  if (!(($as = strpos($file, '*')) === FALSE)) {
-                                      $file_search = str_replace('*', '', $file);
-                                      if ($as == 0) $pos = @strpos($filename, $file_search, (strlen($filename)-strlen($file_search)));
-                                      if ($as == strlen($file_search)) $pos = (@strpos($filename, $file_search) != 0);
-                                  } else {
-                                    $pos = ($filename === $file);
-                                  }
-                */
-                if ($pos === false) continue;
-                return true;
-            }
-        }
-        if (is_array($this->forbiddenPage) && count($this->forbiddenPage) > 0) {
-            foreach ($this->forbiddenPage as $k => $v) {
-                if ($v == '') continue;
-                if (strcasecmp($filename, $v) == 0) return true;
-            }
-        }
-        return false;
-    }
-
-    function checkDirectoryName($directory)
-    {
-        $directory = substr($directory, 0, strrpos($directory, '/') + 1); // with last "/"
-        if (is_array($this->forbidden_dir) && count($this->forbidden_dir) > 0) {
-            foreach ($this->forbidden_dir as $id => $dir) {
-                if ($dir == '') continue;
-                $pos = strpos($directory, $dir);
-                /*	    		$dir_search = '';
-                                  if (!(($as = strpos($dir, '*')) === FALSE)) {
-                                      $dir_search = str_replace('*', '', $dir);
-                                      if ($as == 0) $pos = @strpos($directory, $dir_search, (strlen($directory)-strlen($dir_search)));
-                                      if ($as == strlen($dir_search)) $pos = (@strpos($directory, $dir_search) != 0);
-                                  } else {
-                                    $pos = ($directory === $dir);
-                                  }
-                */ // echo "directory: $directory, dir: $dir, dir_search: $dir_search, pos: $pos<br>\n";
-                if ($pos === false) continue;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function _handleHeaders($header)
-    {
-        $res = array();
-        $res['http_status'] = '';
-        $res['lastmod'] = '';
-        $res['date'] = '';
-        $res['size'] = '';
-        $res['location'] = '';
-        // TODO what about http result? after 'HTTP/' => split(" " ...) => [1]
-        if (is_array($header)) {
-            foreach ($header as $key => $value) {
-                if ($key == '' && substr($value, 0, strlen('HTTP/'))) {
-                    $s = split(" ", $value);
-                    $res['http_status'] = $s[1];
-                } elseif ($key == "Last-Modified") {
-                    $res['lastmod'] = strtotime(trim($value)); // no dynamic (php/other script) generated page
-                } elseif ($key == "Date") {
-                    $res['date'] = strtotime(trim($value));
-                } elseif ($key == "Content-Length") {
-                    $res['size'] = trim($value);
-                } elseif ($key == "Location") {
-                    $res['location'] = trim($value);
-                } elseif ($key == 'Set-Cookie') {
-                    $parts = explode(";", trim($value));
-                    $cookie_name = '';
-                    $cookie = array();
-                    foreach ($parts as $id => $part) {
-                        $p = explode('=', trim($part));
-                        $cookie[$p[0]] = $p[1];
-                        if ($p[0] != 'path' && $p[0] != 'path' && strpos($p[0], 'expires') === false && $p[0] != 'domain') {
-                            $cookie_name = $p[0];
-                        }
-                    }
-                    /*				echo "got cookie: ";
-                                    print_r($cookie);
-                                    echo "<br>\n";
-                    */ // add cookie if not already set
-                    if (!isset($this->cookies[$cookie_name])) {
-                        $this->cookies[$cookie_name] = $cookie;
-                        $this->forbiddenKeys[] = $cookie_name;
-                    }
-                } elseif ($key == "Pragma") {
-                    $pragma = trim($value);
-                    // TODO по стандартам - сделано всё правильно, но получается если у динамических страниц
-                    // не указан lastmod, то частота обновлений будет - always - что не верно
-                    // поэтому тут всё закоментил
-
-                    //if ($pragma == "no-cache") { // handle non-cached files -> normaly dynamic created pages
-                    //	if (!isset ($res['lastmod'])) $res['lastmod'] = $res['date'];
-                    //	$res['changefreq'] = 'always';
-                    //}
-                }
-            }
-        }
-        // И здесь тоже я закомментил:
-        //if ($res['date'] != '' && $res['lastmod'] == '') $res['lastmod'] = $res['date'];
-//		debug($header, 'Header');
-//		debug($res, 'Extracted information from headers');
-        /*
-                echo "final cookies: ";
-                print_r($this->cookies);
-                echo "<br>\n";
-        */
-        return $res;
-    }
-
-    function _removeForbiddenKeys($url)
-    {
-        $paramsStart = strpos($url, '?');
-        if ($paramsStart !== false) { // url has no parameters, don't search for keys
-            foreach ($this->forbiddenKeys as $id => $key) {
-                if ($key == '') continue; // empty key => ignore it
-                $start = strpos($url, $key, $paramsStart);
-                while ($start != false) {
-                    $end = strpos($url, '&', $start);
-                    if ($end !== false) {
-                        $url = substr($url, 0, $start) . substr($url, $end + 1);
-                    } else {
-                        $url = substr($url, 0, $start);
-                    }
-                    $start = strpos($url, $key, $paramsStart);
-                } // else: does not contain key
-            }
-        }
-        // remove anchor links : beginning with # to the end of the url
-        // echo "$url<br>\n";
-        if (strpos($url, '#') !== false) {
-            $url = substr($url, 0, strpos($url, '#'));
-        }
-        // remove empty & and ?
-        while (substr($url, strlen($url) - 1) == "&") {
-            $url = substr($url, 0, strlen($url) - 1);
-        }
-        while (substr($url, strlen($url) - 1) == "?") {
-            $url = substr($url, 0, strlen($url) - 1);
-        }
-        return $url;
-    }
-
-    function _getURL($urlString)
-    {
-        $url = parse_url($urlString);
-        $url_scheme = isset($url['scheme']) ? $url['scheme'] : '';
-        $url_host = isset($url['host']) ? $url['host'] : '';
-        $url_port = isset($url['port']) ? $url['port'] : '';
-        $url_path = isset($url['path']) ? $url['path'] : '';
-        $url_path = str_replace(' ', '%20', $url_path); // replace spaces in url
-        $url_query = isset($url['query']) ? $url['query'] : '';
-        $cookie_string = '';
-        if (count($this->cookies) > 0) {
-            foreach ($this->cookies as $cookie_name => $cookie) {
-                // check path - dumb approach (only check if url contains cookie path)
-                if (strpos($urlString, $cookie['path'])) {
-                    $cookie_string .= $cookie_name . '=' . $cookie[$cookie_name] . '; ';
-                }
-            }
-            if (strlen($cookie_string) > 0) {
-                $cookie_string = 'Cookie: ' . $cookie_string . "\r\n";
-            }
-        }
-//		echo "Sending cookie_string: $cookie_string<br>\n";
-
-        if ($url_port == '') {
-            if ($url_scheme == 'https') {
-                $url_port = "443";
-            } else {
-                $url_port = "80";
-            }
-        }
-        //		debug($url, 'Parsed URL');
-        $fp = fsockopen($url_host, $url_port, $errno, $errstr, $this->timeout);
-        if ($fp === false) {
-            $this->info($errstr, 'Could not open connection for ' . $urlString . ' (host: ' . $url_host . ', port:' . $url_port . '), Errornumber: ' . $errno);
-            return array('header' => array(), 'content' => '');
-        }
-        $query_encoded = '';
-        if ($url_query != '') {
-            $query_encoded = '?';
-            foreach (split('&', $url_query) as $id => $quer) {
-                $v = split('=', $quer);
-                if ($v[1] != '') {
-                    $query_encoded .= $v[0] . '=' . rawurlencode($v[1]) . '&';
-                } else {
-                    $query_encoded .= $v[0] . '&';
-                }
-            }
-            $query_encoded = substr($query_encoded, 0, strlen($query_encoded) - 1);
-            $query_encoded = str_replace('%2B', '+', $query_encoded);
-        }
-
-        $get = "GET " . $url_path . $query_encoded . " HTTP/1.1\r\n";
-        $get .= "Host: " . $url_host . "\r\n";
-        $get .= "User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; phpSitemapNG " . PSNG_VERSION . ")\r\n";
-        $get .= "Referer: " . $url_scheme . '://' . $url_host . $url_path . "\r\n";
-        $get .= $cookie_string;
-        $get .= "Connection: close\r\n\r\n";
-        $this->debug(str_replace("\n", "<br>\n", $get), 'GET-Query');
-        socket_set_blocking($fp, true);
-        fwrite($fp, $get);
-
-        $res = '';
-        $head_done = false;
-        $ts_begin = $this->microtime_float();
-        // source for chunk-decoding: http://www.phpforum.de/archiv_13065_fsockopen@end@chunked@geht@nicht_anzeigen.html
-
-        // get headers
-        $currentHeader = '';
-        while ('' != ($line = trim(fgets($fp, 1024)))) {
-            if (false !== ($pos = strpos($line, ':'))) {
-                $currentHeader = substr($line, 0, $pos);
-                $header[$currentHeader] = trim(substr($line, $pos + 1));
-            } else {
-                @$header[$currentHeader] .= $line;
-            }
-        }
-
-        // check for chunk encoding
-        if (isset($header['Transfer-Encoding']) && $header['Transfer-Encoding'] == 'chunked') {
-            $chunk = hexdec(fgets($fp, 1024));
-        } else {
-            $chunk = -1;
-        }
-
-        // check file size
-        if (isset($header['Content-Length']) && $header['Content-Length'] > PSNG_CRAWLER_MAX_FILESIZE) {
-            $this->info($size, "File size " . $header['Content-Length'] . " of " . $urlString . " exceeds file size limit of " . PSNG_CRAWLER_MAX_FILESIZE . " byte!");
-            fclose($fp);
-            return array('header' => $header, 'content' => '');
-        }
-
-        // get content
-        $res = '';
-        while ($chunk != 0 && !feof($fp)) {
-            // echo "chunking...<br>\n";
-            if ($chunk > 0) {
-                $part = fread($fp, $chunk);
-                $chunk -= strlen($part);
-                $res .= $part;
-
-                if ($chunk == 0) {
-                    if (fgets($fp, 1024) != "\r\n") $this->debug('Error in chunk-decoding');
-                    $chunk = hexdec(fgets($fp, 1024));
-                }
-            } else {
-                $res .= fread($fp, 1024);
-            }
-            // handle local timeout for fetching file
-            // Пока реакция отключена, т.к. не сделано продолжение
-            if (($ts_middle = $this->microtime_float() - $ts_begin) > PSNG_CRAWLER_MAX_GETFILE_TIME) {
-                /// $this->info('error in ' . $urlString . ' handle local timeout for fetching file');
-                //return false;
-                //break;
-            }
-        }
-        fclose($fp);
-
-        return array('header' => $header, 'content' => $res);
     }
 
     // based from: http://www.php-faq.de/q/q-regexp-links-absolut.html
@@ -761,20 +549,237 @@ class Crawler
             return $abs;
         }
     */
+    function info($param, $msg = '')
+    {
+        echo "\n{$param}\n{$msg}";
+    }
+
+    /* better compare function: contains */
+
+    function _getURL($urlString)
+    {
+        $url = parse_url($urlString);
+        $url_scheme = isset($url['scheme']) ? $url['scheme'] : '';
+        $url_host = isset($url['host']) ? $url['host'] : '';
+        $url_port = isset($url['port']) ? $url['port'] : '';
+        $url_path = isset($url['path']) ? $url['path'] : '';
+        $url_path = str_replace(' ', '%20', $url_path); // replace spaces in url
+        $url_query = isset($url['query']) ? $url['query'] : '';
+        $cookie_string = '';
+        if (count($this->cookies) > 0) {
+            foreach ($this->cookies as $cookie_name => $cookie) {
+                // check path - dumb approach (only check if url contains cookie path)
+                if (strpos($urlString, $cookie['path'])) {
+                    $cookie_string .= $cookie_name . '=' . $cookie[$cookie_name] . '; ';
+                }
+            }
+            if (strlen($cookie_string) > 0) {
+                $cookie_string = 'Cookie: ' . $cookie_string . "\r\n";
+            }
+        }
+//		echo "Sending cookie_string: $cookie_string<br>\n";
+
+        if ($url_port == '') {
+            if ($url_scheme == 'https') {
+                $url_port = "443";
+            } else {
+                $url_port = "80";
+            }
+        }
+        //		debug($url, 'Parsed URL');
+        $fp = fsockopen($url_host, $url_port, $errno, $errstr, $this->timeout);
+        if ($fp === false) {
+            $this->info(
+                $errstr,
+                'Could not open connection for ' . $urlString . ' (host: ' . $url_host . ', port:' . $url_port . '), Errornumber: ' . $errno
+            );
+            return array('header' => array(), 'content' => '');
+        }
+        $query_encoded = '';
+        if ($url_query != '') {
+            $query_encoded = '?';
+            foreach (split('&', $url_query) as $id => $quer) {
+                $v = split('=', $quer);
+                if ($v[1] != '') {
+                    $query_encoded .= $v[0] . '=' . rawurlencode($v[1]) . '&';
+                } else {
+                    $query_encoded .= $v[0] . '&';
+                }
+            }
+            $query_encoded = substr($query_encoded, 0, strlen($query_encoded) - 1);
+            $query_encoded = str_replace('%2B', '+', $query_encoded);
+        }
+
+        $get = "GET " . $url_path . $query_encoded . " HTTP/1.1\r\n";
+        $get .= "Host: " . $url_host . "\r\n";
+        $get .= "User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; phpSitemapNG " . PSNG_VERSION . ")\r\n";
+        $get .= "Referer: " . $url_scheme . '://' . $url_host . $url_path . "\r\n";
+        $get .= $cookie_string;
+        $get .= "Connection: close\r\n\r\n";
+        $this->debug(str_replace("\n", "<br>\n", $get), 'GET-Query');
+        socket_set_blocking($fp, true);
+        fwrite($fp, $get);
+
+        $res = '';
+        $head_done = false;
+        $ts_begin = $this->microtime_float();
+        // source for chunk-decoding: http://www.phpforum.de/archiv_13065_fsockopen@end@chunked@geht@nicht_anzeigen.html
+
+        // get headers
+        $currentHeader = '';
+        while ('' != ($line = trim(fgets($fp, 1024)))) {
+            if (false !== ($pos = strpos($line, ':'))) {
+                $currentHeader = substr($line, 0, $pos);
+                $header[$currentHeader] = trim(substr($line, $pos + 1));
+            } else {
+                @$header[$currentHeader] .= $line;
+            }
+        }
+
+        // check for chunk encoding
+        if (isset($header['Transfer-Encoding']) && $header['Transfer-Encoding'] == 'chunked') {
+            $chunk = hexdec(fgets($fp, 1024));
+        } else {
+            $chunk = -1;
+        }
+
+        // check file size
+        if (isset($header['Content-Length']) && $header['Content-Length'] > PSNG_CRAWLER_MAX_FILESIZE) {
+            $this->info(
+                $header['Content-Length'],
+                "File size " . $header['Content-Length'] . " of " . $urlString . " exceeds file size limit of " . PSNG_CRAWLER_MAX_FILESIZE . " byte!"
+            );
+            fclose($fp);
+            return array('header' => $header, 'content' => '');
+        }
+
+        // get content
+        $res = '';
+        while ($chunk != 0 && !feof($fp)) {
+            // echo "chunking...<br>\n";
+            if ($chunk > 0) {
+                $part = fread($fp, $chunk);
+                $chunk -= strlen($part);
+                $res .= $part;
+
+                if ($chunk == 0) {
+                    if (fgets($fp, 1024) != "\r\n") {
+                        $this->debug('Error in chunk-decoding');
+                    }
+                    $chunk = hexdec(fgets($fp, 1024));
+                }
+            } else {
+                $res .= fread($fp, 1024);
+            }
+            // handle local timeout for fetching file
+            // Пока реакция отключена, т.к. не сделано продолжение
+            if (($ts_middle = $this->microtime_float() - $ts_begin) > PSNG_CRAWLER_MAX_GETFILE_TIME) {
+                /// $this->info('error in ' . $urlString . ' handle local timeout for fetching file');
+                //return false;
+                //break;
+            }
+        }
+        fclose($fp);
+
+        return array('header' => $header, 'content' => $res);
+    }
+
+    function debug($param, $msg = '')
+    {
+        return;
+        echo "\n{$param}\n{$msg}";
+    }
+
+    function _handleHeaders($header)
+    {
+        $res = array();
+        $res['http_status'] = '';
+        $res['lastmod'] = '';
+        $res['date'] = '';
+        $res['size'] = '';
+        $res['location'] = '';
+        // TODO what about http result? after 'HTTP/' => split(" " ...) => [1]
+        if (is_array($header)) {
+            foreach ($header as $key => $value) {
+                if ($key == '' && substr($value, 0, strlen('HTTP/'))) {
+                    $s = split(" ", $value);
+                    $res['http_status'] = $s[1];
+                } elseif ($key == "Last-Modified") {
+                    $res['lastmod'] = strtotime(trim($value)); // no dynamic (php/other script) generated page
+                } elseif ($key == "Date") {
+                    $res['date'] = strtotime(trim($value));
+                } elseif ($key == "Content-Length") {
+                    $res['size'] = trim($value);
+                } elseif ($key == "Location") {
+                    $res['location'] = trim($value);
+                } elseif ($key == 'Set-Cookie') {
+                    $parts = explode(";", trim($value));
+                    $cookie_name = '';
+                    $cookie = array();
+                    foreach ($parts as $id => $part) {
+                        $p = explode('=', trim($part));
+                        $cookie[$p[0]] = $p[1];
+                        if ($p[0] != 'path' && $p[0] != 'path' && strpos(
+                                $p[0],
+                                'expires'
+                            ) === false && $p[0] != 'domain'
+                        ) {
+                            $cookie_name = $p[0];
+                        }
+                    }
+                    /*				echo "got cookie: ";
+                                    print_r($cookie);
+                                    echo "<br>\n";
+                    */ // add cookie if not already set
+                    if (!isset($this->cookies[$cookie_name])) {
+                        $this->cookies[$cookie_name] = $cookie;
+                        $this->forbiddenKeys[] = $cookie_name;
+                    }
+                } elseif ($key == "Pragma") {
+                    $pragma = trim($value);
+                    // TODO по стандартам - сделано всё правильно, но получается если у динамических страниц
+                    // не указан lastmod, то частота обновлений будет - always - что не верно
+                    // поэтому тут всё закоментил
+
+                    //if ($pragma == "no-cache") { // handle non-cached files -> normaly dynamic created pages
+                    //	if (!isset ($res['lastmod'])) $res['lastmod'] = $res['date'];
+                    //	$res['changefreq'] = 'always';
+                    //}
+                }
+            }
+        }
+        // И здесь тоже я закомментил:
+        //if ($res['date'] != '' && $res['lastmod'] == '') $res['lastmod'] = $res['date'];
+//		debug($header, 'Header');
+//		debug($res, 'Extracted information from headers');
+        /*
+                echo "final cookies: ";
+                print_r($this->cookies);
+                echo "<br>\n";
+        */
+        return $res;
+    }
+
+
     function _absolute($relative, $absolute)
     {
-        // Link ist schon absolut
-        if (preg_match(',^(https?://|ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:),i', $relative)) {
+        // Проверяем, не является ли ссылка уже абсолютной
+        if (preg_match(',^(https?://|ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:|tel:),i', $relative)) {
             // hostname is not the same (with/without www) than the one used in the link
             if (substr($relative, 0, 4) == 'http') {
                 $url = parse_url($relative);
                 if ($url['host'] != $this->host && ((("www." . $url['host']) == $this->host) && $this->withWWW == true || ($url['host'] == ("www." . $this->host)) && $this->withWWW == false)) {
                     $r = $relative;
-                    $relative = str_replace($url['host'], $this->host, $relative); // replace hostname that differes from local
+                    $relative = str_replace(
+                        $url['host'],
+                        $this->host,
+                        $relative
+                    ); // replace hostname that differes from local
                 }
                 // is pure hostname without path - so add a /
-                if (!array_key_exists('path', $url) || $url['path'] == '' && substr($relative, -1) != '/')
+                if (!array_key_exists('path', $url) || $url['path'] == '' && substr($relative, -1) != '/') {
                     $relative .= '/';
+                }
             }
             return $relative;
         }
@@ -784,12 +789,13 @@ class Crawler
 
         //print "dir ${url['path']}\n";
         // dirname() erkennt auf / endende URLs nicht
-        if ($url['path']{strlen($url['path']) - 1} == '/')
+        if ($url['path']{strlen($url['path']) - 1} == '/') {
             $dir = substr($url['path'], 0, strlen($url['path']) - 1);
-        else {
+        } else {
             $dir = dirname($url['path']);
-            if ($relative{0} == '?')
+            if ($relative{0} == '?') {
                 $relative = basename($url['path']) . $relative;
+            }
         }
         //print "dir $dir\n";
 
@@ -800,20 +806,24 @@ class Crawler
         }
 
         // set it to default host // TK
-        if ($url['host'] != $this->host && (strpos($url['host'], $this->host) != false || strpos($this->host, $url['host']) != false)) {
+        if ($url['host'] != $this->host && (strpos($url['host'], $this->host) != false || strpos(
+                    $this->host,
+                    $url['host']
+                ) != false)
+        ) {
             $url['host'] = $this->host;
         }
 
         // Link fдngt mit ./ an
-        if (substr($relative, 0, 2) == './')
+        if (substr($relative, 0, 2) == './') {
             $relative = substr($relative, 2);
-
-        // Referenzen auf hцher liegende Verzeichnisse auflцsen
-        else
+        } // Referenzen auf hцher liegende Verzeichnisse auflцsen
+        else {
             while (substr($relative, 0, 3) == '../') {
                 $relative = substr($relative, 3);
                 $dir = substr($dir, 0, strrpos($dir, '/'));
             }
+        }
 
         // if base is set, add it.
         if (strlen($this->base)) {
@@ -824,64 +834,72 @@ class Crawler
         return sprintf('%s://%s%s/%s', $url['scheme'], $url['host'], $dir, urldecode($relative));
     }
 
-
-    /* better compare function: contains */
-    function _fl_contains($key, $array)
+    function _removeForbiddenKeys($url)
     {
-        if (is_array($array) && count($array) > 0) {
-            foreach ($array as $id => $val) {
-                $pos = @ strpos($key, $val);
-                if ($pos === false) continue;
+        $paramsStart = strpos($url, '?');
+        if ($paramsStart !== false) { // url has no parameters, don't search for keys
+            foreach ($this->forbiddenKeys as $id => $key) {
+                if ($key == '') {
+                    continue;
+                } // empty key => ignore it
+                $start = strpos($url, $key, $paramsStart);
+                while ($start != false) {
+                    $end = strpos($url, '&', $start);
+                    if ($end !== false) {
+                        $url = substr($url, 0, $start) . substr($url, $end + 1);
+                    } else {
+                        $url = substr($url, 0, $start);
+                    }
+                    $start = strpos($url, $key, $paramsStart);
+                } // else: does not contain key
+            }
+        }
+        // remove anchor links : beginning with # to the end of the url
+        // echo "$url<br>\n";
+        if (strpos($url, '#') !== false) {
+            $url = substr($url, 0, strpos($url, '#'));
+        }
+        // remove empty & and ?
+        while (substr($url, strlen($url) - 1) == "&") {
+            $url = substr($url, 0, strlen($url) - 1);
+        }
+        while (substr($url, strlen($url) - 1) == "?") {
+            $url = substr($url, 0, strlen($url) - 1);
+        }
+        return $url;
+    }
+
+    /**
+     * Проверяем, нужно исключать этот URL или не надо
+     * @param $filename
+     * @return bool
+     */
+    function checkFileName($filename)
+    {
+        // Отрезаем доменную часть
+        $filename = substr($filename, strpos($filename, '/') + 1);
+
+        if (is_array($this->forbiddenPage) && count($this->forbiddenPage) > 0) {
+            // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
+            // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
+            $tmp = $this->forbiddenPage;
+            if ($filename !== array_reduce(
+                    $tmp,
+                    function (&$res, $rule) {
+                        if ($res == 1 || preg_match($rule, $res)) {
+                            return 1;
+                        }
+                        return $res;
+                    },
+                    $filename
+                )
+            ) {
+                // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                 return true;
             }
         }
 
+        // Ни одно из правил не сработало, значит страницу исключать не надо
         return false;
     }
-
-    /**
-     * set list of forbidden directories
-     */
-    function setForbiddenDirectories($directories = array())
-    {
-        $this->forbidden_dir = $directories;
-    }
-
-    /**
-     * set list of forbidden files
-     */
-    function setForbiddenFiles($files = array())
-    {
-        $this->forbidden_files = $files;
-    }
-
-    /**
-     * Страницы которые не нужны в карте сайта
-     * @param array $page
-     */
-    function setForbiddenPages($page = array())
-    {
-        $this->forbiddenPage = $page;
-    }
-
-    function setForbiddenKeys($keys)
-    {
-        $this->forbiddenKeys = $keys;
-        //    	if(!in_array($key, $this->forbiddenKeys)) $this->forbiddenKeys[] = $key;
-    }
-
-    function debug($param, $msg = '')
-    {
-        return;
-        echo "\n{$param}\n{$msg}";
-    }
-
-    function info($param, $msg = '')
-    {
-        echo "\n{$param}\n{$msg}";
-    }
-
-
 }
-
-?>
