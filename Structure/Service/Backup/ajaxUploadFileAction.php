@@ -94,8 +94,8 @@ switch ($ext) {
         gzwrite($gz, $contents);
         gzclose($gz);
 
-        // Удаляем распакованный файл
-        unlink($sqlName);
+        unlink($dumpNameFull);  // удаляем загруженный файл
+        unlink($sqlName); // удаляем распакованный файл
         break;
 }
 
@@ -107,10 +107,18 @@ $html = '<tr id="' . $dumpNameGz . '"><td><a href="" onClick="return downloadDum
     . '<td><button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' .
     addslashes($dumpNameGz) . '\'); return false;">'
     . '<span class="glyphicon glyphicon-upload"></span></button>&nbsp;'
+
     . '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' .
     addslashes($dumpNameGz) . '\'); return false;">'
-    . '<span class="glyphicon glyphicon-remove"></span></button></td>'
-    . '</tr>';
+    . '<span class="glyphicon glyphicon-remove"></span></button>&nbsp;'
+
+    . '<button id="' . $dumpNameGz . '_btn_cmt"
+            class="tlp btn btn-default btn-xs btn-cmt"
+            title="Добавить комментарий"
+            onclick="showModal(\'' . addslashes($dumpNameGz) . '\'); false;">'
+    . '<span class="glyphicon glyphicon-pencil"></span></button>&nbsp;'
+
+    . '</td></tr>';
 
 echo json_encode(array('html' => $html, 'error' => false));
 

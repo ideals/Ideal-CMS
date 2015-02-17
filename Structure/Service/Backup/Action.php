@@ -76,6 +76,29 @@ try {
            onchange="upload(this.files[0])">
 </form>
 
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Комментарий</h4>
+            </div>
+            <div class="modal-body">
+                <textarea class="form-control" name="cmt" id="cmt"
+                          style="width:100%"></textarea>
+                <input type="hidden" id="dname" value="" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" type="button"
+                        data-dismiss="modal">Закрыть</button>
+                <button class="btn btn-primary"
+                        type="button"
+                        onclick="saveModal(); return false;">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div><!-- /.modal -->
+
 <div style="clear:right;"></div>
 
 <?php
@@ -98,6 +121,20 @@ if (is_dir($backupPart)) {
 
         $file = $backupPart . DIRECTORY_SEPARATOR . $file;
 
+        // Текст и кнопка комментария
+        $cmtText = 'Добавить комментарий'; // текст по умолчанию
+        $cmtBtnStyle = 'btn-default'; // стиль кнопки по умолчанию
+        // Считываем данные из файла
+        $cmtFileContents = '';
+        $cmtFileName = str_replace('.gz', '.txt', $file); // имя файла комментария
+        if (file_exists($cmtFileName)) {
+            $cmtFileContents = file_get_contents($cmtFileName);
+        }
+        if ($cmtFileContents) {
+            $cmtText = $cmtFileContents;
+            $cmtBtnStyle = 'btn-info';
+        }
+
         echo '<tr id="' . $file . '"><td>';
         echo '<a href="" onClick="return downloadDump(\'' . addslashes($file) . '\')"> ';
         echo "$day.$month.$year - $hour:$minute:$second";
@@ -107,26 +144,101 @@ if (is_dir($backupPart)) {
         }
         echo '</a></td>';
         echo '<td>';
+
+        // Кнопка импорта
         echo '<button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\''
             . addslashes($file) . '\'); false;">';
         echo ' <span class="glyphicon glyphicon-upload"></span> ';
         echo '</button>&nbsp;';
 
+        // Кнопка удаления
         echo '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\''
             . addslashes($file) . '\'); false;">';
         echo ' <span class="glyphicon glyphicon-remove"></span> ';
-        echo '</button></td>';
+        echo '</button>&nbsp;';
+
+        // Кнопка комментария
+        echo '<button id="' . $file . '_btn_cmt"
+            class="tlp btn ' . $cmtBtnStyle . ' btn-xs btn-cmt"
+            title="' . $cmtText .'"
+            onclick="showModal(\'' . addslashes($file) . '\'); false;">';
+        echo ' <span class="glyphicon glyphicon-pencil"></span> ';
+        echo '</button>&nbsp;';
+
+        echo '</td>';
         echo '</tr>';
     }
-    echo '</table>';
 }
 
 ?>
 
 <script type="text/javascript">
 
+    $(document).ready(function() {
+        $('.tlp').tooltip();
+    });
+
+    // Отображает модальное окно для добавления/редактирования комментария
+    function showModal(nameFile) {
+        var url = window.location.href + "&action=ajaxComment";
+        // Добавляем имя файла в hidden input
+        $('#dname').val(nameFile);
+        // Заполняем textarea
+        $('#cmt').val('');
+        $.ajax({
+            url: url,
+            cache: false,
+            type: 'POST',
+            data: {
+                name: nameFile,
+                act: 'get'
+            },
+            success: function (data) {
+                // Выводим текст комментария в textarea
+                $('#cmt').val(data);
+            }
+        });
+        // Отображение модального окна
+        $('#myModal').modal({backdrop: 'static'});
+    }
+
+    // Сохраненяет текст комментария из модального окна
+    function saveModal() {
+        var url = window.location.href + "&action=ajaxComment";
+        // Имя файла дампа
+        var nameFile = $('#dname').val();
+        // Текст комментария
+        var cmtText = $('#cmt').val();
+        // Сохраняем комментарий
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                name: nameFile,
+                act: 'save',
+                text: cmtText
+            },
+            success: function (data) {
+                $('#cmt').val(''); // очищаем textarea
+                $('#myModal').modal('hide'); // закрываем модальное окно
+                var el = document.getElementById(nameFile+'_btn_cmt');
+                if (data.length > 0) {
+                    el.classList.remove('btn-default');
+                    el.classList.add('btn-info');
+                    el.setAttribute('title', data);
+                } else {
+                    el.classList.remove('btn-info');
+                    el.classList.add('btn-default');
+                    el.setAttribute('title', 'Добавить комментарий');
+                }
+                $('.tlp').tooltip('destroy').tooltip();
+            }
+        })
+    }
+
     // Загрузка файла
     function upload(file) {
+        alert(file.name);
         // FormData
         var fd = new FormData();
         fd.append('file', file);
@@ -149,6 +261,7 @@ if (is_dir($backupPart)) {
                 $('#textDumpStatus').removeClass().addClass('alert alert-success')
                     .html('Файл успешно загружен');
                 $('#dumpTable').prepend(data.html);
+                $('.tlp').tooltip('destroy').tooltip();
             } else {
                 $('#textDumpStatus').removeClass().addClass('alert alert-error')
                     .html(data.error);
@@ -202,14 +315,14 @@ if (is_dir($backupPart)) {
                 },
                 success: function (data) {
                     //Выводим сообщение
-                    if (data == true) {
+                    if (data.length == 0) {
                         var el = document.getElementById(nameFile);
                         el.parentNode.removeChild(el);
                         $('#textDumpStatus').removeClass().addClass('alert alert-success')
                             .html('Файл успешно удалён');
                     } else {
                         $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                            .html('Ошибка при удалении файла');
+                            .html(data);
                     }
                 },
                 error: function () {
@@ -238,6 +351,7 @@ if (is_dir($backupPart)) {
                     $('#textDumpStatus').removeClass().addClass('alert alert-success')
                         .html('Копия БД создана');
                     $('#dumpTable').prepend(data);
+                    $('.tlp').tooltip('destroy').tooltip();
                 } else {
                     $('#textDumpStatus').removeClass().addClass('alert alert-error')
                         .html('Ошибка при создании копии БД');

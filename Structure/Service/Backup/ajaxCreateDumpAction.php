@@ -54,8 +54,15 @@ if (isset($_POST['createMysqlDump'])) {
 
     . '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' .
         addslashes($dumpName) . '\'); return false;">'
-        . '<span class="glyphicon glyphicon-remove"></span></button></td>';
-    echo '</tr>';
+        . '<span class="glyphicon glyphicon-remove"></span></button>&nbsp;'
+
+    . '<button id="' . $dumpName . '_btn_cmt"
+            class="tlp btn btn-default btn-xs btn-cmt"
+            title="Добавить комментарий"
+            onclick="showModal(\'' . addslashes($dumpName) . '\'); false;">'
+        . '<span class="glyphicon glyphicon-pencil"></span></button>&nbsp;';
+
+    echo '</td></tr>';
 }
 
 exit(false);
