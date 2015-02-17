@@ -1,0 +1,35 @@
+{% extends "site.twig" %}
+
+{% block content %}
+
+    <h1>{{ header|raw }}</h1>
+
+    {% if parts|length > 0 %}
+        {% for part in parts %}
+            <p>
+                <small>{{ part.date_create }}</small>
+                <br/>
+                <strong>
+                    <a href="{{ part.link }}">{{ part.name }}</a>
+                </strong>
+                {% if part.annot != '' %}<br/>{% endif %}
+                {{ part.annot }}
+            </p>
+        {% endfor %}
+    {% endif %}
+
+    {% if pager.pages|length > 1 %}
+        <div class="pagination pagination-left">
+            <ul class="pagination-tag">
+                {% for page in pager.pages %}
+                    {% if page.current == 1 %}
+                        <li class="active"><a>{{ page.num }}</a></li>
+                    {% else %}
+                        <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+{% endblock %}

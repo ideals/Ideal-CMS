@@ -1,0 +1,20 @@
+{% extends "site.twig" %}
+
+{% block content %}
+
+    <h1>{{ header|raw }}</h1>
+
+    {% if tagsNews|length > 0 %}
+        {% for part in tagsNews %}
+            <p>
+                <small>{{ part.date_create }}</small>
+                <br/>
+                <strong>
+                    <a href="/news/{{ part.url }}">{{ part.name }}</a>
+                </strong>
+                {% if part.annot != '' %}<br/>{% endif %}
+                {{ part.annot }}
+            </p>
+        {% endfor %}
+    {% endif %}
+{% endblock %}
