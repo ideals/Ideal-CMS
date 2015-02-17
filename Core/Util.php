@@ -154,6 +154,13 @@ class Util
         return $date;
     }
 
+    /**
+     * Получение полного названия класса структуры/поля/аддона на основании краткого названия
+     *
+     * @param string $module Краткое название класса (например, Ideal_Part)
+     * @param string $type Тип класса (например, Structure или Field)
+     * @return string
+     */
     public static function getClassName($module, $type)
     {
         list($module, $structure) = explode('_', $module);
