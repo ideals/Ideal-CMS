@@ -47,9 +47,21 @@ class Model extends AbstractModel
     public function getSqlAdd($newValue = array())
     {
         $_sql = "DELETE FROM {$this->table} WHERE part_id='{{ objectId }}';";
+        $structureID = '';
+        $pageData = $this->obj->getPageData();
+        if (isset($pageData['structure']) && (strlen($pageData['structure']) > 3)) {
+            $config = Config::getInstance();
+            $structureID = $config->getStructureByName($pageData['structure']);
+            $structureID = $structureID['ID'];
+            $structureID = "parent_id = '{$structureID}'";
+        }
+        if ($structureID !== '') {
+            $_sql = trim($_sql, ';') . ' AND ' . $structureID . ';';
+            $structureID = ', ' . $structureID;
+        }
         if (is_array($newValue) && (count($newValue) > 0)) {
             foreach ($newValue as $v) {
-                $_sql .= "INSERT INTO {$this->table} SET part_id='{{ objectId }}', tag_id='{$v}';";
+                $_sql .= "INSERT INTO {$this->table} SET part_id='{{ objectId }}', tag_id='{$v}' {$structureID};";
             }
         }
         return $_sql;

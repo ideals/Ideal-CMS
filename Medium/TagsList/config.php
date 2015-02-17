@@ -18,7 +18,7 @@ return array(
             'label' => 'Идентификатор тега',
             'sql'   => 'int(11)',
         ),
-        'prev_ID' => array(
+        'parent_id' => array(
             'label' => 'ID родительских структур',
             'sql'   => 'char(15)',
             'type'  => 'Ideal_Hidden'
