@@ -31,11 +31,11 @@ $srcName = $_FILES['file']['name'];
 $ext = substr($srcName, strrpos($srcName, '.') + 1);
 
 // Проверяем соответствие имени загружаемого файла шаблону имени для дампа
-preg_match("/dump_([0-9]{4}\.[0-9]{2}\.[0-9]{2}_[0-9]{2}\.[0-9]{2}\.[0-9]{2})_v[0-9a-z\.]{3,}\.[sql|zip]/is", $srcName, $m);
+preg_match("/dump_([0-9]{4}\.[0-9]{2}\.[0-9]{2}_[0-9]{2}\.[0-9]{2}\.[0-9]{2}_v[0-9a-z\.]{3,})[\._]/Usmi", $srcName, $m);
 
 // Имя файла дампа
-$timeName = (!empty($m[1])) ? $m[1] : date('Y.m.d_H.i.s', $time);
-$dumpName = 'dump_' . $timeName . '_' . $version . '_upload.sql';
+$timeName = (!empty($m[1])) ? $m[1] : date('Y.m.d_H.i.s', $time) . '_' . $version;
+$dumpName = 'dump_' . $timeName . '_upload.sql';
 
 // Полный путь до дампа
 $dumpNameFull = $backupPart . DIRECTORY_SEPARATOR . $dumpName;
@@ -121,7 +121,7 @@ switch ($ext) {
 // Формируем строку с новым файлом
 $html = '<tr id="' . $dumpNameGz . '"><td><a href="" onClick="return downloadDump(\'' .
     addslashes($dumpNameGz) . '\')"> ' .
-    str_replace('_', ' - ', $timeName) . ' - ' . $version . ' (upload)'
+    str_replace('_', ' - ', $timeName) . ' (upload)'
     . '</a></td>'
     . '<td><button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' .
     addslashes($dumpNameGz) . '\'); return false;">'
