@@ -14,9 +14,7 @@ if (!isset($_FILES['file']['name'])) {
 }
 
 $time = time();
-
-// Расширение загруженного файла (без точки)
-$ext = substr($_FILES['file']['name'], strrpos($_FILES['file']['name'], '.') + 1);
+$isOverride = false; // перезаписан ли файл
 
 // Папка сохранения дампов
 $backupPart = stream_resolve_include_path($_GET['bf']);
@@ -26,15 +24,31 @@ $versions = new \Ideal\Structure\Service\UpdateCms\Versions();
 $nowVersions = $versions->getVersions();
 $version = 'v' . $nowVersions['Ideal-CMS'];
 
+// Имя загружаемого файла
+$srcName = $_FILES['file']['name'];
+
+// Расширение загружаемого файла (без точки)
+$ext = substr($srcName, strrpos($srcName, '.') + 1);
+
+// Проверяем соответствие имени загружаемого файла шаблону имени для дампа
+preg_match("/dump_([0-9]{4}\.[0-9]{2}\.[0-9]{2}_[0-9]{2}\.[0-9]{2}\.[0-9]{2})_v[0-9a-z\.]{3,}\.[sql|zip]/is", $srcName, $m);
+
 // Имя файла дампа
-$dumpName = 'dump_' . date('Y.m.d_H.i.s', $time) . $version . '_upload.sql';
+$timeName = (!empty($m[1])) ? $m[1] : date('Y.m.d_H.i.s', $time);
+$dumpName = 'dump_' . $timeName . '_' . $version . '_upload.sql';
+
 // Полный путь до дампа
 $dumpNameFull = $backupPart . DIRECTORY_SEPARATOR . $dumpName;
+
 // Полный путь до архива .gz
 $dumpNameGz = $dumpNameFull . '.gz';
 
 if (!in_array($ext, array('gz', 'zip', 'sql'))) {
     $exitScript('', 'Ошибка: расширение файла должно быть .gz, .sql или .zip');
+}
+
+if (file_exists($dumpNameGz)) {
+    $exitScript('', 'Ошибка: файл с таким именем уже существует');
 }
 
 if (!move_uploaded_file($_FILES['file']['tmp_name'], $dumpNameFull)) {
@@ -107,7 +121,7 @@ switch ($ext) {
 // Формируем строку с новым файлом
 $html = '<tr id="' . $dumpNameGz . '"><td><a href="" onClick="return downloadDump(\'' .
     addslashes($dumpNameGz) . '\')"> ' .
-    date('d.m.Y - H:i:s', $time) . ' ' . $version . ' (upload)'
+    str_replace('_', ' - ', $timeName) . ' - ' . $version . ' (upload)'
     . '</a></td>'
     . '<td><button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' .
     addslashes($dumpNameGz) . '\'); return false;">'
