@@ -33,7 +33,7 @@ $.jsonp({
                 .attr('method', 'post');
 
             $.each(update, function (keyLine, line) {
-                buf = 'updateModule("' + key + '","' + line['version'] + '")';
+                buf = 'updateModule("' + key + '", "' + line['version'] + '", "' + value + '")';
                 $('<button>')
                     .appendTo('form:last')
                     .attr('class', 'btn ')
@@ -53,14 +53,15 @@ $.jsonp({
 
 /**
  * Объект осуществляющий процесс обновления*/
-function Update(moduleName, version, url, modalBox) {
+function Update(moduleName, version, currentVersion, url, modalBox) {
     this.url = 'index.php?par=' + url;
     this.modalBox = modalBox;
     this.ajaxData = Object.freeze({
         mode: 'ajax',
         controller: '\\Ideal\\Structure\\Service\\UpdateCms',
         name: moduleName,
-        version: version
+        version: version,
+        currentVersion: currentVersion
     });
 
     this.ajaxRequest = function(data) {
@@ -74,6 +75,8 @@ function Update(moduleName, version, url, modalBox) {
                 var check = update.dataCheck(result);
                 if (check) {
                     update.run(result, data.action);
+                } else {
+                    update.modalBox.find('.close, .btn-close').removeAttr('disabled');
                 }
             },
             error: function (data) {
@@ -151,6 +154,14 @@ function Update(moduleName, version, url, modalBox) {
                     data.action = 'ajaxRunScript';
                     scriptsExecutes = scriptsExecutes--;
                 } else {
+                    data.action = 'ajaxEndVersion';
+                }
+                break;
+            case 'ajaxEndVersion':
+                if (result.data != null && result.data.next == 'true') {
+                    data.action = 'ajaxDownload';
+                    data.currentVersion = result.data.currentVersion;
+                } else {
                     data.action = 'ajaxFinish';
                 }
                 break;
@@ -167,8 +178,8 @@ function Update(moduleName, version, url, modalBox) {
 }
 
 /** Обновление CMS или модуля */
-function updateModule(moduleName, version) {
-    var update = new Update(moduleName, version, url, $('#modalUpdate'));
+function updateModule(moduleName, version, currentVersion) {
+    var update = new Update(moduleName, version, currentVersion, url, $('#modalUpdate'));
     update.modalBox.find('.modal-body').html('');
     update.modalBox.find('.close, .btn-close').attr('disabled', 'disabled');
     // Открываем модальное окно
