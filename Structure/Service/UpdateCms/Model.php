@@ -36,6 +36,9 @@ class Model
     /** @var string Версия, на которую производится обновление */
     public $updateVersion = '';
 
+    /** @var string Текущая версия */
+    public $currentVersion = '';
+
     /**
      * Инициализация файла лога обновлений
      */
@@ -56,12 +59,14 @@ class Model
      *
      * @param string $updateName    Название модуля
      * @param string $updateVersion Номер версии, на которую обновляемся
+     * @param string $currentVersion Номер текущей версии
      */
-    public function setUpdate($updateName, $updateVersion)
+    public function setUpdate($updateName, $updateVersion, $currentVersion)
     {
         // todo Сделать защиту от хакеров на POST-переменные
         $this->updateName = $updateName;
         $this->updateVersion = $updateVersion;
+        $this->currentVersion = $currentVersion;
     }
 
     /**
@@ -72,62 +77,58 @@ class Model
     {
         $updateUrl = $this->updateFolders['getFileScript']
             . '?name=' . urlencode(serialize($this->updateName))
+            . '&cVer=' . $this->currentVersion
             . '&ver=' . $this->updateVersion;
-        $file = file_get_contents($updateUrl);
+        $info = json_decode(file_get_contents($updateUrl), true);
+
+        // Проверка на получение данных о получаемом обновлении
+        if ($info === false || !isset($info['file']) || !isset($info['md5']) ||  !isset($info['version'])) {
+            $this->addAnswer(
+                'Не удалось получить данные о получаемом обновлении',
+                'error'
+            );
+            exit;
+        }
+
+        // Название файла для сохранения
+        $path = $this->updateFolders['uploadDir'] . '/' . $this->updateName;
+
+        $fp = fopen($path, 'w');
+
+        $updateUrl = $this->updateFolders['getFileScript']
+            . '?file=' . $info['file'];
+
+        $ch = curl_init($updateUrl);
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+
+        $data = curl_exec($ch);
+
+        curl_close($ch);
+        fclose($fp);
+
+
         // Проверка на получение файла
-        if ($file === false) {
+        if ($data === false) {
             $this->addAnswer(
                 'Не удалось получить файл обновления с сервера обновлений ' . $this->updateFolders['getFileScript'],
                 'error'
             );
             exit;
         }
-        // Проверка получен ли ответ от сервера
-        if (strlen($file) === 0) {
-            $this->addAnswer('Не удалось получить содержимое файла. Возможно файл пуст.', 'error');
+        // Проверка создан ли запрошенный файл
+        if (!file_exists($path)) {
+            $this->addAnswer('Не удалось создать файл.', 'error');
             exit;
         }
 
-        // Если вместо файла найдено сообщение, выводим его
-        $prefix = substr($file, 0, 5);
-        if ($prefix === "(msg)") {
-            $msg = substr($file, 5, strlen($file));
-            $msg = json_decode($msg);
-            if (!isset($msg->message)) {
-                $this->addAnswer('Получен непонятный ответ: ' . $file, 'error');
-            }
-            $this->addAnswer($msg, 'warning');
-            exit;
-        }
-
-        // Если получили md5
-        if ($prefix !== "(md5)") {
-            $this->addAnswer("Ответ от сервера некорректен:\n" . $file, 'error');
-            exit;
-        }
-
-        $fileGet = array(
-            'md5' => substr($file, 5, strpos($file, 'md5end') - 5),
-            'file' => substr($file, strpos($file, 'md5end') + 6)
-        );
-
-        if (!isset($fileGet['md5'])) {
-            $this->addAnswer('Не удалось получить хеш получаемого файла', 'error');
-            exit;
-        }
-
-        // Сохраняем полученный архив в свою папку (например, /www/example.com/tmp/update)
-        $archive = $this->updateFolders['uploadDir'] . '/' . $this->updateName;
-        file_put_contents($archive, $fileGet['file']);
-
-        if (md5_file($archive) != $fileGet['md5']) {
+        if (md5_file($path) != $info['md5']) {
             $this->addAnswer('Полученный файл повреждён (хеш не совпадает)', 'error');
             exit;
         }
 
         $this->addAnswer('Загружен архив с обновлениями', 'success');
         // Возвращаем название загруженного архива
-        return($archive);
+        return array('path' => $path, 'version' => $info['version']);
     }
 
     /**
@@ -140,7 +141,7 @@ class Model
     public function unpackUpdate($archive)
     {
         $zip = new \ZipArchive;
-        $res = $zip->open($archive);
+        $res = $zip->open($archive['path']);
 
         if ($res !== true) {
             $this->addAnswer('Не получилось из-за ошибки #' . $res, 'error');
@@ -153,7 +154,7 @@ class Model
         // Распаковываем архив в папку
         $zip->extractTo(SETUP_DIR);
         $zip->close();
-        unlink($archive);
+        unlink($archive['path']);
         $this->addAnswer('Распакован архив с обновлениями', 'success');
     }
 
