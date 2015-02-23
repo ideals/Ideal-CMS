@@ -27,7 +27,7 @@ class AjaxController extends \Ideal\Core\AjaxController
         $config = Config::getInstance();
         $this->updateModel = new Model();
 
-        $getFileScript = $this->srv . '/get.php';
+        $getFileScript = $this->srv . '/getNext.php';
 
 
         if (is_null($config->cms['tmpFolder']) || ($config->cms['tmpFolder'] == '')) {
