@@ -16,7 +16,7 @@ namespace FormPhp;
 class Forms
 {
     /** @var array Список полей ввода в форме */
-    protected $fields = array();
+    public $fields = array();
 
     /** @var string Название формы  */
     protected $formName;
@@ -79,6 +79,7 @@ class Forms
         /** @var \FormPhp\Field\AbstractField $field */
         $field = new $fieldName($name, $options);
         $field->setMethod($this->method);
+        $field->setXhtml($this->xhtml);
         $this->fields[$name] = $field;
         return $this;
     }
@@ -283,14 +284,17 @@ class Forms
      */
     protected function renderJs()
     {
-        $validJS = array();
+        $js = array();
         foreach ($this->validators as $v) {
             /** @var $v \FormPhp\Validator\AbstractValidator */
-            $validJS[] = $v->getCheckJs();
+            $js[] = $v->getCheckJs();
         }
-
+        foreach ($this->fields as $v) {
+            /** @var $v \FormPhp\Field\AbstractField */
+            $js[get_class($v)] = $v->getJs();
+        }
         $js = "jQuery(document).ready(function () {\n var $ = jQuery;";
-        $js .= implode("\n", $validJS);
+        $js .= implode("\n", $js);
         $js .= file_get_contents(__DIR__ .'/form.js');
         $this->js = $js . $this->js . "\n"  . '})';
 
