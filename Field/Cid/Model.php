@@ -168,7 +168,7 @@ class Model
             $where .= $or . " cid LIKE '{$old}%'";
             $or = ' OR';
         }
-        $_sql .= "\n ELSE cid END WHERE " . $where;
+        $_sql .= "\n ELSE cid END WHERE " . $where . ';';
         // На основании массива $update составляем список запросов для обновления cid'ов
         return $_sql;
     }
