@@ -243,8 +243,7 @@ class Forms
      * @param string|array $validator Название, список или класс валидатора
      * @throws \Exception
      */
-    public function setValidator($name, $validator)
-    {
+    public function setValidator($name, $validator) {
         if (is_string($validator)) {
             if (!isset($this->fields[$name])) {
                 throw new \Exception('Не найден элемент формы с именем ' . $name);
@@ -293,10 +292,11 @@ class Forms
             /** @var $v \FormPhp\Field\AbstractField */
             $js[get_class($v)] = $v->getJs();
         }
-        $js = "jQuery(document).ready(function () {\n var $ = jQuery;";
-        $js .= implode("\n", $js);
-        $js .= file_get_contents(__DIR__ .'/form.js');
-        $this->js = $js . $this->js . "\n"  . '})';
+        $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
+            . implode("\n", $js)
+            . file_get_contents(__DIR__ .'/form.js')
+            . $this->js
+            . "\n"  . '})';
 
         return $this->js;
     }
