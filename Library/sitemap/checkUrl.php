@@ -1,4 +1,6 @@
 <?php
+namespace ParseIt;
+
 /**
  * Created by PhpStorm.
  * User: Sam
@@ -186,7 +188,7 @@ class ParseIt
         fclose($this->tmp);
     }
 
-    /** Метод для получения html кода и парсинга текущей страницы в основном цикле */
+    /* Метод для получения html кода и парсинга текущей страницы в основном цикле */
     private function getUrl($k)
     {
         $ch = curl_init($k);
@@ -220,7 +222,7 @@ class ParseIt
         $this->processingLinks($k, $urls[1]);
     }
 
-    /** Метод для обработки полученных ссылок в результате парсинга страницы */
+    /* Метод для обработки полученных ссылок в результате парсинга страницы */
     private function processingLinks($k, $urls)
     {
         foreach ($urls as $val) {
