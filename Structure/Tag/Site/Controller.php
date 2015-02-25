@@ -19,10 +19,10 @@ class Controller extends \Ideal\Core\Site\Controller
 
     public function detailAction()
     {
-        $this->templateInit('Ideal/Structure/Tag/Site/detail.twig');
+        $this->templateInit('Structure/Tag/Site/detail.twig');
 
         $this->view->header = $this->model->getHeader();
-        $this->view->tagsNews = $this->model->getTagsNews();
+        $this->view->elemTag = $this->model->getElemTag();
 
         $config = Config::getInstance();
         $parentUrl = $this->model->getParentUrl();
