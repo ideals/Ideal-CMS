@@ -54,7 +54,6 @@ class AbstractModel
         $module = $parts[0];
         $module = ($module == 'Ideal') ? '' : $module . '/';
         $structureName = $parts[2];
-        $structureFullName = $module . '_' . $structureName;
 
         $includeFile = $module . 'Medium/' . $structureName . '/config.php';
         $structure = include($includeFile);

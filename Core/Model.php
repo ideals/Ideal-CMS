@@ -1,4 +1,5 @@
 <?php
+// @codingStandardsIgnoreFile
 namespace Ideal\Core;
 
 use Ideal\Field\Url;
@@ -28,6 +29,8 @@ abstract class Model
     protected $path = array();
 
     protected $prevStructure;
+
+    protected $structureFullName;
 
     public function __construct($prevStructure)
     {
@@ -69,6 +72,8 @@ abstract class Model
                 throw new \Exception('Неизвестный тип: ' . $type);
                 break;
         }
+
+        $this->structureFullName = $structureFullName;
 
         $this->params = $structure['params'];
         $this->fields = $structure['fields'];
@@ -262,6 +267,11 @@ abstract class Model
             $this->initPageData();
         }
         return $this->pageData;
+    }
+
+    public function getStructureFullName()
+    {
+        return $this->structureFullName;
     }
 
     public function setPageData($pageData)

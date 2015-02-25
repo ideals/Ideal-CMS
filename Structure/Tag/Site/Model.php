@@ -71,23 +71,23 @@ class Model extends \Ideal\Core\Site\Model
         return $tags;
     }
 
-    public function getTags($prevID = false)
+    public function getElemTag($prevID = false)
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
         $id = $this->pageData['ID'];
         $tableList = $config->db['prefix'] . 'ideal_medium_tagslist';
         // TODO сделать автоматическое определение тегов и структур где они используются
-        if ($prevID !== false) {
+        if ($prevID === false) {
             $sql = "SELECT * FROM {$tableList} WHERE tag_id={$id}";
             $listTag = $db->select($sql);
 
             $listStructureID = array();
             foreach ($listTag as $key => $value) {
-                if (isset($listStructureID[$value['prev_ID']])) {
+                if (isset($listStructureID[$value['parent_id']])) {
                     continue;
                 }
-                $listStructureID[$value['prev_ID']] = $value['prev_ID'];
+                $listStructureID[$value['parent_id']] = $value['parent_id'];
             }
             return false;
         } else {

@@ -3,7 +3,7 @@
 // Теги
 return array(
     'params' => array (
-        'in_structures' => array('Ideal_DataList'), // в каких структурах можно создавать эту структуру
+        'in_structures' => array('Ideal_Part'), // в каких структурах можно создавать эту структуру
         'elements_cms'  => 10, // количество элементов в списке в CMS
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_name'    => '', // поле для входа в список потомков
