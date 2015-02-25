@@ -16,7 +16,7 @@ namespace FormPhp;
 class Forms
 {
     /** @var array Список полей ввода в форме */
-    protected $fields = array();
+    public $fields = array();
 
     /** @var string Название формы  */
     protected $formName;
@@ -79,6 +79,7 @@ class Forms
         /** @var \FormPhp\Field\AbstractField $field */
         $field = new $fieldName($name, $options);
         $field->setMethod($this->method);
+        $field->setXhtml($this->xhtml);
         $this->fields[$name] = $field;
         return $this;
     }
@@ -242,8 +243,7 @@ class Forms
      * @param string|array $validator Название, список или класс валидатора
      * @throws \Exception
      */
-    public function setValidator($name, $validator)
-    {
+    public function setValidator($name, $validator) {
         if (is_string($validator)) {
             if (!isset($this->fields[$name])) {
                 throw new \Exception('Не найден элемент формы с именем ' . $name);
@@ -283,16 +283,20 @@ class Forms
      */
     protected function renderJs()
     {
-        $validJS = array();
+        $js = array();
         foreach ($this->validators as $v) {
             /** @var $v \FormPhp\Validator\AbstractValidator */
-            $validJS[] = $v->getCheckJs();
+            $js[] = $v->getCheckJs();
         }
-
-        $js = "jQuery(document).ready(function () {\n var $ = jQuery;";
-        $js .= implode("\n", $validJS);
-        $js .= file_get_contents(__DIR__ .'/form.js');
-        $this->js = $js . $this->js . "\n"  . '})';
+        foreach ($this->fields as $v) {
+            /** @var $v \FormPhp\Field\AbstractField */
+            $js[get_class($v)] = $v->getJs();
+        }
+        $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
+            . implode("\n", $js)
+            . file_get_contents(__DIR__ .'/form.js')
+            . $this->js
+            . "\n"  . '})';
 
         return $this->js;
     }
