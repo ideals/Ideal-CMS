@@ -37,7 +37,8 @@ class ParseIt
     /** @var array Массив проверенных ссылок */
     private $checked = array();
 
-    private $timeloop = array();
+    /** @var resource Поток для времнного файла  */
+    private $tmp;
 
     private $options = array(
         CURLOPT_RETURNTRANSFER => true, //  возвращать строку, а не выводить в браузере
@@ -128,13 +129,21 @@ class ParseIt
         if (file_exists($filename)) {
             $arr = file($filename, FILE_IGNORE_NEW_LINES);
             //Разбиваем строку на ссылку и флаг (пройдена ли ссылка)
-            /* todo переписать для двух массивов: пройденных и НЕпройденных ссылок */
-            foreach ($arr as &$v) {
+            foreach ($arr as $v) {
                 $v = explode(" ", $v);
                 $this->links[$v[0]] = $v[1];
             }
-            // иначе создаем его
+            foreach ($this->links as $v => $k) {
+                if ($k == 1) {
+                    $this->checked[$v] = $k;
+                    unset($this->links[$v]);
+                }
+            }
+            //$this->tmp = fopen($filename, "r+");
+            $this->tmp = fopen($filename, "a+");
         } else {
+            // иначе создаем его
+            $this->tmp = fopen($filename, "w+");
             // записываем первую сслыку в массив
             $this->links[$this->host] = 0;
             // Если переданная ссылка не главная страница, тоже добавляем её
@@ -165,22 +174,21 @@ class ParseIt
                 //Передаем ссылку на парсинг
                 $this->getUrl($k);
             } else {
-                echo "Выход по таймауту\n";
-                echo "Непройденные полученные ссылки: ".count($this->links)."\n";
-                echo "Пройденные ссылки:".count($this->checked)."\n";
-                print_r($this->timeloop);
+                foreach ($this->links as $v => $k) {
+                    fwrite($this->tmp, $v." ".$k."\n");
+                }
+                fclose($this->tmp);
+                echo "timeout";
                 exit();
             }
         }
-        print_r($this->checked);
-        echo "\n";
-        print_r($this->timeloop);
+        echo "Карта сайта успешно создана!\n";
+        fclose($this->tmp);
     }
 
     /** Метод для получения html кода и парсинга текущей страницы в основном цикле */
     private function getUrl($k)
     {
-
         $ch = curl_init($k);
 
         curl_setopt_array($ch, $this->options);
@@ -190,9 +198,11 @@ class ParseIt
         $info = curl_getinfo($ch); // получаем инофрмацию о запрошенной странице
 
         if ($info['http_code'] == "404") {
+            // ЧТО ДЕЛАТЬ ЕСЛИ 404?
             //Если страница имеет статус 404 добавляем её в массив пройденных с соответствующим статусом
-            $this->checked[$k] = 0;
+            $this->checked[$k] = 1;
             unset ($this->links[$k]);
+            fwrite($this->tmp, $k." 1\n");
             return 0;
         }
 
@@ -206,8 +216,6 @@ class ParseIt
 
         //получение всех ссылок со страницы
         preg_match_all(self::LINK, $res, $urls);
-
-
 
         $this->processingLinks($k, $urls[1]);
     }
@@ -240,10 +248,9 @@ class ParseIt
         $this->checked[$k] = 1;
         // И удаляем из массива непройденных
         unset ($this->links[$k]);
-
-        /** todo сделать запись в промежуточный файл */
+        // Записываем текущую ссылку в файл как пройденную
+        fwrite($this->tmp, $k." 1\n");
     }
-
 }
 
 $A = new ParseIt();
