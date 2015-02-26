@@ -18,6 +18,10 @@ class Controller extends AbstractField
      */
     public function getFileInput()
     {
+        if (isset($this->options['inputHtml'])) {
+            return $this->options['inputHtml'];
+        }
+
         $xhtml = ($this->xhtml) ? '/' : '';
         return '<input class="'
         . $this->options['id']
@@ -32,10 +36,12 @@ class Controller extends AbstractField
      */
     public function getAddFileButton()
     {
+        $inputHtml = $this->getFileInput();
         $xhtml = ($this->xhtml) ? '/' : '';
         return '<input type="button" value="add file" class="multiFileAddButton" data-input-id='
         . $this->options['id']
-        . '  name="file" value="" ' . $xhtml . '>' . "\n";
+        . '  name="file" value="" ' . $xhtml . '>' . "\n"
+        . "<div class='base-file-input-" . $this->options['id'] . "' style='display: none'>{$inputHtml}</div>";
     }
 
     /**
@@ -44,10 +50,11 @@ class Controller extends AbstractField
     public function getJs()
     {
         return <<<JS
+$('.base-file-input-{$this->options['id']}').children('input').removeClass("{$this->options['id']}");
 $(".multiFileAddButton").click(function() {
-    var baseInput = $('.' + $(this).data('input-id'));
-    var fileInput = baseInput.clone();
-    baseInput.after(fileInput);
+    var baseHtml = $('.base-file-input-' + $(this).data('input-id')).html();
+    var fileInput = $('.' + $(this).data('input-id'));
+    fileInput.after(baseHtml);
 });
 JS;
 
