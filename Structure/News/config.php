@@ -21,6 +21,12 @@ return array(
             'sql' => 'char(15)',
             'type' => 'Ideal_Hidden'
         ),
+        'tag' => array(
+            'label' => 'Теги',
+            'sql' => '',
+            'type' => 'Ideal_SelectMulti',
+            'medium' => '\\Ideal\\Medium\\TagsList\\Model'
+        ),
         'name' => array(
             'label' => 'Заголовок',
             'sql' => 'varchar(255) not null',

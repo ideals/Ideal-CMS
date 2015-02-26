@@ -44,6 +44,22 @@ return array(
             'name' => 'Сервис',
             'isShow' => 1,
             'hasTable' => false,
-        )
+        ),
+        // Подключаем модуль тегов
+        array(
+            'ID' => 5,
+            'structure' => 'Ideal_Tag',
+            'name' => 'Теги',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
+        // Подключаем модуль новостей
+        array(
+            'ID' => 6,
+            'structure' => 'Ideal_News',
+            'name' => 'Новости',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
     )
 );
