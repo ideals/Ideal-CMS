@@ -9,19 +9,20 @@ namespace Ideal\Structure\Tag\Site;
 
 use Ideal\Core\Config;
 
+/**
+ * Класс отвечающий за отображение списка тегов indexAction() и списка элементов в теге detailAction()
+ */
 class Controller extends \Ideal\Core\Site\Controller
 {
-
-    public function indexAction()
-    {
-        parent::indexAction();
-    }
+    /** @var Model */
+    protected $model;
 
     public function detailAction()
     {
         $this->templateInit('Structure/Tag/Site/detail.twig');
 
-        $this->view->header = $this->model->getHeader();
+        parent::indexAction();
+
         $this->view->elemTag = $this->model->getElemTag();
 
         $config = Config::getInstance();
