@@ -172,7 +172,7 @@ class ParseIt
                 //Передаем ссылку на парсинг
                 $this->getUrl($k);
             } else {
-                $result = array_merge($this->links,$this->checked);
+                $result = array_merge($this->links, $this->checked);
                 $result = serialize($result);
                 fwrite($this->tmp, $result);
                 fclose($this->tmp);
