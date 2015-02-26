@@ -52,7 +52,10 @@ class Controller extends AbstractField
         return <<<JS
 $('.base-file-input-{$this->options['id']}').children('input').removeClass("{$this->options['id']}");
 $(".multiFileAddButton").click(function() {
+    var baseInput = $('.base-file-input-' + $(this).data('input-id'));
+    baseInput.find().addClass();
     var baseHtml = $('.base-file-input-' + $(this).data('input-id')).html();
+    $(baseHtml.find('input [type=file]').addClass('file-for-send');
     var fileInput = $('.' + $(this).data('input-id'));
     fileInput.after(baseHtml);
 });
