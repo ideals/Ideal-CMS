@@ -129,7 +129,6 @@ class ParseIt
         $filename = "C:\\www\\parse-it\\tmp\\".$this->nameUrl."_tmp.txt";
         //Если файл существует считываем его
         if (file_exists($filename)) {
-            //$arr = file($filename, FILE_IGNORE_NEW_LINES);
             $arr = file_get_contents($filename);
             $this->links = unserialize($arr);
             //Разбиваем массив на пройденные и непройденные ссылки
