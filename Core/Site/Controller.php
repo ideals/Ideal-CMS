@@ -51,6 +51,11 @@ class Controller
      */
     public function templateInit($tplName = '', $tplFolders = array())
     {
+        // Если вьюха уже установлена, то ничего делать не надо
+        // todo для переустановки вьюхи надо придумать отдельный метод, когда это потребуется
+        if (isset($this->view)) {
+            return;
+        }
         // Инициализация общего шаблона страницы
         $gblName = 'site.twig';
         if (!stream_resolve_include_path($gblName)) {
