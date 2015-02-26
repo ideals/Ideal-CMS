@@ -7,9 +7,10 @@ use Ideal\Medium\AbstractModel;
 
 class Model extends AbstractModel
 {
-    protected $obj;
-    protected $fieldName;
 
+    /**
+     * {@inheritdoc}
+     */
     public function getList()
     {
         $db = Db::getInstance();
@@ -26,24 +27,9 @@ class Model extends AbstractModel
         return $list;
     }
 
-
-    public function getVariants()
-    {
-        $db = Db::getInstance();
-        $pageData = $this->obj->getPageData();
-        $newsId = $pageData['ID'];
-        $_sql = "SELECT tag_id FROM {$this->table} WHERE part_id='{$newsId}'";
-        $arr = $db->select($_sql);
-
-        $list = array();
-        foreach ($arr as $v) {
-            $list[] = $v['tag_id'];
-        }
-
-        return $list;
-    }
-
-
+    /**
+     * {@inheritdoc}
+     */
     public function getSqlAdd($newValue = array())
     {
         $_sql = "DELETE FROM {$this->table} WHERE part_id='{{ objectId }}';";

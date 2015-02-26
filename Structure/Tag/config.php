@@ -71,15 +71,5 @@ return array(
             'sql' => "bool DEFAULT '0' NOT NULL",
             'type' => 'Ideal_Checkbox'
         ),
-        'is_self_menu' => array(
-            'label' => 'Не выводить своё подменю',
-            'sql' => "bool DEFAULT '0' NOT NULL",
-            'type' => 'Ideal_Checkbox'
-        ),
-        'is_skip' => array(
-            'label' => 'Пропускать уровень',
-            'sql' => "bool DEFAULT '0' NOT NULL",
-            'type' => 'Ideal_Checkbox'
-        ),
     ),
 );
