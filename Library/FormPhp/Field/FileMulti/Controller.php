@@ -16,17 +16,39 @@ class Controller extends AbstractField
      *
      * @return string Поле отправки файла
      */
-    public function getFileInput()
+    public function getFileInputBlock()
+    {
+        $input = $this->getFileInput();
+        $button = $this->getAddFileButton();
+        return <<<HTML
+    <div class="file-input-block" id="file-input-block-{$this->options['id']}">
+        <div class="inputs-block">
+            {$input}
+        </div>
+        <div class="base-input" style="display: none;">
+            {$input}
+        </div>
+        {$button}
+    </div>
+HTML;
+
+    }
+
+    /**
+     * Получение поля отправки файла
+     *
+     * @return string Поле отправки файла
+     */
+    protected function getFileInput()
     {
         if (isset($this->options['inputHtml'])) {
             return $this->options['inputHtml'];
         }
 
         $xhtml = ($this->xhtml) ? '/' : '';
-        return '<input class="'
-        . $this->options['id']
-        . '" type="file" name="file" value="" '
-        . $xhtml . '>' . "\n";
+        return <<<HTML
+            <input type="file" value="" {$xhtml}>
+HTML;
     }
 
     /**
@@ -34,14 +56,16 @@ class Controller extends AbstractField
      *
      * @return string Поле отправки файла
      */
-    public function getAddFileButton()
+    protected function getAddFileButton()
     {
-        $inputHtml = $this->getFileInput();
+        if (isset($this->options['buttonHtml'])) {
+            return $this->options['buttonHtml'];
+        }
+
         $xhtml = ($this->xhtml) ? '/' : '';
-        return '<input type="button" value="add file" class="multiFileAddButton" data-input-id='
-        . $this->options['id']
-        . '  name="file" value="" ' . $xhtml . '>' . "\n"
-        . "<div class='base-file-input-" . $this->options['id'] . "' style='display: none'>{$inputHtml}</div>";
+        return <<<HTML
+        <input type="button" value="add file" $xhtml>
+HTML;
     }
 
     /**
@@ -50,15 +74,15 @@ class Controller extends AbstractField
     public function getJs()
     {
         return <<<JS
-$('.base-file-input-{$this->options['id']}').children('input').removeClass("{$this->options['id']}");
-$(".multiFileAddButton").click(function() {
-    var baseInput = $('.base-file-input-' + $(this).data('input-id'));
-    baseInput.find().addClass();
-    var baseHtml = $('.base-file-input-' + $(this).data('input-id')).html();
-    $(baseHtml.find('input [type=file]').addClass('file-for-send');
-    var fileInput = $('.' + $(this).data('input-id'));
-    fileInput.after(baseHtml);
-});
+            $('.file-input-block')
+                .children('[type=button]')
+                .addClass('multi-file-add-button')
+                .attr('data-block', "file-input-block-{$this->options['id']}");
+            $(".multi-file-add-button").click(function() {
+                var fileBlock = '#' + $(this).data('block');
+                var baseInput = $(fileBlock).children('.base-input').html();
+                $(fileBlock).children('.inputs-block').append(baseInput);
+            });
 JS;
 
     }
