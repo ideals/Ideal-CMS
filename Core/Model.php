@@ -30,8 +30,6 @@ abstract class Model
 
     protected $prevStructure;
 
-    protected $structureFullName;
-
     public function __construct($prevStructure)
     {
         $this->prevStructure = $prevStructure;
@@ -72,8 +70,6 @@ abstract class Model
                 throw new \Exception('Неизвестный тип: ' . $type);
                 break;
         }
-
-        $this->structureFullName = $structureFullName;
 
         $this->params = $structure['params'];
         $this->fields = $structure['fields'];
@@ -267,11 +263,6 @@ abstract class Model
             $this->initPageData();
         }
         return $this->pageData;
-    }
-
-    public function getStructureFullName()
-    {
-        return $this->structureFullName;
     }
 
     public function setPageData($pageData)
