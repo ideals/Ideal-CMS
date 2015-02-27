@@ -4,16 +4,14 @@
 
     <h1>{{ header|raw }}</h1>
 
-    {% if parts|length > 0 %}
-        {% for part in parts %}
+    {% if tags|length > 0 %}
+        {% for tag in tags %}
             <p>
-                <small>{{ part.date_create }}</small>
-                <br/>
                 <strong>
-                    <a href="{{ part.link }}">{{ part.name }}</a>
+                    <a href="{{ tag.link }}">{{ tag.name }}</a>
                 </strong>
-                {% if part.annot != '' %}<br/>{% endif %}
-                {{ part.annot }}
+                {% if tag.annot != '' %}<br/>{% endif %}
+                {{ tag.annot }}
             </p>
         {% endfor %}
     {% endif %}

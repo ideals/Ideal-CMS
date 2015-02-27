@@ -17,6 +17,14 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
     /** @var Model */
     protected $model;
 
+    public function indexAction()
+    {
+        parent::indexAction();
+
+        // Получаем полный список тегов
+        $this->view->tags = $this->model->getList();
+    }
+
     public function detailAction()
     {
         $this->templateInit('Structure/Tag/Site/detail.twig');
