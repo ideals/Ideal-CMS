@@ -5,28 +5,13 @@
  * @copyright Copyright (c) 2012-2015 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
+
 namespace Ideal\Structure\Tag\Site;
 
-use Ideal\Core\Config;
-
 /**
- * Класс отвечающий за отображение списка тегов indexAction() и списка элементов в теге detailAction()
+ * Класс-заглушка для переопределения контроллера тегов в своих проектах
  */
-class Controller extends \Ideal\Core\Site\Controller
+class Controller extends ControllerAbstract
 {
-    /** @var Model */
-    protected $model;
 
-    public function detailAction()
-    {
-        $this->templateInit('Structure/Tag/Site/detail.twig');
-
-        parent::indexAction();
-
-        $this->view->elemTag = $this->model->getElemTag();
-
-        $config = Config::getInstance();
-        $parentUrl = $this->model->getParentUrl();
-        $this->view->parentUrl = substr($parentUrl, 0, strrpos($parentUrl, '/')) . $config->urlSuffix;
-    }
 }
