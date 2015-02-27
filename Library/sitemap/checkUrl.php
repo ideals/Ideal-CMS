@@ -222,22 +222,21 @@ class ParseIt
         foreach ($urls as $val) {
             //Переменная для флага, является ли данный url - ссылкой на наш сайт
             $right_url = false;
-
-            //Вырезаем "www."
-            $val = str_replace("www.", "", $val);
-
-            //Если ссылка начинается со "/" то достраиваем и отмечаем её
+            $parse_val = parse_url($val);
+            $link = '';
+            //Если ссылка неполная (без хоста), то достраиваем и отмечаем её
             if (strpos($val, '/') === 0) {
-                $val = 'http://'.$this->url['host'].$val;
+                $link = 'http://'.$this->url['host'].$parse_val['path'];
                 $right_url = true;
-            }
-            //Если существует абсолютная ссылка на данный сайт то отмечаем её
-            if (strpos($val, "http://".$this->url['host']) === 0) {
+            } elseif (strpos($val, "http://".$this->url['host']) === 0) {
+                //Если существует абсолютная ссылка на данный сайт то отмечаем её
                 $right_url = true;
+                $link = $parse_val['scheme']."://".$parse_val['host'].$parse_val['path'];
             }
+
             //Если такой ссылки массиве еще нет и ссылка ведет на наш сайт, то добавляем её
-            if (!isset($this->links[$val]) and !isset($this->checked[$val]) and $right_url === true) {
-                $this->links[$val] = 0;
+            if (!isset($this->links[$link]) and !isset($this->checked[$link]) and $right_url === true) {
+                $this->links[$link] = 0;
             }
         }
         // Добавляем текущую ссылку в массив пройденных ссылок
