@@ -43,12 +43,15 @@ class Model extends AbstractModel
      */
     public function getSqlAdd($newValue = array())
     {
-        $prevStructure = $this->obj->getPrevStructure();
-        $_sql = "DELETE FROM {$this->table} WHERE part_id='{{ objectId }}' AND prev_structure='{$prevStructure}';";
+        $config = Config::getInstance();
+        // Определяем структуру объекта, которому присваиваются теги
+        $structure = $config->getStructureByClass(get_class($this->obj));
+
+        $_sql = "DELETE FROM {$this->table} WHERE part_id='{{ objectId }}' AND structure_id='{$structure['ID']}';";
         if (is_array($newValue) && (count($newValue) > 0)) {
             foreach ($newValue as $v) {
                 $_sql .= "INSERT INTO {$this->table}
-                              SET part_id='{{ objectId }}', tag_id='{$v}', prev_structure='{$prevStructure}';";
+                              SET part_id='{{ objectId }}', tag_id='{$v}', structure_id='{$structure['ID']}';";
             }
         }
         return $_sql;
@@ -63,12 +66,14 @@ class Model extends AbstractModel
         $ownerField = $fieldNames[0];
         $elementsField = $fieldNames[1];
 
-        $prevStructure = $this->obj->getPrevStructure();
+        $config = Config::getInstance();
+        // Определяем структуру объекта, которому присваиваются теги
+        $structure = $config->getStructureByClass(get_class($this->obj));
 
         $db = Db::getInstance();
         $owner = $this->obj->getPageData();
         $_sql = "SELECT {$elementsField} FROM {$this->table}
-                  WHERE {$ownerField}='{$owner['ID']}' AND prev_structure='{$prevStructure}'";
+                  WHERE {$ownerField}='{$owner['ID']}' AND structure_id='{$structure['ID']}'";
         $arr = $db->select($_sql);
 
         $list = array();

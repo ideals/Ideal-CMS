@@ -18,10 +18,9 @@ return array(
             'label' => 'Идентификатор тега',
             'sql'   => 'int(11)',
         ),
-        'prev_structure' => array(
+        'structure_id' => array(
             'label' => 'Структура, элементу которой присвоен тег',
             'sql'   => 'char(15)',
-            'type'  => 'Ideal_Hidden'
         )
     )
 );
