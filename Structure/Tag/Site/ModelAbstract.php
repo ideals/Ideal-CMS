@@ -14,8 +14,19 @@ use Ideal\Core\Request;
 use Ideal\Core\Util;
 use Ideal\Structure\User;
 
+/**
+ * Class ModelAbstract
+ * @package Ideal\Structure\Tag\Site
+ */
 class ModelAbstract extends \Ideal\Core\Site\Model
 {
+    /**
+     * Определение страницы по URL
+     *
+     * @param array $path Разобранная часть URL
+     * @param array $url Оставшаяся, неразобранная часть URL
+     * @return $this
+     */
     public function detectPageByUrl($path, $url)
     {
         $db = Db::getInstance();
@@ -54,6 +65,8 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     }
 
     /**
+     * Получение списка тегов
+     *
      * @param int $page Номер отображаемой страницы
      * @return array Полученный список элементов
      */
@@ -71,34 +84,78 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         return $tags;
     }
 
-    public function getElemTag($prevID = false)
+    /**
+     * Получение списка элементов, которым присвоен тег (в случае, если тег присваивается нескольким структурам)
+     *
+     * @param string $fieldNames Перечень извлекаемых полей, общих для всех структур
+     * @param string $orderBy Поле, присутствующее во всех структурах, по которому проводится сортировка списка
+     * @return array Список элементов, которым присвоен тег из $this->pageData
+     * @throws \Exception
+     */
+    public function getElements($fieldNames = 'ID, name, url', $orderBy = 'date_create')
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
         $id = $this->pageData['ID'];
-        $tableList = $config->db['prefix'] . 'ideal_medium_tagslist';
-        // TODO сделать автоматическое определение тегов и структур где они используются
-        if ($prevID === false) {
-            $sql = "SELECT * FROM {$tableList} WHERE tag_id={$id}";
-            $listTag = $db->select($sql);
+        $tableTag = $config->db['prefix'] . 'ideal_medium_tagslist';
 
-            $listStructureID = array();
-            foreach ($listTag as $key => $value) {
-                if (isset($listStructureID[$value['parent_id']])) {
-                    continue;
-                }
-                $listStructureID[$value['parent_id']] = $value['parent_id'];
-            }
-            return false;
-        } else {
-            $sql = "SELECT news.* FROM i_ideal_structure_news AS news
-INNER JOIN i_ideal_medium_tagslist AS tag ON (tag.news_id = news.ID)
-WHERE tag.tag_id={$id} ORDER BY news.date_create DESC";
-            $result = $db->select($sql);
+        // Считываем все связи этого тега
+        $sql = "SELECT * FROM {$tableTag} WHERE tag_id={$id}";
+        $listTag = $db->select($sql);
+
+        // Раскладываем айдишники элементов по разделам
+        $tables = array();
+        foreach ($listTag as $v) {
+            $tables[$v['structure_id']][] = $v['part_id'];
         }
-        foreach ($result as $k => $v) {
-            $result[$k]['date_create'] = Util::dateReach($v['date_create']);
+
+        // Построение запросов для извлечения данных из таблиц структур
+        $order = (empty($orderBy)) ? '' : ',' . $orderBy;
+        foreach ($tables as $structureId => $parts) {
+            $structure = $config->getStructureById($structureId);
+            $tableStructure = $config->getTableByName($structure['structure']);
+            $ids = '(' . implode(',', $parts) . ')';
+            $sql = "SELECT {$fieldNames}{$order} FROM {$tableStructure} WHERE is_active=1 AND ID IN {$ids}";
+            $tables[$structureId] = $sql;
         }
+
+        $orderBy = ($orderBy == '') ? '' : 'ORDER BY ' . $orderBy;
+
+        $sql = '(' . implode(') UNION (', $tables) . ')' . $orderBy;
+        $result = $db->select($sql);
+
+        return $result;
+    }
+
+    /**
+     * Получение списка элементов, которым присвоен тег (в случае, если тег присваивается одной структуре)
+     *
+     * @param string $structureName Название структуры, из которой выбираются элементы с указанным тегом
+     * @return array Список элементов, которым присвоен тег из $this->pageData
+     * @throws \Exception
+     */
+    public function getElementsByStructure($structureName)
+    {
+        $config = Config::getInstance();
+        $db = Db::getInstance();
+        $id = $this->pageData['ID'];
+        $tableTag = $config->db['prefix'] . 'ideal_medium_tagslist';
+        $structure = $config->getStructureByName($structureName);
+        $tableStructure = $config->getTableByName($structureName);
+
+        // Определяем по какому полю нужно проводить сортировку
+        $orderBy = '';
+        if (isset($structure['params']['field_sort'])
+            && $structure['params']['field_sort'] != ''
+        ) {
+            $orderBy = 'ORDER BY e.' . $structure['params']['field_sort'];
+        }
+
+        $sql = "SELECT e.* FROM {$tableStructure} AS e
+                  INNER JOIN {$tableTag} AS tag ON (tag.part_id = e.ID)
+                  WHERE tag.tag_id={$id} AND tag.structure_id={$structure['ID']} {$orderBy}";
+        $result = $db->select($sql);
+
         return $result;
     }
 }

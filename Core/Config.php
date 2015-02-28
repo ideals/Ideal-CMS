@@ -1,6 +1,17 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2015 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
 namespace Ideal\Core;
 
+/**
+ * Класс конфигурации, в котором хранятся все конфигурационные данные CMS
+ * @property array db Массив с настройками подключения к БД
+ * @property string cmsFolder Название папки с CMS
+ */
 class Config
 {
 
@@ -145,15 +156,36 @@ class Config
     }
 
     /**
+     * Получение имени таблицы на основе названия структуры или аддона
+     *
+     * @param string $name Название структуры или аддона
+     * @param string $type Тип класса (Structure или Addon)
+     * @return string Название таблицы
+     * @throws \Exception
+     */
+    public function getTableByName($name, $type = 'Structure')
+    {
+        $name = strtolower($name);
+        $name = explode('_', $name);
+        if (count($name) != 2) {
+            throw new \Exception('Передано неправильное значение названия структуры: ' . $name);
+        }
+        $table = $this->db['prefix'] . $name[0] . '_' . strtolower($type) . '_' . $name[1];
+        return $table;
+    }
+
+    /**
      * Загружает все конфигурационные переменные из файлов config.php и site_data.php
      * В дальнейшем доступ к ним осуществляется через __get этого класса
      */
     public function loadSettings()
     {
         // Подключаем описание данных для БД
+        /** @noinspection PhpIncludeInspection */
         $this->import(require_once($this->cmsFolder . '/config.php'));
 
         // Подключаем файл с переменными изменяемыми в админке
+        /** @noinspection PhpIncludeInspection */
         $this->import(require_once($this->cmsFolder . '/site_data.php'));
 
         // Загрузка данных из конфигурационных файлов подключённых структур
@@ -185,12 +217,13 @@ class Config
     {
         // Проходимся по всем конфигам подключённых структур и добавляем их в общий конфиг
         $structures = $this->structures;
-        foreach ($structures as $k => $structure) {
-            list($module, $struct) = explode('_', $structure['structure'], 2);
+        foreach ($structures as $k => $structureName) {
+            list($module, $structure) = explode('_', $structureName['structure'], 2);
             $module = ($module == 'Ideal') ? '' : $module . '/';
-            $fileName = $module . 'Structure/' . $struct . '/config.php';
+            $fileName = $module . 'Structure/' . $structure . '/config.php';
+            /** @noinspection PhpIncludeInspection */
             $arr = require_once($fileName);
-            $structures[$k] = array_merge($structure, $arr);
+            $structures[$k] = array_merge($structureName, $arr);
         }
 
         // Строим массив соответствия порядковых номеров структур их названиям

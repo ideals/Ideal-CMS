@@ -31,10 +31,8 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
 
         parent::indexAction();
 
-        $this->view->elemTag = $this->model->getElemTag();
+        $this->view->parts = $this->model->getElementsByStructure('Ideal_News');
 
-        $config = Config::getInstance();
-        $parentUrl = $this->model->getParentUrl();
-        $this->view->parentUrl = substr($parentUrl, 0, strrpos($parentUrl, '/')) . $config->urlSuffix;
+        // todo получение элементов с листалкой
     }
 }
