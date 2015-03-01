@@ -10,7 +10,7 @@
                 <small>{{ part.date_create|date("d.m.Y") }}</small>
                 <br/>
                 <strong>
-                    <a href="{{ part.url }}">{{ part.name }}</a>
+                    <a href="{{ part.link }}">{{ part.name }}</a>
                 </strong>
                 {% if part.annot != '' %}<br/>{% endif %}
                 {{ part.annot }}

@@ -110,17 +110,29 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         // Раскладываем айдишники элементов по разделам
         $tables = array();
         foreach ($listTag as $v) {
-            $tables[$v['structure_id']][] = $v['part_id'];
+            $tables[$v['prev_structure']][] = $v['part_id'];
         }
 
         // Построение запросов для извлечения данных из таблиц структур
+        $paths = array();
         $order = (empty($orderBy)) ? '' : ',' . $orderBy;
-        foreach ($tables as $structureId => $parts) {
+        foreach ($tables as $prevStructure => $parts) {
+            list($structureId, $id) = explode('-', $prevStructure);
             $structure = $config->getStructureById($structureId);
-            $tableStructure = $config->getTableByName($structure['structure']);
+            $structure = explode('_', $structure['structure']);
+            $class = '\\' . $structure[0] . '\\Structure\\' . $structure[1] . '\\Site\\Model';
+            /** @var \Ideal\Core\Site\Model $model */
+            $model = new $class('');
+            $model->setPageDataById($id);
+            $path = $model->detectPath();
+            $paths[$prevStructure] = $path;
+            $data = $model->getPageData();
+
+            $tableStructure = $config->getTableByName($data['structure']);
             $ids = '(' . implode(',', $parts) . ')';
-            $sql = "SELECT {$fieldNames}{$order} FROM {$tableStructure} WHERE is_active=1 AND ID IN {$ids}";
-            $tables[$structureId] = $sql;
+            $sql = "SELECT {$fieldNames}{$order}, '{$prevStructure}' as prev_structure, '{$class}' as class_name
+                      FROM {$tableStructure} WHERE is_active=1 AND ID IN {$ids}";
+            $tables[$prevStructure] = $sql;
         }
 
         $orderBy = ($orderBy == '') ? '' : 'ORDER BY ' . $orderBy;
@@ -130,6 +142,13 @@ class ModelAbstract extends \Ideal\Core\Site\Model
 
         $result = $db->select($sql);
 
+        // Формируем правильные ссылки
+        foreach ($result as $k => $v) {
+            $url = new \Ideal\Field\Url\Model();
+            $result[$k]['link'] = $url->getUrlWithPrefix($v, $prefix);
+        }
+
+
         return $result;
     }
 
@@ -138,10 +157,11 @@ class ModelAbstract extends \Ideal\Core\Site\Model
      *
      * @param int $page Номер отображаемой страницы списка
      * @param string $structureName Название структуры, из которой выбираются элементы с указанным тегом
+     * @param string $prefix Префикс для формирования URL
      * @return array Список элементов, которым присвоен тег из $this->pageData
      * @throws \Exception
      */
-    public function getElementsByStructure($page, $structureName)
+    public function getElementsByStructure($page, $structureName, $prefix)
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
@@ -165,6 +185,12 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $sql = "SELECT e.* " . $this->countSql . $orderBy . $this->getSqlLimit($page);
 
         $result = $db->select($sql);
+
+        // Формируем правильные ссылки
+        $url = new \Ideal\Field\Url\Model();
+        foreach ($result as $k => $v) {
+            $result[$k]['link'] = $url->getUrlWithPrefix($v, $prefix);
+        }
 
         return $result;
     }
