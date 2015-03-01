@@ -20,6 +20,9 @@ use Ideal\Structure\User;
  */
 class ModelAbstract extends \Ideal\Core\Site\Model
 {
+    /** @var bool Флаг отображения списка тегов (false), или списка элементов, которым присвоен тег (true) */
+    protected $countSql = false;
+
     /**
      * Определение страницы по URL
      *
@@ -87,12 +90,13 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     /**
      * Получение списка элементов, которым присвоен тег (в случае, если тег присваивается нескольким структурам)
      *
+     * @param int $page Номер отображаемой страницы списка
      * @param string $fieldNames Перечень извлекаемых полей, общих для всех структур
      * @param string $orderBy Поле, присутствующее во всех структурах, по которому проводится сортировка списка
      * @return array Список элементов, которым присвоен тег из $this->pageData
      * @throws \Exception
      */
-    public function getElements($fieldNames = 'ID, name, url', $orderBy = 'date_create')
+    public function getElements($page = null, $fieldNames = 'ID, name, url', $orderBy = 'date_create')
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
@@ -120,8 +124,10 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         }
 
         $orderBy = ($orderBy == '') ? '' : 'ORDER BY ' . $orderBy;
+        $this->countSql = '(' . implode(') UNION (', $tables) . ')';
 
-        $sql = '(' . implode(') UNION (', $tables) . ')' . $orderBy;
+        $sql = $this->countSql . $orderBy . $this->getSqlLimit($page);
+
         $result = $db->select($sql);
 
         return $result;
@@ -130,11 +136,12 @@ class ModelAbstract extends \Ideal\Core\Site\Model
     /**
      * Получение списка элементов, которым присвоен тег (в случае, если тег присваивается одной структуре)
      *
+     * @param int $page Номер отображаемой страницы списка
      * @param string $structureName Название структуры, из которой выбираются элементы с указанным тегом
      * @return array Список элементов, которым присвоен тег из $this->pageData
      * @throws \Exception
      */
-    public function getElementsByStructure($structureName)
+    public function getElementsByStructure($page, $structureName)
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
@@ -151,11 +158,50 @@ class ModelAbstract extends \Ideal\Core\Site\Model
             $orderBy = 'ORDER BY e.' . $structure['params']['field_sort'];
         }
 
-        $sql = "SELECT e.* FROM {$tableStructure} AS e
+        $this->countSql = "FROM {$tableStructure} AS e
                   INNER JOIN {$tableTag} AS tag ON (tag.part_id = e.ID)
-                  WHERE tag.tag_id={$id} AND tag.structure_id={$structure['ID']} {$orderBy}";
+                  WHERE tag.tag_id={$id} AND tag.structure_id={$structure['ID']}";
+
+        $sql = "SELECT e.* " . $this->countSql . $orderBy . $this->getSqlLimit($page);
+
         $result = $db->select($sql);
 
         return $result;
+    }
+
+    public function getListCount()
+    {
+        if (empty($this->countSql)) {
+            // Нужно отобразить список тэгов, поэтому их количество считаем обычным способом
+            return parent::getListCount();
+        }
+
+        $db = Db::getInstance();
+
+        // Подсчитываем количество элементов
+        $_sql = 'SELECT COUNT(*) FROM (' . $this->countSql . ') as xyz';
+        $list = $db->select($_sql);
+
+        return $list[0]['COUNT(*)'];
+    }
+
+    protected function getSqlLimit($page)
+    {
+        if (is_null($page)) {
+            $this->setPageNum($page);
+            return '';
+        }
+
+        // Определяем кол-во отображаемых элементов на основании названия класса
+        $class = strtolower(get_class($this));
+        $class = explode('\\', trim($class, '\\'));
+        $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
+        $onPage = $this->params[$nameParam];
+
+        $page = $this->setPageNum($page);
+        $start = ($page - 1) * $onPage;
+
+        $sql = " LIMIT {$start}, {$onPage}";
+        return $sql;
     }
 }

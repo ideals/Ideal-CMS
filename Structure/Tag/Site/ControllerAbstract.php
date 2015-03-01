@@ -8,6 +8,7 @@
 namespace Ideal\Structure\Tag\Site;
 
 use Ideal\Core\Config;
+use Ideal\Core\Request;
 
 /**
  * Класс отвечающий за отображение списка тегов indexAction() и списка элементов в теге detailAction()
@@ -31,8 +32,10 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
 
         parent::indexAction();
 
-        $this->view->parts = $this->model->getElementsByStructure('Ideal_News');
+        $request = new Request();
+        $page = intval($request->page);
+        $this->view->parts = $this->model->getElementsByStructure($page, 'Ideal_News');
 
-        // todo получение элементов с листалкой
+        $this->view->pager = $this->model->getPager('page');
     }
 }
