@@ -135,8 +135,10 @@ HTML;
         //Проходим по каждому аддону и собираем введённую информацию
         $addonNewValues = json_decode($this->newValue);
         foreach ($addonNewValues as $addonNewValue) {
-            $addonName = Util::getClassName($addonNewValue[1],
-                'Addon') . '\\Model';
+            $addonName = Util::getClassName(
+                $addonNewValue[1],
+                'Addon'
+              ) . '\\Model';
             $addon = new $addonName('не имеет значения, т.к. только парсим ввод пользователя');
             $addon->setFieldsGroup($this->name);
             $addon->setHtmlNameModifier($addonNewValue[0]);
