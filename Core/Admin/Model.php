@@ -60,7 +60,7 @@ abstract class Model extends Core\Model
     public function createElement(
       $result,
       $groupName = 'general',
-      $addonKey = 0
+      $addonKey = ''
     ) {
         // Из общего списка введённых данных выделяем те, что помечены general
         foreach ($result['items'] as $k => $v) {
@@ -105,8 +105,22 @@ abstract class Model extends Core\Model
         }
 
         if ($id !== false) {
-            $result['items'][$groupName . '_ID']['value'] = $id;
-            $groups[$groupName]['ID'] = $id;
+
+            //Если предан ключ аддона, то формируем его текстовое представление
+            //для использования в формировании массивов
+            $addonKeyString = '';
+            if (!empty($addonKey)) {
+                $addonKeyString = '_' . $addonKey;
+            }
+            $result['items'][$groupName . $addonKeyString . '_ID']['value'] = $id;
+
+            //Если передан ключ аддона, то записываем новый идентификатор
+            //в соответствующий аддон
+            if (!empty($addonKey)) {
+                $groups[$groupName][$addonKey]['ID'] = $id;
+            } else {
+                $groups[$groupName]['ID'] = $id;
+            }
 
             if (isset($result['sqlAdd'][$groupName]) && ($result['sqlAdd'][$groupName] != '')) {
                 $sqlAdd = str_replace('{{ table }}', $this->_table,
