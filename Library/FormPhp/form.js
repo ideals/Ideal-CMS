@@ -201,7 +201,72 @@
 
 jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
 
-
+/**
+ * Объект фрейм
+ * копирование формы в фрейм
+ * Отправка фрейма
+ * Получение данных из фрейма
+ * @type {{}}
+ */
+iFrame = {
+    /**
+     * Отправка формы через iframe
+     * @param formID formID ID формы
+     * @param url URL на который будут переданы данные при отправки фрейма
+     * @param callback Функция, которую нужно будет вывзвать после отправки формы
+     */
+    send: function(formID, url, callback) {
+        var form = $('#' + formID);
+        if (typeof $(this).id == "underfined") {
+            this.create(formID, url);
+        }
+        this.formCallback = callback;
+        this.iframe.onSendComplete = function() {
+            callback(form, url, this.getIFrameXML());
+        };
+        $(form).setAttribute('target', frame.id);
+        $(form).setAttribute('action', url);
+        $(form).submit();
+    },
+    /**
+     * Создание фрейма
+     * @param formID ID формы
+     * @param url URL на который будут переданы данные при отправки фрейма
+     * @returns {*|jQuery} Объект iframe
+     */
+    create: function(formID, url) {
+        var id = 'iFrameID' + Math.floor(Math.random() * 99999);
+        var html = '<iframe id="' + id + '" url="' + url + '"></iframe>';
+        $(formID).append(html);
+        this.iframe = $(formID).children('iframe');
+        this.id = id;
+    },
+    /**
+     * Получение содержимого iframe после отправки
+     * @param e
+     * @returns {*}
+     */
+    getIFrameXML: function(e) {
+        var doc = this.iframe.contentDocument;
+        if (!doc &&this.iframe.contentWindow) doc = this.iframe.contentWindow.document;
+        if (!doc) doc = window.frames[iframe.id].document;
+        if (!doc) return null;
+        if (doc.location=="about:blank") return null;
+        if (doc.XMLDocument) doc = doc.XMLDocument;
+        return doc;
+    },
+    /**
+     * 
+     * @param form
+     * @param act
+     * @param doc
+     */
+    callback: function (form, act, doc) {
+        form.setAttribute('action', act);
+        form.removeAttribute('target');
+        this.formCallback(doc.body.innerHTML);
+    }
+};
 
 jQuery.fn.form = function(options, messages){
     options = $.extend({
@@ -265,6 +330,14 @@ jQuery.fn.form = function(options, messages){
                 this.yaCounter.reachGoal(metka);
             }
         },
+        // Отправка файлов на сервер
+        ajaxSendFiles: function() {
+            var files = $(this).children('.inputs-block').children("[type=file]");
+            var form = this;
+            /*$(files).each(function(k, v) {
+                $(form).
+            });*/
+        },
         //Изменение прогресса загрузки файлов
         ajaxFileProgress: function(percent) {
 
@@ -310,6 +383,7 @@ jQuery.fn.form = function(options, messages){
                 if (http_request.readyState == 4) {
                     if (http_request.status == 200) {
                         methods.ajaxFileProgress.apply(this, [100]);
+                        //methods.ajaxFileFinish.apply(this, );
                         return true;
                     } else {
                         // Ошибка загрузки файла
@@ -357,6 +431,7 @@ jQuery.fn.form = function(options, messages){
                     alert(messages.notValid);
                     return false;
                 }
+                methods.ajaxSendFiles.apply(this);
                 return methods.submit.apply(this);
             })
             .on('form.buttonClick', function() {
