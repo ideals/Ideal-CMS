@@ -154,6 +154,13 @@ class Util
         return $date;
     }
 
+    /**
+     * Получение полного названия класса структуры/поля/аддона на основании краткого названия
+     *
+     * @param string $module Краткое название класса (например, Ideal_Part)
+     * @param string $type Тип класса (например, Structure или Field)
+     * @return string
+     */
     public static function getClassName($module, $type)
     {
         list($module, $structure) = explode('_', $module);
@@ -248,15 +255,32 @@ class Util
         return $str;
     }
 
+    /**
+     * Метод, вызываемый после всех действий при завершении выполнения скрипта
+     */
     public static function shutDown()
     {
         $config = Config::getInstance();
         if ($config->cms['errorLog'] == 'email' && count(self::$errorArray) > 0) {
             $text = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"
-                . implode("\n", self::$errorArray);
+                . implode("\n\n", self::$errorArray) . "\n\n"
+                . '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
+            if (isset($_GET)) {
+                $text .= '$_GET = ' . "\n" . print_r($_GET, true) . "\n\n";
+            }
+            if (isset($_POST)) {
+                $text .= '$_POST = ' . "\n" . print_r($_POST, true) . "\n\n";
+            }
+            if (isset($_COOKIE)) {
+                $text .= '$_COOKIE = ' . "\n" . print_r($_COOKIE, true) . "\n\n";
+            }
+            $subject = "Сообщение об ошибке на сайте " . $config->domain;
+            if ((mb_stripos($text, 'Страница не найдена (404)') !== false) && (count(self::$errorArray) == 1)) {
+                $subject = "Страница не найдена (404) на сайте " . $config->domain;
+            }
             $mail = new \Mail\Sender();
-            $mail->setSubj("Сообщение об ошибке на сайте " . $config->domain);
+            $mail->setSubj($subject);
             $mail->setPlainBody($text);
             $mail->sent($config->robotEmail, $config->cms['adminEmail']);
         }

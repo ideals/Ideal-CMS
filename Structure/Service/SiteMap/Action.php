@@ -102,11 +102,9 @@ if (isset($_POST['edit'])) {
                     echo DOCUMENT_ROOT . '/' . $config->cmsFolder; ?>/Ideal/Library/sitemap/index.php</code></pre>
             <p>Эта инструкция означает запуск скрипта каждые три минуты с двух до четырёх ночи.
                 Если этого времени не хватает для составления карты сайта, то можно увеличить диапазон часов.</p>
-
         </div>
     </div>
 </div>
-
 
 <script type="application/javascript">
     function startSiteMap() {
@@ -115,7 +113,32 @@ if (isset($_POST['edit'])) {
             param = '?w=1';
         }
         $('#loading').html('Идёт составление карты сайта. Ждите.');
-        $('#iframe').html('<iframe src="Ideal/Library/sitemap/index.php' + param + '" onLoad="finishLoad()" />');
+        $('#iframe').html('');
+        getSitemapAjaxify(param);
+    }
+
+    function getSitemapAjaxify(param) {
+        $.ajax({
+            url: 'Ideal/Library/sitemap/index.php' + param,
+            success: function (data) {
+                $('#iframe').append(data);
+                if (/Выход по таймауту/gim.test(data)) {
+                    getSitemapAjaxify(param);
+                } else {
+                    finishLoad();
+                }
+            },
+            error: function (xhr) {
+                $('#iframe').append('<pre> Не удалось завершить сканирование. Статус: '
+                + xhr.statusCode().status +
+                '\n Попытка продолжить сканирование через 10 секунд.</pre>');
+                setTimeout(
+                    function () {
+                        getSitemapAjaxify(param);
+                    }, 10000);
+            },
+            type: 'get'
+        });
     }
 
     function finishLoad() {

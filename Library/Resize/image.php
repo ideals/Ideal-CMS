@@ -2,6 +2,8 @@
 /**
  * Скрипт изменения размеров изображения. Вызывается с помощью .htaccess
  */
+
+include('Resize.php');
 use Resize\Resize;
 
 if (!isset($_GET['img']) || $_GET['img'] == '') {
@@ -9,8 +11,6 @@ if (!isset($_GET['img']) || $_GET['img'] == '') {
     header("HTTP/1.x 404 Not Found");
     exit;
 }
-
-include('Resize.php');
 
 $r = new Resize();
 

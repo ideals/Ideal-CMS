@@ -1,15 +1,26 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Structure\User\Admin;
 
 use Ideal\Core\Request;
 use Ideal\Structure\User;
 
+/**
+ * Класс, отвечающий за отображение списка пользователей в админке, а также
+ * за отображение формы авторизации и её обработку
+ */
 class ControllerAbstract extends \Ideal\Core\Admin\Controller
 {
-
-    // Определяем функцию, формирующую список и загоняющую его в шаблон
-    // $n - номер элемета, с которого нужно начинать выводить список
-
+    /**
+     * {@inheritdoc}
+     */
     public function finishMod($actionName)
     {
         if ($actionName == 'loginAction') {
@@ -20,6 +31,9 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         }
     }
 
+    /**
+     * Отображение списка пользователей
+     */
     public function indexAction()
     {
         $this->templateInit();
@@ -37,19 +51,49 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
     }
 
     /**
-     * Отображение формы логина
-     *
+     * Отображение формы авторизации, если пользователь не авторизован
      */
     public function loginAction()
     {
+        // Проверяем что запрашивается json
+        $jsonResponse = false;
+        $pattern = "/.*json.*/i";
+        if (preg_match($pattern, $_SERVER['HTTP_ACCEPT'])) {
+            $jsonResponse = true;
+        }
+
         $user = User\Model::getInstance();
 
         // Проверяем правильность логина и пароля
-        if (isSet($_POST['user']) and isSet($_POST['pass'])) {
-            if ($user->login($_POST['user'], $_POST['pass'])) {
-                header('Location: ' . $_SERVER['REQUEST_URI']);
+        if (isset($_POST['user']) && isset($_POST['pass'])) {
+
+            // При ajax авторизации отдаём json ответы
+            if ($jsonResponse) {
+                if ($user->login($_POST['user'], $_POST['pass'])) {
+                    echo json_encode(array('login' => 'true'));
+                } else {
+                    echo json_encode(array(
+                        'errorResponse' => $user->errorMessage,
+                        'login' => 'false'
+                    ));
+                }
                 exit;
+            } else {
+                if ($user->login($_POST['user'], $_POST['pass'])) {
+                    header('Location: ' . $_SERVER['REQUEST_URI']);
+                }
             }
+        }
+
+        // Если запрашивается json при не авторизованном пользователе
+        // отдаём ответ инициализирующий показ формы авторизации
+        if ($jsonResponse) {
+            echo json_encode(
+                array(
+                    'errorResponse' => 'not Login',
+                )
+            );
+            exit;
         }
 
         $this->templateInit('Structure/User/Admin/login.twig');

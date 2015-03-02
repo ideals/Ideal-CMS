@@ -27,7 +27,7 @@ class AjaxController extends \Ideal\Core\AjaxController
         $config = Config::getInstance();
         $this->updateModel = new Model();
 
-        $getFileScript = $this->srv . '/get.php';
+        $getFileScript = $this->srv . '/getNext.php';
 
 
         if (is_null($config->cms['tmpFolder']) || ($config->cms['tmpFolder'] == '')) {
@@ -61,16 +61,18 @@ class AjaxController extends \Ideal\Core\AjaxController
             )
         );
 
+        // Создаём сессию для хранения данных между ajax запросами
+        if (session_id() == '') {
+            session_start();
+        }
+
         if (!isset($_POST['version']) || !isset($_POST['name'])) {
             $this->updateModel->addAnswer('Непонятно, что обновлять. Не указаны version и name', 'error');
             exit;
         } else {
-
-            $this->updateModel->setUpdate($_POST['name'], $_POST['version']);
+            $this->updateModel->setUpdate($_POST['name'], $_POST['version'], $_POST['currentVersion']);
         }
 
-        // Создаём сессию для хранения данных между ajax запросами
-        session_start();
         if (isset($_SESSION['update'])) {
             if ($_SESSION['update']['name'] != $this->updateModel->updateName ||
                 $_SESSION['update']['version'] != $this->updateModel->updateVersion) {
@@ -113,7 +115,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     public function ajaxGetUpdateScriptAction()
     {
         // Запускаем выполнение скриптов и запросов
-        $_SESSION['scripts'] = $this->updateModel->getUpdateScripts();
+        $_SESSION['update']['scripts'] = $this->updateModel->getUpdateScripts();
         exit;
     }
 
@@ -122,8 +124,8 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function ajaxSwapAction()
     {
-        $_SESSION['scripts'] = $this->updateModel->runOldScript($_SESSION['scripts']);
-        $_SESSION['oldFolder'] = $this->updateModel->swapUpdate();
+        $_SESSION['update']['scripts'] = $this->updateModel->runOldScript($_SESSION['update']['scripts']);
+        $_SESSION['update']['oldFolder'] = $this->updateModel->swapUpdate();
         exit;
     }
 
@@ -132,11 +134,11 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function ajaxRunScriptAction()
     {
-        if (!isset($_SESSION['scripts'])) {
+        if (!isset($_SESSION['update']['scripts'])) {
             exit;
         }
         // Получаем скрипт, выполняемый в текущем ajax запросе
-        $script = array_shift($_SESSION['scripts']);
+        $script = array_shift($_SESSION['update']['scripts']);
         // Если все скрипты были выполнены ранее, возвращаем false
         if (!$script) {
             exit;
@@ -148,25 +150,42 @@ class AjaxController extends \Ideal\Core\AjaxController
     }
 
     /**
-     * Последний этап выполнения обновления
+     *
      */
-    public function ajaxFinishAction()
+    public function ajaxEndVersionAction()
     {
+        // Записываем текущую версию в сессию
+        $_SESSION['update']['currentVersion'] = $_SESSION['update']['archive']['version'];
         // Модуль установился успешно, делаем запись в лог обновлений
         $this->updateModel->writeLog(
-            'Installed ' . $this->updateModel->updateName . ' v. ' . $this->updateModel->updateVersion
+            'Installed ' . $this->updateModel->updateName . ' v. ' . $_SESSION['update']['currentVersion']
         );
 
         // Получаем раздел со старой версией
         $oldFolder = isset($_SESSION['update']['oldFolder']) ? $_SESSION['update']['oldFolder'] : null;
-        $oldFolderError = '';
         if (!$oldFolder) {
             $this->updateModel->addAnswer('Не удалось удалить раздел со старой версией.', 'warning');
         }
         // Удаляем старую папку
         $this->updateModel->removeDirectory($oldFolder);
+        $data = null;
+        if ($_SESSION['update']['archive']['version'] != $this->updateModel->updateVersion) {
+            $data = array('next' => 'true', 'currentVersion' => $_SESSION['update']['currentVersion']);
+        }
+        $this->updateModel->addAnswer(
+            'Обновление на версию ' . $_SESSION['update']['currentVersion'] . ' произведено успешно',
+            'success',
+            $data
+        );
+        exit;
+    }
 
-        $this->updateModel->addAnswer('Обновление завершено успешно' . $oldFolderError, 'success');
+    /**
+     * Последний этап выполнения обновления
+     */
+    public function ajaxFinishAction()
+    {
+        $this->updateModel->addAnswer('Обновление завершено успешно', 'success');
         exit;
     }
 
