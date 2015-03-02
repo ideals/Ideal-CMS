@@ -60,7 +60,7 @@ abstract class Model extends Core\Model
     public function createElement($result, $groupName = 'general')
     {
         // Из общего списка введённых данных выделяем те, что помечены general
-        foreach ($result['items'] as $v) {
+        foreach ($result['items'] as $k => $v) {
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName
@@ -75,13 +75,35 @@ abstract class Model extends Core\Model
                 continue;
             }
 
-            $groups[$group][$field] = $v['value'];
+            //Берём корректные данные если работаем с аддонами
+            if ($group == 'addon') {
+                list($group, $addonId, $field) = explode('_', $k, 3);
+                $groups[$group][$addonId][$field] = $v['value'];
+            } else {
+                $groups[$group][$field] = $v['value'];
+            }
         }
-        unset($groups[$groupName]['ID']);
+
+        //Если работаем с аддонами, то удаляем идентифиакторы из каждого аддона
+        if ($groupName == 'addon') {
+            array_walk($groups[$groupName], function(&$addonItem){
+                unset($addonItem['ID']);
+            });
+        }
+        else {
+            unset($groups[$groupName]['ID']);
+        }
 
         $db = Db::getInstance();
+        $result_id = array();
 
-        $id = $db->insert($this->_table, $groups[$groupName]);
+        //Если работаем с аддонами, то добавляем значения из каждого аддона
+        if ($groupName == 'addon') {
+            $id = $db->insert($this->_table, $groups[$groupName]);
+        }
+        else {
+            $id = $db->insert($this->_table, $groups[$groupName]);
+        }
 
         if ($id !== false) {
             $result['items'][$groupName . '_ID']['value'] = $id;
@@ -124,33 +146,47 @@ abstract class Model extends Core\Model
 
         // Считываем данные дополнительных табов
         foreach ($this->fields as $fieldName => $field) {
-            if (strpos($field['type'], '_Template') === false) {
+            if (strpos($field['type'], '_Addon') === false) {
                 continue;
             }
 
-            $templateData = $groups[$fieldName];
-            $end = end($this->path);
-            $prevStructure = $config->getStructureByName($end['structure']);
-            $templateData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
-            if (empty($templateData['ID'])) {
-                // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
-                $isCreate = true;
-            }
-            if ($isCreate) {
-                unset($templateData['ID']);
-            }
+            //Обходим все аддоны
+            foreach ($groups[$fieldName] as $key => $value) {
+                $addonData = $value;
+                $end = end($this->path);
+                $prevStructure = $config->getStructureByName($end['structure']);
+                $addonData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
+                if (empty($addonData['ID'])) {
+                    // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
+                    $isCreate = true;
+                }
+                if ($isCreate) {
+                    unset($addonData['ID']);
+                }
 
-            $templateModelName = Util::getClassName($groups[$groupName][$fieldName],
-                'Template') . '\\Model';
+                $addonModelsData = json_decode($groups[$groupName][$fieldName]);
 
-            /* @var $templateModel \Ideal\Core\Admin\Model */
-            $templateModel = new $templateModelName($templateData['prev_structure']);
-            if ($isCreate) {
-                // Записываем данные шаблона в БД и в $result
-                $result = $templateModel->createElement($result, $fieldName);
-            } else {
-                $templateModel->setPageDataById($groups[$fieldName]['ID']);
-                $result = $templateModel->saveElement($result, $fieldName);
+                foreach($addonModelsData as $addonModelData) {
+
+                    if ($addonModelData[0] != $key) {
+                        continue;
+                    }
+
+                    $addonModelName = Util::getClassName($addonModelData[1],
+                        'Addon') . '\\Model';
+
+                    /* @var $templateModel \Ideal\Core\Admin\Model */
+                    $addonModel = new $addonModelName($addonData['prev_structure']);
+                    if ($isCreate) {
+                        // Записываем данные аддона в БД и в $result
+                        $result = $addonModel->createElement($result,
+                          $fieldName);
+                    } else {
+                        $addonModel->setPageDataById($groups[$fieldName]['ID']);
+                        $result = $templateModel->saveElement($result,
+                          $fieldName);
+                    }
+                }
             }
         }
 
@@ -160,8 +196,9 @@ abstract class Model extends Core\Model
     public function saveElement($result, $groupName = 'general')
     {
         // Из общего списка введённых данных выделяем те, что помечены general
-        foreach ($result['items'] as $v) {
+        foreach ($result['items'] as $k => $v) {
             list($group, $field) = explode('_', $v['fieldName'], 2);
+
 
             if ($group == $groupName
               && $field == 'prev_structure' && $v['value'] == ''
@@ -175,7 +212,14 @@ abstract class Model extends Core\Model
                 continue;
             }
 
-            $groups[$group][$field] = $v['value'];
+            //Если рассматривается группа аддонов, то получаем идентификатор таба аддона.
+            //Для формирования правильного массива со значениями из всех вкладок аддонов.
+            if ($group == 'addon') {
+                list($group, $addonId, $field) = explode('_', $k, 3);
+                $groups[$group][$addonId][$field] = $v['value'];
+            } else {
+                $groups[$group][$field] = $v['value'];
+            }
         }
 
         $db = Db::getInstance();
