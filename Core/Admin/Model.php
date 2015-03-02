@@ -57,8 +57,11 @@ abstract class Model extends Core\Model
         return $result;
     }
 
-    public function createElement($result, $groupName = 'general')
-    {
+    public function createElement(
+      $result,
+      $groupName = 'general',
+      $addonKey = 0
+    ) {
         // Из общего списка введённых данных выделяем те, что помечены general
         foreach ($result['items'] as $k => $v) {
             list($group, $field) = explode('_', $v['fieldName'], 2);
@@ -84,24 +87,20 @@ abstract class Model extends Core\Model
             }
         }
 
-        //Если работаем с аддонами, то удаляем идентифиакторы из каждого аддона
+        //Если работаем с аддонами, то удаляем идентифиакторы из аддона с переданным ключом
         if ($groupName == 'addon') {
-            array_walk($groups[$groupName], function(&$addonItem){
-                unset($addonItem['ID']);
-            });
-        }
-        else {
+            unset($groups[$groupName][$addonKey]['ID']);
+        } else {
             unset($groups[$groupName]['ID']);
         }
 
         $db = Db::getInstance();
         $result_id = array();
 
-        //Если работаем с аддонами, то добавляем значения из каждого аддона
+        //Если работаем с аддонами, то добавляем значение для аддона с переданным ключом
         if ($groupName == 'addon') {
-            $id = $db->insert($this->_table, $groups[$groupName]);
-        }
-        else {
+            $id = $db->insert($this->_table, $groups[$groupName][$addonKey]);
+        } else {
             $id = $db->insert($this->_table, $groups[$groupName]);
         }
 
@@ -166,7 +165,7 @@ abstract class Model extends Core\Model
 
                 $addonModelsData = json_decode($groups[$groupName][$fieldName]);
 
-                foreach($addonModelsData as $addonModelData) {
+                foreach ($addonModelsData as $addonModelData) {
 
                     if ($addonModelData[0] != $key) {
                         continue;
@@ -180,7 +179,7 @@ abstract class Model extends Core\Model
                     if ($isCreate) {
                         // Записываем данные аддона в БД и в $result
                         $result = $addonModel->createElement($result,
-                          $fieldName);
+                          $fieldName, $key);
                     } else {
                         $addonModel->setPageDataById($groups[$fieldName]['ID']);
                         $result = $templateModel->saveElement($result,
