@@ -11,6 +11,9 @@ abstract class Model extends Core\Model
 
     protected $fieldsGroup = 'general';
 
+    // Модификатор html названий элемента. Предназначен для полей аддонов
+    protected $htmlNameModifier = '';
+
     public function checkTemplateChange($result)
     {
         foreach ($result['items'] as $fieldName => $field) {
@@ -33,20 +36,24 @@ abstract class Model extends Core\Model
             if ($field['value'] != $this->pageData[$realName]) {
                 $result['isCorrect'] = 2;
 
-                $oldTemplateName = Util::getClassName($this->pageData[$realName], 'Template') . '\\Model';
-                $oldTemplate = new $oldTemplateName($this->pageData[$realName], '');
+                $oldTemplateName = Util::getClassName($this->pageData[$realName],
+                    'Template') . '\\Model';
+                $oldTemplate = new $oldTemplateName($this->pageData[$realName],
+                  '');
                 $oldTemplateCap = $oldTemplate->params['name'];
 
-                $newTemplateName = Util::getClassName($field['value'], 'Template') . '_Model';
+                $newTemplateName = Util::getClassName($field['value'],
+                    'Template') . '_Model';
                 $newTemplate = new $newTemplateName($field['value'], '');
                 $newTemplateCap = $newTemplate->params['name'];
 
                 $result['items'][$fieldName]['confirm'] = 'шаблон «'
-                    . $this->fields[$realName]['label']
-                    . '» с «' . $oldTemplateCap
-                    . '» на «' . $newTemplateCap . '»';
+                  . $this->fields[$realName]['label']
+                  . '» с «' . $oldTemplateCap
+                  . '» на «' . $newTemplateCap . '»';
             }
         }
+
         return $result;
     }
 
@@ -57,7 +64,7 @@ abstract class Model extends Core\Model
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName
-                && $field == 'prev_structure' && $v['value'] == ''
+              && $field == 'prev_structure' && $v['value'] == ''
             ) {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
                 $v['value'] = $this->prevStructure;
@@ -81,7 +88,8 @@ abstract class Model extends Core\Model
             $groups[$groupName]['ID'] = $id;
 
             if (isset($result['sqlAdd'][$groupName]) && ($result['sqlAdd'][$groupName] != '')) {
-                $sqlAdd = str_replace('{{ table }}', $this->_table, $result['sqlAdd'][$groupName]);
+                $sqlAdd = str_replace('{{ table }}', $this->_table,
+                  $result['sqlAdd'][$groupName]);
                 $sqlAdd = str_replace('{{ objectId }}', $id, $sqlAdd);
                 $sqlAdd = explode(';', $sqlAdd);
                 foreach ($sqlAdd as $_sql) {
@@ -97,16 +105,17 @@ abstract class Model extends Core\Model
             $result['isCorrect'] = 0;
             $result['errorText'] = 'Ошибка при добавлении в БД. ' . $db->error;
         }
+
         return $result;
     }
 
     /**
      * Обработка переменных от дополнительных табов с шаблонами
      *
-     * @param array  $result
-     * @param array  $groups
+     * @param array $result
+     * @param array $groups
      * @param string $groupName
-     * @param bool   $isCreate
+     * @param bool $isCreate
      * @return array
      */
     public function saveAddData($result, $groups, $groupName, $isCreate = false)
@@ -131,7 +140,8 @@ abstract class Model extends Core\Model
                 unset($templateData['ID']);
             }
 
-            $templateModelName = Util::getClassName($groups[$groupName][$fieldName], 'Template') . '\\Model';
+            $templateModelName = Util::getClassName($groups[$groupName][$fieldName],
+                'Template') . '\\Model';
 
             /* @var $templateModel \Ideal\Core\Admin\Model */
             $templateModel = new $templateModelName($templateData['prev_structure']);
@@ -143,6 +153,7 @@ abstract class Model extends Core\Model
                 $result = $templateModel->saveElement($result, $fieldName);
             }
         }
+
         return $result;
     }
 
@@ -153,7 +164,7 @@ abstract class Model extends Core\Model
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName
-                && $field == 'prev_structure' && $v['value'] == ''
+              && $field == 'prev_structure' && $v['value'] == ''
             ) {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
                 $v['value'] = $this->prevStructure;
@@ -170,17 +181,21 @@ abstract class Model extends Core\Model
         $db = Db::getInstance();
 
         $db->update($this->_table)->set($groups[$groupName]);
-        $db->where('ID = :id', array('id' => $groups[$groupName]['ID']))->exec();
+        $db->where('ID = :id', array('id' => $groups[$groupName]['ID']))
+          ->exec();
         if ($db->errno > 0) {
             // Если при попытке обновления произошла ошибка не выполнять доп. запросы, а сообщить об этом пользователю
             $result['isCorrect'] = false;
             $result['errorText'] = $db->error . PHP_EOL . 'Query: ' . $db->exec(false);
+
             return $result;
         }
 
         if (isset($result['sqlAdd'][$groupName]) && ($result['sqlAdd'][$groupName] != '')) {
-            $sqlAdd = str_replace('{{ table }}', $this->_table, $result['sqlAdd'][$groupName]);
-            $sqlAdd = str_replace('{{ objectId }}', $groups[$groupName]['ID'], $sqlAdd);
+            $sqlAdd = str_replace('{{ table }}', $this->_table,
+              $result['sqlAdd'][$groupName]);
+            $sqlAdd = str_replace('{{ objectId }}', $groups[$groupName]['ID'],
+              $sqlAdd);
             $sqlAdd = explode(';', $sqlAdd);
             foreach ($sqlAdd as $_sql) {
                 if ($_sql != '') {
@@ -203,12 +218,14 @@ abstract class Model extends Core\Model
     {
         $tabsContent = '';
         foreach ($tab as $fieldName => $field) {
-            $fieldClass = Util::getClassName($field['type'], 'Field') . '\\Controller';
+            $fieldClass = Util::getClassName($field['type'],
+                'Field') . '\\Controller';
             /* @var $fieldModel \Ideal\Field\AbstractController */
             $fieldModel = $fieldClass::getInstance();
             $fieldModel->setModel($this, $fieldName, $this->fieldsGroup);
             $tabsContent .= $fieldModel->showEdit();
         }
+
         return $tabsContent;
     }
 
@@ -251,6 +268,7 @@ abstract class Model extends Core\Model
     public function getHeader()
     {
         $end = end($this->path);
+
         return $end['name'];
     }
 
@@ -270,9 +288,9 @@ abstract class Model extends Core\Model
     public function parseInputParams($isCreate = false)
     {
         $result = array(
-            'isCorrect' => true,
-            'errorTabs' => array(),
-            'items' => array()
+          'isCorrect' => true,
+          'errorTabs' => array(),
+          'items' => array()
         );
 
         // Для каждого поля прописываем имя вкладки, в которой оно находится
@@ -287,7 +305,8 @@ abstract class Model extends Core\Model
             $tab = 'tab1';
             if (isset($field['tab'])) {
                 if (!array_key_exists($field['tab'], $tabs)) {
-                    $tabs[$field['tab']] = 'tab' . ((int)substr(end($tabs), 3) + 1);
+                    $tabs[$field['tab']] = 'tab' . ((int) substr(end($tabs),
+                          3) + 1);
                 }
                 $tab = $tabs[$field['tab']];
             }
@@ -301,31 +320,55 @@ abstract class Model extends Core\Model
             // TODO добавить валидаторы
 
             // Определеям класс контроллера для соответствующего поля
-            $fieldClass = Util::getClassName($field['type'], 'Field') . '\\Controller';
+            $fieldClass = Util::getClassName($field['type'],
+                'Field') . '\\Controller';
             /* @var $fieldModel \Ideal\Field\AbstractController */
             $fieldModel = $fieldClass::getInstance();
-            $fieldModel->setModel($this, $fieldName, $this->fieldsGroup);
+
+            $fieldModel->setModel($this, $fieldName, $this->fieldsGroup,
+              $this->htmlNameModifier);
             // Получаем данные, введённые пользователем
             $item = $fieldModel->parseInputValue($isCreate);
 
             if (isset($item['items'])) {
-                // Если есть вложенные элементы - добавляем их к результатам
-                $result['items'] = array_merge($result['items'], $item['items']['items']);
-                if (!$item['items']['isCorrect']) {
-                    $result['isCorrect'] = false;
+                if (!isset($item['items']['addons'])) {
+                    // Если есть вложенные элементы - добавляем их к результатам
+                    $result['items'] = array_merge($result['items'],
+                      $item['items']['items']);
+                    if (!$item['items']['isCorrect']) {
+                        $result['isCorrect'] = false;
+                    }
+                } else {
+                    foreach ($item['items']['addons'] as $addon) {
+                        // Если есть вложенные элементы - добавляем их к результатам
+                        $result['items'] = array_merge($result['items'],
+                          $addon['items']);
+                        if (!$addon['isCorrect']) {
+                            $result['isCorrect'] = false;
+                        }
+                    }
                 }
                 unset($item['items']);
             }
 
             if (!isset($item['sqlAdd'])) {
                 // Свойство sqlAdd должно быть обязательно определено для каждого редактируемого поля
-                throw new \Exception('Отсутствует свойство sqlAdd в поле ' . print_r($item, true));
+                throw new \Exception('Отсутствует свойство sqlAdd в поле ' . print_r($item,
+                    true));
             }
 
             $result['sqlAdd'][$this->fieldsGroup] .= $item['sqlAdd'];
 
             $item['realTab'] = $field['realTab'];
-            $result['items'][$item['fieldName']] = $item;
+
+//            $result['items'][$item['fieldName']] = $item;
+//
+            //Формируем результат с учётом возможности присутствия множества аддонов
+            $stringHtmlNameModifier = '';
+            if (!empty($this->htmlNameModifier)) {
+                $stringHtmlNameModifier = '_' . $this->htmlNameModifier;
+            }
+            $result['items'][$this->fieldsGroup . $stringHtmlNameModifier . '_' . $fieldName] = $item;
         }
 
         // Проверяем все поля на ошибки, если ошибки есть — составляем список табов, в которых ошибки
@@ -335,7 +378,7 @@ abstract class Model extends Core\Model
 
             // Составляем список вкладок, в которых возникли ошибки
             if (($item['message'] !== '')
-                && (!in_array($item['realTab'], $result['errorTabs']))
+              && (!in_array($item['realTab'], $result['errorTabs']))
             ) {
                 $result['errorTabs'][] = $item['realTab'];
             }
@@ -347,6 +390,12 @@ abstract class Model extends Core\Model
     public function setFieldsGroup($name)
     {
         $this->fieldsGroup = $name;
+    }
+
+    // Устанавливаем значение модификатора html имени
+    public function setHtmlNameModifier($modifier)
+    {
+        $this->htmlNameModifier = $modifier;
     }
 
     /**
