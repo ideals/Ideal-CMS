@@ -127,7 +127,12 @@ HTML;
         return $value;
     }
 
-    // Получаем данные из полей аддонов
+    /**
+     * Получаем данные из полей аддонов
+     *
+     * @param bool $isCreate
+     * @return array
+     */
     public function parseInputValue($isCreate)
     {
         $item = parent::parseInputValue($isCreate);
