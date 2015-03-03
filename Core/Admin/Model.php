@@ -50,15 +50,11 @@ abstract class Model extends Core\Model
                     . '» на «' . $newTemplateCap . '»';
             }
         }
-
         return $result;
     }
 
-    public function createElement(
-        $result,
-        $groupName = 'general',
-        $addonKey = ''
-    ) {
+    public function createElement($result, $groupName = 'general', $addonKey = '')
+    {
         // Из общего списка введённых данных выделяем те, что помечены general
         foreach ($result['items'] as $k => $v) {
             list($group, $field) = explode('_', $v['fieldName'], 2);
@@ -136,7 +132,6 @@ abstract class Model extends Core\Model
             $result['isCorrect'] = 0;
             $result['errorText'] = 'Ошибка при добавлении в БД. ' . $db->error;
         }
-
         return $result;
     }
 
@@ -199,7 +194,6 @@ abstract class Model extends Core\Model
                 }
             }
         }
-
         return $result;
     }
 
@@ -240,7 +234,6 @@ abstract class Model extends Core\Model
             // Если при попытке обновления произошла ошибка не выполнять доп. запросы, а сообщить об этом пользователю
             $result['isCorrect'] = false;
             $result['errorText'] = $db->error . PHP_EOL . 'Query: ' . $db->exec(false);
-
             return $result;
         }
 
@@ -256,7 +249,6 @@ abstract class Model extends Core\Model
         }
 
         $result = $this->saveAddData($result, $groups, $groupName);
-
         return $result;
     }
 
@@ -275,7 +267,6 @@ abstract class Model extends Core\Model
             $fieldModel->setModel($this, $fieldName, $this->fieldsGroup);
             $tabsContent .= $fieldModel->showEdit();
         }
-
         return $tabsContent;
     }
 
@@ -288,7 +279,6 @@ abstract class Model extends Core\Model
         foreach ($headers as $v) {
             $headerNames[$v] = $this->fields[$v]['label'];
         }
-
         return $headerNames;
     }
 
@@ -301,7 +291,6 @@ abstract class Model extends Core\Model
             $column = explode('!', $v);
             $headers[] = $column[0];
         }
-
         return $headers;
     }
 
@@ -310,14 +299,12 @@ abstract class Model extends Core\Model
         $config = Config::getInstance();
 
         $title = $this->getHeader() . ' - админка ' . $config->domain;
-
         return $title;
     }
 
     public function getHeader()
     {
         $end = end($this->path);
-
         return $end['name'];
     }
 
@@ -422,7 +409,6 @@ abstract class Model extends Core\Model
                 $result['errorTabs'][] = $item['realTab'];
             }
         }
-
         return $result;
     }
 

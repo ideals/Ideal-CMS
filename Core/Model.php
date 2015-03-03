@@ -179,7 +179,6 @@ abstract class Model
         if ($prevStructureId == 0) {
             // Если предыдущая структура стартовая — заканчиваем
             array_unshift($localPath, $structure);
-
             return $localPath;
         }
 
@@ -192,7 +191,6 @@ abstract class Model
 
         $path = $structure->detectPath();
         $path = array_merge($path, $localPath);
-
         return $path;
     }
 
@@ -239,7 +237,6 @@ abstract class Model
         }
 
         $list = $db->select($_sql);
-
         return $list;
     }
 
@@ -257,7 +254,6 @@ abstract class Model
             $where = preg_replace('/(^AND)|(^OR)/i', '', $where);
             $where = 'WHERE ' . $where;
         }
-
         return $where;
     }
 
@@ -266,7 +262,6 @@ abstract class Model
         if (is_null($this->pageData)) {
             $this->initPageData();
         }
-
         return $this->pageData;
     }
 
@@ -347,7 +342,6 @@ abstract class Model
         if (($countList > 0) && (ceil($countList / $onPage) < $page)) {
             // Если для запрошенного номера страницы нет элементов - выдать 404
             $this->is404 = true;
-
             return false;
         }
 
@@ -357,7 +351,6 @@ abstract class Model
         $pager['prev'] = $pagination->getPrev(); // ссылка на предыдущю страницу
         $pager['next'] = $pagination->getNext(); // cсылка на следующую страницу
         $pager['total'] = $countList; // общее количество элементов в списке
-
         return $pager;
     }
 
@@ -376,7 +369,6 @@ abstract class Model
         // Считываем все элементы первого уровня
         $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
         $list = $db->select($_sql);
-
         return $list[0]['COUNT(e.ID)'];
     }
 
@@ -388,7 +380,6 @@ abstract class Model
 
         $url = new Url\Model();
         $this->parentUrl = $url->setParentUrl($this->path);
-
         return $this->parentUrl;
     }
 
@@ -443,26 +434,6 @@ abstract class Model
         }
     }
 
-    public function setPageDataByPrevStructure($prevStructure)
-    {
-        $db = Db::getInstance();
-
-        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps";
-        $pageData = $db->select($_sql, array('ps' => $prevStructure));
-        if (isset($pageData[0]['ID'])) {
-            // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
-
-            // Если нужно выбрать информацию по аддону, то вычленяем ключ аддона
-            // из имени группы и возвращаем корректную запись
-            if (strpos($this->fieldsGroup, 'addon') === false) {
-                $this->setPageData($pageData[0]);
-            } else {
-                list($group, $addonKey) = explode('_', $this->fieldsGroup, 2);
-                $addonKey = intval($addonKey) - 1;
-                $this->setPageData($pageData[$addonKey]);
-            }
-        }
-    }
 
     /**
      * Установка номера отображаемой страницы
@@ -488,7 +459,6 @@ abstract class Model
         if (!is_null($pageNumTitle)) {
             $this->pageNumTitle = $pageNumTitle;
         }
-
         return $this->pageNum;
     }
 

@@ -83,7 +83,7 @@ class Model extends \Ideal\Core\Admin\Model
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
         foreach ($elements as $element) {
             $newElements[] = $element;
-            if (!isset($element['structure']) OR ($element['structure'] == $end['structure'])) {
+            if (!isset($element['structure']) || ($element['structure'] == $end['structure'])) {
                 continue;
             }
             // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
@@ -142,15 +142,16 @@ class Model extends \Ideal\Core\Admin\Model
                 // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
                 $tmp = $this->disallow;
                 if ($v['link'] !== array_reduce(
-                    $tmp,
-                    function (&$res, $rule) {
-                        if ($res == 1 || preg_match($rule, $res)) {
-                            return 1;
-                        }
-                        return $res;
-                    },
-                    $v['link']
-                )) {
+                        $tmp,
+                        function (&$res, $rule) {
+                            if ($res == 1 || preg_match($rule, $res)) {
+                                return 1;
+                            }
+                            return $res;
+                        },
+                        $v['link']
+                    )
+                ) {
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }
@@ -160,5 +161,18 @@ class Model extends \Ideal\Core\Admin\Model
         }
         $str .= "</li>\n</ul>\n";
         return $str;
+    }
+
+    public function setPageDataByPrevStructure($prevStructure)
+    {
+        $db = Db::getInstance();
+
+        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps";
+        $pageData = $db->select($_sql, array('ps' => $prevStructure));
+        if (isset($pageData[0]['ID'])) {
+            list($group, $addonKey) = explode('_', $this->fieldsGroup, 2);
+            $addonKey = intval($addonKey) - 1;
+            $this->setPageData($pageData[$addonKey]);
+        }
     }
 }
