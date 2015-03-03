@@ -143,8 +143,7 @@ abstract class Model
     {
         $vars = get_object_vars($model);
         foreach ($vars as $k => $v) {
-            if (in_array($k,
-                array('_table', 'module', 'params', 'fields', 'prevStructure'))) {
+            if (in_array($k, array('_table', 'module', 'params', 'fields', 'prevStructure'))) {
                 continue;
             }
             $this->$k = $v;
