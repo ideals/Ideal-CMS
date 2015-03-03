@@ -53,8 +53,7 @@ abstract class Model
                 $structure = reset($structures);
                 $type = $parts[1];
                 $structureName = $structure['structure'];
-                $structureName = substr($structureName,
-                  strpos($structureName, '_') + 1);
+                $structureName = substr($structureName, strpos($structureName, '_') + 1);
                 break;
             case 'Structure':
                 $structure = $config->getStructureByName($structureFullName);
@@ -112,8 +111,7 @@ abstract class Model
             $end = $this->path[($count - 1)];
             $prev = $this->path[($count - 2)];
 
-            $endClass = ltrim(Util::getClassName($end['structure'],
-              'Structure'), '\\');
+            $endClass = ltrim(Util::getClassName($end['structure'], 'Structure'), '\\');
             $thisClass = get_class($this);
 
             // Проверяем, соответствует ли класс объекта вложенной структуре
@@ -121,8 +119,7 @@ abstract class Model
                 // Если структура активного элемента не равна структуре предыдущего элемента,
                 // то нужно инициализировать модель структуры активного элемента
                 $name = explode('\\', get_class($this));
-                $modelClassName = Util::getClassName($end['structure'],
-                    'Structure') . '\\' . $name[3] . '\\Model';
+                $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\' . $name[3] . '\\Model';
                 $prevStructure = $config->getStructureByName($prev['structure']);
                 /* @var $model Model */
                 $model = new $modelClassName($prevStructure['ID'] . '-' . $end['ID']);
@@ -147,7 +144,7 @@ abstract class Model
         $vars = get_object_vars($model);
         foreach ($vars as $k => $v) {
             if (in_array($k,
-              array('_table', 'module', 'params', 'fields', 'prevStructure'))) {
+                array('_table', 'module', 'params', 'fields', 'prevStructure'))) {
                 continue;
             }
             $this->$k = $v;
@@ -177,8 +174,7 @@ abstract class Model
             $first['prev_structure'] = $this->prevStructure;
         }
 
-        list($prevStructureId, $prevElementId) = explode('-',
-          $first['prev_structure']);
+        list($prevStructureId, $prevElementId) = explode('-', $first['prev_structure']);
         $structure = $config->getStructureByPrev($first['prev_structure']);
 
         if ($prevStructureId == 0) {
@@ -190,8 +186,7 @@ abstract class Model
 
         // Если предыдущая структура не стартовая —
         // инициализируем её модель и продолжаем определение пути в ней
-        $className = Util::getClassName($structure['structure'],
-            'Structure') . '\\Site\\Model';
+        $className = Util::getClassName($structure['structure'], 'Structure') . '\\Site\\Model';
 
         $structure = new $className('');
         $structure->setPageDataById($prevElementId);
@@ -318,8 +313,7 @@ abstract class Model
             }
 
             // Инициализируем модель шаблона
-            $className = Util::getClassName($this->pageData[$k],
-                'Template') . '\\Model';
+            $className = Util::getClassName($this->pageData[$k], 'Template') . '\\Model';
             $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
             $template = new $className($prevStructure);
             $template->setParentModel($this);
@@ -360,8 +354,7 @@ abstract class Model
 
         $pagination = new Pagination();
         // Номера и ссылки на доступные страницы
-        $pager['pages'] = $pagination->getPages($countList, $onPage, $page,
-          $query, 'page');
+        $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, 'page');
         $pager['prev'] = $pagination->getPrev(); // ссылка на предыдущю страницу
         $pager['next'] = $pagination->getNext(); // cсылка на следующую страницу
         $pager['total'] = $countList; // общее количество элементов в списке
@@ -460,7 +453,7 @@ abstract class Model
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
 
-            //Если нужно выбрать информацию по аддону, то вычленяем ключ аддона
+            // Если нужно выбрать информацию по аддону, то вычленяем ключ аддона
             // из имени группы и возвращаем корректную запись
             if (strpos($this->fieldsGroup, 'addon') === false) {
                 $this->setPageData($pageData[0]);
@@ -487,8 +480,9 @@ abstract class Model
     {
         $this->pageNum = 0;
         if ($pageNum !== null) {
-            $pageNum = intval(substr($pageNum, 0,
-              10)); // отсекаем всякую ерунду и слишком большие числа в листалке
+
+            // отсекаем всякую ерунду и слишком большие числа в листалке
+            $pageNum = intval(substr($pageNum, 0, 10));
             $this->pageNum = ($pageNum == 0) ? 1 : $pageNum;
         }
 

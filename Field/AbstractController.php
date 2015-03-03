@@ -180,10 +180,10 @@ abstract class AbstractController
      * @param string $htmlNameModifier модификатор атрибута name, для html элемента
      */
     public function setModel(
-      $model,
-      $fieldName,
-      $groupName = 'general',
-      $htmlNameModifier = ''
+        $model,
+        $fieldName,
+        $groupName = 'general',
+        $htmlNameModifier = ''
     ) {
         $this->name = $fieldName;
         $this->model = $model;
