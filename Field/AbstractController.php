@@ -88,6 +88,14 @@ abstract class AbstractController
             $value = $this->field['default'];
         }
 
+        // Если рассматривается поле "tab_ID" и его значение не было получено, то
+        // скорее всего это новое поле и его значение необходимо получить из ранее
+        // сформированного имени группы
+        //TODO разобраться как заполнить пустое поле только при сохранении
+        if (empty($value) && $this->name == 'tab_ID') {
+            $value =  explode('_', $this->groupName)[1];
+        }
+
         return $value;
     }
 
