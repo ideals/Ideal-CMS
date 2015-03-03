@@ -19,14 +19,10 @@ abstract class Model extends Core\Model
         foreach ($result['items'] as $fieldName => $field) {
             $result['items'][$fieldName]['confirm'] = '';
             $fieldsGroup = $this->fieldsGroup . '_';
-            if (substr($fieldName,
-                    0,
-                    strlen($fieldsGroup)) != $fieldsGroup
-            ) {
+            if (substr($fieldName, 0, strlen($fieldsGroup)) != $fieldsGroup) {
                 continue;
             }
-            $realName = substr($fieldName,
-                strlen($fieldsGroup));
+            $realName = substr($fieldName, strlen($fieldsGroup));
             if (!isset($this->fields[$realName])) {
                 continue;
             }
