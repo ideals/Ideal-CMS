@@ -43,6 +43,7 @@ class Controller extends AbstractController
     {
         $this->htmlName = $this->groupName . '_' . $this->name;
         $input = $this->getInputText();
+
         return $input;
     }
 
@@ -94,6 +95,7 @@ class Controller extends AbstractController
             </script>
             <script type="text/javascript" src="Ideal/Field/Addon/script.js"></script>
 HTML;
+
         return $html;
     }
 
@@ -123,5 +125,23 @@ HTML;
         $value = json_encode($arr);
 
         return $value;
+    }
+
+    // Получаем данные из полей аддонов
+    public function parseInputValue($isCreate)
+    {
+        $item = parent::parseInputValue($isCreate);
+
+        //Проходим по каждому аддону и собираем введённую информацию
+        $addonNewValues = json_decode($this->newValue);
+        foreach ($addonNewValues as $addonNewValue) {
+            $addonName = Util::getClassName($addonNewValue[1],'Addon') . '\\Model';
+            $addon = new $addonName('не имеет значения, т.к. только парсим ввод пользователя');
+            $addon->setFieldsGroup($this->name);
+            $addon->setHtmlNameModifier($addonNewValue[0]);
+            $item['items']['addons'][$addonNewValue[0]] = $addon->parseInputParams($isCreate);
+        }
+
+        return $item;
     }
 }
