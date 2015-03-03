@@ -135,10 +135,7 @@ abstract class AbstractController
         }
 
         $sql = strtolower($this->field['sql']);
-        if (empty($this->newValue)
-            && (strpos($sql, 'not null') !== false)
-            && (strpos($sql, 'default') === false)
-        ) {
+        if (empty($this->newValue) && (strpos($sql, 'not null') !== false) && (strpos($sql, 'default') === false)) {
             // Установлен NOT NULL и нет DEFAULT и $value пустое
             $item['message'] = 'необходимо заполнить это поле';
         }
@@ -180,19 +177,19 @@ abstract class AbstractController
      * @param string $htmlNameModifier модификатор атрибута name, для html элемента
      */
     public function setModel($model, $fieldName, $groupName = 'general', $htmlNameModifier = '')
-      {
-          $this->name = $fieldName;
-          $this->model = $model;
-          $this->field = $model->fields[$fieldName];
-          $this->groupName = $groupName;
+    {
+        $this->name = $fieldName;
+        $this->model = $model;
+        $this->field = $model->fields[$fieldName];
+        $this->groupName = $groupName;
 
-          //Учитываем модификатор для установки htmlName
-          if (!empty($htmlNameModifier)) {
-              $htmlNameModifier .= '_';
-          }
+        //Учитываем модификатор для установки htmlName
+        if (!empty($htmlNameModifier)) {
+            $htmlNameModifier .= '_';
+        }
 
-          $this->htmlName = $this->groupName . '_' . $htmlNameModifier . $this->name;
-      }
+        $this->htmlName = $this->groupName . '_' . $htmlNameModifier . $this->name;
+    }
 
     /**
      * Отображение html-элементов для редактирования этого поля
