@@ -114,10 +114,10 @@ abstract class AbstractController
         $this->newValue = $this->pickupNewValue();
 
         $item = array(
-          'fieldName' => $this->groupName . '_' . $this->name,
-          'value' => $this->newValue,
-          'message' => '',
-          'sqlAdd' => ''
+            'fieldName' => $this->groupName . '_' . $this->name,
+            'value' => $this->newValue,
+            'message' => '',
+            'sqlAdd' => ''
         );
 
         // В первой версии только на правильность данных и их наличие, если в описании бд указано not null
@@ -136,8 +136,8 @@ abstract class AbstractController
 
         $sql = strtolower($this->field['sql']);
         if (empty($this->newValue)
-          && (strpos($sql, 'not null') !== false)
-          && (strpos($sql, 'default') === false)
+            && (strpos($sql, 'not null') !== false)
+            && (strpos($sql, 'default') === false)
         ) {
             // Установлен NOT NULL и нет DEFAULT и $value пустое
             $item['message'] = 'необходимо заполнить это поле';
@@ -179,12 +179,8 @@ abstract class AbstractController
      * @param string $groupName Вкладка, к которой принадлежит редактируемое поле
      * @param string $htmlNameModifier модификатор атрибута name, для html элемента
      */
-    public function setModel(
-        $model,
-        $fieldName,
-        $groupName = 'general',
-        $htmlNameModifier = ''
-    ) {
+    public function setModel($model, $fieldName, $groupName = 'general', $htmlNameModifier = '')
+    {
         $this->name = $fieldName;
         $this->model = $model;
         $this->field = $model->fields[$fieldName];
