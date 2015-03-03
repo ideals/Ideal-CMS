@@ -59,7 +59,7 @@ abstract class Model
                 $structure = $config->getStructureByName($structureFullName);
                 break;
             case 'Addon':
-                $includeFile = $module . 'Template/' . $structureName . '/config.php';
+                $includeFile = $module . 'Addon/' . $structureName . '/config.php';
                 $structure = include($includeFile);
                 if (!is_array($structure)) {
                     throw new \Exception('Не удалось подключить файл: ' . $includeFile);
@@ -84,6 +84,7 @@ abstract class Model
     public static function getStructureName()
     {
         $parts = explode('\\', get_called_class());
+
         return $parts[0] . '_' . $parts[2];
     }
 
@@ -126,6 +127,7 @@ abstract class Model
                 $model = $model->setVars($this);
             }
         }
+
         return $model;
     }
 
@@ -146,6 +148,7 @@ abstract class Model
             }
             $this->$k = $v;
         }
+
         return $this;
     }
 
@@ -176,6 +179,7 @@ abstract class Model
         if ($prevStructureId == 0) {
             // Если предыдущая структура стартовая — заканчиваем
             array_unshift($localPath, $structure);
+
             return $localPath;
         }
 
@@ -253,6 +257,7 @@ abstract class Model
             $where = preg_replace('/(^AND)|(^OR)/i', '', $where);
             $where = 'WHERE ' . $where;
         }
+
         return $where;
     }
 
@@ -261,6 +266,7 @@ abstract class Model
         if (is_null($this->pageData)) {
             $this->initPageData();
         }
+
         return $this->pageData;
     }
 
@@ -341,6 +347,7 @@ abstract class Model
         if (($countList > 0) && (ceil($countList / $onPage) < $page)) {
             // Если для запрошенного номера страницы нет элементов - выдать 404
             $this->is404 = true;
+
             return false;
         }
 
@@ -444,7 +451,16 @@ abstract class Model
         $pageData = $db->select($_sql, array('ps' => $prevStructure));
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
-            $this->setPageData($pageData[0]);
+
+            // Если нужно выбрать информацию по аддону, то вычленяем ключ аддона
+            // из имени группы и возвращаем корректную запись
+            if (strpos($this->fieldsGroup, 'addon') === false) {
+                $this->setPageData($pageData[0]);
+            } else {
+                list($group, $addonKey) = explode('_', $this->fieldsGroup, 2);
+                $addonKey = intval($addonKey) - 1;
+                $this->setPageData($pageData[$addonKey]);
+            }
         }
     }
 
@@ -455,7 +471,7 @@ abstract class Model
      * суффикса для листалки " | Страница [N]" на любой другой суффикс, где
      * вместе [N] будет подставляться номер страницы.
      *
-     * @param int  $pageNum      Номер отображаемой страницы
+     * @param int $pageNum Номер отображаемой страницы
      * @param null $pageNumTitle Строка для замены стандартного суффикса листалки в тайтле
      * @return int Безопасный номер страницы
      */
@@ -463,7 +479,9 @@ abstract class Model
     {
         $this->pageNum = 0;
         if ($pageNum !== null) {
-            $pageNum = intval(substr($pageNum, 0, 10)); // отсекаем всякую ерунду и слишком большие числа в листалке
+
+            // отсекаем всякую ерунду и слишком большие числа в листалке
+            $pageNum = intval(substr($pageNum, 0, 10));
             $this->pageNum = ($pageNum == 0) ? 1 : $pageNum;
         }
 
