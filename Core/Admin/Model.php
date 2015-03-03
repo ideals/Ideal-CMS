@@ -397,8 +397,7 @@ abstract class Model extends Core\Model
 
             if (!isset($item['sqlAdd'])) {
                 // Свойство sqlAdd должно быть обязательно определено для каждого редактируемого поля
-                throw new \Exception('Отсутствует свойство sqlAdd в поле ' . print_r($item,
-                        true));
+                throw new \Exception('Отсутствует свойство sqlAdd в поле ' . print_r($item, true));
             }
 
             $result['sqlAdd'][$this->fieldsGroup] .= $item['sqlAdd'];
