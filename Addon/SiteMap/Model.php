@@ -161,4 +161,17 @@ class Model extends \Ideal\Core\Admin\Model
         $str .= "</li>\n</ul>\n";
         return $str;
     }
+
+    public function setPageDataByPrevStructure($prevStructure)
+    {
+        $db = Db::getInstance();
+
+        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps";
+        $pageData = $db->select($_sql, array('ps' => $prevStructure));
+        if (isset($pageData[0]['ID'])) {
+            list($group, $addonKey) = explode('_', $this->fieldsGroup, 2);
+            $addonKey = intval($addonKey) - 1;
+            $this->setPageData($pageData[$addonKey]);
+        }
+    }
 }
