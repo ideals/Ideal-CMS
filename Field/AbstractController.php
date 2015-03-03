@@ -63,6 +63,7 @@ abstract class AbstractController
             $className = get_called_class();
             static::$instance = new $className();
         }
+
         return static::$instance;
     }
 
@@ -86,13 +87,14 @@ abstract class AbstractController
             // Если поле ещё не заполнено, берём его значение по умолчанию из описания полей структуры
             $value = $this->field['default'];
         }
+
         return $value;
     }
 
     /**
      * Форматирование значения поля для отображения значения в списке элементов
      *
-     * @param array  $values    Массив значений объекта
+     * @param array $values Массив значений объекта
      * @param string $fieldName Название поля, из которого надо взять значение
      * @return string Строка со значением для отображения в списке
      */
@@ -112,7 +114,7 @@ abstract class AbstractController
         $this->newValue = $this->pickupNewValue();
 
         $item = array(
-            'fieldName' => $this->htmlName,
+            'fieldName' => $this->groupName . '_' . $this->name,
             'value' => $this->newValue,
             'message' => '',
             'sqlAdd' => ''
@@ -123,6 +125,7 @@ abstract class AbstractController
             if (!empty($this->newValue)) {
                 $item['message'] = 'При создании элемента поле ID не может быть заполнено';
             }
+
             return $item;
         }
 
@@ -132,10 +135,7 @@ abstract class AbstractController
         }
 
         $sql = strtolower($this->field['sql']);
-        if (empty($this->newValue)
-            && (strpos($sql, 'not null') !== false)
-            && (strpos($sql, 'default') === false)
-        ) {
+        if (empty($this->newValue) && (strpos($sql, 'not null') !== false) && (strpos($sql, 'default') === false)) {
             // Установлен NOT NULL и нет DEFAULT и $value пустое
             $item['message'] = 'необходимо заполнить это поле';
         }
@@ -153,8 +153,15 @@ abstract class AbstractController
     public function pickupNewValue()
     {
         $request = new Request();
-        $fieldName = $this->groupName . '_' . $this->name;
+
+        //TODO уточнить по поводу обязательности этой проверки
+        if (isset($this->htmlName) && !empty($this->htmlName)) {
+            $fieldName = $this->htmlName;
+        } else {
+            $fieldName = $this->groupName . '_' . $this->name;
+        }
         $this->newValue = $request->$fieldName;
+
         return $this->newValue;
     }
 
@@ -164,22 +171,27 @@ abstract class AbstractController
      * Полю необходимо получать сведения о состоянии объекта и о других полях, т.к.
      * его значения и поведение может зависеть от значений других полей
      *
-     * @param \Ideal\Core\Admin\Model $model     Модель редактируемого объекта
-     * @param string                  $fieldName Редактируемое поле
-     * @param string                  $groupName Вкладка, к которой принадлежит редактируемое поле
+     * @param \Ideal\Core\Admin\Model $model Модель редактируемого объекта
+     * @param string $fieldName Редактируемое поле
+     * @param string $groupName Вкладка, к которой принадлежит редактируемое поле
+     * @param string $htmlNameModifier модификатор атрибута name, для html элемента
      */
-    public function setModel($model, $fieldName, $groupName = 'general')
+    public function setModel($model, $fieldName, $groupName = 'general', $htmlNameModifier = '')
     {
         $this->name = $fieldName;
         $this->model = $model;
         $this->field = $model->fields[$fieldName];
         $this->groupName = $groupName;
-        $this->htmlName = $this->groupName . '_' . $this->name;
+
+        //Учитываем модификатор для установки htmlName
+        if (!empty($htmlNameModifier)) {
+            $htmlNameModifier .= '_';
+        }
+        $this->htmlName = $this->groupName . '_' . $htmlNameModifier . $this->name;
     }
 
     /**
      * Отображение html-элементов для редактирования этого поля
-     *
      * @return string HTML-код группы редактирования для этого поля
      */
     public function showEdit()
