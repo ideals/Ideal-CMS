@@ -48,4 +48,21 @@ class Controller extends AbstractController
         . '" name="' . $this->htmlName
         . '" value="' . $this->getValue() . '">';
     }
+
+    /**
+     * Используется для присвоения значения скрытому полю идентификатора таба, если оно пустое (при добавлении нового
+     * аддона)
+     */
+    public function parseInputValue($isCreate)
+    {
+        $item = parent::parseInputValue($isCreate);
+        if (strpos($item['fieldName'], 'tab_ID') === false) {
+            return $item;
+        } else {
+            list($tabID) = explode('_', $item['fieldName'], 2);
+            list(, $tabID) = explode('-', $tabID);
+            $item['value'] = $tabID;
+            return $item;
+        }
+    }
 }
