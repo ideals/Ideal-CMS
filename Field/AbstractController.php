@@ -92,7 +92,7 @@ abstract class AbstractController
     /**
      * Форматирование значения поля для отображения значения в списке элементов
      *
-     * @param array  $values    Массив значений объекта
+     * @param array $values Массив значений объекта
      * @param string $fieldName Название поля, из которого надо взять значение
      * @return string Строка со значением для отображения в списке
      */
@@ -132,10 +132,7 @@ abstract class AbstractController
         }
 
         $sql = strtolower($this->field['sql']);
-        if (empty($this->newValue)
-            && (strpos($sql, 'not null') !== false)
-            && (strpos($sql, 'default') === false)
-        ) {
+        if (empty($this->newValue) && (strpos($sql, 'not null') !== false) && (strpos($sql, 'default') === false)) {
             // Установлен NOT NULL и нет DEFAULT и $value пустое
             $item['message'] = 'необходимо заполнить это поле';
         }
@@ -164,9 +161,9 @@ abstract class AbstractController
      * Полю необходимо получать сведения о состоянии объекта и о других полях, т.к.
      * его значения и поведение может зависеть от значений других полей
      *
-     * @param \Ideal\Core\Admin\Model $model     Модель редактируемого объекта
-     * @param string                  $fieldName Редактируемое поле
-     * @param string                  $groupName Вкладка, к которой принадлежит редактируемое поле
+     * @param \Ideal\Core\Admin\Model $model Модель редактируемого объекта
+     * @param string $fieldName Редактируемое поле
+     * @param string $groupName Вкладка, к которой принадлежит редактируемое поле
      */
     public function setModel($model, $fieldName, $groupName = 'general')
     {
