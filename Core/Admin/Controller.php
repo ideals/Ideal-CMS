@@ -59,6 +59,7 @@ class Controller
         $result = $this->model->parseInputParams();
 
         // Проверяем не выбран ли другой прикреплённый шаблон
+        // TODO узнать является ли эта проверка издержками работы с шаблонами, когда их можно было сменить?
         if ($request->changeTemplate == 0) {
             $result = $this->model->checkTemplateChange($result);
         }
