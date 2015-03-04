@@ -115,7 +115,10 @@ class Model
         $class = Util::getClassName($addonVar, 'Addon') . '\\Model';
         /** @var \Ideal\Core\Admin\Model $model */
         $model = new $class('');
-        $model->setFieldsGroup($this->name . '_' . $id);
+
+        // Получаем тип аддона для формирования правильного groupName
+        $groupName = strtolower(end(explode('_', $addonVar)));
+        $model->setFieldsGroup($groupName . '-' . $id);
         // Загрузка данных связанного объекта
         $pageData = $this->model->getPageData();
         if (isset($pageData['ID'])) {
