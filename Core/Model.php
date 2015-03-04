@@ -39,7 +39,7 @@ abstract class Model
         $parts = preg_split('/[_\\\\]+/', get_class($this));
         $this->module = $parts[0];
         $module = ($this->module == 'Ideal') ? '' : $this->module . '/';
-        $type = $parts[1]; // Structure или Template
+        $type = $parts[1]; // Structure или Addon
         $structureName = $parts[2];
         $structureFullName = $this->module . '_' . $structureName;
 
@@ -60,7 +60,7 @@ abstract class Model
                 $structure = $config->getStructureByName($structureFullName);
                 break;
             case 'Addon':
-                $includeFile = $module . 'Template/' . $structureName . '/config.php';
+                $includeFile = $module . 'Addon/' . $structureName . '/config.php';
                 $structure = include($includeFile);
                 if (!is_array($structure)) {
                     throw new \Exception('Не удалось подключить файл: ' . $includeFile);
@@ -281,8 +281,8 @@ abstract class Model
         // Получаем переменные шаблона
         $config = Config::getInstance();
         foreach ($this->fields as $k => $v) {
-            // Пропускаем все поля, которые не являются шаблоном
-            if (strpos($v['type'], '_Template') === false) {
+            // Пропускаем все поля, которые не являются аддоном
+            if (strpos($v['type'], '_Addon') === false) {
                 continue;
             }
 
