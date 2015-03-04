@@ -217,16 +217,17 @@ iFrame = {
      */
     send: function(formID, url, callback) {
         var form = $('#' + formID);
-        if (typeof $(this).id == "underfined") {
+        if (typeof $(this).id == "undefined") {
             this.create(formID, url);
         }
         this.formCallback = callback;
         this.iframe.onSendComplete = function() {
-            callback(form, url, this.getIFrameXML());
+            this.callback(form, url, this.getIFrameXML());
         };
-        $(form).setAttribute('target', frame.id);
-        $(form).setAttribute('action', url);
+        $(form).attr('target', this.id);
+        $(form).attr('action', url);
         $(form).submit();
+        return false;
     },
     /**
      * Создание фрейма
@@ -237,7 +238,7 @@ iFrame = {
     create: function(formID, url) {
         var id = 'iFrameID' + Math.floor(Math.random() * 99999);
         var html = '<iframe id="' + id + '" url="' + url + '"></iframe>';
-        $(formID).append(html);
+        $('#' + formID).append(html);
         this.iframe = $(formID).children('iframe');
         this.id = id;
     },
@@ -249,14 +250,14 @@ iFrame = {
     getIFrameXML: function(e) {
         var doc = this.iframe.contentDocument;
         if (!doc &&this.iframe.contentWindow) doc = this.iframe.contentWindow.document;
-        if (!doc) doc = window.frames[iframe.id].document;
+        if (!doc) doc = window.frames[this.id].document;
         if (!doc) return null;
-        if (doc.location=="about:blank") return null;
+        if (doc.location == "about:blank") return null;
         if (doc.XMLDocument) doc = doc.XMLDocument;
         return doc;
     },
     /**
-     * 
+     *
      * @param form
      * @param act
      * @param doc
@@ -403,18 +404,25 @@ jQuery.fn.form = function(options, messages){
                 data: data,
                 dataType: 'json',
                 async:false,
-                success: function(result){
-                    alert(result);
-                    $form[0].reset();
-                    $form.trigger('form.successSend');
-
+                success: function(result) {
+                    methods.successSend().apply(this, [result]);
                 },
-                error: function(){
-                    $form.trigger('form.errorSend');
-                    alert(messages.ajaxError);
+                error: function(result){
+                    methods.successSend().apply(this, [result]);
                 }
             });
             return false;
+        },
+        //Обработка успешной отправки формы
+        successSend : function(result) {
+            alert(result);
+            //$(this)[0].reset();
+            //$(this).trigger('form.successSend');
+        },
+        //Обработка неудачной отправки формы
+        errorSend : function(result) {
+            $(this).trigger('form.errorSend');
+            alert(messages.ajaxError);
         }
 
     };
@@ -431,8 +439,17 @@ jQuery.fn.form = function(options, messages){
                     alert(messages.notValid);
                     return false;
                 }
-                methods.ajaxSendFiles.apply(this);
-                return methods.submit.apply(this);
+                //Отправляем форму, при наличии атрибута target
+                if ($(this).is("[target]")) {
+                    return true;
+                }
+                if (typeof $(this).children('.file-input-block') != "undefined") {
+                    iFrame.send($(this).attr('id'), options.ajaxUrl, function(result) {
+                        return methods.successSend.append(this, [result]);
+                    });
+                } else {
+                    return methods.submit.apply(this);
+                }
             })
             .on('form.buttonClick', function() {
                 methods.metrikaOnButtonClick.apply(this);
