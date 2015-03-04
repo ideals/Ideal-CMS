@@ -124,4 +124,24 @@ HTML;
 
         return $value;
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function parseInputValue($isCreate)
+    {
+        $item = parent::parseInputValue($isCreate);
+
+        // TODO Дли типа данных аддон - нужно распарсить его элементы
+        $addonsData = json_decode($item['value']);
+        foreach ($addonsData as $addonData) {
+            list($tabID, $addonType) = $addonData;
+            $addonName = Util::getClassName($addonType, 'Addon') . '\\Model';
+            $addon = new $addonName('не имеет значения, т.к. только парсим ввод пользователя');
+            $groupName = strtolower(end(explode('_', $addonType))) . '-' . $tabID;
+            $addon->setFieldsGroup($groupName);
+            $item['items'][$tabID] = $addon->parseInputParams($isCreate);
+        }
+        return $item;
+    }
 }
