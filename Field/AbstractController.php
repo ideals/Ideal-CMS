@@ -132,6 +132,7 @@ abstract class AbstractController
         }
 
         $sql = strtolower($this->field['sql']);
+
         if (($this->newValue === '') && (strpos($sql, 'not null') !== false) && (strpos($sql, 'default') === false)) {
             // Установлен NOT NULL и нет DEFAULT и $value пустое
             $item['message'] = 'необходимо заполнить это поле';
