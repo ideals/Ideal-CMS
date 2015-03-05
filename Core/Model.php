@@ -38,7 +38,7 @@ abstract class Model
         $parts = preg_split('/[_\\\\]+/', get_class($this));
         $this->module = $parts[0];
         $module = ($this->module == 'Ideal') ? '' : $this->module . '/';
-        $type = $parts[1]; // Structure или Template
+        $type = $parts[1]; // Structure или Addon
         $structureName = $parts[2];
         $structureFullName = $this->module . '_' . $structureName;
 
@@ -59,7 +59,7 @@ abstract class Model
                 $structure = $config->getStructureByName($structureFullName);
                 break;
             case 'Addon':
-                $includeFile = $module . 'Template/' . $structureName . '/config.php';
+                $includeFile = $module . 'Addon/' . $structureName . '/config.php';
                 $structure = include($includeFile);
                 if (!is_array($structure)) {
                     throw new \Exception('Не удалось подключить файл: ' . $includeFile);
@@ -280,8 +280,8 @@ abstract class Model
         // Получаем переменные шаблона
         $config = Config::getInstance();
         foreach ($this->fields as $k => $v) {
-            // Пропускаем все поля, которые не являются шаблоном
-            if (strpos($v['type'], '_Template') === false) {
+            // Пропускаем все поля, которые не являются аддоном
+            if (strpos($v['type'], '_Addon') === false) {
                 continue;
             }
 
@@ -436,18 +436,6 @@ abstract class Model
         }
     }
 
-    public function setPageDataByPrevStructure($prevStructure)
-    {
-        $db = Db::getInstance();
-
-        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps";
-        $pageData = $db->select($_sql, array('ps' => $prevStructure));
-        if (isset($pageData[0]['ID'])) {
-            // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
-            $this->setPageData($pageData[0]);
-        }
-    }
-
     /**
      * Установка номера отображаемой страницы
      *
@@ -455,7 +443,7 @@ abstract class Model
      * суффикса для листалки " | Страница [N]" на любой другой суффикс, где
      * вместе [N] будет подставляться номер страницы.
      *
-     * @param int  $pageNum      Номер отображаемой страницы
+     * @param int $pageNum Номер отображаемой страницы
      * @param null $pageNumTitle Строка для замены стандартного суффикса листалки в тайтле
      * @return int Безопасный номер страницы
      */
