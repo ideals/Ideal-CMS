@@ -57,9 +57,7 @@ abstract class Model extends Core\Model
         foreach ($result['items'] as $v) {
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
-            if ($group == $groupName
-                && $field == 'prev_structure' && $v['value'] == ''
-            ) {
+            if ($group == $groupName && $field == 'prev_structure' && $v['value'] == '') {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
                 $v['value'] = $this->prevStructure;
             }
@@ -133,23 +131,23 @@ abstract class Model extends Core\Model
                 // значением преструктуры основной структуры
                 $addonData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
                 if (empty($addonData['ID'])) {
-                    // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
+                    // Для случая, если вдруг элемент был создан, а аддон у него был непрописан
                     $isCreate = true;
                 }
                 if ($isCreate) {
                     unset($addonData['ID']);
                 }
 
-                $addonModelName = Util::getClassName($groups[$addonGroupName][$fieldName], 'Addon') . '\\Model';
+                $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
 
                 /* @var $templateModel \Ideal\Core\Admin\Model */
                 $addonModel = new $addonModelName($addonData['prev_structure']);
                 if ($isCreate) {
                     // Записываем данные шаблона в БД и в $result
-                    $result = $addonModel->createElement($result, $fieldName);
+                    $result = $addonModel->createElement($result, $addonGroupName);
                 } else {
-                    $addonModel->setPageDataById($groups[$fieldName]['ID']);
-                    $result = $addonModel->saveElement($result, $fieldName);
+                    $addonModel->setPageDataById($addonData['ID']);
+                    $result = $addonModel->saveElement($result, $addonGroupName);
                 }
             }
         }
