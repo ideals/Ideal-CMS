@@ -16,7 +16,7 @@ use Ideal\Core\Util;
  * Класс построения html-карты сайта на основании структуры БД
  *
  */
-class Model extends \Ideal\Core\Admin\Model
+class Model extends \Ideal\Addon\AbstractModel
 {
 
     /** @var array Массив правил для запрещения отображения ссылок в карте сайта */
@@ -83,7 +83,7 @@ class Model extends \Ideal\Core\Admin\Model
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
         foreach ($elements as $element) {
             $newElements[] = $element;
-            if (!isset($element['structure']) OR ($element['structure'] == $end['structure'])) {
+            if (!isset($element['structure']) || ($element['structure'] == $end['structure'])) {
                 continue;
             }
             // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
@@ -141,16 +141,13 @@ class Model extends \Ideal\Core\Admin\Model
                 // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
                 // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
                 $tmp = $this->disallow;
-                if ($v['link'] !== array_reduce(
-                    $tmp,
-                    function (&$res, $rule) {
-                        if ($res == 1 || preg_match($rule, $res)) {
-                            return 1;
-                        }
-                        return $res;
-                    },
-                    $v['link']
-                )) {
+                $link = array_reduce($tmp, function (&$res, $rule) {
+                    if ($res == 1 || preg_match($rule, $res)) {
+                        return 1;
+                    }
+                    return $res;
+                }, $v['link']);
+                if ($v['link'] !== $link) {
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }

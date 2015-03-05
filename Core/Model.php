@@ -437,18 +437,6 @@ abstract class Model
         }
     }
 
-    public function setPageDataByPrevStructure($prevStructure)
-    {
-        $db = Db::getInstance();
-
-        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps";
-        $pageData = $db->select($_sql, array('ps' => $prevStructure));
-        if (isset($pageData[0]['ID'])) {
-            // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
-            $this->setPageData($pageData[0]);
-        }
-    }
-
     /**
      * Установка номера отображаемой страницы
      *
@@ -456,7 +444,7 @@ abstract class Model
      * суффикса для листалки " | Страница [N]" на любой другой суффикс, где
      * вместе [N] будет подставляться номер страницы.
      *
-     * @param int  $pageNum      Номер отображаемой страницы
+     * @param int $pageNum Номер отображаемой страницы
      * @param null $pageNumTitle Строка для замены стандартного суффикса листалки в тайтле
      * @return int Безопасный номер страницы
      */
