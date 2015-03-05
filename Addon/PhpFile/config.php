@@ -15,6 +15,11 @@ return array(
             'sql' => 'char(15)',
             'type' => 'Ideal_Hidden'
         ),
+        'tab_ID' => array(
+            'label' => 'ID таба аддона',
+            'sql' => 'int not null default 0',
+            'type' => 'Ideal_Hidden'
+        ),
         'php_file' => array(
             'label' => 'Подключаемый файл',
             'sql' => 'varchar(255)',
