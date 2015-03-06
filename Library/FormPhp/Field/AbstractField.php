@@ -20,6 +20,12 @@ class AbstractField
     /** @var array  */
     protected $validators = array();
 
+    /** @var bool Флаг отображения html-сущностей в XHTML или в HTML стиле */
+    protected $xhtml = true;
+
+    /** @var string JavaScript необходимыя для работы поля */
+    protected $js;
+
     /**
      * Добавление элемента к форме
      *
@@ -91,6 +97,16 @@ class AbstractField
     }
 
     /**
+     * Установка отображения html-сущностей
+     *
+     * @param bool $xhtml Если истина, то код полей ввода будет отображается в xhtml-стиле
+     */
+    public function setXhtml($xhtml)
+    {
+        $this->xhtml = $xhtml;
+    }
+
+    /**
      * Установка валидатора на поле
      *
      * @param \FormPhp\Validator\AbstractValidator $validator
@@ -98,5 +114,23 @@ class AbstractField
     public function setValidator($validator)
     {
         $this->validators[] = $validator;
+    }
+
+    /**
+     * Получение js кода, необходимого для работы поля
+     */
+    public function getJs()
+    {
+        return $this->js;
+    }
+
+    /**
+     * Получение js когда класса отправки формы, отличного от стандартного
+     *
+     * @return string JS код класса
+     */
+    public function getSenderClassName()
+    {
+        return '';
     }
 }

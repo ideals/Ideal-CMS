@@ -198,9 +198,7 @@
 }));
 
 
-
 jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
-
 
 
 jQuery.fn.form = function(options, messages){
@@ -265,6 +263,69 @@ jQuery.fn.form = function(options, messages){
                 this.yaCounter.reachGoal(metka);
             }
         },
+        // Отправка файлов на сервер
+        ajaxSendFiles: function() {
+            var files = $(this).children('.inputs-block').children("[type=file]");
+            var form = this;
+            /*$(files).each(function(k, v) {
+                $(form).
+            });*/
+        },
+        //Изменение прогресса загрузки файлов
+        ajaxFileProgress: function(percent) {
+
+        },
+        ajaxUpload: function(file) {
+        // Mozilla, Safari, Opera, Chrome
+            if (window.XMLHttpRequest) {
+                var http_request = new XMLHttpRequest();
+            }
+            // Internet Explorer
+            else if (window.ActiveXObject) {
+                try {
+                    http_request = new ActiveXObject("Msxml2.XMLHTTP");
+                } catch (e) {
+                    try {
+                        http_request = new ActiveXObject("Microsoft.XMLHTTP");
+                    } catch (e) {
+                        // Браузер не поддерживает эту технологию
+                        return false;
+                    }
+                }
+            }
+            else {
+                // Браузер не поддерживает эту технологию
+                return false;
+            }
+            var name = file.fileName || file.name;
+
+            // Обработчик прогресса загрузки
+            // Полный размер файла - event.total, загружено - event.loaded
+            http_request.upload.addEventListener('progress', function(event) {
+                var percent = Math.ceil(event.loaded / event.total * 100);
+                methods.ajaxFileProgress.apply(this, [percent]);
+            }, false);
+
+            // Отправить файл на загрузку
+            http_request.open('POST', options.ajaxUrl + '?fname=' + name, true);
+            http_request.setRequestHeader("Referer", location.href);
+            http_request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            http_request.setRequestHeader("X-File-Name", encodeURIComponent(name));
+            http_request.setRequestHeader("Content-Type", "application/octet-stream");
+            http_request.onreadystatechange = function() {
+                if (http_request.readyState == 4) {
+                    if (http_request.status == 200) {
+                        methods.ajaxFileProgress.apply(this, [100]);
+                        //methods.ajaxFileFinish.apply(this, );
+                        return true;
+                    } else {
+                        // Ошибка загрузки файла
+                        return false;
+                    }
+                }
+            };
+            http_request.send(file);
+        },
         //Отправка формы
         submit : function() {
             var $form = $(this);
@@ -275,25 +336,32 @@ jQuery.fn.form = function(options, messages){
                 data: data,
                 dataType: 'json',
                 async:false,
-                success: function(result){
-                    alert(result);
-                    $form[0].reset();
-                    $form.trigger('form.successSend');
-
+                success: function(result) {
+                    methods.successSend().apply(this, [result]);
                 },
-                error: function(){
-                    $form.trigger('form.errorSend');
-                    alert(messages.ajaxError);
+                error: function(result){
+                    methods.successSend().apply(this, [result]);
                 }
             });
             return false;
+        },
+        //Обработка успешной отправки формы
+        successSend : function(result) {
+            alert(result);
+            //$(this)[0].reset();
+            //$(this).trigger('form.successSend');
+        },
+        //Обработка неудачной отправки формы
+        errorSend : function(result) {
+            $(this).trigger('form.errorSend');
+            alert(messages.ajaxError);
         }
 
     };
 
     var make = function(form){
         $(this)
-            .submit(function(){
+            .submit(function() {
                 if ($(this).disableSubmit == true) {
                     return false;
                 }
@@ -303,7 +371,14 @@ jQuery.fn.form = function(options, messages){
                     alert(messages.notValid);
                     return false;
                 }
-                return methods.submit.apply(this);
+
+                if (typeof senderAjax == "object") {
+                    return senderAjax.send(this, options.ajaxUrl, function(result) {
+                        return methods.successSend.append(this, [result]);
+                    });
+                } else {
+                    return methods.submit.apply(this);
+                }
             })
             .on('form.buttonClick', function() {
                 methods.metrikaOnButtonClick.apply(this);

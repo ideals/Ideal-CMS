@@ -16,7 +16,7 @@ namespace FormPhp;
 class Forms
 {
     /** @var array Список полей ввода в форме */
-    protected $fields = array();
+    public $fields = array();
 
     /** @var string Название формы  */
     protected $formName;
@@ -35,6 +35,9 @@ class Forms
 
     /** @var bool Флаг отображения html-сущностей в XHTML или в HTML стиле */
     protected $xhtml = true;
+
+    /** @var object Класс отправки формы */
+    protected $senderClass;
 
     /**
      * Инициализируем сессии, если это нужно
@@ -79,6 +82,7 @@ class Forms
         /** @var \FormPhp\Field\AbstractField $field */
         $field = new $fieldName($name, $options);
         $field->setMethod($this->method);
+        $field->setXhtml($this->xhtml);
         $this->fields[$name] = $field;
         return $this;
     }
@@ -274,6 +278,27 @@ class Forms
     }
 
     /**
+     * Определение класса отправки формы
+     *
+     * @throws \Exception
+     */
+    protected function getSenderClass()
+    {
+        $class = array();
+        foreach ($this->fields as $v) {
+            /** @var $v \FormPhp\Field\AbstractField */
+            $class[] = $v->getSenderClassName();
+        }
+        $class = array_diff($class, array(''));
+        $class = array_unique($class);
+        if (count($class) > 1) {
+            throw new \Exception('Найдено несколько классов отправки формы');
+        } elseif (count($class) == 1) {
+            $this->senderClass = "\\FormPhp\\Sender\\" . current($class);
+        }
+    }
+
+    /**
      * Генерирование js-скрипта, общего для всей формы
      *
      * Js генерируется на основе общих js-скриптов для формы, плюс js-скрипты для полей ввода
@@ -283,16 +308,30 @@ class Forms
      */
     protected function renderJs()
     {
-        $validJS = array();
+        $js = array();
         foreach ($this->validators as $v) {
             /** @var $v \FormPhp\Validator\AbstractValidator */
-            $validJS[] = $v->getCheckJs();
+            $js[] = $v->getCheckJs();
+        }
+        foreach ($this->fields as $v) {
+            /** @var $v \FormPhp\Field\AbstractField */
+            $js[get_class($v)] = $v->getJs();
         }
 
-        $js = "jQuery(document).ready(function () {\n var $ = jQuery;";
-        $js .= implode("\n", $validJS);
-        $js .= file_get_contents(__DIR__ .'/form.js');
-        $this->js = $js . $this->js . "\n"  . '})';
+        $this->getSenderClass();
+        if ($this->senderClass != '') {
+            if (!class_exists($this->senderClass)) {
+                throw new \Exception('Не найден класс отправки форм');
+            }
+            $sender = new $this->senderClass;
+            $js[] = $sender->getSenderAjax();
+        }
+
+        $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
+            . implode("\n", $js)
+            . file_get_contents(__DIR__ .'/form.js')
+            . $this->js
+            . "\n"  . '})';
 
         return $this->js;
     }
