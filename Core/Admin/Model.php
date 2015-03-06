@@ -11,45 +11,7 @@ abstract class Model extends Core\Model
 
     protected $fieldsGroup = 'general';
 
-    public function checkTemplateChange($result)
-    {
-        foreach ($result['items'] as $fieldName => $field) {
-            $result['items'][$fieldName]['confirm'] = '';
-            $fieldsGroup = $this->fieldsGroup . '_';
-            if (substr($fieldName, 0, strlen($fieldsGroup)) != $fieldsGroup) {
-                continue;
-            }
-            $realName = substr($fieldName, strlen($fieldsGroup));
-            if (!isset($this->fields[$realName])) {
-                continue;
-            }
-            if ($this->fields[$realName]['type'] != 'Template') {
-                continue;
-            }
-            if ($this->pageData[$realName] == '') {
-                // Если изначально шаблон не был задан - просто сохраняем введённое значение
-                continue;
-            }
-            if ($field['value'] != $this->pageData[$realName]) {
-                $result['isCorrect'] = 2;
-
-                $oldTemplateName = Util::getClassName($this->pageData[$realName], 'Template') . '\\Model';
-                $oldTemplate = new $oldTemplateName($this->pageData[$realName], '');
-                $oldTemplateCap = $oldTemplate->params['name'];
-
-                $newTemplateName = Util::getClassName($field['value'], 'Template') . '_Model';
-                $newTemplate = new $newTemplateName($field['value'], '');
-                $newTemplateCap = $newTemplate->params['name'];
-
-                $result['items'][$fieldName]['confirm'] = 'шаблон «'
-                    . $this->fields[$realName]['label']
-                    . '» с «' . $oldTemplateCap
-                    . '» на «' . $newTemplateCap . '»';
-            }
-        }
-        return $result;
-    }
-
+    // Создание нового элемента структуры
     public function createElement($result, $groupName = 'general')
     {
         // Из общего списка введённых данных выделяем те, что помечены general
@@ -117,7 +79,7 @@ abstract class Model extends Core\Model
                 continue;
             }
 
-            $addonsInfo = json_decode($this->pageData[$fieldName]);
+            $addonsInfo = json_decode($groups[$groupName][$fieldName]);
 
             foreach ($addonsInfo as $addonInfo) {
                 $addonGroupName = strtolower(end(explode('_', $addonInfo[1]))) . '-' . $addonInfo[0];
@@ -125,9 +87,8 @@ abstract class Model extends Core\Model
                 $end = end($this->path);
                 $prevStructure = $config->getStructureByName($end['structure']);
 
-                // TODO уточнить по поводу формирования преструктуры не из данных аддона
-                // Используется идентификатор из главной структуры, потому что значение преструктуры аддона совпадает со
                 // значением преструктуры основной структуры
+                // TODO переделать собирание преструктуры, чтобы значение брались из правильного места
                 $addonData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
                 if (empty($addonData['ID'])) {
                     // Для случая, если вдруг элемент был создан, а аддон у него был непрописан
