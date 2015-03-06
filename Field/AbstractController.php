@@ -79,8 +79,6 @@ abstract class AbstractController
         // TODO сделать определение значения по умолчанию, если для этого указан геттер
         //      и убрать этот функционал из selectField
         $value = '';
-
-        // Метод возвращает не верные данные для аддонов, нужно исправлять
         $pageData = $this->model->getPageData();
         if (isset($pageData[$this->name]) && !is_null($pageData[$this->name])) {
             $value = $pageData[$this->name];
