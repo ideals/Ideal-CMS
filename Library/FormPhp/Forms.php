@@ -243,7 +243,8 @@ class Forms
      * @param string|array $validator Название, список или класс валидатора
      * @throws \Exception
      */
-    public function setValidator($name, $validator) {
+    public function setValidator($name, $validator)
+    {
         if (is_string($validator)) {
             if (!isset($this->fields[$name])) {
                 throw new \Exception('Не найден элемент формы с именем ' . $name);
