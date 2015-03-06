@@ -47,7 +47,7 @@ HTML;
 
         $xhtml = ($this->xhtml) ? '/' : '';
         return <<<HTML
-            <input type="file" value="" {$xhtml}>
+            <input type="file" name="file" value="" {$xhtml}>
 HTML;
     }
 
@@ -78,12 +78,26 @@ HTML;
                 .children('[type=button]')
                 .addClass('multi-file-add-button')
                 .attr('data-block', "file-input-block-{$this->options['id']}");
+                $('.file-input-block').children('.base-input').children('input').attr('name', 'base-file')
             $(".multi-file-add-button").click(function() {
                 var fileBlock = '#' + $(this).data('block');
+                var name = 'file' + Math.floor(Math.random() * 99999);
+                $(fileBlock).children('.base-input').children('input').attr('name', name)
                 var baseInput = $(fileBlock).children('.base-input').html();
                 $(fileBlock).children('.inputs-block').append(baseInput);
+                $(fileBlock).children('.base-input').children('input').attr('name', 'base-file')
             });
 JS;
 
+    }
+
+    /**
+     * Получение класса отправки формы
+     *
+     * @return string JS код класса
+     */
+    public function getSenderClassName()
+    {
+        return "IFrame";
     }
 }

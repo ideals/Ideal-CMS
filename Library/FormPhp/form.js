@@ -198,76 +198,8 @@
 }));
 
 
-
 jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
 
-/**
- * Объект фрейм
- * копирование формы в фрейм
- * Отправка фрейма
- * Получение данных из фрейма
- * @type {{}}
- */
-iFrame = {
-    /**
-     * Отправка формы через iframe
-     * @param formID formID ID формы
-     * @param url URL на который будут переданы данные при отправки фрейма
-     * @param callback Функция, которую нужно будет вывзвать после отправки формы
-     */
-    send: function(formID, url, callback) {
-        var form = $('#' + formID);
-        if (typeof $(this).id == "undefined") {
-            this.create(formID, url);
-        }
-        this.formCallback = callback;
-        this.iframe.onSendComplete = function() {
-            this.callback(form, url, this.getIFrameXML());
-        };
-        $(form).attr('target', this.id);
-        $(form).attr('action', url);
-        $(form).submit();
-        return false;
-    },
-    /**
-     * Создание фрейма
-     * @param formID ID формы
-     * @param url URL на который будут переданы данные при отправки фрейма
-     * @returns {*|jQuery} Объект iframe
-     */
-    create: function(formID, url) {
-        var id = 'iFrameID' + Math.floor(Math.random() * 99999);
-        var html = '<iframe id="' + id + '" url="' + url + '"></iframe>';
-        $('#' + formID).append(html);
-        this.iframe = $(formID).children('iframe');
-        this.id = id;
-    },
-    /**
-     * Получение содержимого iframe после отправки
-     * @param e
-     * @returns {*}
-     */
-    getIFrameXML: function(e) {
-        var doc = this.iframe.contentDocument;
-        if (!doc &&this.iframe.contentWindow) doc = this.iframe.contentWindow.document;
-        if (!doc) doc = window.frames[this.id].document;
-        if (!doc) return null;
-        if (doc.location == "about:blank") return null;
-        if (doc.XMLDocument) doc = doc.XMLDocument;
-        return doc;
-    },
-    /**
-     *
-     * @param form
-     * @param act
-     * @param doc
-     */
-    callback: function (form, act, doc) {
-        form.setAttribute('action', act);
-        form.removeAttribute('target');
-        this.formCallback(doc.body.innerHTML);
-    }
-};
 
 jQuery.fn.form = function(options, messages){
     options = $.extend({
@@ -439,12 +371,9 @@ jQuery.fn.form = function(options, messages){
                     alert(messages.notValid);
                     return false;
                 }
-                //Отправляем форму, при наличии атрибута target
-                if ($(this).is("[target]")) {
-                    return true;
-                }
-                if (typeof $(this).children('.file-input-block') != "undefined") {
-                    iFrame.send($(this).attr('id'), options.ajaxUrl, function(result) {
+
+                if (typeof senderAjax == "object") {
+                    return senderAjax.send(this, options.ajaxUrl, function(result) {
                         return methods.successSend.append(this, [result]);
                     });
                 } else {

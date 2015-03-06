@@ -36,6 +36,9 @@ class Forms
     /** @var bool Флаг отображения html-сущностей в XHTML или в HTML стиле */
     protected $xhtml = true;
 
+    /** @var object Класс отправки формы */
+    protected $senderClass;
+
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -275,6 +278,27 @@ class Forms
     }
 
     /**
+     * Определение класса отправки формы
+     *
+     * @throws \Exception
+     */
+    protected function getSenderClass()
+    {
+        $class = array();
+        foreach ($this->fields as $v) {
+            /** @var $v \FormPhp\Field\AbstractField */
+            $class[] = $v->getSenderClassName();
+        }
+        $class = array_diff($class, array(''));
+        $class = array_unique($class);
+        if (count($class) > 1) {
+            throw new \Exception('Найдено несколько классов отправки формы');
+        } elseif (count($class) == 1) {
+            $this->senderClass = "\\FormPhp\\Sender\\" . current($class);
+        }
+    }
+
+    /**
      * Генерирование js-скрипта, общего для всей формы
      *
      * Js генерируется на основе общих js-скриптов для формы, плюс js-скрипты для полей ввода
@@ -293,6 +317,16 @@ class Forms
             /** @var $v \FormPhp\Field\AbstractField */
             $js[get_class($v)] = $v->getJs();
         }
+
+        $this->getSenderClass();
+        if ($this->senderClass != '') {
+            if (!class_exists($this->senderClass)) {
+                throw new \Exception('Не найден класс отправки форм');
+            }
+            $sender = new $this->senderClass;
+            $js[] = $sender->getSenderAjax();
+        }
+
         $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)
             . file_get_contents(__DIR__ .'/form.js')

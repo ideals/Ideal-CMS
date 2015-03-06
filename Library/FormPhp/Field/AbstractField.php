@@ -123,4 +123,14 @@ class AbstractField
     {
         return $this->js;
     }
+
+    /**
+     * Получение js когда класса отправки формы, отличного от стандартного
+     *
+     * @return string JS код класса
+     */
+    public function getSenderClassName()
+    {
+        return '';
+    }
 }
