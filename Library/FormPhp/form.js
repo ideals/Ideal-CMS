@@ -197,23 +197,22 @@
 
 }));
 
+// The end of placeholder plugin
 
 jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
 
-
-jQuery.fn.form = function(options, messages){
+jQuery.fn.form = function (options, messages) {
     options = $.extend({
-        ajaxUrl : '/'
+        ajaxUrl: '/'
     }, options);
     messages = $.extend({
-        ajaxError : 'К сожалению, на данный момент услуга обратного звонка не доступна. Приносим свои извинения.',
-        notValid : 'Поля, выделенные красным, заполнены не верно!'
+        ajaxError: 'К сожалению, на данный момент услуга обратного звонка не доступна. Приносим свои извинения.',
+        notValid: 'Поля, выделенные красным, заполнены не верно!'
     }, messages);
 
-
     var methods = {
-        //Валидация формы
-        validate : function() {
+        // Валидация формы
+        validate: function () {
             var $form = $(this);
 
             var values = $form.find('[name]');
@@ -233,67 +232,65 @@ jQuery.fn.form = function(options, messages){
             return isValid;
         },
         // Инициализация yaCounter
-        initYaCounter: function() {
+        initYaCounter: function () {
             if (typeof this.yaCounter != 'undefined') {
                 return;
             }
             var yaCounterName = $(this).find('[name = "_yaCounter"]').val();
             this.yaCounter = {};
-            eval("var yaCounterName = typeof " + yaCounterName + " == 'undefined' ? false : yaCounterName");
+            eval('var yaCounterName = typeof ' + yaCounterName + ' == \'undefined\' ? false : yaCounterName');
             if (yaCounterName !== false) {
-                this.yaCounter.reachGoal = function(metka) {
-                    eval("var yaCounter = " + yaCounterName);
+                this.yaCounter.reachGoal = function (metka) {
+                    eval('var yaCounter = ' + yaCounterName);
                     yaCounter.reachGoal(metka);
                 }
             } else {
-                this.yaCounter.reachGoal = function(opt) {}
+                this.yaCounter.reachGoal = function (opt) {}
             }
         },
-        //Отправка метрики, при нажатии на кнопку отправки формы
-        metrikaOnButtonClick: function() {
+        // Отправка метрики, при нажатии на кнопку отправки формы
+        metrikaOnButtonClick: function () {
             var metka = $(this).data('click');
             if (metka) {
                 this.yaCounter.reachGoal(metka);
             }
         },
-        //Отправка метрики, при успешной отправке формы
-        metrikaOnSuccessSend: function() {
+        // Отправка метрики, при успешной отправке формы
+        metrikaOnSuccessSend: function () {
             var metka = $(this).data('send');
             if (metka) {
                 this.yaCounter.reachGoal(metka);
             }
         },
         // Отправка файлов на сервер
-        ajaxSendFiles: function() {
-            var files = $(this).children('.inputs-block').children("[type=file]");
+        ajaxSendFiles: function () {
+            var files = $(this).children('.inputs-block').children('[type=file]');
             var form = this;
             /*$(files).each(function(k, v) {
                 $(form).
             });*/
         },
-        //Изменение прогресса загрузки файлов
-        ajaxFileProgress: function(percent) {
+        // Изменение прогресса загрузки файлов
+        ajaxFileProgress: function (percent) {
 
         },
-        ajaxUpload: function(file) {
+        ajaxUpload: function (file) {
         // Mozilla, Safari, Opera, Chrome
             if (window.XMLHttpRequest) {
                 var http_request = new XMLHttpRequest();
-            }
-            // Internet Explorer
-            else if (window.ActiveXObject) {
+            } else if (window.ActiveXObject) {
+                // Internet Explorer
                 try {
-                    http_request = new ActiveXObject("Msxml2.XMLHTTP");
+                    http_request = new ActiveXObject('Msxml2.XMLHTTP');
                 } catch (e) {
                     try {
-                        http_request = new ActiveXObject("Microsoft.XMLHTTP");
+                        http_request = new ActiveXObject('Microsoft.XMLHTTP');
                     } catch (e) {
                         // Браузер не поддерживает эту технологию
                         return false;
                     }
                 }
-            }
-            else {
+            } else {
                 // Браузер не поддерживает эту технологию
                 return false;
             }
@@ -301,22 +298,22 @@ jQuery.fn.form = function(options, messages){
 
             // Обработчик прогресса загрузки
             // Полный размер файла - event.total, загружено - event.loaded
-            http_request.upload.addEventListener('progress', function(event) {
+            http_request.upload.addEventListener('progress', function (event) {
                 var percent = Math.ceil(event.loaded / event.total * 100);
                 methods.ajaxFileProgress.apply(this, [percent]);
             }, false);
 
             // Отправить файл на загрузку
             http_request.open('POST', options.ajaxUrl + '?fname=' + name, true);
-            http_request.setRequestHeader("Referer", location.href);
-            http_request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            http_request.setRequestHeader("X-File-Name", encodeURIComponent(name));
-            http_request.setRequestHeader("Content-Type", "application/octet-stream");
-            http_request.onreadystatechange = function() {
+            http_request.setRequestHeader('Referer', location.href);
+            http_request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            http_request.setRequestHeader('X-File-Name', encodeURIComponent(name));
+            http_request.setRequestHeader('Content-Type', 'application/octet-stream');
+            http_request.onreadystatechange = function () {
                 if (http_request.readyState == 4) {
                     if (http_request.status == 200) {
                         methods.ajaxFileProgress.apply(this, [100]);
-                        //methods.ajaxFileFinish.apply(this, );
+                        // methods.ajaxFileFinish.apply(this, );
                         return true;
                     } else {
                         // Ошибка загрузки файла
@@ -326,8 +323,8 @@ jQuery.fn.form = function(options, messages){
             };
             http_request.send(file);
         },
-        //Отправка формы
-        submit : function() {
+        // Отправка формы
+        submit: function () {
             var $form = $(this);
             var data = $form.serialize();
             $.ajax({
@@ -336,32 +333,32 @@ jQuery.fn.form = function(options, messages){
                 data: data,
                 dataType: 'json',
                 async:false,
-                success: function(result) {
+                success: function (result) {
                     methods.successSend().apply(this, [result]);
                 },
-                error: function(result){
+                error: function (result) {
                     methods.successSend().apply(this, [result]);
                 }
             });
             return false;
         },
-        //Обработка успешной отправки формы
-        successSend : function(result) {
+        // Обработка успешной отправки формы
+        successSend: function (result) {
             alert(result);
-            //$(this)[0].reset();
-            //$(this).trigger('form.successSend');
+            // $(this)[0].reset();
+            // $(this).trigger('form.successSend');
         },
-        //Обработка неудачной отправки формы
-        errorSend : function(result) {
+        // Обработка неудачной отправки формы
+        errorSend: function (result) {
             $(this).trigger('form.errorSend');
             alert(messages.ajaxError);
         }
 
     };
 
-    var make = function(form){
+    var make = function (form) {
         $(this)
-            .submit(function() {
+            .submit(function () {
                 if ($(this).disableSubmit == true) {
                     return false;
                 }
@@ -372,22 +369,22 @@ jQuery.fn.form = function(options, messages){
                     return false;
                 }
 
-                if (typeof senderAjax == "object") {
-                    return senderAjax.send(this, options.ajaxUrl, function(result) {
+                if (typeof senderAjax == 'object') {
+                    return senderAjax.send(this, options.ajaxUrl, function (result) {
                         return methods.successSend.append(this, [result]);
                     });
                 } else {
                     return methods.submit.apply(this);
                 }
             })
-            .on('form.buttonClick', function() {
+            .on('form.buttonClick', function () {
                 methods.metrikaOnButtonClick.apply(this);
                 $(this).disableSubmit = false;
             })
-            .on('form.successSend', function() {
+            .on('form.successSend', function () {
                 methods.metrikaOnSuccessSend.apply(this);
             })
-            .on('form.errorSend', function() {
+            .on('form.errorSend', function () {
                 $(this).disableSubmit = false;
             })
             .disableSubmit = false;
@@ -396,7 +393,6 @@ jQuery.fn.form = function(options, messages){
 
     return this.each(make);
 };
-
 
 function ucfirst(str)
 {
