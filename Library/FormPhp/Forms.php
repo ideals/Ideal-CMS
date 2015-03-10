@@ -278,24 +278,23 @@ class Forms
     }
 
     /**
-     * Определение класса отправки формы
+     * Определение кастомного кода отправки формы
      *
+     * @return string Кастомный код отправки формы
      * @throws \Exception
      */
-    protected function getSenderClass()
+    protected function getSenderJs()
     {
-        $class = array();
+        $js = '';
         foreach ($this->fields as $v) {
             /** @var $v \FormPhp\Field\AbstractField */
-            $class[] = $v->getSenderClassName();
+            $nextJs = $v->getSenderJs();
+            if (!empty($js) && !empty($nextJs) && ($js != $nextJs)) {
+                throw new \Exception('Ошибка! Найдено несколько классов отправки формы');
+            }
+            $js = $nextJs;
         }
-        $class = array_diff($class, array(''));
-        $class = array_unique($class);
-        if (count($class) > 1) {
-            throw new \Exception('Найдено несколько классов отправки формы');
-        } elseif (count($class) == 1) {
-            $this->senderClass = "\\FormPhp\\Sender\\" . current($class);
-        }
+        return $js;
     }
 
     /**
@@ -305,27 +304,23 @@ class Forms
      * и валидаторов
      *
      * @return string
+     * @throws \Exception
      */
     protected function renderJs()
     {
         $js = array();
+
         foreach ($this->validators as $v) {
             /** @var $v \FormPhp\Validator\AbstractValidator */
             $js[] = $v->getCheckJs();
         }
+
         foreach ($this->fields as $v) {
             /** @var $v \FormPhp\Field\AbstractField */
             $js[get_class($v)] = $v->getJs();
         }
 
-        $this->getSenderClass();
-        if ($this->senderClass != '') {
-            if (!class_exists($this->senderClass)) {
-                throw new \Exception('Не найден класс отправки форм');
-            }
-            $sender = new $this->senderClass;
-            $js[] = $sender->getSenderAjax();
-        }
+        $js[] = $this->getSenderJs();
 
         $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)

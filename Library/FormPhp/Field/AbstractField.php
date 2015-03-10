@@ -125,11 +125,11 @@ class AbstractField
     }
 
     /**
-     * Получение js когда класса отправки формы, отличного от стандартного
+     * Получение js-кода отправки формы, отличного от стандартного
      *
-     * @return string JS код класса
+     * @return string js-код отправки формы
      */
-    public function getSenderClassName()
+    public function getSenderJs()
     {
         return '';
     }

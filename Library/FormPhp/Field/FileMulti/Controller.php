@@ -96,8 +96,22 @@ JS;
      *
      * @return string JS код класса
      */
-    public function getSenderClassName()
+    public function getSenderJs()
     {
+/**
+// Отправка файлов на сервер
+ajaxSendFiles: function () {
+        var files = $(this).children('.inputs-block').children('[type=file]');
+        var form = this;
+        $(files).each(function(k, v) {
+        $(form).
+        });
+    },
+// Изменение прогресса загрузки файлов
+ajaxFileProgress: function (percent) {
+
+    },
+*/
         return "IFrame";
     }
 }

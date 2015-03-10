@@ -206,8 +206,8 @@ jQuery.fn.form = function (options, messages) {
         ajaxUrl: '/'
     }, options);
     messages = $.extend({
-        ajaxError: 'К сожалению, на данный момент услуга обратного звонка не доступна. Приносим свои извинения.',
-        notValid: 'Поля, выделенные красным, заполнены не верно!'
+        ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
+        notValid: 'Поля, выделенные красным, заполнены неверно!'
     }, messages);
 
     var methods = {
@@ -261,67 +261,6 @@ jQuery.fn.form = function (options, messages) {
             if (metka) {
                 this.yaCounter.reachGoal(metka);
             }
-        },
-        // Отправка файлов на сервер
-        ajaxSendFiles: function () {
-            var files = $(this).children('.inputs-block').children('[type=file]');
-            var form = this;
-            /*$(files).each(function(k, v) {
-                $(form).
-            });*/
-        },
-        // Изменение прогресса загрузки файлов
-        ajaxFileProgress: function (percent) {
-
-        },
-        ajaxUpload: function (file) {
-        // Mozilla, Safari, Opera, Chrome
-            if (window.XMLHttpRequest) {
-                var http_request = new XMLHttpRequest();
-            } else if (window.ActiveXObject) {
-                // Internet Explorer
-                try {
-                    http_request = new ActiveXObject('Msxml2.XMLHTTP');
-                } catch (e) {
-                    try {
-                        http_request = new ActiveXObject('Microsoft.XMLHTTP');
-                    } catch (e) {
-                        // Браузер не поддерживает эту технологию
-                        return false;
-                    }
-                }
-            } else {
-                // Браузер не поддерживает эту технологию
-                return false;
-            }
-            var name = file.fileName || file.name;
-
-            // Обработчик прогресса загрузки
-            // Полный размер файла - event.total, загружено - event.loaded
-            http_request.upload.addEventListener('progress', function (event) {
-                var percent = Math.ceil(event.loaded / event.total * 100);
-                methods.ajaxFileProgress.apply(this, [percent]);
-            }, false);
-
-            // Отправить файл на загрузку
-            http_request.open('POST', options.ajaxUrl + '?fname=' + name, true);
-            http_request.setRequestHeader('Referer', location.href);
-            http_request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            http_request.setRequestHeader('X-File-Name', encodeURIComponent(name));
-            http_request.setRequestHeader('Content-Type', 'application/octet-stream');
-            http_request.onreadystatechange = function () {
-                if (http_request.readyState == 4) {
-                    if (http_request.status == 200) {
-                        methods.ajaxFileProgress.apply(this, [100]);
-                        // methods.ajaxFileFinish.apply(this, );
-                        return true;
-                    } else {
-                        // Ошибка загрузки файла
-                        return false;
-                    }
-                }
-            };
-            http_request.send(file);
         },
         // Отправка формы
         submit: function () {
