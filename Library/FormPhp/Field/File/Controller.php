@@ -67,58 +67,72 @@ JS;
      */
     public function getSenderJs()
     {
-        $js = <<<JS
-        ajaxUpload: function (file) {
-        // Mozilla, Safari, Opera, Chrome
-            if (window.XMLHttpRequest) {
-                var http_request = new XMLHttpRequest();
-            } else if (window.ActiveXObject) {
-                // Internet Explorer
-                try {
-                    http_request = new ActiveXObject('Msxml2.XMLHTTP');
-                } catch (e) {
+        return <<<JS
+        senderAjax = {
+            /**
+             * Отправка формы через iframe
+             * @param form formID ID формы
+             * @param url URL на который будут переданы данные при отправки фрейма
+             * @param callback Функция, которую нужно будет вывзвать после отправки формы
+             */
+            send: function(form, url, callback) {
+                var http_request = this.getXMLHttpReques();
+
+                var data = $(form).serialize();
+                var file = $(form).children('[type=file]')
+
+                var name = file.fileName || file.name;
+
+                // Обработчик прогресса загрузки
+                // Полный размер файла - event.total, загружено - event.loaded
+                http_request.upload.addEventListener('progress', function (event) {
+                    var percent = Math.ceil(event.loaded / event.total * 100);
+                    methods.ajaxFileProgress.apply(this, [percent]);
+                }, false);
+
+                // Отправить файл на загрузку
+                http_request.open('POST', url + '?fname=' + name, true);
+                http_request.setRequestHeader('Referer', location.href);
+                http_request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                http_request.setRequestHeader('X-File-Name', encodeURIComponent(name));
+                http_request.setRequestHeader('Content-Type', 'application/octet-stream');
+                http_request.onreadystatechange = function () {
+                    if (http_request.readyState == 4) {
+                        if (http_request.status == 200) {
+                            methods.ajaxFileProgress.apply(this, [100]);
+                            // methods.ajaxFileFinish.apply(this, );
+                            return true;
+                        } else {
+                            // Ошибка загрузки файла
+                            return false;
+                        }
+                    }
+                };
+                http_request.send(file);
+            },
+            getXMLHttpReques: function() {
+                // Mozilla, Safari, Opera, Chrome
+                if (window.XMLHttpRequest) {
+                    var http_request = new XMLHttpRequest();
+                } else if (window.ActiveXObject) {
+                    // Internet Explorer
                     try {
-                        http_request = new ActiveXObject('Microsoft.XMLHTTP');
+                        http_request = new ActiveXObject('Msxml2.XMLHTTP');
                     } catch (e) {
-                        // Браузер не поддерживает эту технологию
-                        return false;
+                        try {
+                            http_request = new ActiveXObject('Microsoft.XMLHTTP');
+                        } catch (e) {
+                            // Браузер не поддерживает эту технологию
+                            return false;
+                        }
                     }
+                } else {
+                    // Браузер не поддерживает эту технологию
+                    return false;
                 }
-            } else {
-                // Браузер не поддерживает эту технологию
-                return false;
+                return http_request;
             }
-            var name = file.fileName || file.name;
-
-            // Обработчик прогресса загрузки
-            // Полный размер файла - event.total, загружено - event.loaded
-            http_request.upload.addEventListener('progress', function (event) {
-                var percent = Math.ceil(event.loaded / event.total * 100);
-                methods.ajaxFileProgress.apply(this, [percent]);
-            }, false);
-
-            // Отправить файл на загрузку
-            http_request.open('POST', options.ajaxUrl + '?fname=' + name, true);
-            http_request.setRequestHeader('Referer', location.href);
-            http_request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            http_request.setRequestHeader('X-File-Name', encodeURIComponent(name));
-            http_request.setRequestHeader('Content-Type', 'application/octet-stream');
-            http_request.onreadystatechange = function () {
-                if (http_request.readyState == 4) {
-                    if (http_request.status == 200) {
-                        methods.ajaxFileProgress.apply(this, [100]);
-                        // methods.ajaxFileFinish.apply(this, );
-                        return true;
-                    } else {
-                        // Ошибка загрузки файла
-                        return false;
-                    }
-                }
-            };
-            http_request.send(file);
-        },
+        }
 JS;
-
-        return "IFrame";
     }
 }
