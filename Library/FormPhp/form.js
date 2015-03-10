@@ -284,8 +284,8 @@ jQuery.fn.form = function (options, messages) {
         // Обработка успешной отправки формы
         successSend: function (result) {
             alert(result);
-            // $(this)[0].reset();
-            // $(this).trigger('form.successSend');
+            $(this)[0].reset();
+            $(this).trigger('form.successSend');
         },
         // Обработка неудачной отправки формы
         errorSend: function (result) {
@@ -309,9 +309,7 @@ jQuery.fn.form = function (options, messages) {
                 }
 
                 if (typeof senderAjax == 'object') {
-                    return senderAjax.send(this, options.ajaxUrl, function (result) {
-                        return methods.successSend.append(this, [result]);
-                    });
+                    return senderAjax.send(this, options.ajaxUrl, methods.successSend);
                 } else {
                     return methods.submit.apply(this);
                 }
