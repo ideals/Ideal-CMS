@@ -132,5 +132,9 @@ function onAddNewTab(data) {
 
     // Записываем в поле аддона новый список элементов
     addonField = getAddonFieldName();
-    $('#' + addonField).val(data['list']);
+    var curr = $.parseJSON($('#' + addonField).val());
+    var dataList = $.parseJSON(data['list']);
+    curr = curr.concat(dataList);
+    curr = JSON.stringify(curr);
+    $('#' + addonField).val(curr);
 }

@@ -32,9 +32,8 @@ class AjaxController extends \Ideal\Core\AjaxController
         // Получаем html-код новой вкладки, её заголовок и название
         $result = $addonModel->getTab($request->newId, $request->addonName);
 
-        // Добавляем новый аддон в json-список аддонов
-        $pageData = $this->model->getPageData();
-        $json = json_decode($pageData[$field]);
+        // Возвращаем информацию только о новом подключенном аддоне
+        $json = array();
         $json[] = array($request->newId, $request->addonName, $result['name']);
         $result['list'] = json_encode($json);
 
