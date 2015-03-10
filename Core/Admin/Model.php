@@ -280,6 +280,9 @@ abstract class Model extends Core\Model
                 if (is_array($item['items']) && !isset($item['items']['items'])) {
                     foreach ($item['items'] as $value) {
                         $result['items'] = array_merge($result['items'], $value['items']);
+
+                        // Добавляем дополнительные запросы от вложенных элементов
+                        $result['sqlAdd'] = array_merge($result['sqlAdd'], $value['sqlAdd']);
                         if (!$value['isCorrect']) {
                             $result['isCorrect'] = false;
                         }
