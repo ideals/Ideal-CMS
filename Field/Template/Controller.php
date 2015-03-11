@@ -15,24 +15,19 @@ use Ideal\Core\Util;
 use Ideal\Field\Select;
 
 /**
- * Специальное поле, предоставляющее возможность добавить к редактируемому элементу дополнительные поля
+ * Специальное поле, предоставляющее возможность выбрать шаблон для отображения структуры
  *
- * Эти дополнительные поля хранятся в отдельной таблице и связаны с редактируемым элементом
- * через prev_structure.
  *
  * Пример объявления в конфигурационном файле структуры:
  *
  *     'template' => array(
- *         'label'     => 'Тип документа',
- *         'sql'       => "varchar(30) not null default 'Ideal_Page'",
- *         'type'      => 'Ideal_Template',
- *         'medium'    => '\\Ideal\\Medium\\TemplateList\\Model',
- *         'templates' =>  array('Ideal_Page', 'Ideal_SimpleNote', 'Ideal_PhpFile', 'Ideal_SiteMap'),
- *     ),
+ *         'label' => 'Шаблон отображения',
+ *         'sql' => "varchar(255) default 'index.twig'",
+ *         'type' => 'Ideal_Template',
+ *         'medium' => '\\Ideal\\Medium\\TemplateList\\Model',
+ *         'default'   => 'index.twig',
  *
  * В поле medium указывается класс, отвечающий за предоставление списка элементов для select.
- * Кроме того Ideal_Template, при выборе одного из значений в списке, добавляет вкладку, в которой
- * находятся поля таблицы выбранного Template.
  */
 class Controller extends Select\Controller
 {
@@ -45,61 +40,7 @@ class Controller extends Select\Controller
      */
     public function getInputText()
     {
-        $modelName = $this->getValue();
-        $class = Util::getClassName($modelName, 'Template') . '\\Model';
-        $model = new $class('');
-        $model->setFieldsGroup($this->name);
-        // Загрузка данных связанного объекта
-        $id = '';
-        $pageData = $this->model->getPageData();
-        if (isset($pageData['ID'])) {
-            $config = Config::getInstance();
-            $path = $this->model->getPath();
-            $end = end($path);
-            $prevStructure = $config->getStructureByName($end['structure']);
-            $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
-            $model->setPageDataByPrevStructure($prevStructure);
-            $id = $pageData['ID'];
-        }
-        // Получение содержимого вкладки
-        $tabContent = $model->getFieldsList($model->fields);
-        // Убираем переводы строки, иначе текст не обрабатывается в JS
-        $tabContent = str_replace(
-            array("\\", '<script>', '</script>', "'"),
-            array("\\\\", '\<script>', '<\/script>', "\\'"),
-            $tabContent
-        );
-        $tabContent = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tabContent);
         $html = parent::getInputText();
-        // Добавляем обработчик на изменение select
-        $html = str_replace('<select', '<select onchange="changeTemplate(this, \'' . $this->name . '\')"', $html);
-        $tabName = $this->list[$this->getValue()];
-        $html .= "<script>
-            $(document).ready(function() {
-                // Добавляем элемент к списку вкладок
-                var data = '<li>'
-                     + '<a data-toggle=\"tab\" id=\"tab{$this->name}Head\" href=\"#tab{$this->name}\">{$tabName}</a>'
-                     + '</li>';
-                $('#tabs').append(data);
-
-                // Добавляем собственно саму страничку вкладки
-                data = '<div id=\"tab{$this->name}\" class=\"tab-pane\">{$tabContent}</div>';
-                $('#tabs-content').append(data);
-            });
-            </script>";
-        $request = new Request();
-        $par = $request->par;
-        $action = $request->action . "Template";
-        $html .= "<script>
-            function changeTemplate(tab, name){
-                // Заменяем текст заголовка вкладки
-                var w = tab.selectedIndex;
-                var selectedText = tab.options[w].text;
-                $('#tab' + name + 'Head').html(selectedText);
-                // Заменяем внутренности вкладки с полями шаблона
-                var url = 'index.php?par={$par}&action={$action}&id={$id}&template=' + tab.value + '&name=' + name;
-                $('#tab' + name).load(url);
-            }</script>";
         return $html;
     }
 
