@@ -270,13 +270,12 @@ jQuery.fn.form = function (options, messages) {
                 type: 'post',
                 url: options.ajaxUrl,
                 data: data,
-                dataType: 'json',
                 async:false,
                 success: function (result) {
-                    methods.successSend().apply(this, [result]);
+                    methods.successSend.apply($form, [result]);
                 },
                 error: function (result) {
-                    methods.successSend().apply(this, [result]);
+                    methods.errorSend.apply($form, [result]);
                 }
             });
             return false;
