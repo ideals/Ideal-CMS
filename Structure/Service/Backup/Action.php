@@ -140,7 +140,10 @@ if (is_dir($backupPart)) {
 
         echo '<tr id="' . $file . '"><td>';
         echo '<a href="" onClick="return downloadDump(\'' . addslashes($file) . '\')"> ';
-        echo "$day.$month.$year - $hour:$minute:$second - $ver[1]";
+        echo "$day.$month.$year - $hour:$minute:$second";
+        if (!empty($ver[1])) {
+            echo ' - ' . $ver[1];
+        }
         // если загруженный сторонний файл, дописываем в названии "(upload)"
         if (preg_match("/_upload/", $file)) {
             echo ' (upload)';
