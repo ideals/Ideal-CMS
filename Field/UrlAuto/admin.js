@@ -11,6 +11,21 @@ $('body').on('windowOpen', '#modalContent', function () {
 function translit(str) {
     str = str.toLocaleLowerCase();
     var translitWord = {
+        '@': '',
+        '$': '',
+        '%': '',
+        '^': '',
+        '+': '',
+        '|': '',
+        '{': '',
+        '}': '',
+        '>': '',
+        '<': '',
+        ':': '',
+        ';': '',
+        '[': '',
+        ']': '',
+        '\\': '',
         '*': '',
         '(': '',
         ')': '',
@@ -90,6 +105,9 @@ function setTranslit(e) {
         butt.text(AUTO_URL_ON);
         console.log(e.textContent);
         input.attr("readonly", "readonly");
+        var name = $('#general_name').val();
+        var tran = translit(name);
+        input.val(tran);
     }
 }
 

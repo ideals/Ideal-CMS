@@ -111,7 +111,7 @@ class Sender
         // Если выбрана отправка письма только в html-виде
         if (!empty($this->body_html) && ($this->body_plain === '')) {
             $body = "Content-type: text/html; charset=utf-8\n"
-                . "Content-transfer-encoding: 8bit\n\n";
+                . "Content-transfer-encoding: quoted-printable\n\n";
             $body .= $this->body_html . "\n\n";
             return $body;
         }
