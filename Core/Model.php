@@ -305,12 +305,24 @@ abstract class Model
                 }
             }
 
-            // Инициализируем модель шаблона
-            $className = Util::getClassName($this->pageData[$k], 'Template') . '\\Model';
-            $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
-            $template = new $className($prevStructure);
-            $template->setParentModel($this);
-            $this->pageData[$k] = $template->getPageData();
+            // Обходим все аддоны, подключенные к странице
+            $addonsInfo = json_decode($this->pageData[$k]);
+
+            foreach ($addonsInfo as $addonInfo) {
+                // Инициализируем модель аддона
+                $className = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
+                $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
+                $addon = new $className($prevStructure);
+                $addon->setParentModel($this);
+                list(, $fildsGroup) = explode('_', $addonInfo[1]);
+                $addon->setFieldsGroup(strtolower($fildsGroup) . '-' . $addonInfo[0]);
+                $addon->pageData = $addon->getPageData();
+                if (!empty($addon->pageData)) {
+                    foreach ($addon->pageData as $key => $value) {
+                        $this->pageData[strtolower($fildsGroup)][$addonInfo[0]][$key] = $value;
+                    }
+                }
+            }
         }
     }
 
