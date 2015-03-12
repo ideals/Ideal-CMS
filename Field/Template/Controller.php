@@ -10,6 +10,7 @@
 namespace Ideal\Field\Template;
 
 use Ideal\Field\Select;
+use Ideal\Core\Request;
 
 /**
  * Специальное поле, предоставляющее возможность выбрать шаблон для отображения структуры
@@ -31,4 +32,56 @@ class Controller extends Select\Controller
 
     /** @inheritdoc */
     protected static $instance;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getInputText()
+    {
+        // Подключаем скрипт смены списка шабонов, только если доступно более одной структуры
+        if (count($this->list) > 1) {
+            $html = '<script type="text/javascript" src="Ideal/Field/Template/templateShowing.js" />';
+        } else {
+            $html = '';
+        }
+
+        // Получаем значение поумолчанию для структуры
+        $pageData = $this->model->getPageData();
+        if (isset($pageData['structure'])) {
+            $structureValue = $pageData['structure'];
+        } else {
+            reset($this->list);
+            $structureValue = key($this->list);
+        }
+
+        // Составляем списки шаблонов
+        foreach ($this->list as $key => $value) {
+            // индикатор показа списка по умолчанию
+            $structureValue == $key ? $display = "style='display: block;'" : $display = "style='display: none;'";
+            $html .= '<select class="form-control" name="' . $this->htmlName . '_' . strtolower($key) . '" id="' . $this->htmlName . '_' . strtolower($key) . '" ' . $display . '>';
+            $defaultValue = $this->getValue();
+            foreach ($value as $k => $v) {
+                $selected = '';
+                if ($k == $defaultValue) {
+                    $selected = ' selected="selected"';
+                }
+                $html .= '<option value="' . $k . '"' . $selected . '>' . $v . '</option>';
+            }
+            $html .= '</select>';
+        }
+        return $html;
+    }
+
+    /**
+     * Получение нового значения поля шаблона из данных, введённых пользователем, с учётом "Типа раздела"
+     *
+     * @return string
+     */
+    public function pickupNewValue()
+    {
+        $request = new Request();
+        $fieldName = $this->groupName . '_' . $this->name . '_' . strtolower($request->general_structure);
+        $this->newValue = $request->$fieldName;
+        return $this->newValue;
+    }
 }
