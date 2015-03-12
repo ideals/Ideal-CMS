@@ -9,10 +9,11 @@
 namespace Ideal\Medium\TemplateList;
 
 use Ideal\Core\Util;
+use Ideal\Core\Config;
 use Ideal\Medium\AbstractModel;
 
 /**
- * Медиум для получения списка шаблонов, которые можно создавать для структуры $obj
+ * Медиум для получения списка шаблонов, которые можно выбрать для отображения структуры $obj
  */
 class Model extends AbstractModel
 {
@@ -21,14 +22,19 @@ class Model extends AbstractModel
      */
     public function getList()
     {
-        // Получаем список шаблонов, которые можно создавать в этой структуре
-        $templates = $this->obj->fields[$this->fieldName]['templates'];
-        $list = array();
-        foreach ($templates as $template) {
-            $class = Util::getClassName($template, 'Template');
-            $folder = ltrim(ltrim(str_replace('\\', '/', $class), '/'), 'Ideal/');
-            $arr = require($folder . '/config.php');
-            $list[$template] = $arr['params']['name'];
+        // Определяем папку для сканирования доступных шаблонов
+        $config = Config::getInstance();
+        $scanFolderName = preg_split('/\\\(.*)/iU', get_class($this->obj), 4);
+        array_pop($scanFolderName);
+        $scanFolderName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . implode('/', $scanFolderName). '/Site';
+        $nameTpl = '/.*\.twig$/';
+        $templates = scandir($scanFolderName);
+
+        // Получаем список доступных для выбора шаблонов
+        foreach ($templates as $node) {
+            if (preg_match($nameTpl, $node)) {
+                $list[$node] = $node;
+            }
         }
         return $list;
     }
