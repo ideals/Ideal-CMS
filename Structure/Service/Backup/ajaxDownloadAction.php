@@ -24,8 +24,11 @@ if (!is_file($_GET['file'])) {
 header('Content-Disposition: attachment; filename=' . basename($_GET['file']));
 header('Content-Length: ' . filesize($_GET['file']));
 
-@ob_clean();
-@flush();
+if (ob_get_length() !== false) {
+    ob_clean();
+}
+
+flush();
 readfile($_GET['file']);
 
 exit;
