@@ -21,6 +21,13 @@ return array(
             'sql' => 'char(15)',
             'type' => 'Ideal_Hidden'
         ),
+        'template' => array(
+            'label' => 'Шаблон отображения',
+            'sql' => "varchar(255) default 'index.twig'",
+            'type' => 'Ideal_Template',
+            'medium' => '\\Ideal\\Medium\\TemplateList\\Model',
+            'default'   => 'index.twig',
+        ),
         'name' => array(
             'label' => 'Заголовок',
             'sql' => 'varchar(255) not null',

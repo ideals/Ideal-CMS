@@ -9,9 +9,6 @@
 
 namespace Ideal\Field\Template;
 
-use Ideal\Core\Config;
-use Ideal\Core\Request;
-use Ideal\Core\Util;
 use Ideal\Field\Select;
 
 /**
@@ -34,30 +31,4 @@ class Controller extends Select\Controller
 
     /** @inheritdoc */
     protected static $instance;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getInputText()
-    {
-        $html = parent::getInputText();
-        return $html;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function parseInputValue($isCreate)
-    {
-        $item = parent::parseInputValue($isCreate);
-
-        // TODO Дли типа данных шаблон - нужно распарсить его элементы
-        $templateName = Util::getClassName($this->newValue, 'Template') . '\\Model';
-        /* @var $template \Ideal\Core\Admin\Model */
-        $template = new $templateName('не имеет значения, т.к. только парсим ввод пользователя');
-        $template->setFieldsGroup($this->name);
-        $item['items'] = $template->parseInputParams($isCreate);
-
-        return $item;
-    }
 }
