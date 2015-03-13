@@ -86,7 +86,7 @@ class Model extends \Ideal\Core\Admin\Model
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
         foreach ($elements as $element) {
             $newElements[] = $element;
-            if (!isset($element['structure']) OR ($element['structure'] == $end['structure'])) {
+            if (!isset($element['structure']) || ($element['structure'] == $end['structure'])) {
                 continue;
             }
             // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
@@ -144,7 +144,7 @@ class Model extends \Ideal\Core\Admin\Model
                 // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
                 // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
                 $tmp = $this->disallow;
-                if ($v['link'] !== array_reduce(
+                $link = array_reduce(
                     $tmp,
                     function (&$res, $rule) {
                         if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
@@ -153,7 +153,8 @@ class Model extends \Ideal\Core\Admin\Model
                         return $res;
                     },
                     $v['link']
-                )) {
+                );
+                if ($v['link'] !== $link) {
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }
