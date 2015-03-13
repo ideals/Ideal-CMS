@@ -299,7 +299,7 @@ jQuery.fn.form = function (options, messages, methods) {
         },
         // Вывод сообщений
         alert: function ($message, $status) {
-            alert($message);
+            window.alert($message);
         }
     });
     //
