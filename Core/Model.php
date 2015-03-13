@@ -473,14 +473,4 @@ abstract class Model
 
         return $this->pageNum;
     }
-
-    /**
-     * Метод используется только в моделях Template для установки модели владельца этого шаблона
-     *
-     * @param $model
-     */
-    public function setParentModel($model)
-    {
-        $this->parentModel = $model;
-    }
 }
