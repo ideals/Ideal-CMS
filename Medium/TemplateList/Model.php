@@ -8,8 +8,8 @@
  */
 namespace Ideal\Medium\TemplateList;
 
-use Ideal\Core\Util;
 use Ideal\Core\Config;
+use Ideal\Core\Util;
 use Ideal\Medium\AbstractModel;
 
 /**
@@ -22,18 +22,30 @@ class Model extends AbstractModel
      */
     public function getList()
     {
+        $structures = array();
+        $list = null;
         // Определяем папку для сканирования доступных шаблонов
         $config = Config::getInstance();
-        $scanFolderName = preg_split('/\\\(.*)/iU', get_class($this->obj), 4);
-        array_pop($scanFolderName);
-        $scanFolderName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . implode('/', $scanFolderName). '/Site';
-        $nameTpl = '/.*\.twig$/';
-        $templates = scandir($scanFolderName);
+        $modelStructures = array_unique($this->obj->params['structures']);
 
-        // Получаем список доступных для выбора шаблонов
-        foreach ($templates as $node) {
-            if (preg_match($nameTpl, $node)) {
-                $list[$node] = $node;
+        // Получаем список структур, которые можно создавать в этой структуре
+        foreach ($config->structures as $structure) {
+            if (in_array($structure['structure'], $modelStructures)) {
+                $structures[] = $structure['structure'];
+            }
+        }
+
+        foreach ($structures as $value) {
+            $scanFolderName = str_replace('\\', '/', Util::getClassName($value, 'Structure'));
+            $scanFolderName = DOCUMENT_ROOT . '/' . $config->cmsFolder . $scanFolderName . '/Site';
+            $nameTpl = '/.*\.twig$/';
+            $templates = scandir($scanFolderName);
+
+            // Получаем список доступных для выбора шаблонов
+            foreach ($templates as $node) {
+                if (preg_match($nameTpl, $node)) {
+                    $list[$value][$node] = $node;
+                }
             }
         }
         return $list;
