@@ -42,11 +42,11 @@ foreach ($config->structures as $v) {
 
     // Обработка папки с кастомными шаблонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
-    $dir = stream_resolve_include_path($dir . $module . '/Template');
+    $dir = stream_resolve_include_path($dir . $module . '/Addon');
     checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
     // Обработка папки с шаблонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/' : $config->cmsFolder . '/' . 'Mods/';
-    $dir = stream_resolve_include_path($dir . $module . '/Template');
+    $dir = stream_resolve_include_path($dir . $module . '/Addon');
     checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
 
     // Обработка папки с кастомными связующими таблицами
@@ -62,7 +62,7 @@ foreach ($config->structures as $v) {
     $cfgTablesFull[$table] = $module . 'Structure/' . $structure;
 }
 
-function checkTypeFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config, $type = 'Template')
+function checkTypeFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config, $type = 'Addon')
 {
     if ($handle = opendir($dir)) {
         while (false !== ($file = readdir($handle))) {
