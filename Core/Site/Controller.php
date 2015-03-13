@@ -241,7 +241,7 @@ class Controller
     /**
      * Получение пути до twig шаблона структуры
      *
-     * @param string $tplName Тип класса (например, Structure или Field)
+     * @param string $tplName имя файла twig шаблона
      * @return string
      */
     private function getPathToTwigTemplate($tplName)

@@ -22,6 +22,8 @@ class Model extends AbstractModel
      */
     public function getList()
     {
+        $structures = array();
+        $list = null;
         // Определяем папку для сканирования доступных шаблонов
         $config = Config::getInstance();
         $modelStructures = array_unique($this->obj->params['structures']);

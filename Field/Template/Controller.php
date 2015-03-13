@@ -38,7 +38,7 @@ class Controller extends Select\Controller
      */
     public function getInputText()
     {
-        // Подключаем скрипт смены списка шабонов, только если доступно более одной структуры
+        // Подключаем скрипт смены списка шабонов, только если доступно более чем одна структура
         if (count($this->list) > 1) {
             $html = '<script type="text/javascript" src="Ideal/Field/Template/templateShowing.js" />';
         } else {
