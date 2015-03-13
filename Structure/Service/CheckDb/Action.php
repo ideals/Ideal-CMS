@@ -41,11 +41,11 @@ foreach ($config->structures as $v) {
 
     // Обработка папки с кастомными шаблонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
-    $dir = stream_resolve_include_path($dir . $module . '/Template');
+    $dir = stream_resolve_include_path($dir . $module . '/Addon');
     checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
     // Обработка папки с шаблонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/' : $config->cmsFolder . '/' . 'Mods/';
-    $dir = stream_resolve_include_path($dir . $module . '/Template');
+    $dir = stream_resolve_include_path($dir . $module . '/Addon');
     checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
 
     // Обработка папки с кастомными связующими таблицами
@@ -61,7 +61,7 @@ foreach ($config->structures as $v) {
     $cfgTablesFull[$table] = $module . 'Structure/' . $structure;
 }
 
-function checkTypeFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config, $type = 'Template')
+function checkTypeFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config, $type = 'Addon')
 {
     if ($handle = opendir($dir)) {
         while (false !== ($file = readdir($handle))) {
@@ -161,6 +161,48 @@ if ($isCool) {
                     text = 'Информация о закэшированных страницах верна.';
                 }
                 $('.nav-tabs').parent().prepend('<div class="alert alert-block alert-success fade in"> <button type="button" class="close" data-dismiss="alert">&times;</button><span class="alert-heading">' + text + '</span></div>');
+            },
+            type: 'GET',
+            dataType: "json"
+        });
+    }
+
+    function checkCmsFiles()
+    {
+        $('#loading').html('Идёт сбор данных. Ждите.');
+        $('#iframe').html('');
+        var text = '';
+        $.ajax({
+            url: 'index.php',
+            data: {action: 'checkCmsFiles', controller: 'Ideal\\Structure\\Service\\CheckCmsFiles', mode: 'ajax'},
+            success: function (data)
+            {
+                if (data.newFiles) {
+                    text += 'Были добавлены новые файлы: <br />' + data.newFiles;
+                }
+                if (data.changeFiles) {
+                    if (text != '') {
+                        text += '<br /><br />';
+                    }
+                    text += 'Были внесены изменения в следующие файлы: <br />' + data.changeFiles;
+                }
+                if (data.delFiles) {
+                    if (text != '') {
+                        text += '<br /><br />';
+                    }
+                    text += 'Были удалены следующие файлы: <br />' + data.delFiles;
+                }
+                if (text == '') {
+                    text = 'Системные файлы соответствуют актуальной версии'
+                }
+                $('#loading').html('');
+                $('#iframe').html(text);
+            },
+            error: function (xhr) {
+                $('#loading').html('');
+                $('#iframe').html('<pre> Не удалось завершить сканирование. Статус: '
+                + xhr.statusCode().status +
+                '\n Попробуйте повторить позже.</pre>');
             },
             type: 'GET',
             dataType: "json"
