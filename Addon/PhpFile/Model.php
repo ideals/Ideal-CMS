@@ -1,6 +1,8 @@
 <?php
 namespace Ideal\Addon\PhpFile;
 
+use Ideal\Core\Util;
+
 class Model extends \Ideal\Addon\AbstractModel
 {
     public function getPageData()
@@ -14,7 +16,8 @@ class Model extends \Ideal\Addon\AbstractModel
                 if (file_exists(DOCUMENT_ROOT . $this->pageData['php_file'])) {
                     require DOCUMENT_ROOT . $this->pageData['php_file'];
                 } else {
-                    $this->pageData['content'] = 'Не удалось подключить файл "' . DOCUMENT_ROOT . $this->pageData['php_file'] . '"<br />' . $this->pageData['content'];
+                    Util::addError('Не удалось подключить файл "' . DOCUMENT_ROOT . $this->pageData['php_file'] . '"');
+                    $this->pageData['content'] =  $this->pageData['content'];
                 }
             }
         }
