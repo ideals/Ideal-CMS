@@ -25,4 +25,14 @@ class AbstractModel extends \Ideal\Core\Admin\Model
             $this->setPageData($pageData[0]);
         }
     }
+
+    /**
+     * Установка модели владельца этого шаблона
+     *
+     * @param $model
+     */
+    public function setParentModel($model)
+    {
+        $this->parentModel = $model;
+    }
 }
