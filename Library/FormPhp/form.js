@@ -201,16 +201,17 @@
 
 jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
 
-jQuery.fn.form = function (options, messages) {
+jQuery.fn.form = function (options, messages, methods) {
     options = $.extend({
-        ajaxUrl: '/'
+        ajaxUrl: '/',
+        ajaxDataType: 'text'
     }, options);
     messages = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
         notValid: 'Поля, выделенные красным, заполнены неверно!'
     }, messages);
 
-    var methods = {
+    methods = $.extend({
         // Валидация формы
         validate: function () {
             var $form = $(this);
@@ -270,6 +271,7 @@ jQuery.fn.form = function (options, messages) {
                 type: 'post',
                 url: options.ajaxUrl,
                 data: data,
+                dataType: options.ajaxDataType,
                 async:false,
                 success: function (result) {
                     methods.successSend.apply($form, [result]);
@@ -282,7 +284,11 @@ jQuery.fn.form = function (options, messages) {
         },
         // Обработка успешной отправки формы
         successSend: function (result) {
-            alert(result);
+            if (options.ajaxDataType == 'text') {
+                alert(result);
+            } else if (options.ajaxDataType == 'json' || options.ajaxDataType == 'jsonp') {
+                alert(result.message);
+            }
             $(this)[0].reset();
             $(this).trigger('form.successSend');
         },
@@ -290,9 +296,17 @@ jQuery.fn.form = function (options, messages) {
         errorSend: function (result) {
             $(this).trigger('form.errorSend');
             alert(messages.ajaxError);
+        },
+        // Вывод сообщений
+        alert: function ($message, $status) {
+            alert($message);
         }
-
-    };
+    });
+    //
+    function alert(message, status) {
+        status = status || null;
+        methods.alert(message, status)
+    }
 
     var make = function (form) {
         $(this)
