@@ -15,6 +15,11 @@ return array(
             'sql' => 'char(15)',
             'type' => 'Ideal_Hidden'
         ),
+        'tab_ID' => array(
+            'label' => 'ID таба аддона',
+            'sql' => 'int not null default 0',
+            'type' => 'Ideal_Hidden'
+        ),
         'level' => array(
             'label' => 'Кол-во отображаемых уровней',
             'sql' => 'int not null default 0',
