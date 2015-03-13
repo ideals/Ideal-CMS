@@ -45,6 +45,13 @@ return array(
             'type' => 'Ideal_Select',
             'medium' => '\\Ideal\\Medium\\StructureList\\Model'
         ),
+        'template' => array(
+            'label' => 'Шаблон отображения',
+            'sql' => "varchar(255) default 'index.twig'",
+            'type' => 'Ideal_Template',
+            'medium' => '\\Ideal\\Medium\\TemplateList\\Model',
+            'default'   => 'index.twig',
+        ),
         'addon' => array(
             'label' => 'Аддоны',
             'sql' => "varchar(255) not null default '{\"1\":\"Ideal_Page\"}'",
