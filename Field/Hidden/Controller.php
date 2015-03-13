@@ -78,7 +78,7 @@ class Controller extends AbstractController
     public function getSqlAdd($tabID)
     {
         // Удаляем все существующие связи владельца и элементов
-        $_sql = "UPDATE {$this->model->_table} SET {$this->name}=$tabID WHERE ID='{{ objectId }}';";
+        $_sql = "UPDATE {{ table }} SET {$this->name}=$tabID WHERE ID='{{ objectId }}';";
         return $_sql;
     }
 }
