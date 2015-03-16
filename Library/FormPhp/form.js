@@ -197,25 +197,22 @@
 
 }));
 
-
+// The end of placeholder plugin
 
 jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
 
-
-
-jQuery.fn.form = function(options, messages){
+jQuery.fn.form = function (options, messages) {
     options = $.extend({
-        ajaxUrl : '/'
+        ajaxUrl: '/'
     }, options);
     messages = $.extend({
-        ajaxError : 'К сожалению, на данный момент услуга обратного звонка не доступна. Приносим свои извинения.',
-        notValid : 'Поля, выделенные красным, заполнены не верно!'
+        ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
+        notValid: 'Поля, выделенные красным, заполнены неверно!'
     }, messages);
 
-
     var methods = {
-        //Валидация формы
-        validate : function() {
+        // Валидация формы
+        validate: function () {
             var $form = $(this);
 
             var values = $form.find('[name]');
@@ -235,38 +232,38 @@ jQuery.fn.form = function(options, messages){
             return isValid;
         },
         // Инициализация yaCounter
-        initYaCounter: function() {
+        initYaCounter: function () {
             if (typeof this.yaCounter != 'undefined') {
                 return;
             }
             var yaCounterName = $(this).find('[name = "_yaCounter"]').val();
             this.yaCounter = {};
-            eval("var yaCounterName = typeof " + yaCounterName + " == 'undefined' ? false : yaCounterName");
+            eval('var yaCounterName = typeof ' + yaCounterName + ' == \'undefined\' ? false : yaCounterName');
             if (yaCounterName !== false) {
-                this.yaCounter.reachGoal = function(metka) {
-                    eval("var yaCounter = " + yaCounterName);
+                this.yaCounter.reachGoal = function (metka) {
+                    eval('var yaCounter = ' + yaCounterName);
                     yaCounter.reachGoal(metka);
                 }
             } else {
-                this.yaCounter.reachGoal = function(opt) {}
+                this.yaCounter.reachGoal = function (opt) {}
             }
         },
-        //Отправка метрики, при нажатии на кнопку отправки формы
-        metrikaOnButtonClick: function() {
+        // Отправка метрики, при нажатии на кнопку отправки формы
+        metrikaOnButtonClick: function () {
             var metka = $(this).data('click');
             if (metka) {
                 this.yaCounter.reachGoal(metka);
             }
         },
-        //Отправка метрики, при успешной отправке формы
-        metrikaOnSuccessSend: function() {
+        // Отправка метрики, при успешной отправке формы
+        metrikaOnSuccessSend: function () {
             var metka = $(this).data('send');
             if (metka) {
                 this.yaCounter.reachGoal(metka);
             }
         },
-        //Отправка формы
-        submit : function() {
+        // Отправка формы
+        submit: function () {
             var $form = $(this);
             var data = $form.serialize();
             $.ajax({
@@ -275,25 +272,32 @@ jQuery.fn.form = function(options, messages){
                 data: data,
                 dataType: 'json',
                 async:false,
-                success: function(result){
-                    alert(result);
-                    $form[0].reset();
-                    $form.trigger('form.successSend');
-
+                success: function (result) {
+                    methods.successSend().apply(this, [result]);
                 },
-                error: function(){
-                    $form.trigger('form.errorSend');
-                    alert(messages.ajaxError);
+                error: function (result) {
+                    methods.successSend().apply(this, [result]);
                 }
             });
             return false;
+        },
+        // Обработка успешной отправки формы
+        successSend: function (result) {
+            alert(result);
+            $(this)[0].reset();
+            $(this).trigger('form.successSend');
+        },
+        // Обработка неудачной отправки формы
+        errorSend: function (result) {
+            $(this).trigger('form.errorSend');
+            alert(messages.ajaxError);
         }
 
     };
 
-    var make = function(form){
+    var make = function (form) {
         $(this)
-            .submit(function(){
+            .submit(function () {
                 if ($(this).disableSubmit == true) {
                     return false;
                 }
@@ -303,16 +307,21 @@ jQuery.fn.form = function(options, messages){
                     alert(messages.notValid);
                     return false;
                 }
-                return methods.submit.apply(this);
+
+                if (typeof senderAjax == 'object') {
+                    return senderAjax.send(this, options.ajaxUrl, methods.successSend);
+                } else {
+                    return methods.submit.apply(this);
+                }
             })
-            .on('form.buttonClick', function() {
+            .on('form.buttonClick', function () {
                 methods.metrikaOnButtonClick.apply(this);
                 $(this).disableSubmit = false;
             })
-            .on('form.successSend', function() {
+            .on('form.successSend', function () {
                 methods.metrikaOnSuccessSend.apply(this);
             })
-            .on('form.errorSend', function() {
+            .on('form.errorSend', function () {
                 $(this).disableSubmit = false;
             })
             .disableSubmit = false;
@@ -321,7 +330,6 @@ jQuery.fn.form = function(options, messages){
 
     return this.each(make);
 };
-
 
 function ucfirst(str)
 {

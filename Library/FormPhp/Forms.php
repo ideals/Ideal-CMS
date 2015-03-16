@@ -16,7 +16,7 @@ namespace FormPhp;
 class Forms
 {
     /** @var array Список полей ввода в форме */
-    protected $fields = array();
+    public $fields = array();
 
     /** @var string Название формы  */
     protected $formName;
@@ -35,6 +35,9 @@ class Forms
 
     /** @var bool Флаг отображения html-сущностей в XHTML или в HTML стиле */
     protected $xhtml = true;
+
+    /** @var object Класс отправки формы */
+    protected $senderClass;
 
     /**
      * Инициализируем сессии, если это нужно
@@ -79,6 +82,7 @@ class Forms
         /** @var \FormPhp\Field\AbstractField $field */
         $field = new $fieldName($name, $options);
         $field->setMethod($this->method);
+        $field->setXhtml($this->xhtml);
         $this->fields[$name] = $field;
         return $this;
     }
@@ -274,25 +278,55 @@ class Forms
     }
 
     /**
+     * Определение кастомного кода отправки формы
+     *
+     * @return string Кастомный код отправки формы
+     * @throws \Exception
+     */
+    protected function getSenderJs()
+    {
+        $js = '';
+        foreach ($this->fields as $v) {
+            /** @var $v \FormPhp\Field\AbstractField */
+            $nextJs = $v->getSenderJs();
+            if (!empty($js) && !empty($nextJs) && ($js != $nextJs)) {
+                throw new \Exception('Ошибка! Найдено несколько классов отправки формы');
+            }
+            $js = $nextJs;
+        }
+        return $js;
+    }
+
+    /**
      * Генерирование js-скрипта, общего для всей формы
      *
      * Js генерируется на основе общих js-скриптов для формы, плюс js-скрипты для полей ввода
      * и валидаторов
      *
      * @return string
+     * @throws \Exception
      */
     protected function renderJs()
     {
-        $validJS = array();
+        $js = array();
+
         foreach ($this->validators as $v) {
             /** @var $v \FormPhp\Validator\AbstractValidator */
-            $validJS[] = $v->getCheckJs();
+            $js[] = $v->getCheckJs();
         }
 
-        $js = "jQuery(document).ready(function () {\n var $ = jQuery;";
-        $js .= implode("\n", $validJS);
-        $js .= file_get_contents(__DIR__ .'/form.js');
-        $this->js = $js . $this->js . "\n"  . '})';
+        foreach ($this->fields as $v) {
+            /** @var $v \FormPhp\Field\AbstractField */
+            $js[get_class($v)] = $v->getJs();
+        }
+
+        $js[] = $this->getSenderJs();
+
+        $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
+            . implode("\n", $js)
+            . file_get_contents(__DIR__ .'/form.js')
+            . $this->js
+            . "\n"  . '})';
 
         return $this->js;
     }
