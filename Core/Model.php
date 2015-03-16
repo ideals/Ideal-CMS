@@ -1,4 +1,5 @@
 <?php
+// @codingStandardsIgnoreFile
 namespace Ideal\Core;
 
 use Ideal\Field\Url;

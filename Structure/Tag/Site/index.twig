@@ -1,0 +1,33 @@
+{% extends "site.twig" %}
+
+{% block content %}
+
+    <h1>{{ header|raw }}</h1>
+
+    {% if tags|length > 0 %}
+        {% for tag in tags %}
+            <p>
+                <strong>
+                    <a href="{{ tag.link }}">{{ tag.name }}</a>
+                </strong>
+                {% if tag.annot != '' %}<br/>{% endif %}
+                {{ tag.annot }}
+            </p>
+        {% endfor %}
+    {% endif %}
+
+    {% if pager.pages|length > 1 %}
+        <div class="pagination pagination-left">
+            <ul class="pagination-tag">
+                {% for page in pager.pages %}
+                    {% if page.current == 1 %}
+                        <li class="active"><a>{{ page.num }}</a></li>
+                    {% else %}
+                        <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+{% endblock %}
