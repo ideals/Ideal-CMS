@@ -143,11 +143,13 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $result = $db->select($sql);
 
         // Формируем правильные ссылки
+        // todo формирование правильных ссылок для разных структур
+        /**
         foreach ($result as $k => $v) {
             $url = new \Ideal\Field\Url\Model();
             $result[$k]['link'] = $url->getUrlWithPrefix($v, $prefix);
         }
-
+        **/
 
         return $result;
     }
@@ -195,6 +197,9 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         return $result;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getListCount()
     {
         if (empty($this->countSql)) {
@@ -211,6 +216,12 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         return $list[0]['COUNT(*)'];
     }
 
+    /**
+     * Построение LIMIT части sql-запроса
+     *
+     * @param int $page Номер отображаемой страницы
+     * @return string LIMIT часть sql-запроса (например 'LIMIT 10, 10'
+     */
     protected function getSqlLimit($page)
     {
         if (is_null($page)) {

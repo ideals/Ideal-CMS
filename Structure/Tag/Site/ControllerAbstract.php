@@ -34,8 +34,8 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
 
         $request = new Request();
         $page = intval($request->page);
-        //$this->view->parts = $this->model->getElementsByStructure($page, 'Ideal_News');
-        $this->view->parts = $this->model->getElements($page);
+        $this->view->parts = $this->model->getElementsByStructure($page, 'Ideal_News', '/news');
+        // $this->view->parts = $this->model->getElements($page);
 
         $this->view->pager = $this->model->getPager('page');
     }
