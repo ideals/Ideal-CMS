@@ -22,7 +22,7 @@ class Model extends AbstractModel
      */
     public function getList()
     {
-        // Определяем папку для сканирования доступных шаблонов
+        $parsingHierarchy = array('Mods.c', 'Mods', 'Ideal.c', 'Ideal');
         $config = Config::getInstance();
         $modelStructures = array_unique($this->obj->params['structures']);
 
@@ -34,15 +34,22 @@ class Model extends AbstractModel
         }
 
         foreach ($structures as $value) {
-            $scanFolderName = str_replace('\\', '/', Util::getClassName($value, 'Structure'));
-            $scanFolderName = DOCUMENT_ROOT . '/' . $config->cmsFolder . $scanFolderName . '/Site';
-            $nameTpl = '/.*\.twig$/';
-            $templates = scandir($scanFolderName);
+            $folderName = str_replace('\\', '/', Util::getClassName($value, 'Structure'));
+            $folderName = preg_replace('/\/(.*)\//iU', '/', $folderName, 1);
 
-            // Получаем список доступных для выбора шаблонов
-            foreach ($templates as $node) {
-                if (preg_match($nameTpl, $node)) {
-                    $list[$value][$node] = $node;
+            foreach ($parsingHierarchy as $parsingHierarchyValue) {
+                $folderForScan = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . $parsingHierarchyValue . $folderName . '/Site';
+                if (!file_exists($folderForScan)) {
+                    continue;
+                }
+                $nameTpl = '/.*\.twig$/';
+                $templates = scandir($folderForScan);
+
+                // Получаем список доступных для выбора шаблонов
+                foreach ($templates as $node) {
+                    if (preg_match($nameTpl, $node)) {
+                        $list[$value][$node] = $node;
+                    }
                 }
             }
         }

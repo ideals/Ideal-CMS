@@ -46,8 +46,8 @@ class Controller
     /**
      * Инициализация twig-шаблона сайта
      *
-     * @param string $tplName    Название файла шаблона (с путём к нему), если не задан - будет index.twig
-     * @param array  $tplFolders Список дополнительных папок с файлами шаблонов
+     * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     * @param array $tplFolders Список дополнительных папок с файлами шаблонов
      */
     public function templateInit($tplName = '', $tplFolders = array())
     {
@@ -251,10 +251,16 @@ class Controller
      */
     private function getPathToTwigTemplate($tplName)
     {
+        $config = Config::getInstance();
+        $parsingHierarchy = array('Mods.c', 'Mods', 'Ideal.c', 'Ideal');
         $parts = explode('\\', get_class($this));
-        $moduleName = $parts[0];
-        $moduleName = ($moduleName == 'Ideal') ? '' : $moduleName . '/';
-        $structureName = $parts[2];
-        return $moduleName . 'Structure/' . $structureName . '/Site/' . $tplName;
+        $folderName = $parts[1] . '/' . $parts[2];
+        foreach ($parsingHierarchy as $parsingHierarchyValue) {
+            $tplNameForScan = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . $parsingHierarchyValue . '/' . $folderName . '/Site/' . $tplName;
+            if (!file_exists($tplNameForScan)) {
+                continue;
+            }
+            return $folderName . '/Site/' . $tplName;
+        }
     }
 }
