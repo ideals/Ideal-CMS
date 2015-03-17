@@ -47,8 +47,8 @@ class Controller
     /**
      * Инициализация twig-шаблона сайта
      *
-     * @param string $tplName    Название файла шаблона (с путём к нему), если не задан - будет index.twig
-     * @param array  $tplFolders Список дополнительных папок с файлами шаблонов
+     * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     * @param array $tplFolders Список дополнительных папок с файлами шаблонов
      */
     public function templateInit($tplName = '', $tplFolders = array())
     {
@@ -64,16 +64,10 @@ class Controller
         }
         $gblRoot = dirname(stream_resolve_include_path($gblName));
 
-        $parts = explode('\\', get_class($this));
-
-        $moduleName = $parts[0];
-        $moduleName = ($moduleName == 'Ideal') ? '' : $moduleName . '/';
-        $structureName = $parts[2];
-
         // Инициализация шаблона страницы
         if ($tplName == '') {
             if ($this->tplName == '') {
-                $tplName = $moduleName . 'Structure/' . $structureName . '/Site/index.twig';
+                $tplName = $this->getPathToTwigTemplate('index.twig');
             } else {
                 $tplName = $this->tplName;
             }
@@ -132,13 +126,20 @@ class Controller
      */
     public function indexAction()
     {
-        $this->templateInit();
+        $tplName = '';
+        $pageData = $this->model->getPageData();
+
+        //Определяем шаблон для отображения
+        if (!empty($pageData['template'])) {
+            $tplName = $this->getPathToTwigTemplate($pageData['template']);
+        }
+
+        $this->templateInit($tplName);
 
         // Выдёргиваем заголовок из template['content']
         $this->view->header = $this->model->getHeader();
 
         // Перенос данных страницы в шаблон
-        $pageData = $this->model->getPageData();
         foreach ($pageData as $k => $v) {
             $this->view->$k = $v;
         }
@@ -245,5 +246,18 @@ class Controller
     public function setTemplate($tplName)
     {
         $this->tplName = $tplName;
+    }
+
+    /**
+     * Получение пути до twig шаблона структуры
+     *
+     * @param string $tplName Тип класса (например, Structure или Field)
+     * @return string
+     */
+    private function getPathToTwigTemplate($tplName)
+    {
+        $parts = explode('\\', get_class($this));
+        $moduleName = ($parts[0] == 'Ideal') ? '' : $parts[0] . '/';
+        return $moduleName . $parts[1] . '/' . $parts[2] . '/Site/' . $tplName;
     }
 }
