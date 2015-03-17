@@ -43,10 +43,6 @@ class Controller extends AbstractField
                     $(form).attr('target', this.id);
                     $(form).attr('action', options.ajaxUrl);
                     $(form).attr('method', 'post');
-                   // $(form).unbind('submit');
-                    /*$(form).submit(function() {
-                        return true;
-                    });*/
                     form.defaultSubmit = true;
                     $(form).submit();
                     return false;
