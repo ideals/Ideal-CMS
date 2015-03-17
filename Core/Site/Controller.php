@@ -251,16 +251,8 @@ class Controller
      */
     private function getPathToTwigTemplate($tplName)
     {
-        $config = Config::getInstance();
-        $parsingHierarchy = array('Mods.c', 'Mods', 'Ideal.c', 'Ideal');
         $parts = explode('\\', get_class($this));
-        $folderName = $parts[1] . '/' . $parts[2];
-        foreach ($parsingHierarchy as $parsingHierarchyValue) {
-            $tplNameForScan = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . $parsingHierarchyValue . '/' . $folderName . '/Site/' . $tplName;
-            if (!file_exists($tplNameForScan)) {
-                continue;
-            }
-            return $folderName . '/Site/' . $tplName;
-        }
+        $moduleName = ($parts[0] == 'Ideal') ? '' : $parts[0] . '/';
+        return $moduleName . $parts[1] . '/' . $parts[2] . '/Site/' . $tplName;
     }
 }
