@@ -47,8 +47,8 @@ class Controller
     /**
      * Инициализация twig-шаблона сайта
      *
-     * @param string $tplName    Название файла шаблона (с путём к нему), если не задан - будет index.twig
-     * @param array  $tplFolders Список дополнительных папок с файлами шаблонов
+     * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     * @param array $tplFolders Список дополнительных папок с файлами шаблонов
      */
     public function templateInit($tplName = '', $tplFolders = array())
     {
@@ -257,9 +257,7 @@ class Controller
     private function getPathToTwigTemplate($tplName)
     {
         $parts = explode('\\', get_class($this));
-        $moduleName = $parts[0];
-        $moduleName = ($moduleName == 'Ideal') ? '' : $moduleName . '/';
-        $structureName = $parts[2];
-        return $moduleName . 'Structure/' . $structureName . '/Site/' . $tplName;
+        $moduleName = ($parts[0] == 'Ideal') ? '' : $parts[0] . '/';
+        return $moduleName . $parts[1] . '/' . $parts[2] . '/Site/' . $tplName;
     }
 }
