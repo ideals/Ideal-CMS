@@ -105,7 +105,7 @@ class Resize
         }
 
         // Проверяем есть ли в списке разрешённых размеров изображений запрошенное
-        $allowResize = explode("\n", $config['allowResize']);
+        $allowResize = explode("\\n", $config['allowResize']);
         if (!in_array($this->width . $this->sizeDelimiter . $this->height, $allowResize)) {
             return false;
         }
