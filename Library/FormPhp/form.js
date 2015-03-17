@@ -201,16 +201,17 @@
 
 jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
 
-jQuery.fn.form = function (options, messages) {
+jQuery.fn.form = function (options, messages, methods) {
     options = $.extend({
-        ajaxUrl: '/'
+        ajaxUrl: '/',
+        ajaxDataType: 'text'
     }, options);
     messages = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
         notValid: 'Поля, выделенные красным, заполнены неверно!'
     }, messages);
 
-    var methods = {
+    methods = $.extend({
         // Валидация формы
         validate: function () {
             var $form = $(this);
@@ -270,38 +271,57 @@ jQuery.fn.form = function (options, messages) {
                 type: 'post',
                 url: options.ajaxUrl,
                 data: data,
-                dataType: 'json',
+                dataType: options.ajaxDataType,
                 async:false,
                 success: function (result) {
-                    methods.successSend().apply(this, [result]);
+                    methods.successSend.apply($form, [result]);
                 },
                 error: function (result) {
-                    methods.successSend().apply(this, [result]);
+                    methods.errorSend.apply($form, [result]);
                 }
             });
             return false;
         },
         // Обработка успешной отправки формы
         successSend: function (result) {
-            alert(result);
-            $(this)[0].reset();
-            $(this).trigger('form.successSend');
+            if (options.ajaxDataType == 'text') {
+                alert(result);
+            } else if (options.ajaxDataType == 'json' || options.ajaxDataType == 'jsonp') {
+                alert(result[0]);
+            }
+            if (options.ajaxDataType == 'text' || result[1] != 'error') {
+                $(this)[0].reset();
+                $(this).trigger('form.successSend');
+                return;
+            }
+            $(this).trigger('form.errorSend');
         },
         // Обработка неудачной отправки формы
         errorSend: function (result) {
             $(this).trigger('form.errorSend');
             alert(messages.ajaxError);
+        },
+        // Вывод сообщений
+        alert: function ($message, $status) {
+            window.alert($message);
         }
-
-    };
+    });
+    //
+    function alert(message, status) {
+        status = status || null;
+        methods.alert(message, status)
+    }
 
     var make = function (form) {
         $(this)
             .submit(function () {
-                if ($(this).disableSubmit == true) {
+                if (this.defaultSubmit === true) {
+                    return true;
+                }
+                if (this.disableSubmit == true) {
                     return false;
                 }
-                $(this).disableSubmit = true;
+                this.disableSubmit = true;
                 $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
                     alert(messages.notValid);
@@ -309,25 +329,25 @@ jQuery.fn.form = function (options, messages) {
                 }
 
                 if (typeof senderAjax == 'object') {
-                    return senderAjax.send(this, options.ajaxUrl, methods.successSend);
+                    return senderAjax.send(this, options, methods.successSend);
                 } else {
                     return methods.submit.apply(this);
                 }
             })
             .on('form.buttonClick', function () {
                 methods.metrikaOnButtonClick.apply(this);
-                $(this).disableSubmit = false;
+                this.disableSubmit = false;
             })
             .on('form.successSend', function () {
                 methods.metrikaOnSuccessSend.apply(this);
             })
             .on('form.errorSend', function () {
-                $(this).disableSubmit = false;
-            })
-            .disableSubmit = false;
+                this.disableSubmit = false;
+            });
+        this.disableSubmit = false;
+        this.defaultSubmit = false;
         methods.initYaCounter.apply(this);
     };
-
     return this.each(make);
 };
 
