@@ -287,10 +287,14 @@ jQuery.fn.form = function (options, messages, methods) {
             if (options.ajaxDataType == 'text') {
                 alert(result);
             } else if (options.ajaxDataType == 'json' || options.ajaxDataType == 'jsonp') {
-                alert(result.message);
+                alert(result[0]);
             }
-            $(this)[0].reset();
-            $(this).trigger('form.successSend');
+            if (options.ajaxDataType == 'text' || result[1] != 'error') {
+                $(this)[0].reset();
+                $(this).trigger('form.successSend');
+                return;
+            }
+            $(this).trigger('form.errorSend');
         },
         // Обработка неудачной отправки формы
         errorSend: function (result) {
@@ -311,10 +315,13 @@ jQuery.fn.form = function (options, messages, methods) {
     var make = function (form) {
         $(this)
             .submit(function () {
-                if ($(this).disableSubmit == true) {
+                if (this.defaultSubmit === true) {
+                    return true;
+                }
+                if (this.disableSubmit == true) {
                     return false;
                 }
-                $(this).disableSubmit = true;
+                this.disableSubmit = true;
                 $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
                     alert(messages.notValid);
@@ -322,25 +329,25 @@ jQuery.fn.form = function (options, messages, methods) {
                 }
 
                 if (typeof senderAjax == 'object') {
-                    return senderAjax.send(this, options.ajaxUrl, methods.successSend);
+                    return senderAjax.send(this, options, methods.successSend);
                 } else {
                     return methods.submit.apply(this);
                 }
             })
             .on('form.buttonClick', function () {
                 methods.metrikaOnButtonClick.apply(this);
-                $(this).disableSubmit = false;
+                this.disableSubmit = false;
             })
             .on('form.successSend', function () {
                 methods.metrikaOnSuccessSend.apply(this);
             })
             .on('form.errorSend', function () {
-                $(this).disableSubmit = false;
-            })
-            .disableSubmit = false;
+                this.disableSubmit = false;
+            });
+        this.disableSubmit = false;
+        this.defaultSubmit = false;
         methods.initYaCounter.apply(this);
     };
-
     return this.each(make);
 };
 

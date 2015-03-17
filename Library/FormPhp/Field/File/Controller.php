@@ -30,22 +30,24 @@ class Controller extends AbstractField
                 /**
                  * Отправка формы через iframe
                  * @param form formID ID формы
-                 * @param url URL на который будут переданы данные при отправки фрейма
+                 * @param options Свойства формы
                  * @param callback Функция, которую нужно будет вывзвать после отправки формы
                  */
-                send: function(form, url, callback) {
-                                    this.formCallback = callback;
+                send: function(form, options, callback) {
+                    this.formCallback = callback;
                     this.form = form;
+                    this.formOptions = options;
                     if (typeof $(this).id == "undefined") {
-                        this.create(url);
+                        this.create(options.ajaxUrl);
                     }
                     $(form).attr('target', this.id);
-                    $(form).attr('action', url);
+                    $(form).attr('action', options.ajaxUrl);
                     $(form).attr('method', 'post');
-                    $(form).unbind('submit');
+                   // $(form).unbind('submit');
                     /*$(form).submit(function() {
                         return true;
                     });*/
+                    form.defaultSubmit = true;
                     $(form).submit();
                     return false;
                 },
@@ -71,12 +73,10 @@ class Controller extends AbstractField
                  * @returns {*}
                  */
                 getIFrameXML: function(e) {
-                    var doc = this.iframe.contentDocument;
-                    if (!doc &&this.iframe.contentWindow) doc = this.iframe.contentWindow.document;
-                    if (!doc) doc = window.frames[this.id].document;
-                    if (!doc) return null;
-                    if (doc.location == "about:blank") return null;
-                    if (doc.XMLDocument) doc = doc.XMLDocument;
+                    var doc = $(this.iframe).contents().find("body").html();
+                    if (this.formOptions.ajaxDataType == 'json' || this.formOptions.ajaxDataType == 'jsonp') {
+                         doc = $.parseJSON(doc);
+                    }
                     return doc;
                 },
                 /**
@@ -86,7 +86,8 @@ class Controller extends AbstractField
                  */
                 callback: function (act, doc) {
                     $(this.iframe).remove();
-                    this.formCallback.apply(this.form, [doc.body.innerHTML])
+                    this.form.defaultSubmit = false;
+                    this.formCallback.apply(this.form, [doc])
                 }
             };
 JS;
