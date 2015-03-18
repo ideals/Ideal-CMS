@@ -211,6 +211,12 @@ jQuery.fn.form = function (options, messages, methods) {
         notValid: 'Поля, выделенные красным, заполнены неверно!'
     }, messages);
 
+    //
+    function alert(message, status) {
+        status = status || null;
+        methods.alert(message, status)
+    }
+
     methods = $.extend({
         // Валидация формы
         validate: function () {
@@ -287,7 +293,7 @@ jQuery.fn.form = function (options, messages, methods) {
             if (options.ajaxDataType == 'text') {
                 alert(result);
             } else if (options.ajaxDataType == 'json' || options.ajaxDataType == 'jsonp') {
-                alert(result[0]);
+                alert(result[0], result[1]);
             }
             if (options.ajaxDataType == 'text' || result[1] != 'error') {
                 $(this)[0].reset();
@@ -305,12 +311,7 @@ jQuery.fn.form = function (options, messages, methods) {
         alert: function ($message, $status) {
             window.alert($message);
         }
-    });
-    //
-    function alert(message, status) {
-        status = status || null;
-        methods.alert(message, status)
-    }
+    }, methods);
 
     var make = function (form) {
         $(this)
