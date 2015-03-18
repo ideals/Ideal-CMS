@@ -231,8 +231,11 @@ jQuery.fn.form = function (options, messages, methods) {
                 for (var k in check[field]) {
                     var fn = 'validate' + ucfirst(check[field][k]);
                     var value = (typeof input.val() == 'undefined') ? '' : input.val();
-                    if (eval(fn)(value, $form.attr('id'), input) == false) {
+                    var validate = eval(fn)(value, $form.attr('id'), input);
+                    if (validate !== true) {
                         isValid = false;
+
+                        messages.notValid = validate;
                     }
                 }
             }

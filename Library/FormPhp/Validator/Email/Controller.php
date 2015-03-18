@@ -11,7 +11,7 @@ use FormPhp\Validator\AbstractValidator;
  */
 class Controller extends AbstractValidator
 {
-
+    protected $errorMsg = "Неверно заполнен адрес электронной почты!";
     /**
      * Проверка введённого пользователем значения
      *
@@ -33,13 +33,14 @@ class Controller extends AbstractValidator
      */
     public function getCheckJs()
     {
+        $msg = $this->getErrorMsg();
         return <<<JS
             function validateEmail(e, formId, input) {
                 var pattern = new RegExp(/^[\w-\.]+@[\w-]+\.[a-z]{2,4}$/i);
                 var r = pattern.test(e);
                 if (!r) {
                     input.addClass('error-email');
-                    return false;
+                    return "{$msg}";
                 } else {
                     input.removeClass('error-email');
                     return true;
