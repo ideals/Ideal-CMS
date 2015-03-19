@@ -8,9 +8,11 @@ $(document).ready(function() {
 
     // Строим список подключённых аддонов в html-виде
     addonsHtml = '<div class="list-group">';
-    for (i = 0; i < addons.length; i++) {
-        addonsHtml += '<div class="list-group-item"><div class="input-group"><span class="form-control">' + addons[i][2] + '</span>';
-        addonsHtml += '<span class="input-group-btn remove-addon"><button class="btn btn-default" type="button">&times;</button></span></div></div>';
+    if (addons != null) {
+        for (i = 0; i < addons.length; i++) {
+            addonsHtml += '<div class="list-group-item"><div class="input-group"><span class="form-control">' + addons[i][2] + '</span>';
+            addonsHtml += '<span class="input-group-btn remove-addon"><button class="btn btn-default" type="button">&times;</button></span></div></div>';
+        }
     }
     addonsHtml += '</div>';
     // Отображаем список аддонов на странице
@@ -76,8 +78,10 @@ $('#add-addon-add').click(function(){
 
     // Ищем максимальный ID
     maxId = 0;
-    for (i = 0; i < addons.length; i++) {
-        maxId = (addons[i][0] > maxId) ? addons[i][0] : maxId;
+    if (addons != null) {
+        for (i = 0; i < addons.length; i++) {
+            maxId = (addons[i][0] > maxId) ? addons[i][0] : maxId;
+        }
     }
     newId = maxId - 0 + 1; // - 0 нужен для приведения типа maxId
 
@@ -133,6 +137,9 @@ function onAddNewTab(data) {
     // Записываем в поле аддона новый список элементов
     addonField = getAddonFieldName();
     var curr = $.parseJSON($('#' + addonField).val());
+    if (curr  == null) {
+        curr = [];
+    }
     var dataList = $.parseJSON(data['list']);
     curr = curr.concat(dataList);
     curr = JSON.stringify(curr);
