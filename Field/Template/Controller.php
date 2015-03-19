@@ -47,7 +47,7 @@ class Controller extends Select\Controller
 
         // Получаем значение поумолчанию для структуры
         $pageData = $this->model->getPageData();
-        if (isset($pageData['structure'])) {
+        if (isset($pageData['structure']) && !empty($pageData['structure'])) {
             $structureValue = $pageData['structure'];
         } else {
             reset($this->list);
