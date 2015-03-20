@@ -288,7 +288,6 @@
                     window.idObject['id'] = id;
                     window.idObject['action'] = action;
 
-                    window.idObject['changeTemplate'] = 0;
                     dataToAjax = {action: action, par: par, id: id}
 
                 }
@@ -434,7 +433,6 @@
                         par: window.idObject['par'],
                         id: window.idObject['id'],
                         action: action,
-                        changeTemplate: window.idObject['changeTemplate'],
                         formValues: formValues
                     },
                     beforeSend: function ()
@@ -495,8 +493,6 @@
                                 text = text + "\n" + 'данные изменённых параметров будут удалены!!!';
                                 // Если требуется подтверждение на смену шаблона
                                 if (confirm(text)) {
-                                    window.idObject['changeTemplate'] = 1;
-                                    // Даём команду на стирание старых данных
                                     onSubmit(window.idObject['closeWindow']);
                                 } else {
                                     // Ничего не делаем
@@ -567,8 +563,6 @@
                 $('#message').removeClass('hide alert-success alert-error')
                 // Снимаем подсветку с вкладок
                 $('.nav-tabs > li > a').removeClass('error');
-                // Сбрасываем флаг разрешения на изменение шаблона
-                window.idObject['changeTemplate'] = 0;
             }
 
             //

@@ -58,7 +58,7 @@ class View
      * Передача по ссылке используется для того, чтобы в коде была возможность изменять значения
      * элементов массива, хранящегося во View. Например:
      *
-     * $view->template['content'] = 'something new';
+     * $view->addonName[key]['content'] = 'something new';
      *
      * @param string $name Название переменной
      * @return mixed Переменная
