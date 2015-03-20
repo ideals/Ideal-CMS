@@ -136,7 +136,7 @@ class Controller
 
         $this->templateInit($tplName);
 
-        // Выдёргиваем заголовок из template['content']
+        // Выдёргиваем заголовок из addonName[key]['content']
         $this->view->header = $this->model->getHeader();
 
         // Перенос данных страницы в шаблон
@@ -149,9 +149,14 @@ class Controller
 
         if ($page > 1) {
             // На страницах листалки описание категории отображать не надо
-            $template = $this->view->template;
-            $template['content'] = '';
-            $this->view->template = $template;
+            $addons = json_decode($this->view->addon);
+            foreach ($addons as $addon) {
+                list(, $addonName) = explode('_', $addon[1]);
+                $addonName = strtolower($addonName);
+                foreach ($this->view->$addonName as $key => $value) {
+                    $this->view->$addonName[$key]['content'] = '';
+                }
+            }
             // Страницы листалки неиндексируются, но ссылки с них — индексируются
             $this->model->metaTags['robots'] = 'follow, noindex';
         }
