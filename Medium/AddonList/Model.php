@@ -21,14 +21,13 @@ class Model extends AbstractModel
      */
     public function getList()
     {
-        // Получаем список шаблонов, которые можно создавать в этой структуре
-        $templates = $this->obj->fields[$this->fieldName]['available'];
+        $addons = $this->obj->fields[$this->fieldName]['available'];
         $list = array();
-        foreach ($templates as $template) {
-            $class = Util::getClassName($template, 'Addon');
+        foreach ($addons as $addon) {
+            $class = Util::getClassName($addon, 'Addon');
             $folder = ltrim(ltrim(str_replace('\\', '/', $class), '/'), 'Ideal/');
             $arr = require($folder . '/config.php');
-            $list[$template] = $arr['params']['name'];
+            $list[$addon] = $arr['params']['name'];
         }
         return $list;
     }
