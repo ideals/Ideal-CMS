@@ -103,12 +103,27 @@ class ModelAbstract extends Site\Model
 
             $end = end($branch['branch']);
             if ($end['is_skip'] == 1) {
-                if (end($url) == $end['url']) {
+                $endUrl = end($url);
+                if ($endUrl == $end['url']) {
                     // Если в URL запрошен элемент с is_skip=1
                     $newPath = $branch['branch'];
                     unset($url[(count($url)-1)]);
                     break;
                 }
+
+                // Проверка случая, если за найденным элементом с is_skip есть ещё элементы с is_skip
+                $c = count($branch['branch']) - 2; // начинаем обход с предпоследнего элемента
+                $notCorrectBranch = false;
+                for ($i = $c; $i >= 0; $i--) {
+                    $element = $branch['branch'][$i];
+                    if (($element['url'] == $endUrl) && ($element['is_skip'] == 1)) {
+                        $notCorrectBranch = true;
+                    }
+                }
+                if ($notCorrectBranch) {
+                    continue;
+                }
+
                 // Если последний элемент в максимальной цепочке — пропущенный, проверяем не хранится
                 // ли в нём другая структура
                 $structureName = $this->getStructureName();
