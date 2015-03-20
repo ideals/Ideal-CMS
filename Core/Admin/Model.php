@@ -100,7 +100,7 @@ abstract class Model extends Core\Model
 
                 $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
 
-                /* @var $templateModel \Ideal\Core\Admin\Model */
+                /* @var $addonModelName \Ideal\Core\Admin\Model */
                 $addonModel = new $addonModelName($addonData['prev_structure']);
                 if ($isCreate) {
                     // Записываем данные шаблона в БД и в $result
