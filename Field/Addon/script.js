@@ -87,7 +87,6 @@ $('#add-addon-add').click(function(){
 
     // Переданные параметры нужно записать в глобальную переменную idObject
     //window.idObject['action'] = action;
-    //window.idObject['changeTemplate'] = 0;
 
     // Пытаемся получить заголовок и содержимое новой вкладки
     // В случае удачи — добавляем новую вкладку
