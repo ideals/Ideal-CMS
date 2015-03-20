@@ -4,3 +4,8 @@
     border-color: #b70005 !important;
     box-shadow: 0 0 5px 0 rgba(255, 0, 5, 0.75) !important;
 }
+
+.error-text {
+    color: #b70005;
+    font-size: 12px;
+}

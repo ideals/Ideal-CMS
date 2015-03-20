@@ -46,10 +46,8 @@ class Controller extends AbstractValidator
                     r = 0;
                 }
                 if (r < 7) {
-                    input.addClass('error-phone');
                     return "{$msg}";
                 } else {
-                    input.removeClass('error-phone');
                     return true;
                 }
             }

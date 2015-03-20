@@ -208,7 +208,8 @@ jQuery.fn.form = function (options, messages, methods) {
     }, options);
     messages = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
-        notValid: 'Поля, выделенные красным, заполнены неверно!'
+        notValid: 'Поля, выделенные красным, заполнены неверно!',
+        errors: []
     }, messages);
 
     //
@@ -222,6 +223,7 @@ jQuery.fn.form = function (options, messages, methods) {
         validate: function () {
             var $form = $(this);
 
+            $form.find('.error-text').remove();
             var values = $form.find('[name]');
             var check = $.parseJSON(values.filter('[name = "_validators"]').val());
 
@@ -234,8 +236,11 @@ jQuery.fn.form = function (options, messages, methods) {
                     var validate = eval(fn)(value, $form.attr('id'), input);
                     if (validate !== true) {
                         isValid = false;
-
-                        messages.notValid = validate;
+                        messages.errors[messages.errors.length + 1] = validate;
+                        input.addClass('error-' + check[field][k]);
+                        input.parent().append("<div class='error-text'>" + validate + "</div>");
+                    } else {
+                        input.removeClass('error-' + check[field][k]);
                     }
                 }
             }
@@ -328,7 +333,11 @@ jQuery.fn.form = function (options, messages, methods) {
                 this.disableSubmit = true;
                 $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
-                    alert(messages.notValid);
+                    if (messages.errors.length > 1) {
+                        alert(messages.notValid);
+                    } else {
+                        alert(messages.errors[0]);
+                    }
                     return false;
                 }
 

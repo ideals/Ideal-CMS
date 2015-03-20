@@ -39,10 +39,8 @@ class Controller extends AbstractValidator
                 var pattern = new RegExp(/^[\w-\.]+@[\w-]+\.[a-z]{2,4}$/i);
                 var r = pattern.test(e);
                 if (!r) {
-                    input.addClass('error-email');
                     return "{$msg}";
                 } else {
-                    input.removeClass('error-email');
                     return true;
                 }
             }
