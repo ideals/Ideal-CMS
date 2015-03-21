@@ -13,6 +13,18 @@ abstract class Model extends Core\Model
 
     abstract public function detectPageByUrl($path, $url);
 
+    /**
+     * Заглушка для метода, возвращающего список вложенных элементов выбранного элемента структуры
+     *
+     * Этот метод используется в построении на основе БД html-карты сайта
+     *
+     * @return array Список вложенных элементов
+     */
+    public function getStructureElements()
+    {
+        return array();
+    }
+
     public function getBreadCrumbs()
     {
         $path = $this->path;
