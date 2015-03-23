@@ -226,6 +226,7 @@ jQuery.fn.form = function (options, messages, methods) {
             $form.find('.error-text').remove();
             var values = $form.find('[name]');
             var check = $.parseJSON(values.filter('[name = "_validators"]').val());
+            messages.errors = [];
 
             var isValid = true;
             for (var field in check) {
@@ -236,7 +237,7 @@ jQuery.fn.form = function (options, messages, methods) {
                     var validate = eval(fn)(value, $form.attr('id'), input);
                     if (validate !== true) {
                         isValid = false;
-                        messages.errors[messages.errors.length + 1] = validate;
+                        messages.errors[messages.errors.length] = validate;
                         input.addClass('error-' + check[field][k]);
                         input.parent().append("<div class='error-text'>" + validate + "</div>");
                     } else {
@@ -334,6 +335,7 @@ jQuery.fn.form = function (options, messages, methods) {
                 $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
                     if (messages.errors.length > 1) {
+                        $(this).find('.error-text').show();
                         alert(messages.notValid);
                     } else {
                         alert(messages.errors[0]);

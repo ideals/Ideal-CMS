@@ -8,4 +8,5 @@
 .error-text {
     color: #b70005;
     font-size: 12px;
+    display: none;
 }
