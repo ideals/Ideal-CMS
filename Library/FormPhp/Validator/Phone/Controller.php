@@ -45,7 +45,7 @@ class Controller extends AbstractValidator
                 } else {
                     r = 0;
                 }
-                if (r < 7) {
+                if (r < 7 && e != '') {
                     messages.errors[messages.errors.length] = "{$msg}";
                     messages.validate = false;
                     return messages;

@@ -38,7 +38,7 @@ class Controller extends AbstractValidator
             function validateEmail(e, messages) {
                 var pattern = new RegExp(/^[\w-\.]+@[\w-]+\.[a-z]{2,4}$/i);
                 var r = pattern.test(e);
-                if (!r) {
+                if (!r && e != '') {
                     messages.errors[messages.errors.length] = "{$msg}";
                     messages.validate = false;
                     return messages;
