@@ -233,7 +233,12 @@ jQuery.fn.form = function (options, messages, methods) {
                 var input = values.filter('[name = "' + field + '"]');
                 for (var k in check[field]) {
                     var fn = 'validate' + ucfirst(check[field][k]);
-                    var value = (typeof input.val() == 'undefined') ? '' : input.val();
+                    var value = '';
+                    if (input.filter('select').size()) {
+                        value = input.find(':selected').val();
+                    } else {
+                        value = (typeof input.val() == 'undefined') ? '' : input.val();
+                    }
                     var validate = eval(fn)(value, $form.attr('id'), input);
                     if (validate !== true) {
                         isValid = false;
