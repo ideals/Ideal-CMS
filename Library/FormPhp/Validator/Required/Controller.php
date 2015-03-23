@@ -11,7 +11,7 @@ use FormPhp\Validator\AbstractValidator;
  */
 class Controller extends AbstractValidator
 {
-    protected $errorMsg = "Заполните все поля, отмеченные звездочкой!";
+    protected $errorMsg = "";
     /**
      * Проверка введённого пользователем значения
      *
@@ -31,11 +31,15 @@ class Controller extends AbstractValidator
     {
         $msg = $this->getErrorMsg();
         return <<<JS
-        function validateRequired(e, formId, input) {
+        function validateRequired(e, messages) {
             if ((e) == '') {
-                return "{$msg}";
+                messages.notValid = 'Заполните все поля, отмеченные звездочкой!';
+                messages.errors[messages.errors.length] = "{$msg}";
+                messages.validate = false;
+                return messages;
             } else {
-                return true;
+                messages.validate = true;
+                return messages;
             }
         }
 JS;

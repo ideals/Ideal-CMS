@@ -35,13 +35,16 @@ class Controller extends AbstractValidator
     {
         $msg = $this->getErrorMsg();
         return <<<JS
-            function validateEmail(e, formId, input) {
+            function validateEmail(e, messages) {
                 var pattern = new RegExp(/^[\w-\.]+@[\w-]+\.[a-z]{2,4}$/i);
                 var r = pattern.test(e);
                 if (!r) {
-                    return "{$msg}";
+                    messages.errors[messages.errors.length] = "{$msg}";
+                    messages.validate = false;
+                    return messages;
                 } else {
-                    return true;
+                    messages.validate = true;
+                    return messages;
                 }
             }
 JS;

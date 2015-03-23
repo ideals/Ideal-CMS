@@ -206,12 +206,13 @@ jQuery.fn.form = function (options, messages, methods) {
         ajaxUrl: '/',
         ajaxDataType: 'text'
     }, options);
-    messages = $.extend({
+    var messagesOrig = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
-        notValid: 'Поля, выделенные красным, заполнены неверно!',
-        errors: []
+        notValid: 'Поля заполнены неверно!',
+        errors: [],
+        validate: true
     }, messages);
-
+    messages = $.extend({}, messagesOrig);
     //
     function alert(message, status) {
         status = status || null;
@@ -226,7 +227,7 @@ jQuery.fn.form = function (options, messages, methods) {
             $form.find('.error-text').remove();
             var values = $form.find('[name]');
             var check = $.parseJSON(values.filter('[name = "_validators"]').val());
-            messages.errors = [];
+            messages = $.extend({}, messagesOrig);
 
             var isValid = true;
             for (var field in check) {
@@ -239,12 +240,13 @@ jQuery.fn.form = function (options, messages, methods) {
                     } else {
                         value = (typeof input.val() == 'undefined') ? '' : input.val();
                     }
-                    var validate = eval(fn)(value, $form.attr('id'), input);
-                    if (validate !== true) {
+                    messages = eval(fn)(value, messages);
+                    if (messages.validate == false) {
                         isValid = false;
-                        messages.errors[messages.errors.length] = validate;
                         input.addClass('error-' + check[field][k]);
-                        input.parent().append("<div class='error-text'>" + validate + "</div>");
+                        if (messages.errors[messages.errors.length - 1] != '') {
+                            input.parent().append("<div class='error-text'>" + messages.errors[messages.errors.length - 1] + "</div>");
+                        }
                     } else {
                         input.removeClass('error-' + check[field][k]);
                     }
