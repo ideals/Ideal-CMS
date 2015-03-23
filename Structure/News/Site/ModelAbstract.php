@@ -83,21 +83,34 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $db = Db::getInstance();
         $end = end($this->path);
 
-        if (isset($end['content'])) {
+        if (isset($end['content']) && !empty($end['content'])) {
             $text = $end['content'];
+        } elseif (empty($end['content']) && !empty($end['addon'])) {
+            $text = '';
+            $addons = json_decode($end['addon']);
+            foreach ($config->structures as $key => $value) {
+                if ($value['structure'] == $end['structure']) {
+                    $prevStructure = $value['ID'] . '-' . $end['ID'];
+                }
+            }
+            foreach ($addons as $addon) {
+                $addonGroupName = strtolower(end(explode('_', $addon[1])));
+                $table = $config->db['prefix'] . 'ideal_addon_' . $addonGroupName;
+                $_sql = "SELECT * FROM {$table} WHERE prev_structure=:ps AND tab_ID=:ti";
+                $result = $db->select($_sql, array('ps' => $prevStructure, 'ti' => $addon[0]));
+                $text .= $result[0]['content'];
+            }
         } else {
-            // TODO проработать ситуацию, когда текст в шаблоне (сейчас нет определения модуля)
-            $table = $config->db['prefix'] . 'Template_' . $end['template'];
-            $prevStructure = $end['prev_structure'] . '-' . $end['ID'];
-            $_sql = "SELECT * FROM {$table} WHERE prev_structure=:ps";
-            $text = $db->select($_sql, array('ps' => $prevStructure));
-            $text = $text[0]['content'];
+            $text = '';
         }
 
         $header = '';
-        if (preg_match('/<h1>(.*)<\/h1>/isU', $text, $header)) {
+        if (preg_match('/<h1.*>(.*)<\/h1>/isU', $text, $header)) {
             $text = preg_replace('/<h1>(.*)<\/h1>/isU', '', $text, 1);
             $this->header = $header[1];
+        }
+        if (count($header) > 1) {
+            $text = str_replace($header[0], '', $text);
         }
         return $text;
     }
