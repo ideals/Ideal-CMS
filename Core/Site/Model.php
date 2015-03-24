@@ -52,12 +52,12 @@ abstract class Model extends Core\Model
     public function getHeader()
     {
         $header = '';
+        // Если есть шаблон с контентом, пытаемся из него извлечь заголовок H1
         if (isset($this->pageData['content']) && !empty($this->pageData['content'])) {
             list($header, $text) = $this->extractHeader($this->pageData['content']);
             $this->pageData['content'] = $text;
         } elseif (!empty($this->pageData['addon'])) {
             $addons = json_decode($this->pageData['addon']);
-            // Если есть шаблон с контентом, пытаемся из него извлечь заголовок H1
             foreach ($addons as $addon) {
                 $addonGroupName = strtolower(end(explode('_', $addon[1])));
                 list($header, $text) = $this->extractHeader($this->pageData[$addonGroupName][$addon[0]]['content']);
