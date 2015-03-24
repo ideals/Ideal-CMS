@@ -126,6 +126,10 @@ class Controller
      */
     public function indexAction()
     {
+
+        // Выдёргиваем заголовок из addonName[key]['content']
+        $header = $this->model->getHeader();
+
         $tplName = '';
         $pageData = $this->model->getPageData();
 
@@ -136,8 +140,7 @@ class Controller
 
         $this->templateInit($tplName);
 
-        // Выдёргиваем заголовок из addonName[key]['content']
-        $this->view->header = $this->model->getHeader();
+        $this->view->header = $header;
 
         // Перенос данных страницы в шаблон
         foreach ($pageData as $k => $v) {
