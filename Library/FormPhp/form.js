@@ -332,6 +332,7 @@ jQuery.fn.form = function (options, messages, methods) {
     var make = function (form) {
         $(this)
             .submit(function () {
+                methods.initYaCounter.apply(this);
                 if (this.defaultSubmit === true) {
                     return true;
                 }
@@ -368,7 +369,6 @@ jQuery.fn.form = function (options, messages, methods) {
             });
         this.disableSubmit = false;
         this.defaultSubmit = false;
-        methods.initYaCounter.apply(this);
     };
     return this.each(make);
 };
