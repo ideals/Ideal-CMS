@@ -145,11 +145,11 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         // Формируем правильные ссылки
         // todo формирование правильных ссылок для разных структур
         /**
-        foreach ($result as $k => $v) {
-            $url = new \Ideal\Field\Url\Model();
-            $result[$k]['link'] = $url->getUrlWithPrefix($v, $prefix);
-        }
-        **/
+         * foreach ($result as $k => $v) {
+         * $url = new \Ideal\Field\Url\Model();
+         * $result[$k]['link'] = $url->getUrlWithPrefix($v, $prefix);
+         * }
+         **/
 
         return $result;
     }
@@ -240,5 +240,14 @@ class ModelAbstract extends \Ideal\Core\Site\Model
 
         $sql = " LIMIT {$start}, {$onPage}";
         return $sql;
+    }
+
+    public function getCurrent()
+    {
+        if (isset($this->pageData)) {
+            return $this->pageData;
+        } else {
+            return false;
+        }
     }
 }
