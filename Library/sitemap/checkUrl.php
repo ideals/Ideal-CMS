@@ -246,5 +246,4 @@ class ParseIt
         unset ($this->links[$k]);
     }
 }
-
 $A = new ParseIt();
