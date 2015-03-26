@@ -87,6 +87,7 @@ class ParseIt
         } else {
             $this->nameUrl = $this->url['host'];
         }
+
         // Для обхода ссылок лучше всегда обрезать "www."
         // Так проще обрабатывать полученные сслыки
         $this->url['host'] = $this->nameUrl;
@@ -246,5 +247,5 @@ class ParseIt
         unset ($this->links[$k]);
     }
 }
-
+// Инициализация создания карты сайта
 $A = new ParseIt();
