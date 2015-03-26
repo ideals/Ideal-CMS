@@ -49,7 +49,7 @@ class ParseIt
         CURLOPT_FOLLOWLOCATION => true, // следовать по любому заголовку Location
         CURLOPT_ENCODING => "", // декодировать запрос используя все возможные кодировки
         CURLOPT_AUTOREFERER => true, // автоматическая установка поля referer в запросах, перенаправленных Location
-        CURLOPT_CONNECTTIMEOUT => 2, // кол-во секунд ожидания при соединении (мб лучше CURLOPT_CONNECTTIMEOUT_MS)
+        CURLOPT_CONNECTTIMEOUT => 1, // кол-во секунд ожидания при соединении (мб лучше CURLOPT_CONNECTTIMEOUT_MS)
         CURLOPT_TIMEOUT => 1, // максимальное время выполнения функций cURL функций
         CURLOPT_MAXREDIRS => 2, // максимальное число редиректов
     );
@@ -87,6 +87,7 @@ class ParseIt
         } else {
             $this->nameUrl = $this->url['host'];
         }
+
         // Для обхода ссылок лучше всегда обрезать "www."
         // Так проще обрабатывать полученные сслыки
         $this->url['host'] = $this->nameUrl;
@@ -129,20 +130,16 @@ class ParseIt
         $filename = "C:\\www\\parse-it\\tmp\\".$this->nameUrl."_tmp.txt";
         //Если файл существует считываем его
         if (file_exists($filename)) {
-            $arr = file($filename, FILE_IGNORE_NEW_LINES);
-            //Разбиваем строку на ссылку и флаг (пройдена ли ссылка)
-            foreach ($arr as $v) {
-                $v = explode(" ", $v);
-                $this->links[$v[0]] = $v[1];
-            }
+            $arr = file_get_contents($filename);
+            $this->links = unserialize($arr);
+            //Разбиваем массив на пройденные и непройденные ссылки
             foreach ($this->links as $v => $k) {
                 if ($k == 1) {
                     $this->checked[$v] = $k;
                     unset($this->links[$v]);
                 }
             }
-            //$this->tmp = fopen($filename, "r+");
-            $this->tmp = fopen($filename, "a+");
+            $this->tmp = fopen($filename, "w");
         } else {
             // иначе создаем его
             $this->tmp = fopen($filename, "w+");
@@ -176,9 +173,9 @@ class ParseIt
                 //Передаем ссылку на парсинг
                 $this->getUrl($k);
             } else {
-                foreach ($this->links as $v => $k) {
-                    fwrite($this->tmp, $v." ".$k."\n");
-                }
+                $result = array_merge($this->links, $this->checked);
+                $result = serialize($result);
+                fwrite($this->tmp, $result);
                 fclose($this->tmp);
                 echo "timeout";
                 exit();
@@ -200,11 +197,9 @@ class ParseIt
         $info = curl_getinfo($ch); // получаем инофрмацию о запрошенной странице
 
         if ($info['http_code'] == "404") {
-            // ЧТО ДЕЛАТЬ ЕСЛИ 404?
             //Если страница имеет статус 404 добавляем её в массив пройденных с соответствующим статусом
             $this->checked[$k] = 1;
             unset ($this->links[$k]);
-            fwrite($this->tmp, $k." 1\n");
             return 0;
         }
 
@@ -250,9 +245,7 @@ class ParseIt
         $this->checked[$k] = 1;
         // И удаляем из массива непройденных
         unset ($this->links[$k]);
-        // Записываем текущую ссылку в файл как пройденную
-        fwrite($this->tmp, $k." 1\n");
     }
 }
-
+// Инициализация создания карты сайта
 $A = new ParseIt();
