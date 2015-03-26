@@ -1,50 +1,50 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Field\Pos;
 
-use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
+use Ideal\Field\AbstractController;
 
+/**
+ * Поле для сортировки элементов по порядку значений
+ *
+ * Пример объявления в конфигурационном файле структуры:
+ *     'pos' => array(
+ *         'label' => '№',
+ *         'sql'   => 'int not null',
+ *         'type'  => 'Ideal_Pos'
+ *     ),
+ */
 class Controller extends AbstractController
 {
+
+    /** @inheritdoc */
     protected static $instance;
 
-
-    public function showEdit()
+    /**
+     * {@inheritdoc}
+     */
+    public function getInputText()
     {
-        $this->htmlName = $this->groupName . '_' . $this->name;
         $value = $this->getValue();
 
-        if ($value == '') {
-            $input = '<input type="hidden" id="' . $this->htmlName
-                   . '" name="' . $this->htmlName
-                   . '" value="' . $value . '">';
-        } else {
-            $input = '<input type="text" class="input ' . $this->widthEditField
-                . '" name="' . $this->htmlName
-                . '" id="' . $this->htmlName
-                .'" value="' . $value .'">';
-            $label = $this->getLabelText();
+        $input = '<input type="text" class="form-control" name="' . $this->htmlName
+            . '" id="' . $this->htmlName
+            . '" value="' . $value . '">';
 
-            $input = <<<HTML
-        <div id="{$this->htmlName}-control-group" class="control-group">
-            <label class="control-label" for="{$this->htmlName}">{$label}</label>
-            <div class="controls {$this->htmlName}-controls">
-                {$input}
-                <div id="{$this->htmlName}-help"></div>
-            </div>
-        </div>
-HTML;
-        }
         return $input;
     }
 
-
-    public function getInputText()
-    {
-        // Заглушка для абстрактного метода
-    }
-
-
+    /**
+     * {@inheritdoc}
+     */
     public function pickupNewValue()
     {
         $request = new Request();
@@ -57,10 +57,11 @@ HTML;
         $oldPos = (isset($pageData['pos'])) ? $pageData['pos'] : 0;
 
         // Если был указан и не изменился, то оставляем как есть
-        // Если был указан и изменился, перенумеровываем список
+        // Если был указан и изменился, перенумеруем список
         if ($this->newValue == '') {
             // Если pos не был указан, надо поставить максимальный
-            $this->newValue = $model->getNewPos();
+            $posModel = new Model();
+            $this->newValue = $posModel->getNewPos($model);
         } elseif ($oldPos != $newPos) {
             $posModel = new Model();
             $this->sqlAdd = $posModel->movePos($oldPos, $newPos, $model->getPrevStructure());
@@ -70,4 +71,21 @@ HTML;
         return $this->newValue;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function showEdit()
+    {
+        $this->htmlName = $this->groupName . '_' . $this->name;
+        $value = $this->getValue();
+
+        if ($value == '') {
+            $html = '<input type="hidden" id="' . $this->htmlName
+                . '" name="' . $this->htmlName
+                . '" value="' . $value . '">';
+        } else {
+            $html = parent::showEdit();
+        }
+        return $html;
+    }
 }

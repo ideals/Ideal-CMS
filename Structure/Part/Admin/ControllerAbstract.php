@@ -1,12 +1,12 @@
 <?php
 namespace Ideal\Structure\Part\Admin;
 
-use Ideal\Core\Pagination;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
 
 class ControllerAbstract extends \Ideal\Core\Admin\Controller
 {
+
     /* @var $model Model */
     protected $model;
 
@@ -25,7 +25,6 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $this->view->pager = $this->model->getPager('page');
     }
 
-
     public function showCreateTemplateAction()
     {
         $request = new Request();
@@ -38,7 +37,6 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         echo $model->getFieldsList($model->fields);
         exit;
     }
-
 
     public function showEditTemplateAction()
     {
@@ -60,5 +58,4 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         echo $model->getFieldsList($model->fields);
         exit;
     }
-
 }

@@ -1,9 +1,9 @@
 <?php
 namespace Ideal\Structure\Part\Site;
 
+use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Site;
-use Ideal\Core\Config;
 use Ideal\Core\Util;
 use Ideal\Field;
 use Ideal\Field\Url;
@@ -12,62 +12,6 @@ use Ideal\Structure\User;
 class ModelAbstract extends Site\Model
 {
 
-    /**
-     * @param int $page Номер отображаемой страницы
-     * @return array Полученный список элементов
-     */
-    public function getList($page)
-    {
-        $list = parent::getList($page);
-
-        // Построение правильных URL
-        $url = new Field\Url\Model();
-        $url->setParentUrl($this->path);
-        if (is_array($list) and count($list) != 0 ) {
-            foreach ($list as $k => $v) {
-                $list[$k]['link'] = $url->getUrl($v);
-            }
-        }
-
-        return $list;
-    }
-
-
-    /**
-     * @param $where
-     * @return string
-     */
-    protected function getWhere($where)
-    {
-        // Считываем все элементы первого уровня
-        $lvl = 1;
-        $cid = '';
-
-        if (count($this->path) > 0) {
-            // Считываем все элементы последнего уровня из пути
-            $c = count($this->path);
-            $end = end($this->path);
-            if ($end['is_self_menu']) return false;
-            if (isset($this->path[$c - 2]) AND ($end['structure'] == $this->path[$c - 2]['structure'])) {
-                $lvl = $end['lvl'] + 1;
-                $cidModel = new Field\Cid\Model($this->params['levels'], $this->params['digits']);
-                $cid = $cidModel->getCidByLevel($end['cid'], $end['lvl'], false);
-                $cid = " AND cid LIKE '{$cid}%'";
-            }
-        }
-
-        if (is_array($end) && $end['is_self_menu'] == 0) {
-            $where .= "AND lvl={$lvl} {$cid} AND is_active=1 AND is_not_menu=0";
-        }
-
-        if ($where != '') {
-            $where = 'WHERE ' . $where;
-        }
-
-        return $where;
-    }
-
-
     public function detectPageByUrl($path, $url)
     {
         $db = Db::getInstance();
@@ -75,8 +19,10 @@ class ModelAbstract extends Site\Model
         // составляем запрос из списка URL
         $_sql = ' is_skip=1';
         foreach ($url as $v) {
-            if ($v == '') continue;
-            $_sql .= ' OR url="' . mysql_real_escape_string($v) . '"';
+            if ($v == '') {
+                continue;
+            }
+            $_sql .= ' OR url="' . $db->real_escape_string($v) . '"';
         }
 
         // Для авторизированных в админку пользователей отображать скрытые страницы
@@ -86,7 +32,7 @@ class ModelAbstract extends Site\Model
         $_sql = "SELECT * FROM {$this->_table} WHERE ({$_sql})
                     AND prev_structure='{$this->prevStructure}' {$checkActive} ORDER BY lvl, cid";
 
-        $list = $db->queryArray($_sql); // запрос на получение всех страниц, соответствующих частям url
+        $list = $db->select($_sql); // запрос на получение всех страниц, соответствующих частям url
 
         // Страницу не нашли устанавливаем флаг 404-ошибки
         if (!isset($list[0]['cid'])) {
@@ -101,14 +47,16 @@ class ModelAbstract extends Site\Model
 
         // Распределяем считанные cid'ы по веткам
         $branches = array();
-        foreach($list as $v) {
+        foreach ($list as $v) {
             if ($v['lvl'] == 1) {
                 $cid = $v['cid'];
                 $branches[$cid]['count'] = 1;
                 $branches[$cid]['branch'][] = $v;
             } else {
                 $cid = $cidModel->getCidByLevel($v['cid'], $v['lvl'] - 1);
-                if (!isset($branches[$cid]['count'])) continue;
+                if (!isset($branches[$cid]['count'])) {
+                    continue;
+                }
                 $newCid = $v['cid'];
                 $branches[$newCid] = $branches[$cid];
                 $branches[$newCid]['count']++;
@@ -117,16 +65,19 @@ class ModelAbstract extends Site\Model
         }
 
         // Сортируем ветки по количеству элементов (по убыванию), а при равном количестве — по is_skip
-        usort($branches, function($a, $b){
-            $res = $b['count'] - $a['count'];
-            if ($res == 0) {
-                // Количество элементов одинаковое, сортируем по is_skip (первыми без него)
-                $aEnd = end($a['branch']);
-                $bEnd = end($b['branch']);
-                $res = $aEnd['is_skip'] - $bEnd['is_skip'];
+        usort(
+            $branches,
+            function ($a, $b) {
+                $res = $b['count'] - $a['count'];
+                if ($res == 0) {
+                    // Количество элементов одинаковое, сортируем по is_skip (первыми без него)
+                    $aEnd = end($a['branch']);
+                    $bEnd = end($b['branch']);
+                    $res = $aEnd['is_skip'] - $bEnd['is_skip'];
+                }
+                return $res;
             }
-            return $res;
-        });
+        );
 
         // Проходим каждую ветку, начиная с наибольшей, пока не найдём полный путь
         // без разрывов или не кончатся ветки
@@ -134,20 +85,30 @@ class ModelAbstract extends Site\Model
         foreach ($branches as $branch) {
             $isOk = true;
             foreach ($branch['branch'] as $k => $v) {
-                if (($k+1) != $v['lvl']) {
+                if (($k + 1) != $v['lvl']) {
                     $isOk = false;
                     break;
                 }
             }
             // Если в анализируемой ветке найден разрыв — пропускаем её
-            if (!$isOk) continue;
+            if (!$isOk) {
+                continue;
+            }
 
             // Проверяем, собирается ли нужный url из найденного пути
             $count = $this->checkDetectedUrlCount($url, $branch['branch']);
-            if ($count == 0) continue;
+            if ($count == 0) {
+                continue;
+            }
 
             $end = end($branch['branch']);
             if ($end['is_skip'] == 1) {
+                if (end($url) == $end['url']) {
+                    // Если в URL запрошен элемент с is_skip=1
+                    $newPath = $branch['branch'];
+                    unset($url[(count($url)-1)]);
+                    break;
+                }
                 // Если последний элемент в максимальной цепочке — пропущенный, проверяем не хранится
                 // ли в нём другая структура
                 $structureName = $this->getStructureName();
@@ -159,8 +120,6 @@ class ModelAbstract extends Site\Model
                     $url = array_slice($url, count($newPath) - 2);
                     $model = $structure->detectPageByUrl($newPath, $url);
                     return $model;
-                } else {
-                    // todo обработку когда сегмент URL пропускается внутри структуры
                 }
                 continue;
             }
@@ -207,14 +166,17 @@ class ModelAbstract extends Site\Model
 
     /**
      * Определяет количество совпадающих сегментов найденного пути и запрошенного url
-     * @param array $url Массив сегментов url для определения пути
+     *
+     * @param array $url     Массив сегментов url для определения пути
      * @param array $newPath Массив найденных элементов пути из БД
      * @return int Количество совпадающих сегментов найденного пути и запрошенного url
      */
     protected function checkDetectedUrlCount($url, $newPath)
     {
         // В случае, если новый путь состоит из одного элемента, который пропускается
-        if (count($newPath) == 1 && $newPath[0]['is_skip'] == 1) return 1;
+        if (count($newPath) == 1 && $newPath[0]['is_skip'] == 1) {
+            return 1;
+        }
 
         // Подсчитываем кол-во элементов пути, без учёта пропущенных сегментов
         // и составляем строку найденной части URL
@@ -233,6 +195,9 @@ class ModelAbstract extends Site\Model
         $parsedUrlPart = implode('/', $parsedUrlPart);
         if ($parsedUrl != $parsedUrlPart) {
             $count = 0;
+        } elseif ($parsedUrl == '' && $parsedUrlPart == '') {
+            // Если весь путь состоит из пропущенных элементов (is_skip=1)
+            $count = 1;
         }
 
         return $count;
@@ -240,6 +205,7 @@ class ModelAbstract extends Site\Model
 
     /**
      * Определение вложенной структуры по $end['structure']
+     *
      * @param array $end Все параметры родительской структуры
      * @return Model Инициализированный объект модели вложенной структуры
      */
@@ -260,37 +226,27 @@ class ModelAbstract extends Site\Model
         return $structure;
     }
 
-    public function getStructureElements()
+    /**
+     * @param int $page Номер отображаемой страницы
+     * @return array Полученный список элементов
+     */
+    public function getList($page = null)
     {
-        $db = Db::getInstance();
-        $config = Config::getInstance();
-        $urlModel = new Url\Model();
-
-        $_sql = "SELECT * FROM {$this->_table} WHERE is_active=1 ORDER BY cid";
-        $list = $db->queryArray($_sql);
-
-        if (count($this->path) == 0 ) {
-            $url = array('0' => array('url' => $config->structures[0]['url']));
-        } else {
-            $url = $this->path;
+        if ($this->pageData['is_self_menu']) {
+            return array();
         }
 
-        $lvl = 0;
-        foreach ($list as $k => $v) {
-            if ($v['lvl'] > $lvl) {
-                if (($v['url'] != '/') AND ($k > 0)) {
-                    $url[] = $list[$k-1];
-                }
-                $urlModel->setParentUrl($url);
-            } elseif ($v['lvl'] < $lvl) {
-                // Если двойной или тройной выход добавляем соответствующий мультипликатор
-                $c = $lvl - $v['lvl'];
-                $url = array_slice($url, 0, -$c);
-                $urlModel->setParentUrl($url);
+        $list = parent::getList($page);
+
+        // Построение правильных URL
+        $url = new Field\Url\Model();
+        $url->setParentUrl($this->path);
+        if (is_array($list) and count($list) != 0) {
+            foreach ($list as $k => $v) {
+                $list[$k]['link'] = $url->getUrl($v);
             }
-            $lvl = $v['lvl'];
-            $list[$k]['link'] = $urlModel->getUrl($v);
         }
+
         return $list;
     }
 
@@ -322,7 +278,7 @@ class ModelAbstract extends Site\Model
             // Считываем все элементы с указанными cid'ами
             $db = Db::getInstance();
             $_sql = "SELECT * FROM {$this->_table} WHERE cid IN ({$strCids}) ORDER BY cid";
-            $path = $db->queryArray($_sql);
+            $path = $db->select($_sql);
         }
 
         $path = array_merge($path, array($category)); // добавляем наш элемент к родительским
@@ -330,4 +286,70 @@ class ModelAbstract extends Site\Model
         return $path;
     }
 
+    public function getStructureElements()
+    {
+        $db = Db::getInstance();
+        $config = Config::getInstance();
+        $urlModel = new Url\Model();
+
+        $_sql = "SELECT * FROM {$this->_table} WHERE is_active=1 ORDER BY cid";
+        $list = $db->select($_sql);
+
+        if (count($this->path) == 0) {
+            $url = array('0' => array('url' => $config->structures[0]['url']));
+        } else {
+            $url = $this->path;
+        }
+
+        $lvl = 0;
+        foreach ($list as $k => $v) {
+            if ($v['lvl'] > $lvl) {
+                if (($v['url'] != '/') && ($k > 0)) {
+                    $url[] = $list[$k - 1];
+                }
+                $urlModel->setParentUrl($url);
+            } elseif ($v['lvl'] < $lvl) {
+                // Если двойной или тройной выход добавляем соответствующий мультипликатор
+                $c = $lvl - $v['lvl'];
+                $url = array_slice($url, 0, -$c);
+                $urlModel->setParentUrl($url);
+            }
+            $lvl = $v['lvl'];
+            $list[$k]['link'] = $urlModel->getUrl($v);
+        }
+        return $list;
+    }
+
+    /**
+     * @param $where
+     * @return string
+     */
+    protected function getWhere($where)
+    {
+        // Считываем все элементы первого уровня
+        $lvl = 1;
+        $cid = '';
+
+        if (count($this->path) > 0) {
+            // Считываем все элементы последнего уровня из пути
+            $c = count($this->path);
+            $end = end($this->path);
+            if (isset($this->path[$c - 2]) && ($end['structure'] == $this->path[$c - 2]['structure'])) {
+                $lvl = $end['lvl'] + 1;
+                $cidModel = new Field\Cid\Model($this->params['levels'], $this->params['digits']);
+                $cid = $cidModel->getCidByLevel($end['cid'], $end['lvl'], false);
+                $cid = " AND cid LIKE '{$cid}%'";
+            }
+        }
+
+        if (is_array($end) && $end['is_self_menu'] == 0) {
+            $where .= "AND lvl={$lvl} {$cid} AND is_active=1 AND is_not_menu=0";
+        }
+
+        if ($where != '') {
+            $where = 'WHERE ' . $where;
+        }
+
+        return $where;
+    }
 }

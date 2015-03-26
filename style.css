@@ -24,6 +24,7 @@ table.table tr.not-menu td a {
 }
 tr.element td div.button-edit {
     display: none;
+    margin-left: -60px;
 }
 table.table-hover tbody tr:hover td {
     background-color: #D9EDF7;
@@ -36,4 +37,15 @@ table.table-hover tbody tr:hover td div.button-edit {
 }
 .nav-tabs li a.error {
     color: red!important;
+}
+/* -------------- */
+#tabs-content {padding-top: 15px;}
+
+div.checkbox {
+    margin-bottom: 20px;
+}
+
+.form-horizontal div.checkbox {
+    margin-left: 25%;
+    margin-bottom: 10px;
 }

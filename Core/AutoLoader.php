@@ -13,8 +13,9 @@ if (function_exists('date_default_timezone_set')) {
 
 /**
  * Обработчик обычных ошибок скриптов. Реакция зависит от настроек $config->errorLog
- * @param $errno Номер ошибки
- * @param $errstr Сообщение об ошибке
+ *
+ * @param $errno   Номер ошибки
+ * @param $errstr  Сообщение об ошибке
  * @param $errfile Имя файла, в котором была ошибка
  * @param $errline Номер строки на которой произошла ошибка
  */
@@ -31,10 +32,11 @@ set_error_handler('myErrorHandler');
  * Используется для обработки ошибок, которые не перехватывает set_error_handler()
  * Реакция зависит от настроек $config->errorLog
  */
-function shutDownFunction() {
+function shutDownFunction()
+{
     $error = error_get_last();
     $errors = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING);
-    if (in_array($error['type'],$errors)) {
+    if (in_array($error['type'], $errors)) {
         $_err = 'Ошибка ' . $error['message'] . ', в строке ' . $error['line'] . ' файла ' . $error['file'];
         \Ideal\Core\Util::addError($_err);
     }
@@ -54,6 +56,7 @@ if (get_magic_quotes_gpc()) {
  * Все классы Ideal CMS вызываются по следующей схеме:
  * ModuleName/Class_Name
  * где ModuleName — это название модуля (и соответствующее пространство имён)
+ *
  * @param $className Имя класса, которое не нашлось в пространстве имён
  * @return bool Флаг успешного подключения файла класса
  */
@@ -81,7 +84,7 @@ function autoLoad($className)
     $file = implode('', $end);
     $fileName = $folder . DIRECTORY_SEPARATOR . $file . '.php';
 
-    if(stream_resolve_include_path($fileName) !== false) {
+    if (stream_resolve_include_path($fileName) !== false) {
         require_once $fileName;
         return true;
     } else {

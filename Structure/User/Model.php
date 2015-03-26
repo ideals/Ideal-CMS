@@ -1,4 +1,12 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru/)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Structure\User;
 
 use Ideal\Core\Config;
@@ -6,24 +14,74 @@ use Ideal\Core\Db;
 
 /**
  * Класс для работы с пользователем
- *
  */
-
-session_start();
-
 class Model
 {
-    public $data = array();         // массив с данными пользователя
-    public $errorMessage = '';      // последнее сообщение об ошибке
-    protected $_seance = '';        // наименование сессии и cookies
-    protected $_session = array();  // считанная сессия этого сеанса
-    protected $_table = 'ideal_structure_user';
+
+    /** @var  mixed Хранит в себе копию соответствующего объекта поля (паттерн singleton) */
+    protected static $instance;
+
+    /** @var array Массив с данными пользователя */
+    public $data = array();
+
+    /** @var string Последнее сообщение об ошибке */
+    public $errorMessage = '';
+
+    /** @var string Наименование сессии и cookies */
+    protected $seance = '';
+
+    /** @var array Считанная сессия этого сеанса */
+    protected $session = array();
+
+    /** @var string Название таблицы, в которой хранятся данные пользователей */
+    protected $table = 'ideal_structure_user';
+
+    /** @var string Поле, используемое в качестве логина */
     protected $loginRow = 'email';
+
+    /** @var string Название поля логина (используется для выдачи уведомлений) */
     protected $loginRowName = 'e-mail';
 
-    static $instance;
+    /**
+     * Считывает данные о пользователе из сессии
+     */
+    public function __construct()
+    {
+        // Запуск сессий только в случае, если они не запущены
+        if (session_id() == '') {
+            // Для корректной работы этого класса нужны сессии
+            session_start();
+        }
 
+        $config = Config::getInstance();
 
+        // Устанавливаем имя связанной таблицы
+        $this->table = $config->db['prefix'] . $this->table;
+
+        // TODO сделать считывание переменной сеанса из конфига
+
+        // Инициализируем переменную сеанса
+        if ($this->seance == '') {
+            $this->seance = $config->domain;
+        }
+
+        // Загружаем данные о пользователе, если запущена сессия
+        if (isset($_SESSION[$this->seance])) {
+            $this->session = unserialize($_SESSION[$this->seance]);
+            $this->data = $this->session['user_data'];
+        } else {
+            $this->data = array();
+        }
+    }
+
+    /**
+     * Обеспечение паттерна singleton
+     *
+     * Особенность — во всех потомках нужно обязательно определять свойство
+     * protected static $instance
+     *
+     * @return mixed
+     */
     public static function getInstance()
     {
         if (empty(self::$instance)) {
@@ -32,87 +90,70 @@ class Model
         return self::$instance;
     }
 
+    /**
+     * При уничтожении объекта данные пользователя записываются в сессию
+     */
+    public function __destruct()
+    {
+        if (isset($this->session['user_data'])) {
+            $_SESSION[$this->seance] = serialize($this->session);
+        }
+    }
 
     /**
-     * Считывает данные о пользователе из сессии
+     * Проверка залогинен ли пользователь
      *
+     * @return bool Если залогинен — true, иначе — false
      */
-    public function __construct()
-    {
-        $config = Config::getInstance();
-
-        // Устанавливаем имя связанной таблицы
-        $this->_table = $config->db['prefix'] . $this->_table;
-
-        // TODO сделать считывание переменной сеанса из конфига
-
-        // Инициализируем переменную сеанса
-        if ($this->_seance == '') {
-            $this->_seance = $config->domain;
-        }
-
-        // Загружаем данные о пользователе, если запущена сессия
-        if (isset($_SESSION[$this->_seance])) {
-            $this->_session = unserialize($_SESSION[$this->_seance]);
-            $this->data = $this->_session['user_data'];
-        } else {
-            $this->data = array();
-        }
-    }
-
-
     public function checkLogin()
     {
-        // Если пользователь не залогинен - возвращаем FALSE
+        // Если пользователь не залогинен - возвращаем false
         return isset($this->data['ID']);
     }
-
 
     /**
      * Проверка введённого пароля
      *
      * В случае удачной авторизации заполняется поле $this->data
      *
-     * @param $login Имя пользователя
-     * @param $pass  Пароль в md5()
+     * @param string $login Имя пользователя
+     * @param string $pass  Пароль в md5()
      *
-     * @return bool true, если удалось залогиниться, false, если не удалось
+     * @return bool true — если удалось авторизоваться, false — если не удалось
      */
     public function login($login, $pass)
     {
-		$login = trim($login);
-		$pass = trim($pass);
-	
+        $login = trim($login);
+        $pass = trim($pass);
+
         // Если не указан логин или пароль - выходим с false
-        if (!$login OR !$pass) {
+        if (!$login || !$pass) {
             $this->errorMessage = "Необходимо указать и {$this->loginRowName}, и пароль.";
             return false;
         }
 
         // Получаем пользователя с указанным логином
         $db = Db::getInstance();
-        $par = array(
-            $this->loginRow => $login,
-            'is_active' => 1
-        );
-        $user = $db->select($this->_table, $par);
+        $_sql = "SELECT * FROM {$this->table} WHERE is_active = 1 AND {$this->loginRow} = :login";
+        $user = $db->select($_sql, array('login' => $login));
         if (count($user) == 0) {
             $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
             return false;
         }
         $user = $user[0];
 
-        // Если юзера с таким логином не нашлось, или пароль не совпал - выходим с false
-        if (($user[$this->loginRow] == '' )
-		     OR (crypt($pass, $user['password']) != $user['password'])) {
+        // Если пользователь с таким логином не нашлось, или пароль не совпал - выходим с false
+        if (($user[$this->loginRow] == '')
+            || (crypt($pass, $user['password']) != $user['password'])
+        ) {
             $this->logout();
             $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
             return false;
         }
 
         // Если пользователь находится в процессе активации аккаунта
-        if ($user['act_key'] != '' ) {
-             $this->errorMessage = 'Этот аккаунт не активирован.';
+        if ($user['act_key'] != '') {
+            $this->errorMessage = 'Этот аккаунт не активирован.';
             return false;
         }
 
@@ -120,32 +161,29 @@ class Model
         $this->data = $user;
 
         // Обновляем запись о последнем визите пользователя
-        $db->update($this->_table, $user['ID'], $user);
+        $db->update($this->table)->set($user);
+        $db->where('ID=:id', array('id' => $user['ID']))->exec();
 
         // Записываем данные о пользователе в сессию
-        $this->_session['user_data'] = $this->data;
+        $this->session['user_data'] = $this->data;
         return true;
     }
 
+    /**
+     * Выход пользователя с удалением данных из сессии
+     */
+    public function logout()
+    {
+        $this->data = $this->session = array();
+        unset($_SESSION[$this->seance]);
+    }
 
     /**
-     * Выход юзера
+     * Установка произвольного поля для логина пользователя
+     *
+     * @param string $loginRow Название поля (например, email)
+     * @param string $loginRowName Название поля для отображения уведомлений (например, e-mail)
      */
-    public function logout ()
-    {
-        $this->data = $this->_session = array();
-        unset($_SESSION[$this->_seance]);
-    }
-
-
-    public function __destruct()
-    {
-        if (isset($this->_session['user_data'])) {
-            $_SESSION[$this->_seance] = serialize($this->_session);
-        }
-    }
-
-
     public function setLoginField($loginRow, $loginRowName)
     {
         $this->loginRow = $loginRow;
