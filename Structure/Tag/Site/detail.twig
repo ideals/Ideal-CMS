@@ -1,0 +1,21 @@
+{% extends "site.twig" %}
+
+{% block content %}
+
+    <h1>{{ header|raw }}</h1>
+
+    {% if parts|length > 0 %}
+        {% for part in parts %}
+            <p>
+                <small>{{ part.date_create|date("d.m.Y") }}</small>
+                <br/>
+                <strong>
+                    <a href="{{ part.link }}">{{ part.name }}</a>
+                </strong>
+                {% if part.annot != '' %}<br/>{% endif %}
+                {{ part.annot }}
+            </p>
+        {% endfor %}
+    {% endif %}
+
+{% endblock %}

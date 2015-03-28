@@ -9,10 +9,10 @@ echo '<form method="POST" action="">';
 $db = Db::getInstance();
 $config = Config::getInstance();
 
-$result = $db->queryArray('SHOW TABLES');
+$result = $db->select('SHOW TABLES');
 
 $dbTables = array();
-foreach($result as $v) {
+foreach ($result as $v) {
     $table = array_shift($v);
     if (strpos($table, $config->db['prefix']) === 0) {
         $dbTables[] = $table;
@@ -21,7 +21,7 @@ foreach($result as $v) {
 
 $cfgTables = array();
 $cfgTablesFull = array();
-foreach($config->structures as $v) {
+foreach ($config->structures as $v) {
     if (!$v['hasTable']) {
         continue;
     }
@@ -32,27 +32,38 @@ foreach($config->structures as $v) {
     // Обработка папки с кастомными шаблонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
     $dir = stream_resolve_include_path($dir . $module . '/Template');
-    checkTemplateFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
+    checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
     // Обработка папки с шаблонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/' : $config->cmsFolder . '/' . 'Mods/';
     $dir = stream_resolve_include_path($dir . $module . '/Template');
-    checkTemplateFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
+    checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
+
+    // Обработка папки с кастомными связующими таблицами
+    $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
+    $dir = stream_resolve_include_path($dir . $module . '/Medium');
+    checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Medium');
+    // Обработка папки с связующими таблицами
+    $dir = ($module == 'Ideal') ? $config->cmsFolder . '/' : $config->cmsFolder . '/' . 'Mods/';
+    $dir = stream_resolve_include_path($dir . $module . '/Medium');
+    checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Medium');
 
     $module = ($module == 'Ideal') ? '' : $module . '/';
     $cfgTablesFull[$table] = $module . 'Structure/' . $structure;
 }
 
-function checkTemplateFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config)
+function checkTypeFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config, $type = 'Template')
 {
     if ($handle = opendir($dir)) {
         while (false !== ($file = readdir($handle))) {
-            if ($file != '.' && $file != '..') {
-                if (is_dir($dir . '/' . $file)) {
-                    $t = strtolower($config->db['prefix'] . $module . '_template_' . $file);
-                    if (array_search($t, $cfgTables) === false) {
-                        $cfgTables[] = $t;
-                        $cfgTablesFull[$t] = ($module == 'Ideal') ? 'Template/' . $file : $module . '/' . 'Template/' . $file;
-                    }
+            if (($file != '.') && ($file != '..') && (is_dir($dir . '/' . $file))) {
+                $c = require($dir . '/' . $file . '/config.php');
+                if (isset($c['params']['has_table']) && ($c['params']['has_table'] == false)) {
+                    continue;
+                }
+                $t = strtolower($config->db['prefix'] . $module . '_' . $type . '_' . $file);
+                if (array_search($t, $cfgTables) === false) {
+                    $cfgTables[] = $t;
+                    $cfgTablesFull[$t] = ($module == 'Ideal') ? $type . '/' . $file : $module . '/' . $type . '/' . $file;
                 }
             }
         }
@@ -61,7 +72,7 @@ function checkTemplateFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config
 
 // Если есть таблицы, которые надо создать
 if (isset($_POST['create'])) {
-    foreach($_POST['create'] as $table => $v) {
+    foreach ($_POST['create'] as $table => $v) {
         echo '<p>Создаём таблицу ' . $table . '…';
         $file = $cfgTablesFull[$table] . '/config.php';
         $data = include($file);
@@ -73,7 +84,7 @@ if (isset($_POST['create'])) {
 
 // Если есть таблицы, которые надо удалить
 if (isset($_POST['delete'])) {
-    foreach($_POST['delete'] as $table => $v) {
+    foreach ($_POST['delete'] as $table => $v) {
         echo '<p>Удаляем таблицу ' . $table . '…';
         $db->query("DROP TABLE `{$table}`");
         echo ' Готово.</p>';
@@ -84,7 +95,7 @@ if (isset($_POST['delete'])) {
 
 $isCool = true;
 
-foreach($cfgTables as $table) {
+foreach ($cfgTables as $table) {
     if (!in_array($table, $dbTables)) {
         echo '<p class="well"><input type="checkbox" name="create[' . $table . ']">&nbsp; ';
         echo 'Таблица <b>' . $table . '</b> отсутствует в базе данных. Создать?</p>';
@@ -92,7 +103,7 @@ foreach($cfgTables as $table) {
     }
 }
 
-foreach($dbTables as $table) {
+foreach ($dbTables as $table) {
     if (!in_array($table, $cfgTables)) {
         echo '<p class="well"><input type="checkbox" name="delete[' . $table . ']">&nbsp; ';
         echo 'Таблица <b>' . $table . '</b> отсутствует в конфигурации. Удалить?</p>';

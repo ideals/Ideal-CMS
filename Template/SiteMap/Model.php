@@ -1,8 +1,9 @@
 <?php
 /**
  * Ideal CMS (http://idealcms.ru/)
+ *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
- * @copyright Copyright (c) 2012-2013 Ideal CMS (http://idealcms.ru)
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
@@ -17,6 +18,10 @@ use Ideal\Core\Util;
  */
 class Model extends \Ideal\Core\Admin\Model
 {
+
+    /** @var array Массив правил для запрещения отображения ссылок в карте сайта */
+    protected $disallow = array();
+
     /**
      * Извлечение настроек карты сайта из своей таблицы,
      * построение карты сайта и преобразование её в html-формат
@@ -27,11 +32,14 @@ class Model extends \Ideal\Core\Admin\Model
     {
         $this->setPageDataByPrevStructure($this->prevStructure);
 
+        $this->pageData['disallow'] = str_replace("\r\n", "\n", $this->pageData['disallow']);
+        $this->disallow = explode("\n", $this->pageData['disallow']);
+
         $mode = explode('\\', get_class($this->parentModel));
         if ($mode[3] == 'Site') {
             // Для фронтенда к контенту добавляется карта сайта в виде ul-списка разделов
             $list = $this->getList(1); // считываем из БД все открытые разделы
-            $this->pageData['content'] .=  $this->createSiteMap($list); // строим html-код карты сайта
+            $this->pageData['content'] .= $this->createSiteMap($list); // строим html-код карты сайта
         }
 
         return $this->pageData;
@@ -43,11 +51,11 @@ class Model extends \Ideal\Core\Admin\Model
      * @param int $page Не используется
      * @return array
      */
-    public function getList($page)
+    public function getList($page = null)
     {
         $config = Config::getInstance();
 
-        // Определение стартовой структуры и начать считываение с неё
+        // Определение стартовой структуры и начать считывание с неё
         $structure = $config->structures[0];
         $className = Util::getClassName($structure['structure'], 'Structure') . '\\Site\\Model';
         /** @var $startStructure \Ideal\Structure\Part\Site\Model */
@@ -72,6 +80,9 @@ class Model extends \Ideal\Core\Admin\Model
         $config = Config::getInstance();
         $end = end($path);
         $newElements = array();
+        if (empty($elements)) {
+            return array();
+        }
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
         foreach ($elements as $element) {
             $newElements[] = $element;
@@ -106,10 +117,10 @@ class Model extends \Ideal\Core\Admin\Model
         return $newElements;
     }
 
-
     /**
      * Построение html-карты сайта на основе древовидного списка
-     * @param $list Древовидный список
+     *
+     * @param array $list Древовидный список
      * @return string html-код списка ссылок карты сайта
      */
     public function createSiteMap($list)
@@ -127,12 +138,30 @@ class Model extends \Ideal\Core\Admin\Model
                 $str .= str_repeat("</li>\n</ul>\n</li>\n", $c);
             }
 
-            $str .= '<li><a href="' . $v['link'] . '">'
-                  . $v['name'] . '</a>';
+            if ((!isset($v['link'])) || (isset($v['is_skip']) && $v['is_skip'] == 1)) {
+                $str .= '<li>' . $v['name'];
+            } else {
+                // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
+                // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
+                $tmp = $this->disallow;
+                if ($v['link'] !== array_reduce(
+                    $tmp,
+                    function (&$res, $rule) {
+                        if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
+                            return 1;
+                        }
+                        return $res;
+                    },
+                    $v['link']
+                )) {
+                    // Сработало одно из регулярных выражений, значит ссылку нужно исключить
+                    continue;
+                }
+                $str .= '<li><a href="' . $v['link'] . '">' . $v['name'] . '</a>';
+            }
             $lvl = $v['lvl'];
         }
         $str .= "</li>\n</ul>\n";
         return $str;
     }
-
 }

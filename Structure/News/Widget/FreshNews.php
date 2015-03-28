@@ -1,19 +1,19 @@
 <?php
 namespace Ideal\Structure\News\Widget;
 
-use Ideal\Core\Db;
 use Ideal\Core\Config;
+use Ideal\Core\Db;
 use Ideal\Core\Util;
 
 /**
  * Отображает последние новости
  */
-
 class FreshNews
 {
 
     /**
      * Получение последних новостей
+     *
      * @param int $num Кол-во новостей
      * @return array
      */
@@ -29,7 +29,7 @@ class FreshNews
                  WHERE is_active=1
                  ORDER BY date_create DESC
                  LIMIT ' . intval($num);
-        $news = $db->queryArray($_sql);
+        $news = $db->select($_sql);
         $freshNews = array();
         $num = 0;
         foreach ($news as $v) {
@@ -41,7 +41,6 @@ class FreshNews
             $num++;
         }
 
-        return $freshNews;        
+        return $freshNews;
     }
-
 }

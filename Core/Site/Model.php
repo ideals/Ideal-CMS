@@ -2,22 +2,63 @@
 namespace Ideal\Core\Site;
 
 use Ideal\Core;
-use Ideal\Core\Util;
 use Ideal\Field;
 
 abstract class Model extends Core\Model
 {
-    public $metaTags = array(
-        'robots' => 'index, follow');
 
-    public function getTitle()
+    public $metaTags = array(
+        'robots' => 'index, follow'
+    );
+
+    abstract public function detectPageByUrl($path, $url);
+
+    /**
+     * Заглушка для метода, возвращающего список вложенных элементов выбранного элемента структуры
+     *
+     * Этот метод используется в построении на основе БД html-карты сайта
+     *
+     * @return array Список вложенных элементов
+     */
+    public function getStructureElements()
     {
-        $end = $this->pageData;
-        if (isset($end['title']) AND $end['title'] != '') {
-            return $end['title'];
-        } else {
-            return $end['name'];
+        return array();
+    }
+
+    public function getBreadCrumbs()
+    {
+        $path = $this->path;
+        $path[0]['name'] = $path[0]['startName'];
+
+        if (isset($this->path[1]['url']) && ($this->path[1]['url'] == '/') && count($path) == 2) {
+            // На главной странице хлебные крошки отображать не надо
+            return '';
         }
+
+        // Отображение хлебных крошек
+        $pars = array();
+        $breadCrumbs = array();
+        $url = new Field\Url\Model();
+        foreach ($path as $v) {
+            if (isset($v['is_skip']) && $v['is_skip'] && isset($v['is_not_menu']) && $v['is_not_menu']) {
+                continue;
+            }
+            $url->setParentUrl($pars);
+            $link = $url->getUrl($v);
+            $pars[] = $v;
+            if ($link == '/') {
+                $breadCrumbs[] = array(
+                    'link' => $link,
+                    'name' => $v['startName']
+                );
+            } else {
+                $breadCrumbs[] = array(
+                    'link' => $link,
+                    'name' => $v['name']
+                );
+            }
+        }
+        return $breadCrumbs;
     }
 
     public function getHeader()
@@ -36,7 +77,6 @@ abstract class Model extends Core\Model
         return $header;
     }
 
-
     public function extractHeader($text)
     {
         $header = '';
@@ -53,63 +93,44 @@ abstract class Model extends Core\Model
         $xhtml = ($xhtml) ? '/' : '';
         $end = end($this->path);
 
-        if (isset($end['description']) AND $end['description'] != '') {
+        if (isset($end['description']) && $end['description'] != '' && $this->pageNum === 1) {
             $meta .= '<meta name="description" content="'
-                   . str_replace('"', '&quot;', $end['description'])
-                   . '" ' . $xhtml . '>';
+                . str_replace('"', '&quot;', $end['description'])
+                . '" ' . $xhtml . '>';
         }
 
-        if (isset($end['keywords']) AND $end['keywords'] != '') {
+        if (isset($end['keywords']) && $end['keywords'] != '' && $this->pageNum === 1) {
             $meta .= '<meta name="keywords" content="'
-                   . str_replace('"', '&quot;', $end['keywords'])
-                   . '" ' . $xhtml . '>';
+                . str_replace('"', '&quot;', $end['keywords'])
+                . '" ' . $xhtml . '>';
         }
 
-        foreach($this->metaTags as $tag => $value) {
+        foreach ($this->metaTags as $tag => $value) {
             $meta .= '<meta name="' . $tag . '" content="'
-                  . $value . '" ' . $xhtml . '>';
+                . $value . '" ' . $xhtml . '>';
         }
 
         return $meta;
     }
 
-
-    public function getBreadCrumbs()
+    /**
+     * Получение тайтла (<title>) для страницы
+     *
+     * Тайтл может быть либо задан через параметр title в $this->pageDate, а если title отсутствует или пуст,
+     * то тайтл генерируется из параметра name.
+     * Кроме того, в случае, если запрашивается не первая страница листалки (новости, статьи и т.п.), то
+     * этот метод добавляет суффикс листалки с указанием номера страницы
+     *
+     * @return string Тайтл для страницы
+     */
+    public function getTitle()
     {
-        $path = $this->path;
-        $path[0]['name'] = $path[0]['startName'];
-
-
-        if (isset($this->path[1]['url']) AND ($this->path[1]['url'] == '/') AND count($path) == 2) {
-            // На главной странице хлебные крошки отображать не надо
-            return '';
+        $end = $this->pageData;
+        $concat = ($this->pageNum > 1) ? str_replace('[N]', $this->pageNum, $this->pageNumTitle) : '';
+        if (isset($end['title']) && $end['title'] != '') {
+            return $end['title'] . $concat;
+        } else {
+            return $end['name'] . $concat;
         }
-
-        // Отображение хлебных крошек
-        $pars = array();
-        $breadCrumbs = array();
-        $url = new Field\Url\Model();
-        foreach ($path as $v) {
-            if (isset($v['is_skip']) && $v['is_skip']) continue;
-            $url->setParentUrl($pars);
-            $link = $url->getUrl($v);
-            $pars[] = $v;
-            if ($link == '/') {
-                $breadCrumbs[] = array(
-                    'link' => $link,
-                    'name' => $v['startName']
-                );
-
-            } else {
-                $breadCrumbs[] = array(
-                    'link' => $link,
-                    'name' => $v['name']
-                );
-            }
-        }
-        return $breadCrumbs;
     }
-
-
-    abstract function detectPageByUrl($path, $url);
 }

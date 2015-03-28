@@ -1,8 +1,9 @@
 <?php
 /**
  * Ideal CMS (http://idealcms.ru/)
+ *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
- * @copyright Copyright (c) 2012-2013 Ideal CMS (http://idealcms.ru)
+ * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
@@ -33,13 +34,16 @@ $table = $file->getTable();
 echo $file->getMsg();
 
 // Если уровень ошибки больше 1, то список редиректов не отображается
-if ($file->getError() > 1) return;
+if ($file->getError() > 1) {
+    return;
+}
 ?>
 <table id="redirect" class="table table-hover table-striped">
     <tr>
-        <th style="width: 249px">Откуда</th>
-        <th style="width: 249px">Куда</th>
-        <th style="text-align: right"></th>
+        <th class="">№</th>
+        <th class="col-xs-6">Откуда</th>
+        <th class="col-xs-6">Куда</th>
+        <th>&nbsp;&nbsp;</th>
     </tr>
     <?php
     echo $table;
@@ -48,26 +52,19 @@ if ($file->getError() > 1) return;
 
 <br/>
 
-<button type="button" class="btn btn-primary pull-left" value="<?php echo $file->getCountParam(); ?>" onclick="addLine(this)">
+<button type="button" class="btn btn-primary pull-left" value="<?php echo $file->getCountParam(); ?>"
+        onclick="addLine(this)">
     Добавить редирект
 </button>
 
-<div class="alert" style="margin-left: 190px;">
-    <strong>Не забывайте</strong> экранировать специмволы в первой колонке в соответствии с правилами регулярных выражений!
+<div class="alert alert-warning" style="margin-left: 190px;">
+    <strong>Не забывайте</strong> экранировать специмволы в первой колонке в соответствии с правилами регулярных
+    выражений!
 </div>
 
 <style>
-    tr:hover .editGroup {
-        display: inline;
-    }
-
-    tr {
-        height: 42px;
-    }
-
-    tr td:last-child {
-        text-align: right;
-        vertical-align: middle;
+    tr.element td .btn-group {
+        position: absolute;
     }
 
     .editLine td {
@@ -77,30 +74,29 @@ if ($file->getError() > 1) return;
 
 
 <script type="text/javascript">
-    function addLine(e)
-    {
+    function addLine(e) {
         $(e).attr("disabled", "disabled");
         var i = parseInt($(e).val()) + 1;
         var from = $('#line' + (i - 1) + ' > .from').children().val();
         var to = $('#line' + (i - 1) + ' > .to').children().val();
         if (from !== '' && to !== '') {
-            $('#redirect > tbody:last').append('<tr id="line' + i + '">'
-                + '<td class="from"><input type="text" name="from"></td>'
-                + '<td class="to"><input type="text" name="to"></td>'
-                + '<td><div class="hide editGroup"> '
-                + '<span class="input-prepend">'
-                + '<button type="button" style="width: 47px;" onclick="saveLine(' + i + ')" title="Сохранить" class="btn btn-success btn-mini">'
-                + '<i class="icon-ok icon-white"></i></button></span>'
-                + '<span class="input-append"><button onclick="delLine(' + i + ')" title="Удалить" class="btn btn-danger btn-mini">'
-                + '<i class="icon-remove icon-white"></i></button></span></div>'
-                + '</td></tr>')
+            $('#redirect > tbody:last').append('<tr id="line' + i + '" class="element">'
+            + '<td></td>' // заготовка для номера редиректа
+            + '<td class="from"><input type="text" name="from" class="form-control input-sm"></td>'
+            + '<td class="to"><input type="text" name="to" class="form-control input-sm"></td>'
+            + '<td><div class="button-edit btn-group btn-group-sm "> '
+            + '<button type="button" style="width: 47px;" onclick="saveLine(' + i + ')" title="Сохранить"'
+            + ' class="btn btn-success">'
+            + '<span class="glyphicon glyphicon-ok"></span></button>'
+            + '<button onclick="delLine(' + i + ')" title="Удалить" class="btn btn-danger">'
+            + '<span class="glyphicon glyphicon-remove"></i></button></div>'
+            + '</td></tr>')
             $(e).val(i + 1);
         }
         $(e).removeAttr('disabled');
     }
 
-    function delLine(e)
-    {
+    function delLine(e) {
         var line = $('#line' + e);
         var from = line.find('.from');
         var to = line.find('.to');
@@ -131,10 +127,10 @@ if ($file->getError() > 1) return;
         });
     }
 
-    function editLine(e)
-    {
+    function editLine(e) {
         var line = $('#line' + e);
         line.addClass('editLine');
+        line.find('.btn-group-xs').removeClass('btn-group-xs').addClass('btn-group-sm');
         // Заменяем кнопку «Редактировать» на кнопку «Сохранить»
         var editBtn = line.find('.btn-info').removeClass('btn-info').addClass('btn-success');
         editBtn.attr('onclick', 'saveLine(' + e + ')');
@@ -147,12 +143,11 @@ if ($file->getError() > 1) return;
         // Создаём поля ввода
         var from = line.find('.from');
         var to = line.find('.to');
-        from.html('<input type="text" name="from" value="' + from.html() + '">');
-        to.html('<input type="text" name="to" value="' + to.html() + '">');
+        from.html('<input type="text" name="from" value="' + from.html() + '"  class="form-control input-sm">');
+        to.html('<input type="text" name="to" value="' + to.html() + '"  class="form-control input-sm">');
     }
 
-    function cancelLine(e)
-    {
+    function cancelLine(e) {
         var line = $('#line' + e);
         var from = line.find('.from');
         var to = line.find('.to');
@@ -163,12 +158,15 @@ if ($file->getError() > 1) return;
         from.html(oldFrom);
         to.html(oldTo);
 
-        var editBtn = line.find('.btn-success').removeClass('btn-success').addClass('btn-info');
+        line.find('.btn-group-sm').removeClass('btn-group-sm').addClass('btn-group-xs');
+
+        var editBtn = line.find('.btn-success').removeClass('btn-success').addClass('btn-info')
+            .removeClass('btn-sm').addClass('btn-xs');
         editBtn.attr('onclick', 'editLine(' + e + ')');
         editBtn.attr('title', 'Изменить');
         editBtn.children().removeClass('icon-ok').addClass('icon-pencil');
 
-        var cancelBtn = line.find('.btn-danger');
+        var cancelBtn = line.find('.btn-danger').removeClass('btn-sm').addClass('btn-xs');
         cancelBtn.attr('onclick', 'delLine(' + e + ')');
         cancelBtn.attr('title', 'Удалить');
         cancelBtn.val(oldFrom);
@@ -177,8 +175,7 @@ if ($file->getError() > 1) return;
 
     }
 
-    function saveLine(e)
-    {
+    function saveLine(e) {
         var type = 'add';
         var line = $('#line' + e);
         var from = line.find('.from');
@@ -206,6 +203,7 @@ if ($file->getError() > 1) return;
         }
         if (fromVal == from.attr('data-from') && toVal == to.attr('data-to')) {
             line.removeClass('editLine');
+            line.find('.btn-group-sm').removeClass('btn-group-sm').addClass('btn-group-xs');
             from.html(fromVal);
             to.html(toVal);
 
@@ -232,6 +230,7 @@ if ($file->getError() > 1) return;
                     return false;
                 } else {
                     line.removeClass('editLine');
+                    line.find('.btn-group-sm').removeClass('btn-group-sm').addClass('btn-group-xs');
                     from.html(fromVal);
                     from.attr('data-from', fromVal);
                     to.html(toVal);
@@ -241,7 +240,6 @@ if ($file->getError() > 1) return;
                     butedit.attr('onclick', 'editLine(' + e + ')');
                     butedit.attr('title', 'Изменить');
                     butedit.children().removeClass('icon-ok').addClass('icon-pencil');
-                    line.removeClass();
                 }
             }
         });

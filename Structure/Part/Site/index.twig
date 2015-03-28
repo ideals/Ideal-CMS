@@ -6,12 +6,12 @@
 
     {{ template.content|raw }}
 
-    {%if parts|length > 0 %}
-    <ul>
-    {% for part in parts %}
-        <li><a href="{{ part.link }}">{{ part.name }}</a></li>
-    {% endfor %}
-    </ul>
+    {% if parts|length > 0 %}
+        <ul>
+            {% for part in parts %}
+                <li><a href="{{ part.link }}">{{ part.name }}</a></li>
+            {% endfor %}
+        </ul>
     {% endif %}
 
 {% endblock %}
