@@ -451,7 +451,8 @@
                             // Если всё прошло успешно переименовываем заголовок
                             if (window.idObject['action'] == 'showCreate') {
                                 window.idObject['action'] = 'showEdit';
-                                $('#modal-header').html('Редактирование');
+                                window.idObject['id'] = data.items.general_ID.value;
+                                $('#myModalLabel').html('Редактирование');
                             }
                         } else {
                             if (data['isCorrect'] == '2') {
