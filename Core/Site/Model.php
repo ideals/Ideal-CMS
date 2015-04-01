@@ -59,7 +59,8 @@ abstract class Model extends Core\Model
         } elseif (!empty($this->pageData['addon'])) {
             $addons = json_decode($this->pageData['addon']);
             foreach ($addons as $addon) {
-                $addonGroupName = strtolower(end(explode('_', $addon[1])));
+                $addonGroupName = end(explode('_', $addon[1]));
+                $addonGroupName = strtolower($addonGroupName);
                 list($header, $text) = $this->extractHeader($this->pageData[$addonGroupName][$addon[0]]['content']);
                 $this->pageData[$addonGroupName][$addon[0]]['content'] = $text;
             }
