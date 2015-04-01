@@ -59,8 +59,13 @@ abstract class Model extends Core\Model
         } elseif (!empty($this->pageData['addon'])) {
             $addons = json_decode($this->pageData['addon']);
             foreach ($addons as $addon) {
-                $addonGroupName = strtolower(end(explode('_', $addon[1])));
-                list($header, $text) = $this->extractHeader($this->pageData[$addonGroupName][$addon[0]]['content']);
+                $addonGroupName = explode('_', $addon[1]);
+                $addonGroupName = strtolower(end($addonGroupName));
+                $text = '';
+                if (isset($this->pageData[$addonGroupName][$addon[0]]['content'])
+                    && $this->pageData[$addonGroupName][$addon[0]]['content'] !== '') {
+                    list($header, $text) = $this->extractHeader($this->pageData[$addonGroupName][$addon[0]]['content']);
+                }
                 $this->pageData[$addonGroupName][$addon[0]]['content'] = $text;
             }
         }
