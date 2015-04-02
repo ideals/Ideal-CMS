@@ -4,18 +4,8 @@
 
     <h1>{{ header|raw }}</h1>
 
-    {# Сначала выводим все аддоны типа "Текст" #}
-    {% for value in page %}
-        {{ value.content|raw }}
-    {% endfor %}
-
-    {# Затем выводим все аддоны типа "PHP-файл" #}
-    {% for value in phpfile %}
-        {{ value.content|raw }}
-    {% endfor %}
-
-    {# Затем выводим все аддоны типа "Карта сайта" #}
-    {% for value in sitemap %}
+    {# Выводим по порядку все аддоны #}
+    {% for value in addons %}
         {{ value.content|raw }}
     {% endfor %}
 
@@ -26,5 +16,4 @@
             {% endfor %}
         </ul>
     {% endif %}
-
 {% endblock %}
