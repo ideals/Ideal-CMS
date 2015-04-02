@@ -141,9 +141,12 @@ class Model extends \Ideal\Addon\AbstractModel
                 // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
                 // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
                 $tmp = $this->disallow;
+
                 $link = array_reduce($tmp, function (&$res, $rule) {
-                    if ($res == 1 || preg_match($rule, $res)) {
-                        return 1;
+                    if (!empty($rule)) {
+                        if ($res == 1 || preg_match($rule, $res)) {
+                            return 1;
+                        }
                     }
                     return $res;
                 }, $v['link']);
