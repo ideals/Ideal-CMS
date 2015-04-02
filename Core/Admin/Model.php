@@ -83,7 +83,8 @@ abstract class Model extends Core\Model
             $addonsInfo = json_decode($groups[$groupName][$fieldName]);
 
             foreach ($addonsInfo as $addonInfo) {
-                $addonGroupName = strtolower(end(explode('_', $addonInfo[1]))) . '-' . $addonInfo[0];
+                $tempAddonInfo = explode('_', $addonInfo[1]);
+                $addonGroupName = strtolower(end($tempAddonInfo)) . '-' . $addonInfo[0];
                 $addonData = $groups[$addonGroupName];
                 $end = end($this->path);
                 $prevStructure = $config->getStructureByName($end['structure']);
