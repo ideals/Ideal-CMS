@@ -24,6 +24,9 @@ class myCrawler
      */
     public function __construct()
     {
+        // Устанавливаем кодировку
+        header('Content-Type: text/html; charset=utf-8');
+
         // Запоминаем путь до скрипта от корня сайта
         $home = dirname($_SERVER['SCRIPT_FILENAME']);
 
