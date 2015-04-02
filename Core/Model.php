@@ -319,9 +319,7 @@ abstract class Model
                 $addon->setFieldsGroup(strtolower($fildsGroup) . '-' . $addonInfo[0]);
                 $addon->pageData = $addon->getPageData();
                 if (!empty($addon->pageData)) {
-                    foreach ($addon->pageData as $key => $value) {
-                        $this->pageData[strtolower($fildsGroup)][$addonInfo[0]][$key] = $value;
-                    }
+                    $this->pageData['addons'][] = $addon->pageData;
                 }
             }
         }
