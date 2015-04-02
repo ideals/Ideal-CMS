@@ -47,13 +47,16 @@ class Model extends AbstractModel
             foreach ($folderPartNames as $folderPartName) {
                 $twigTplRootScanFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . $folderPartName . '/' . $moduleName . 'Structure/' . $structureName . '/Site/';
 
-                $nameTpl = '/.*\.twig$/';
-                $templates = scandir($twigTplRootScanFolder);
+                // Проверяем на существование директорию перед сканированием.
+                if (is_dir($twigTplRootScanFolder)) {
+                    $nameTpl = '/.*\.twig$/';
+                    $templates = scandir($twigTplRootScanFolder);
 
-                // Получаем список доступных для выбора шаблонов
-                foreach ($templates as $node) {
-                    if (preg_match($nameTpl, $node)) {
-                        $list[$value][$node] = $node;
+                    // Получаем список доступных для выбора шаблонов
+                    foreach ($templates as $node) {
+                        if (preg_match($nameTpl, $node)) {
+                            $list[$value][$node] = $node;
+                        }
                     }
                 }
             }
