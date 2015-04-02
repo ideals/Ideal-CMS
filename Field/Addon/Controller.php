@@ -138,7 +138,8 @@ HTML;
             list($tabID, $addonType) = $addonData;
             $addonName = Util::getClassName($addonType, 'Addon') . '\\Model';
             $addon = new $addonName('не имеет значения, т.к. только парсим ввод пользователя');
-            $groupName = strtolower(end(explode('_', $addonType))) . '-' . $tabID;
+            $explodeAddonType = explode('_', $addonType);
+            $groupName = strtolower(end($explodeAddonType)) . '-' . $tabID;
             $addon->setFieldsGroup($groupName);
             $item['items'][$tabID] = $addon->parseInputParams($isCreate);
         }
