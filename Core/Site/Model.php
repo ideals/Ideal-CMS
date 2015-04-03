@@ -57,16 +57,18 @@ abstract class Model extends Core\Model
             list($header, $text) = $this->extractHeader($this->pageData['content']);
             $this->pageData['content'] = $text;
         } elseif (!empty($this->pageData['addon'])) {
+            // Последовательно пытаемся получить заголовок из всех аддонов до первого найденного
             $addons = json_decode($this->pageData['addon']);
-            foreach ($addons as $addon) {
-                $addonGroupName = explode('_', $addon[1]);
-                $addonGroupName = strtolower(end($addonGroupName));
-                $text = '';
-                if (isset($this->pageData[$addonGroupName][$addon[0]]['content'])
-                    && $this->pageData[$addonGroupName][$addon[0]]['content'] !== '') {
-                    list($header, $text) = $this->extractHeader($this->pageData[$addonGroupName][$addon[0]]['content']);
+            for ($i = 0; $i < count($addons); $i++) {
+                if (isset($this->pageData['addons'][$i]['content'])
+                    && $this->pageData['addons'][$i]['content'] !== ''
+                ) {
+                    list($header, $text) = $this->extractHeader($this->pageData['addons'][$i]['content']);
+                    if (!empty($header)) {
+                        $this->pageData['addons'][$i]['content'] = $text;
+                        break;
+                    }
                 }
-                $this->pageData[$addonGroupName][$addon[0]]['content'] = $text;
             }
         }
 
