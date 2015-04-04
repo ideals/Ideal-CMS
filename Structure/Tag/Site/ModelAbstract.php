@@ -39,7 +39,9 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
 
         $_sql = "SELECT * FROM {$this->_table} WHERE url=:url {$checkActive}";
-        $par = array('url' => $url[0], 'time' => time());
+        $par = array();
+        $par['url'] = !empty($url) ? $url[0] : null;
+        $par['time'] = time();
 
         $tags = $db->select($_sql, $par); // запрос на получение всех страниц, соответствующих частям url
 
