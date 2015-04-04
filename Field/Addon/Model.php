@@ -117,7 +117,8 @@ class Model
         $model = new $class('');
 
         // Получаем тип аддона для формирования правильного groupName
-        $groupName = strtolower(end(explode('_', $addonVar)));
+        $groupName = explode('_', $addonVar);
+        $groupName = strtolower(end($groupName));
         $model->setFieldsGroup($groupName . '-' . $id);
         // Загрузка данных связанного объекта
         $pageData = $this->model->getPageData();
