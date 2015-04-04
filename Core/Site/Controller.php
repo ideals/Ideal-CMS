@@ -151,12 +151,9 @@ class Controller
 
         if ($page > 1) {
             // На страницах листалки описание категории отображать не надо
-            $addons = json_decode($this->view->addon);
-            foreach ($addons as $addon) {
-                list(, $addonName) = explode('_', $addon[1]);
-                $addonName = strtolower($addonName);
-                foreach ($this->view->$addonName as $key => $value) {
-                    $this->view->$addonName[$key]['content'] = '';
+            if (isset($pageData['addons'])) {
+                for ($i = 0; $i < count($pageData['addons']); $i++) {
+                    $this->view->addons[$i]['content'] = '';
                 }
             }
             // Страницы листалки неиндексируются, но ссылки с них — индексируются
