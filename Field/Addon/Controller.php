@@ -111,13 +111,13 @@ HTML;
 
         foreach ($arr as $k => $v) {
             $addonVar = $v[1];
-            $addonName = $v[2];
+            $addonName = isset($v[2]) ? $v[2] : '';
 
             $class = Util::getClassName($addonVar, 'Addon') . '\\Model';
 
             /** @var \Ideal\Core\Admin\Model $model */
             $model = new $class('');
-            $arr[$k][2] = ($addonName == '') ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
+            $arr[$k][2] = $addonName == '' ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
         }
 
         $value = json_encode($arr);
