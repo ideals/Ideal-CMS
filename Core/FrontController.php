@@ -46,6 +46,11 @@ class FrontController
             $httpHeaders = $controller->getHttpHeaders();
         }
 
+        // Если запрошена страница из пользовательской части, то сохранить её в кэш
+        if ($mode != 'admin') {
+            FileCache::saveCache($content, $_SERVER['REQUEST_URI']);
+        }
+
         $this->sendHttpHeaders($httpHeaders); // вывод http-заголовков
 
         echo $content; // отображение страницы
