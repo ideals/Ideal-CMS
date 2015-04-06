@@ -8,6 +8,7 @@ namespace FormPhp\Validator;
  */
 abstract class AbstractValidator
 {
+    protected $errorMsg = "Поля, выделенные красным, заполнены неверно!";
     /**
      * Проверка введённого пользователем значения
      *
@@ -31,4 +32,13 @@ abstract class AbstractValidator
      * @return string
      */
     abstract public function getCheckJs();
+
+    /**
+     * Получение текста сообщения об ошибке
+     * @return string
+     */
+    public function getErrorMsg()
+    {
+        return $this->errorMsg;
+    }
 }
