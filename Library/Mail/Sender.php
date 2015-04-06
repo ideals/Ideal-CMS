@@ -164,7 +164,7 @@ class Sender
      */
     protected function render()
     {
-        if (!empty($this->attach)) {
+        if (empty($this->attach)) {
             // Если аттач отсутствует, генерируем только текст
             $body = $this->getTextPart();
             // Вырезаем из текста заголовок

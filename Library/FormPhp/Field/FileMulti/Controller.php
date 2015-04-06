@@ -79,14 +79,17 @@ HTML;
                 .children('[type=button]')
                 .addClass('multi-file-add-button')
                 .attr('data-block', "file-input-block-{$this->options['id']}");
-                $('.file-input-block').children('.base-input').children('input').attr('name', 'base-file')
+                $('.file-input-block').children('.base-input').find('input').attr('name', 'base-file')
             $(".multi-file-add-button").click(function() {
                 var fileBlock = '#' + $(this).data('block');
+                if ($(fileBlock).find('[type="file"]').size() > 10) {
+                    return;
+                }
                 var name = 'file' + Math.floor(Math.random() * 99999);
-                $(fileBlock).children('.base-input').children('input').attr('name', name)
+                $(fileBlock).children('.base-input').find('input').attr('name', name)
                 var baseInput = $(fileBlock).children('.base-input').html();
                 $(fileBlock).children('.inputs-block').append(baseInput);
-                $(fileBlock).children('.base-input').children('input').attr('name', 'base-file')
+                $(fileBlock).children('.base-input').find('input').attr('name', 'base-file')
             });
 JS;
 
