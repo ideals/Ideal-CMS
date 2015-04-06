@@ -11,7 +11,7 @@ use FormPhp\Validator\AbstractValidator;
  */
 class Controller extends AbstractValidator
 {
-
+    protected $errorMsg = "";
     /**
      * Проверка введённого пользователем значения
      *
@@ -29,15 +29,17 @@ class Controller extends AbstractValidator
      */
     public function getCheckJs()
     {
-
+        $msg = $this->getErrorMsg();
         return <<<JS
-        function validateRequired(e, formId, input) {
+        function validateRequired(e, messages) {
             if ((e) == '') {
-                input.addClass('error-required');
-                return false;
+                messages.notValid = 'Заполните все поля, отмеченные звездочкой!';
+                messages.errors[messages.errors.length] = "{$msg}";
+                messages.validate = false;
+                return messages;
             } else {
-                input.removeClass('error-required');
-                return true;
+                messages.validate = true;
+                return messages;
             }
         }
 JS;

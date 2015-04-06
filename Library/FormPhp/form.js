@@ -206,27 +206,49 @@ jQuery.fn.form = function (options, messages, methods) {
         ajaxUrl: '/',
         ajaxDataType: 'text'
     }, options);
-    messages = $.extend({
+    var messagesOrig = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
-        notValid: 'Поля, выделенные красным, заполнены неверно!'
+        notValid: 'Поля заполнены неверно!',
+        errors: [],
+        validate: true
     }, messages);
+    messages = $.extend({}, messagesOrig);
+    //
+    function alert(message, status) {
+        status = status || null;
+        methods.alert(message, status)
+    }
 
     methods = $.extend({
         // Валидация формы
         validate: function () {
             var $form = $(this);
 
+            $form.find('.error-text').remove();
             var values = $form.find('[name]');
             var check = $.parseJSON(values.filter('[name = "_validators"]').val());
+            messages = $.extend({}, messagesOrig);
 
             var isValid = true;
             for (var field in check) {
                 var input = values.filter('[name = "' + field + '"]');
                 for (var k in check[field]) {
                     var fn = 'validate' + ucfirst(check[field][k]);
-                    var value = (typeof input.val() == 'undefined') ? '' : input.val();
-                    if (eval(fn)(value, $form.attr('id'), input) == false) {
+                    var value = '';
+                    if (input.filter('select').size()) {
+                        value = input.find(':selected').val();
+                    } else {
+                        value = (typeof input.val() == 'undefined') ? '' : input.val();
+                    }
+                    messages = eval(fn)(value, messages);
+                    if (messages.validate == false) {
                         isValid = false;
+                        input.addClass('error-' + check[field][k]);
+                        if (messages.errors[messages.errors.length - 1] != '') {
+                            input.parent().append("<div class='error-text'>" + messages.errors[messages.errors.length - 1] + "</div>");
+                        }
+                    } else {
+                        input.removeClass('error-' + check[field][k]);
                     }
                 }
             }
@@ -287,7 +309,7 @@ jQuery.fn.form = function (options, messages, methods) {
             if (options.ajaxDataType == 'text') {
                 alert(result);
             } else if (options.ajaxDataType == 'json' || options.ajaxDataType == 'jsonp') {
-                alert(result[0]);
+                alert(result[0], result[1]);
             }
             if (options.ajaxDataType == 'text' || result[1] != 'error') {
                 $(this)[0].reset();
@@ -305,16 +327,12 @@ jQuery.fn.form = function (options, messages, methods) {
         alert: function ($message, $status) {
             window.alert($message);
         }
-    });
-    //
-    function alert(message, status) {
-        status = status || null;
-        methods.alert(message, status)
-    }
+    }, methods);
 
     var make = function (form) {
         $(this)
             .submit(function () {
+                methods.initYaCounter.apply(this);
                 if (this.defaultSubmit === true) {
                     return true;
                 }
@@ -324,7 +342,12 @@ jQuery.fn.form = function (options, messages, methods) {
                 this.disableSubmit = true;
                 $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
-                    alert(messages.notValid);
+                    if (messages.errors.length > 1) {
+                        $(this).find('.error-text').show();
+                        alert(messages.notValid);
+                    } else {
+                        alert(messages.errors[0]);
+                    }
                     return false;
                 }
 
@@ -346,7 +369,6 @@ jQuery.fn.form = function (options, messages, methods) {
             });
         this.disableSubmit = false;
         this.defaultSubmit = false;
-        methods.initYaCounter.apply(this);
     };
     return this.each(make);
 };

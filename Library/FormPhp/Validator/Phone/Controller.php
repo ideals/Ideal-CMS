@@ -11,7 +11,7 @@ use FormPhp\Validator\AbstractValidator;
  */
 class Controller extends AbstractValidator
 {
-
+    protected $errorMsg = "Неверно заполнен номер телефона!";
     /**
      * Проверка введённого пользователем значения
      *
@@ -36,20 +36,22 @@ class Controller extends AbstractValidator
      */
     public function getCheckJs()
     {
+        $msg = $this->getErrorMsg();
         return <<<JS
-            function validatePhone(e, formId, input) {
+            function validatePhone(e, messages) {
                 var r = e.match(/[0-9]/g);
                 if (r != null) {
                     r = r.length;
                 } else {
                     r = 0;
                 }
-                if (r < 7) {
-                    input.addClass('error-phone');
-                    return false;
+                if (r < 7 && e != '') {
+                    messages.errors[messages.errors.length] = "{$msg}";
+                    messages.validate = false;
+                    return messages;
                 } else {
-                    input.removeClass('error-phone');
-                    return true;
+                    messages.validate = true;
+                    return messages;
                 }
             }
 JS;
