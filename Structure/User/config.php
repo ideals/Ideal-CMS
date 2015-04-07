@@ -66,5 +66,10 @@ return array(
             'sql' => "bool not null default '0'",
             'type' => 'Ideal_Checkbox'
         ),
+        'counter_failures' => array(
+            'label' => 'Счётчик неудачных попыток авторизации',
+            'sql' => "int(11) DEFAULT '0' NOT NULL",
+            'type' => 'Ideal_Hidden'
+        ),
     ),
 );
