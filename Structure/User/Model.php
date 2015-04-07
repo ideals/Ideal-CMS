@@ -42,6 +42,9 @@ class Model
     /** @var string Название поля логина (используется для выдачи уведомлений) */
     protected $loginRowName = 'e-mail';
 
+    /** @var int Cчётчик неудачных попыток авторизации */
+    public $counterFailures = 0;
+
     /**
      * Считывает данные о пользователе из сессии
      */
@@ -146,6 +149,13 @@ class Model
         if (($user[$this->loginRow] == '')
             || (crypt($pass, $user['password']) != $user['password'])
         ) {
+            // Увеличиваем значение счётчика неудачных авторизация если он меньше 12
+            if ($user['counter_failures'] < 12) {
+                $db->update($this->table)->set(array('counter_failures' => $user['counter_failures'] + 1));
+                $db->where($this->loginRow . ' = :login', array('login' => $login))->exec();
+            }
+            $this->counterFailures = $user['counter_failures'];
+
             $this->logout();
             $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
             return false;
