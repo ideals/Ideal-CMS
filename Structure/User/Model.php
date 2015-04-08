@@ -146,10 +146,22 @@ class Model
         if (($user[$this->loginRow] == '')
             || (crypt($pass, $user['password']) != $user['password'])
         ) {
+            // Увеличиваем значение счётчика неудачных попыток авторизации если он меньше 12
+            if ($user['counter_failures'] < 12) {
+                $db->update($this->table)->set(array('counter_failures' => $user['counter_failures'] + 1));
+                $db->where($this->loginRow . ' = :login', array('login' => $login))->exec();
+            }
+
             $this->logout();
             $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
+
+            // Придерживаем ответ на значение равное умножению счётчика неудачных попыток авторизации на 5
+            sleep($user['counter_failures'] * 5);
             return false;
         }
+
+        // Обнуляем счётчик неудачных попыток авторизации
+        $user['counter_failures'] = 0;
 
         // Если пользователь находится в процессе активации аккаунта
         if ($user['act_key'] != '') {
