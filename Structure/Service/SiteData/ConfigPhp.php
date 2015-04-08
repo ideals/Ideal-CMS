@@ -10,6 +10,7 @@
 namespace Ideal\Structure\Service\SiteData;
 
 use Ideal\Core\Util;
+use Ideal\Core\FileCache;
 
 /**
  * Чтение, отображение и запись специального формата конфигурационных php-файлов
@@ -56,7 +57,6 @@ class ConfigPhp
                 $this->params[$tabId]['arr'][$field]['value'] = $value;
             }
         }
-
     }
 
     /**
@@ -110,6 +110,11 @@ class ConfigPhp
 
         // Заменяем настройки на введённые пользователем
         $this->pickupValues();
+
+        // Запускаем очистку кэша если он отключен
+        if (!$this->params['cache']['arr']['fileCache']['value']) {
+            FileCache::clearFileCache();
+        }
 
         if ($this->saveFile($fileName) === false) {
             $res = false;
