@@ -66,7 +66,6 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
 
         // Проверяем правильность логина и пароля
         if (isset($_POST['user']) && isset($_POST['pass'])) {
-
             // При ajax авторизации отдаём json ответы
             if ($jsonResponse) {
                 if ($user->login($_POST['user'], $_POST['pass'])) {
