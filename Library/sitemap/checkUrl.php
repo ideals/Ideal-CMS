@@ -259,7 +259,7 @@ class ParseIt
         $info = curl_getinfo($ch); // получаем инофрмацию о запрошенной странице
 
 
-        if ($info['http_code'] >= '400' && $info < '599' ) {
+        if ($info['http_code'] >= '400' && $info < '599') {
             //Если страница имеет статус 404 добавляем её в массив пройденных с соответствующим статусом
             $this->checked[$k] = 1;
             unset ($this->links[$k]);
