@@ -36,6 +36,9 @@ class ParseIt
     /** @var resource Поток для времнного файла */
     private $tmp;
 
+    /** @var string Текст сообщения */
+    private $mes = '';
+
     /** @var  string Путь к времнному файлу */
     private $tmp_file;
 
@@ -62,17 +65,9 @@ class ParseIt
         // Время начала работы скрипта
         $this->start = microtime(1);
 
-        // Подгрузка конфига
-        $config = "sitemap.php";
 
-        if (!file_exists($config)) {
-            $this->info('Конфигурационный файл не найден!', 1);
-        } else {
-            if ($config != '') {
-                $this->config = require('sitemap.php');
-                rtrim($this->config['website'], '/');
-            }
-        }
+        $this->loadConfig();
+
         // Проверка существования файла sitemap.xml и его даты
         if ($this->isSiteMapExist()) {
             echo 'Карта сайта уже создана';
@@ -84,7 +79,7 @@ class ParseIt
 
         if ((count($this->links) == 0) && (count($this->checked) == 0)) {
             // Если это самое начало сканирования, добавляем в массив для сканирования первую ссылку
-            $this->links[$config['']] = 0;
+            $this->links[$this->config['website']] = 0;
         }
 
         $this->run();
@@ -96,6 +91,21 @@ class ParseIt
         echo $mes . "</br>";
         if ($status == 1) {
             exit();
+        }
+    }
+
+    protected function loadConfig()
+    {
+        // Подгрузка конфига
+        $config = __DIR__ . "/sitemap.php";
+
+        if (!file_exists($config)) {
+            $this->info('Конфигурационный файл не найден!', 1);
+        } else {
+            if ($config != '') {
+                $this->config = require($config);
+                rtrim($this->config['website'], '/');
+            }
         }
     }
 
@@ -126,7 +136,7 @@ class ParseIt
         }
         // Проверяем, обновлялась ли сегодня карта сайта
         if (date('d:m:Y', filemtime($xmlFile)) == date('d:m:Y')) {
-            $this->info("Warning! File {$xmlFile} have current date and skip in cron", 1);
+            $this->info("Карта сайта уже создавалась сегодня!", 1);
         }
 
         return true;
@@ -142,24 +152,24 @@ class ParseIt
         if (file_exists($tmpFile)) {
             $arr = file_get_contents($tmpFile);
             $this->links = unserialize($arr);
-            unset($arr);
             /* todo массив вида [ссылка] => array(checked(1 или 0), position) */
-            foreach ($this->links as $k => $v) {
-                if ($v['checked'] == 1) {
-                    $this->checked[$k] = $v;
-                    unset($this->links[$k]);
-                }
-            }
+            /* todo Новый вид массива $data = array(0 => $this->links, 1 => $this->checked) */
+
+            $this->links = $arr[0];
+            $this->checked = $arr[1];
+
         }
     }
 
     /** Метод для сохранения распарсенных данных во временный файл */
     protected function saveParsedUrls()
     {
-        $result = array_merge($this->links, $this->checked);
+        $result[0] = $this->links;
+        $result[1] = $this->checked;
+
         $result = serialize($result);
 
-        $tmp_file = $this->config['pageroot'] . $this->config['tmp_file'];
+        $tmp_file = __DIR__ . $this->config['tmp_file'];
 
         $fp = fopen($tmp_file, "w");
 
@@ -189,6 +199,12 @@ class ParseIt
             // Получаем контент страницы
             $content = $this->getUrl($k);
 
+            if ($content = 'error') {
+                //  Добавляем страницу с которой переходим на нерабочую страницу
+                $this->mes .= $this->links[$k];
+                // Завершаем работу скрипта с этим сообщением
+                exit($this->mes);
+            }
             // Парсим ссылки из контента
             $urls = $this->parseLinks($content);
 
@@ -221,7 +237,7 @@ class ParseIt
         // Удаляем временный файл
         unlink($this->tmp_file);
 
-        $filename = "/var/www/html/sitemaps/" . $this->nameUrl . "_" . date("j-n-Y.") . "txt";
+        $filename = __DIR__ . "/sitemaps/" . $this->nameUrl . "_" . date("j-n-Y.") . "txt";
         $fp = fopen($filename, "w");
         $result = serialize($this->checked);
         fwrite($fp, $result);
@@ -242,12 +258,15 @@ class ParseIt
 
         $info = curl_getinfo($ch); // получаем инофрмацию о запрошенной странице
 
-        if ($info['http_code'] == "404") {
+
+        if ($info['http_code'] >= '400' && $info < '599' ) {
             //Если страница имеет статус 404 добавляем её в массив пройденных с соответствующим статусом
             $this->checked[$k] = 1;
             unset ($this->links[$k]);
 
-            return 0;
+            $this->mes = "Страница" . $k . "недоступна. Ошибка" . $info['http_code'] . ". Переход с ";
+
+            return 'error';
         }
 
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
@@ -284,7 +303,7 @@ class ParseIt
                 continue;
             }
 
-            $this->links[$link] = 0;
+            $this->links[$link] = $current;
         }
     }
 
@@ -385,7 +404,8 @@ class ParseIt
             // Возвращаем false, т.е. текущая ссылка не внешняя
             return false;
         } else {
-            return false;
+            // Возвращаем true, т.е. пропусаем текущую ссылку
+            return true;
         }
     }
 }
