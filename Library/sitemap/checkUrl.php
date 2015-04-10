@@ -213,9 +213,73 @@ class ParseIt
         $this->saveSiteMap();
     }
 
+    /* Метод преобразования специальных символов для xml файла карты сайта */
+    public function xmlEscape($str)
+    {
+        static $trans;
+        if (!isset($trans)) {
+            $trans = get_html_translation_table(HTML_ENTITIES, ENT_QUOTES);
+            foreach ($trans as $key => $value) {
+                $trans[$key] = '&#' . ord($key) . ';';
+            }
+            // dont translate the '&' in case it is part of &xxx;
+            $trans[chr(38)] = '&amp;';
+        }
+        return preg_replace("/&(?![A-Za-z]{0,4}\w{2,3};|#[0-9]{2,4};)/", "&#38;", strtr($str, $trans));
+    }
 
     protected function saveSiteMap()
     {
+
+        $ret = array();
+
+        $ret[] = sprintf('<?xml version="1.0" encoding="%s"?>', 'UTF-8');
+        $ret[] = sprintf(
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
+        );
+        $ret[] = sprintf(
+            '<!-- Last update of sitemap %s -->',
+            date('Y-m-d\TH:i:s') . substr(date("O"), 0, 3) . ":" . substr(date("O"), 3)
+        );
+
+        foreach ($this->checked as $url) {
+            $ret[] = '<url>';
+            $ret[] = sprintf('<loc>%s</loc>', $this->xmlEscape($url['url']));
+            if (isset($url['lastmod'])) {
+                if (is_numeric($url['lastmod'])) {
+                    $ret[] = sprintf(
+                        '<lastmod>%s</lastmod>',
+                        $url['lastmod_dateonly'] ?
+                        date('Y-m-d', $url['lastmod']):
+                        date('Y-m-d\TH:i:s', $url['lastmod']) .
+                        substr(date("O", $url['lastmod']), 0, 3) . ":" .
+                        substr(date("O", $url['lastmod']), 3)
+                    );
+                } elseif (is_string($url['lastmod'])) {
+                    $ret[] = sprintf('<lastmod>%s</lastmod>', $url['lastmod']);
+                }
+            }
+            if (isset($url['changefreq'])) {
+                $ret[] = sprintf(
+                    '<changefreq>%s</changefreq>',
+                    $this->xmlEscape($url['changefreq'])
+                );
+            }
+            if (isset($url['priority'])) {
+                $priorityStr = sprintf('<priority>%s</priority>', '%01.1f');
+                $ret[] = sprintf($priorityStr, $url['priority']);
+            }
+            $ret[] = '</url>';
+        }
+
+        $ret[] = '</urlset>';
+
+        return join("\n", $ret);
+
+
+
         // todo Сохранение xml-карты сайта
         fclose($this->tmp);
         // Удаляем временный файл
