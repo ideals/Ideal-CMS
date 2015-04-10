@@ -116,6 +116,13 @@ class ConfigPhp
             FileCache::clearFileCache();
         }
 
+        //Перезаписываем данные в исключениях кэша
+        $response = self::cacheExcludeProcessing($this->params['cache']['arr']['excludeFileCache']['value']);
+        if ($response['res'] === false) {
+            $res = false;
+            $text = $response['text'];
+        }
+
         if ($this->saveFile($fileName) === false) {
             $res = false;
             $text = 'Не получилось сохранить настройки в файл ' . $fileName;
@@ -127,6 +134,32 @@ class ConfigPhp
         <span class="{$class}-heading">{$text}</span></div>
 DONE;
         return $res;
+    }
+
+    /**
+     * Обрабатывает список исключений из настроек кэша
+     */
+    public static function cacheExcludeProcessing($string)
+    {
+        $response = array('res' => true);
+
+        // Экранируем переводы строки для обработки каждой строки
+        $string = str_replace("\r", '', $string);
+        $lines = explode("\n", $string);
+
+        foreach ($lines as $line) {
+            // Проверка на соответствие формату регулярного выражения, если нет, то уведомляем об этом
+            if (!preg_match("/^\/.*\/$/", $line)) {
+                $response['res'] = false;
+                $response['text'] = 'В списке исключений есть значение не удовлетворяющее формату регулярных выражений.';
+                return $response;
+            }
+
+            if (!FileCache::addExcludeFileCache($line)) {
+                $response['res'] = false;
+                $response['text'] = 'Не получилось сохранить настройки исключений в файл';
+            }
+        }
     }
 
     /**
