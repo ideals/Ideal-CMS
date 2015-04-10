@@ -23,8 +23,8 @@ class Controller extends AbstractValidator
         if ($value == '') {
             return true;
         }
-        $filter = filter_var($value, FILTER_VALIDATE_EMAIL);
-        return ($filter == $value);
+        $pattern = '/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/im';
+        return (preg_match($pattern, $value) === 1);
     }
 
     /**
