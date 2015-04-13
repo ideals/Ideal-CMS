@@ -3,7 +3,7 @@
  * Ideal CMS (http://idealcms.ru/)
  *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
- * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
+ * @copyright Copyright (c) 2012-2015 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 namespace Ideal\Medium\TemplateList;
@@ -23,7 +23,15 @@ class Model extends AbstractModel
     public function getList()
     {
         $config = Config::getInstance();
-        $modelStructures = array_unique($this->obj->params['structures']);
+        $structures = array();
+        if (isset($this->obj->params['structures'])) {
+            $modelStructures = array_unique($this->obj->params['structures']);
+        } else {
+            $modelStructures = $this->obj->getPath();
+            $modelStructures = end($modelStructures);
+            $modelStructures[] = $modelStructures['structure'];
+        }
+        $list = array();
 
         // Получаем список структур, которые можно создавать в этой структуре
         foreach ($config->structures as $structure) {
@@ -45,7 +53,8 @@ class Model extends AbstractModel
             }
             $structureName = $parts[3];
             foreach ($folderPartNames as $folderPartName) {
-                $twigTplRootScanFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . $folderPartName . '/' . $moduleName . 'Structure/' . $structureName . '/Site/';
+                $twigTplRootScanFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/' . $folderPartName
+                    . '/' . $moduleName . 'Structure/' . $structureName . '/Site/';
 
                 // Проверяем на существование директорию перед сканированием.
                 if (is_dir($twigTplRootScanFolder)) {
