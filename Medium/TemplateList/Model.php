@@ -29,8 +29,7 @@ class Model extends AbstractModel
         } else {
             $modelStructures = $this->obj->getPath();
             $modelStructures = end($modelStructures);
-            $modelStructures = $modelStructures['structure'];
-            $structures[] = $modelStructures;
+            $modelStructures[] = $modelStructures['structure'];
         }
         $list = array();
 
