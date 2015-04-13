@@ -26,7 +26,6 @@ class FileCache
      */
     public static function saveCache($content, $uri)
     {
-        $excludeThisPath = false;
         $config = Config::getInstance();
         $configCache = $config->cache;
 
@@ -34,7 +33,6 @@ class FileCache
         $queryString = http_build_query($_GET);
         if (!empty($queryString)) {
             $uri = str_replace('?' . $queryString, '', $uri);
-            $excludeThisPath = true;
         }
 
         $uriArray = array_values(array_filter(explode('/', $uri)));
@@ -63,12 +61,6 @@ class FileCache
 
         // Проверяем наличие рассматриваемого пути в исключениях
         if (!$exclude) {
-            // Если данная страница ещё не в исключениях, но должна там быть
-            if ($excludeThisPath) {
-                self::excludePathFromCache($uri);
-                return;
-            }
-
             // Путь до файла хранящего информацию о закэшированных страницах
             $cacheDir = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/cache';
 
@@ -117,6 +109,15 @@ class FileCache
      */
     public static function addExcludeFileCache($string)
     {
+        // Проверяем на существование файл кэша, при надобности удаляем
+        preg_match('/^\/(.*)\/[imsxADSUXJu]{0,11}$/', $string, $cacheFiles);
+        $cacheFiles = glob(stripcslashes($cacheFiles[1]));
+        if (!empty($cacheFiles)) {
+            foreach ($cacheFiles as $cacheFile) {
+                self::excludePathFromCache("/$cacheFile");
+            }
+        }
+
         $config = Config::getInstance();
         $configSD = new \Ideal\Structure\Service\SiteData\ConfigPhp();
         $file = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php';
@@ -195,7 +196,7 @@ class FileCache
     }
 
     /**
-     * Удаляет файл кэша страницы и заносит путь в исключение
+     * Удаляет файл кэша страницы и информацию о нём из общего файла
      *
      * @param string $path адрес страницы подлежащей исключению из кэша
      */
@@ -216,10 +217,5 @@ class FileCache
             $file = "<?php\n// @codingStandardsIgnoreFile\nreturn " . var_export($cacheFileValue, true) . ";\n";
             file_put_contents($cacheFile, $file);
         }
-
-        // Добавляем адрес в исключения
-        // Удаляем первый слэш для правильного построения регулярного выражения
-        $path = preg_replace('/\//', '', $path, 1);
-        self::addExcludeFileCache('/' . preg_quote($path) . '/');
     }
 }
