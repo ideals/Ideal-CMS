@@ -36,6 +36,7 @@ class ConfigPhp
      */
     public function pickupValues()
     {
+        $response = array('res' => true, 'text' => '');
         $pageData = array();
         foreach ($this->params as $tabId => $tab) {
             foreach ($tab['arr'] as $field => $param) {
@@ -46,7 +47,7 @@ class ConfigPhp
                 $model->setPageData($pageData);
 
                 $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
-                /** @noinspection PhpUndefinedMethodInspection  */
+                /** @noinspection PhpUndefinedMethodInspection */
                 /** @var $fieldModel \Ideal\Field\AbstractController */
                 $fieldModel = $fieldClass::getInstance();
                 $fieldModel->setModel($model, $fieldName, 'general');
@@ -54,9 +55,17 @@ class ConfigPhp
                 // Получаем данные от пользователя
                 $value = $fieldModel->pickupNewValue();
 
+                // Обработка данных введённых пользователем
+                $item = $fieldModel->parseInputValue(false);
+
+                if (!empty($item['message'])) {
+                    $response = array('res' => false, 'text' => $item['message']);
+                    return $response;
+                }
                 $this->params[$tabId]['arr'][$field]['value'] = $value;
             }
         }
+        return $response;
     }
 
     /**
@@ -109,23 +118,27 @@ class ConfigPhp
         $text = 'Настройки сохранены!';
 
         // Заменяем настройки на введённые пользователем
-        $this->pickupValues();
-
-        // Запускаем очистку кэша если он отключен
-        if (!$this->params['cache']['arr']['fileCache']['value']) {
-            FileCache::clearFileCache();
-        }
-
-        //Перезаписываем данные в исключениях кэша
-        $response = self::cacheExcludeProcessing($this->params['cache']['arr']['excludeFileCache']['value']);
+        $response = $this->pickupValues();
         if ($response['res'] === false) {
             $res = false;
             $text = $response['text'];
-        }
+        } else {
+            // Запускаем очистку кэша если он отключен
+            if (!$this->params['cache']['arr']['fileCache']['value']) {
+                FileCache::clearFileCache();
+            }
 
-        if ($this->saveFile($fileName) === false) {
-            $res = false;
-            $text = 'Не получилось сохранить настройки в файл ' . $fileName;
+            //Перезаписываем данные в исключениях кэша
+            $response = self::cacheExcludeProcessing($this->params['cache']['arr']['excludeFileCache']['value']);
+            if ($response['res'] === false) {
+                $res = false;
+                $text = $response['text'];
+            }
+
+            if ($this->saveFile($fileName) === false) {
+                $res = false;
+                $text = 'Не получилось сохранить настройки в файл ' . $fileName;
+            }
         }
 
         print <<<DONE
@@ -148,13 +161,6 @@ DONE;
         $lines = explode("\n", $string);
 
         foreach ($lines as $line) {
-            // Проверка на соответствие формату регулярного выражения, если нет, то уведомляем об этом
-            if (!preg_match("/^\/.*\/$/", $line)) {
-                $response['res'] = false;
-                $response['text'] = 'В списке исключений есть значение не удовлетворяющее формату регулярных выражений.';
-                return $response;
-            }
-
             if (!FileCache::addExcludeFileCache($line)) {
                 $response['res'] = false;
                 $response['text'] = 'Не получилось сохранить настройки исключений в файл';
@@ -310,7 +316,7 @@ DONE;
                 $model->setPageData($pageData);
 
                 $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
-                /** @noinspection PhpUndefinedMethodInspection  */
+                /** @noinspection PhpUndefinedMethodInspection */
                 /** @var $fieldModel \Ideal\Field\AbstractController */
                 $fieldModel = $fieldClass::getInstance();
                 $fieldModel->setModel($model, $fieldName, 'general');
