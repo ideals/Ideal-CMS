@@ -39,7 +39,11 @@ class FileCache
 
         $uriArray = array_values(array_filter(explode('/', $uri)));
 
-        if (empty($uriArray)) {
+        $pageName = end($uriArray);
+        reset($uriArray);
+
+        // Если это главная страница
+        if (!$pageName || !preg_match('/.*\..*$/', $pageName)) {
             $uri .= $configCache['indexFile'];
             array_push($uriArray, $configCache['indexFile']);
         }
