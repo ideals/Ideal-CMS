@@ -9,23 +9,11 @@ class ParseIt
     /** Регулярное выражение для поиска ссылок */
     const LINK = "/<[Aa][^>]*[Hh][Rr][Ee][Ff]=['\"]?([^\"'>]+)[^>]*>/";
 
-    /** @var string Время начала работы скрипта */
-    private $startUrl = 'http://linkinpark.com/';
-
     /** @var float Время начала работы скрипта */
     private $start;
 
     /** @var string Переменная содержащая адрес главной страницы сайты */
     private $host;
-
-    /** @var string Переменная для достраивания ссылки до абсолютной */
-    private $begin;
-
-    /** @var string Имя хоста без www */
-    private $nameUrl;
-
-    /** @var array Массив с частями переданной ссылки */
-    private $url = array();
 
     /** @var  array Массив НЕпроверенных ссылок */
     private $links = array();
@@ -33,11 +21,8 @@ class ParseIt
     /** @var array Массив проверенных ссылок */
     private $checked = array();
 
-    /** @var resource Поток для времнного файла */
-    private $tmp;
-
-    /** @var  string Путь к времнному файлу */
-    private $tmp_file;
+    /** @var array Массив для данных из конфига */
+    private $config = array();
 
     private $options = array(
         CURLOPT_RETURNTRANSFER => true, //  возвращать строку, а не выводить в браузере
@@ -58,10 +43,8 @@ class ParseIt
 
     public function __construct()
     {
-
         // Время начала работы скрипта
         $this->start = microtime(1);
-
 
         $this->loadConfig();
 
@@ -100,6 +83,8 @@ class ParseIt
         } else {
             $this->config = require($config);
             rtrim($this->config['website'], '/');
+            $tmp = parse_url($this->config['website']);
+            $this->host = $tmp['host'];
         }
     }
 
@@ -269,12 +254,11 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
                     $this->xmlEscape($url['changefreq'])
                 );
             }
-
-            if (isset($url['priority'])) {
-                $priorityStr = sprintf('<priority>%s</priority>', '%01.1f');
-                $ret[] = sprintf($priorityStr, $url['priority']);
-            }
             */
+            if (isset($this->config['priority'])) {
+                $priorityStr = sprintf('<priority>%s</priority>', '%01.1f');
+                $ret[] = sprintf($priorityStr, $this->config['priority']);
+            }
             $ret[] = '</url>';
         }
 
