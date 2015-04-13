@@ -26,7 +26,6 @@ class FileCache
      */
     public static function saveCache($content, $uri)
     {
-        $excludeThisPath = false;
         $config = Config::getInstance();
         $configCache = $config->cache;
 
@@ -34,15 +33,9 @@ class FileCache
         $queryString = http_build_query($_GET);
         if (!empty($queryString)) {
             $uri = str_replace('?' . $queryString, '', $uri);
-            $excludeThisPath = true;
         }
 
-        $uriArray = array_values(array_filter(explode('/', $uri)));
-
-        if (empty($uriArray)) {
-            $uri .= $configCache['indexFile'];
-            array_push($uriArray, $configCache['indexFile']);
-        }
+        $uriArray = self::getModifyUri($uri);
 
         $excludeCacheFileValue = explode("\n", $configCache['excludeFileCache']);
 
@@ -59,12 +52,6 @@ class FileCache
 
         // Проверяем наличие рассматриваемого пути в исключениях
         if (!$exclude) {
-            // Если данная страница ещё не в исключениях, но должна там быть
-            if ($excludeThisPath) {
-                self::excludePathFromCache($uri);
-                return;
-            }
-
             // Путь до файла хранящего информацию о закэшированных страницах
             $cacheDir = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/cache';
 
@@ -113,6 +100,15 @@ class FileCache
      */
     public static function addExcludeFileCache($string)
     {
+        // Проверяем на существование файл кэша, при надобности удаляем
+        preg_match('/^\/(.*)\/[imsxADSUXJu]{0,11}$/', $string, $cacheFiles);
+        $cacheFiles = glob(stripcslashes($cacheFiles[1]));
+        if (!empty($cacheFiles)) {
+            foreach ($cacheFiles as $cacheFile) {
+                self::excludePathFromCache("/$cacheFile");
+            }
+        }
+
         $config = Config::getInstance();
         $configSD = new \Ideal\Structure\Service\SiteData\ConfigPhp();
         $file = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php';
@@ -129,6 +125,26 @@ class FileCache
         } else {
             return true;
         }
+    }
+
+    private static function getModifyUri(&$uri)
+    {
+
+        $config = Config::getInstance();
+        $configCache = $config->cache;
+
+        $uriArray = array_values(array_filter(explode('/', $uri)));
+
+        $pageName = end($uriArray);
+        reset($uriArray);
+
+        // Если это главная страница или каталог
+        if (!$pageName || !preg_match('/.*\..*$/', $pageName)) {
+            $uri .= $configCache['indexFile'];
+            array_push($uriArray, $configCache['indexFile']);
+        }
+
+        return $uriArray;
     }
 
     /**
@@ -163,35 +179,43 @@ class FileCache
      *
      * @param string $path путь до удаляемого файла
      */
-    private static function delCacheFileDir($path)
+    public static function delCacheFileDir($path)
     {
+
+        self::getModifyUri($path);
+
         // Удаляем сам файл
-        unlink(DOCUMENT_ROOT . $path);
+        if (file_exists(DOCUMENT_ROOT . $path)) {
+            unlink(DOCUMENT_ROOT . $path);
 
-        // Последовательная проверка каджого каталога из всей иерархии на возможность удаления
-        $dirArray = array_values(array_filter(explode('/', $path)));
-        array_pop($dirArray);
-        if (!empty($dirArray)) {
-            // Получаем массив с полными путями до каждого каталога в иерархии
-            $implodeDirArrayElement = array();
-            for ($i = 0; $i < count($dirArray); $i++) {
-                // TODO продумать вариант получения пути по красивее
-                $dirPath = implode('/', explode('/', implode('/', $dirArray), 0 - $i));
-                $implodeDirArrayElement[] = DOCUMENT_ROOT . '/' . $dirPath;
-            }
-
-            // Попытка удаления каждого каталога из иерархии
-            foreach ($implodeDirArrayElement as $dirPath) {
-                if (count(glob($dirPath . '/*'))) {
-                    break;
+            // Последовательная проверка каджого каталога из всей иерархии на возможность удаления
+            $dirArray = array_values(array_filter(explode('/', $path)));
+            array_pop($dirArray);
+            if (!empty($dirArray)) {
+                // Получаем массив с полными путями до каждого каталога в иерархии
+                $implodeDirArrayElement = array();
+                for ($i = 0; $i < count($dirArray); $i++) {
+                    // TODO продумать вариант получения пути по красивее
+                    $dirPath = implode('/', explode('/', implode('/', $dirArray), 0 - $i));
+                    $implodeDirArrayElement[] = DOCUMENT_ROOT . '/' . $dirPath;
                 }
-                rmdir($dirPath);
+
+                // Попытка удаления каждого каталога из иерархии
+                foreach ($implodeDirArrayElement as $dirPath) {
+                    if (count(glob($dirPath . '/*'))) {
+                        break;
+                    }
+                    rmdir($dirPath);
+                }
             }
+            return true;
+        } else {
+            return false;
         }
     }
 
     /**
-     * Удаляет файл кэша страницы и заносит путь в исключение
+     * Удаляет файл кэша страницы и информацию о нём из общего файла
      *
      * @param string $path адрес страницы подлежащей исключению из кэша
      */
@@ -212,10 +236,5 @@ class FileCache
             $file = "<?php\n// @codingStandardsIgnoreFile\nreturn " . var_export($cacheFileValue, true) . ";\n";
             file_put_contents($cacheFile, $file);
         }
-
-        // Добавляем адрес в исключения
-        // Удаляем первый слэш для правильного построения регулярного выражения
-        $path = preg_replace('/\//', '', $path, 1);
-        self::addExcludeFileCache('/' . preg_quote($path) . '/');
     }
 }

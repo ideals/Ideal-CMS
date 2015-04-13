@@ -23,6 +23,6 @@ return array(
         'memcache' => "0", // Кэширование запросов к БД | Ideal_Checkbox
         'indexFile' => "index.html", // Индексный файл в папке | Ideal_Text
         'fileCache' => "0", // Кэширование страниц в файлы | Ideal_Checkbox
-        'excludeFileCache' => "", // Адреса для исключения из кэша (по одному на строку, формат "регулярные выражения") | Ideal_Area
+        'excludeFileCache' => "", // Адреса для исключения из кэша (по одному на строку, формат "регулярные выражения") | Ideal_RegexpList
     ),
 );

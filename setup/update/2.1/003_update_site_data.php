@@ -22,7 +22,7 @@ $params['cache']['arr']['fileCache'] = array(
 $params['cache']['arr']['excludeFileCache'] = array(
     'label' => 'Адреса для исключения из кэша (по одному на строку, формат "регулярные выражения")',
     'value' => '',
-    'type' => 'Ideal_Area'
+    'type' => 'Ideal_RegexpList'
 );
 $configSD->setParams($params);
 $configSD->saveFile($file);

@@ -11,6 +11,7 @@ namespace Ideal\Structure\Service\Cache;
 use Ideal\Core\FileCache;
 use Ideal\Core\Memcache;
 use Ideal\Core\View;
+use Ideal\Template\SiteMap;
 
 /**
  * Сброс всего кэширования
@@ -45,6 +46,24 @@ class AjaxController extends \Ideal\Core\AjaxController
         }
 
         print json_encode(array('text' => 'ok'));
+        exit;
+    }
+
+    /**
+     * Действие срабатывающее при нажатии на кнопку "Очистить кэш"
+     */
+    public function dellCacheFilesAction()
+    {
+        $delPages = array();
+        $pageList = new SiteMap\Model('0-1');
+        $pages = $pageList->getList();
+        foreach ($pages as $page) {
+            if (FileCache::delCacheFileDir($page['link'])) {
+                $delPages[] = $page['link'];
+            }
+        }
+        $delPages = implode("<br />", $delPages);
+        print json_encode(array('text' => $delPages));
         exit;
     }
 }
