@@ -70,7 +70,6 @@ class ParseIt
             echo 'Карта сайта уже создана';
             exit;
         }
-
         //list($this->links, $this->checked) = $this->loadParsedUrls();
         $this->loadParsedUrls();
 
@@ -117,6 +116,10 @@ class ParseIt
                 exit("Карта сайта {$xmlFile} не доступна для записи!");
                 return false;
             }
+            // Проверяем, обновлялась ли сегодня карта сайта
+            if (date('d:m:Y', filemtime($xmlFile)) == date('d:m:Y')) {
+                exit("Карта сайта {$xmlFile} уже создавалась сегодня!");
+            }
             return true;
         } else {
             // Файла нет, пытаемся создать
@@ -125,12 +128,7 @@ class ParseIt
                 exit("Не удалось создать файл {$xmlFile} для карты сайта!");
             }
         }
-        // Проверяем, обновлялась ли сегодня карта сайта
-        if (date('d:m:Y', filemtime($xmlFile)) == date('d:m:Y')) {
-            exit("Карта сайта {$xmlFile} уже создавалась сегодня!");
-        }
 
-        return true;
     }
 
     /** Метод для загрузки распарсенных данных из временного файла */
@@ -141,9 +139,7 @@ class ParseIt
         $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
         if (file_exists($tmpFile)) {
             $arr = file_get_contents($tmpFile);
-            $this->links = unserialize($arr);
-            /* todo массив вида [ссылка] => array(checked(1 или 0), position) */
-            /* todo Новый вид массива $data = array(0 => $this->links, 1 => $this->checked) */
+            $arr = unserialize($arr);
 
             $this->links = $arr[0];
             $this->checked = $arr[1];
@@ -208,6 +204,10 @@ class ParseIt
             echo 'Всего пройденных ссылок: ' . count($this->checked) . "\n" . '</br>';
             echo 'Всего непройденных ссылок: ' . count($this->links) . '</br>';
             echo($time - $this->start);
+            echo "<pre>";
+            print_r($this->checked);
+            print_r($this->links);
+            echo "</pre>";
             exit();
         }
         $this->saveSiteMap();
@@ -244,9 +244,11 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
             date('Y-m-d\TH:i:s') . substr(date("O"), 0, 3) . ":" . substr(date("O"), 3)
         );
 
-        foreach ($this->checked as $url) {
+        foreach ($this->checked as $k => $v) {
             $ret[] = '<url>';
-            $ret[] = sprintf('<loc>%s</loc>', $this->xmlEscape($url['url']));
+            $ret[] = sprintf('<loc>%s</loc>', $this->xmlEscape($k));
+            // Временно без частоты обновления, даты последнего изменения и приоритета
+            /*
             if (isset($url['lastmod'])) {
                 if (is_numeric($url['lastmod'])) {
                     $ret[] = sprintf(
@@ -267,32 +269,27 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
                     $this->xmlEscape($url['changefreq'])
                 );
             }
+
             if (isset($url['priority'])) {
                 $priorityStr = sprintf('<priority>%s</priority>', '%01.1f');
                 $ret[] = sprintf($priorityStr, $url['priority']);
             }
+            */
             $ret[] = '</url>';
         }
 
         $ret[] = '</urlset>';
 
-        return join("\n", $ret);
-
-
-
-        // todo Сохранение xml-карты сайта
-        fclose($this->tmp);
-        // Удаляем временный файл
-        unlink($this->tmp_file);
-
-        $filename = __DIR__ . '/sitemaps/' . $this->nameUrl . "_" . date("j-n-Y.") . 'txt';
-        $fp = fopen($filename, 'w');
-        $result = serialize($this->checked);
-        fwrite($fp, $result);
+        $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
+        $fp = fopen($xmlFile, 'w');
+        foreach ($ret as $v) {
+            fwrite($fp, $v);
+        }
         fclose($fp);
 
         //echo "Карта сайта успешно создана!\n";
-        echo 'done';
+        $time = microtime(1);
+        echo 'done' . ($time - $this->start);
     }
 
     /* Метод для получения html кода и парсинга текущей страницы в основном цикле */
@@ -326,13 +323,18 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
         // Получение всех ссылок со страницы
         preg_match_all(self::LINK, $content, $urls);
 
-        return $urls;
+        return $urls[1];
     }
 
     /* Метод для обработки полученных ссылок в результате парсинга страницы */
     private function addLinks($urls, $current)
     {
         foreach ($urls as $url) {
+            //Убираем все флаги без ссылок
+            if (strpos($url, '#') === 0) {
+                continue;
+            }
+
             $link = $this->getAbsoluteUrl($url, $current);
 
             if ($this->isExternalLink($link)) {
@@ -340,7 +342,7 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
                 continue;
             }
 
-            if (isset($this->links[$link])) {
+            if (isset($this->links[$link]) || isset($this->checked[$link])) {
                 // Пропускаем уже добавленные ссылки
                 continue;
             }
@@ -434,6 +436,9 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
 
         $url = parse_url($link);
 
+        $tmp = $this->config['website'];
+        $tmp = parse_url($tmp);
+        $this->host = $tmp['host'];
         //Начальная директория - хост из конфига
         $startDir = $this->host;
         // Текущая директория: хост переданной ссылки
