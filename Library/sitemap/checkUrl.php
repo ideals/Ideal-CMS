@@ -85,6 +85,18 @@ class ParseIt
             rtrim($this->config['website'], '/');
             $tmp = parse_url($this->config['website']);
             $this->host = $tmp['host'];
+            if (isset($this->config['seo_urls'])) {
+                $seo = array();
+                $tmp = explode(',', $this->config['seo_urls']);
+                foreach ($tmp as $v => $k) {
+                    $a = explode('=', trim($k));
+                    $url = trim($a[0]);
+                    $priority = trim($a[1]);
+                    $seo[$url] = $priority;
+                }
+                $this->config['seo_urls'] = $seo;
+
+            }
         }
     }
 
@@ -257,7 +269,12 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
             */
             if (isset($this->config['priority'])) {
                 $priorityStr = sprintf('<priority>%s</priority>', '%01.1f');
-                $ret[] = sprintf($priorityStr, $this->config['priority']);
+                if (isset($this->config['seo_urls'][$k])) {
+                    $priority = $v;
+                } else {
+                    $priority = $this->config['priority'];
+                }
+                $ret[] = sprintf($priorityStr, $priority);
             }
             $ret[] = '</url>';
         }
@@ -273,7 +290,7 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
 
         //echo "Карта сайта успешно создана!\n";
         $time = microtime(1);
-        echo 'done' . ($time - $this->start);
+        echo 'done ' . ($time - $this->start);
     }
 
     /* Метод для получения html кода и парсинга текущей страницы в основном цикле */
