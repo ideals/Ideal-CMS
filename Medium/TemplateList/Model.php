@@ -23,7 +23,24 @@ class Model extends AbstractModel
     public function getList()
     {
         $config = Config::getInstance();
-        $modelStructures = array_unique($this->obj->params['structures']);
+
+        $objClassName = get_class($this->obj); // определяем название класса модели редактируемого элемента
+        $objClassNameSlice = explode('\\', $objClassName);
+
+        // Получаем название текущего типа структуры
+        $modelStructures = array($objClassNameSlice[0] . '_' . $objClassNameSlice[2]);
+
+        // Заносим уже введённое значение в список доступных шаблонов, так как оно может быть кастомным
+        $pageData = $this->obj->getPageData();
+        if (!empty($pageData['template'])) {
+            $list[$pageData['structure']][$pageData['template']] = $pageData['template'];
+        }
+
+        // Проверяем какие типы можно создавать в этом разделе
+        if (isset($this->obj->params['structures']) && !empty($this->obj->params['structures'])) {
+            // Учитываем все возможные типы из этого раздела при построении списка шаблонов для отображения
+            $modelStructures = array_unique($this->obj->params['structures']);
+        }
 
         // Получаем список структур, которые можно создавать в этой структуре
         foreach ($config->structures as $structure) {
@@ -32,6 +49,8 @@ class Model extends AbstractModel
             }
         }
 
+        // Проходим по списку всех возможных типов из этого раздела и ищем в них шаблоны для отображения
+        // TODO учесть вевроятность снижения производительности при наличии достстоно большого количества типов структур
         foreach ($structures as $value) {
             $folderName = str_replace('\\', '/', Util::getClassName($value, 'Structure'));
             $parts = explode('/', $folderName);
