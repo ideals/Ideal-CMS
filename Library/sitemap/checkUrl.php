@@ -23,6 +23,9 @@ class ParseIt
     /** @var array Массив для данных из конфига */
     private $config = array();
 
+    /** @var boolean Булева переменная: ссылки с www или без */
+    private $withWWW;
+
     private $options = array(
         CURLOPT_RETURNTRANSFER => true, //  возвращать строку, а не выводить в браузере
         CURLOPT_VERBOSE => true, // вывод дополнительной информации (?)
@@ -83,6 +86,13 @@ class ParseIt
             $this->config['website'] = rtrim($this->config['website'], '/');
             $tmp = parse_url($this->config['website']);
             $this->host = $tmp['host'];
+
+            if (strpos($this->host, 'www') === 0) {
+                $this->withWWW = true;
+            } else {
+                $this->withWWW = false;
+            }
+
             if (isset($this->config['seo_urls'])) {
                 $seo = array();
                 $tmp = explode(',', $this->config['seo_urls']);
