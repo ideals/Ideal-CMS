@@ -3,7 +3,6 @@ namespace ParseIt;
 
 header('Content-Type: text/html; charset=utf-8');
 
-
 class ParseIt
 {
     /** Регулярное выражение для поиска ссылок */
@@ -62,11 +61,16 @@ class ParseIt
         $this->run();
     }
 
+    /**
+     * Вывод ошибки и завершение работы скрипта
+     * @param string $mes - сообщение для вывода
+     */
     protected function stop($mes)
     {
         exit($mes);
     }
 
+    /** Загрузка конфига */
     protected function loadConfig()
     {
         // Подгрузка конфига
@@ -94,6 +98,7 @@ class ParseIt
         }
     }
 
+    /** Проверка существования xml файла карты сайта */
     protected function isSiteMapExist()
     {
         $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
@@ -203,7 +208,11 @@ class ParseIt
         $this->saveSiteMap();
     }
 
-    /* Метод преобразования специальных символов для xml файла карты сайта */
+    /**
+     * Преобразования специальных символов для xml файла карты сайта
+     * @param string $str - ссылка для обработки
+     * @return string - обработанная ссылка
+     */
     public function xmlEscape($str)
     {
         static $trans;
@@ -218,9 +227,9 @@ class ParseIt
         return preg_replace("/&(?![A-Za-z]{0,4}\w{2,3};|#[0-9]{2,4};)/", "&#38;", strtr($str, $trans));
     }
 
+    /** Метод создания xml файла с картой сайта */
     protected function saveSiteMap()
     {
-
         $ret = array();
 
         $ret[] = sprintf('<?xml version="1.0" encoding="%s"?>', 'UTF-8');
@@ -286,7 +295,12 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
         echo 'done ' . ($time - $this->start);
     }
 
-    /* Метод для получения html кода и парсинга текущей страницы в основном цикле */
+    /**
+     * Метод для получения html кода и парсинга текущей страницы в основном цикле
+     * @param string $k - получение html кода из ссылки
+     * @param string $place - страница, на которой получили ссылку (нужна только в случае ощибки)
+     * @return string  - возвращается строка с html кодом
+     */
     private function getUrl($k, $place)
     {
         $ch = curl_init($k);
@@ -312,6 +326,11 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
     }
 
 
+    /**
+     * Парсинг ссылок из обрабатываемой страницы
+     * @param string $content - Обрабатываемая страницы
+     * @return array - Список полученных ссылок
+     */
     protected function parseLinks($content)
     {
         // Получение всех ссылок со страницы
@@ -320,7 +339,11 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
         return $urls[1];
     }
 
-    /* Метод для обработки полученных ссылок в результате парсинга страницы */
+    /**
+     * Обработка полученных ссылок, добавление в очередь новых ссылок
+     * @param array $urls - массив ссылок на обработку
+     * @param string $current - текущая страница
+     */
     private function addLinks($urls, $current)
     {
         foreach ($urls as $url) {
@@ -345,6 +368,12 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
         }
     }
 
+    /**
+     * Достраивание обрабатываемой ссылки до абсолютной
+     * @param string $link - обрабатываемая ссылка
+     * @param string $current - текущая страница с которой получена ссылка
+     * @return string - возвращается абсолютная ссылка
+     */
     protected function getAbsoluteUrl($link, $current)
     {
         if (preg_match(',^(https?://|ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:),i', $link)) {
@@ -421,6 +450,11 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
 
     }
 
+    /**
+     * Проверка является ли ссылка внешней
+     * @param string $link - проверяемая ссылка
+     * @return boolean - true если ссылка внешняя, иначе false
+     */
     protected function isExternalLink($link)
     {
         // Если ссылка на приложение - пропускаем её
