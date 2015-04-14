@@ -38,11 +38,12 @@ class Controller extends Select\Controller
      */
     public function getInputText()
     {
+
+        $html = '';
+
         // Подключаем скрипт смены списка шабонов, только если доступна более чем одна структура
         if (count($this->list) > 1) {
-            $html = '<script type="text/javascript" src="Ideal/Field/Template/templateShowing.js" />';
-        } else {
-            $html = '';
+            $html .= '<script type="text/javascript" src="Ideal/Field/Template/templateShowing.js" />';
         }
 
         // Получаем значение поумолчанию для структуры
@@ -57,8 +58,10 @@ class Controller extends Select\Controller
         // Составляем списки шаблонов
         foreach ($this->list as $key => $value) {
             // индикатор показа списка по умолчанию
-            $structureValue == $key ? $display = "style='display: block;'" : $display = "style='display: none;'";
-            $html .= '<select class="form-control" name="' . $this->htmlName . '_' . strtolower($key) . '" id="' . $this->htmlName . '_' . strtolower($key) . '" ' . $display . '>';
+            $structureValue == $key ? $display = "block" : $display = "none";
+
+            // Построение тега "select" со списком доступных шаблонов
+            $html .= '<select class="form-control" name="' . $this->htmlName . '_' . strtolower($key) . '" id="' . $this->htmlName . '_' . strtolower($key) . '" >';
             $defaultValue = $this->getValue();
             foreach ($value as $k => $v) {
                 $selected = '';
@@ -68,6 +71,30 @@ class Controller extends Select\Controller
                 $html .= '<option value="' . $k . '"' . $selected . '>' . $v . '</option>';
             }
             $html .= '</select>';
+
+            // js скрипт инициализирующий модификацию тега "select" для возможности вставки собственного значения
+            $html .= '
+            <script>
+            $(\'.general_template-controls select[name="general_template_' . strtolower($key) . '"]\').selectize({
+                persist: false,
+                create: function(input) {
+                    return {
+                        value: input,
+                        text: input
+                    }
+                }
+            });
+            </script>
+            <script>
+            // Скрываем лишние теги "select" и следующие за ними теги "div" и открываем только одну пару.
+            // Это необходимо потому что при инициализации js скрипта скрываются все теги select.
+            // Из за этого едет вёрстка
+            $(\'.general_template-controls select[name="general_template_' . strtolower($key) . '"]\').next("div").css("display",
+            "' . $display . '");
+            $(\'.general_template-controls select[name="general_template_' . strtolower($key) . '"]\').css("display",
+            "' . $display . '");
+            </script>';
+
         }
         return $html;
     }
@@ -80,7 +107,17 @@ class Controller extends Select\Controller
     public function pickupNewValue()
     {
         $request = new Request();
-        $fieldName = $this->groupName . '_' . $this->name . '_' . strtolower($request->general_structure);
+
+        // Вычесляем последний префикс с учётом того что поля выбора типа структуры может не существовать
+        if (isset($request->general_structure)) {
+            $lastPrefix = strtolower($request->general_structure);
+        } else {
+            $objClassName = get_class($this->model);
+            $objClassNameSlice = explode('\\', $objClassName);
+            $lastPrefix = strtolower($objClassNameSlice[0] . '_' . $objClassNameSlice[2]);
+        }
+
+        $fieldName = $this->groupName . '_' . $this->name . '_' . $lastPrefix;
         $this->newValue = $request->$fieldName;
         return $this->newValue;
     }
