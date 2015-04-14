@@ -36,11 +36,6 @@ class ParseIt
         CURLOPT_MAXREDIRS => 10, // максимальное число редиректов
     );
 
-    private $excess = array(
-        '/users',
-        '/account'
-    );
-
     public function __construct()
     {
         // Время начала работы скрипта
@@ -48,10 +43,13 @@ class ParseIt
 
         $this->loadConfig();
 
+        $tmp = $this->config['website'];
+        $tmp = parse_url($tmp);
+        $this->host = $tmp['host'];
+
         // Проверка существования файла sitemap.xml и его даты
         if ($this->isSiteMapExist()) {
-            echo 'Карта сайта уже создана';
-            exit;
+            $this->stop('Карта сайта уже создана');
         }
         //list($this->links, $this->checked) = $this->loadParsedUrls();
         $this->loadParsedUrls();
@@ -64,13 +62,9 @@ class ParseIt
         $this->run();
     }
 
-    protected function info($mes, $status)
+    protected function stop($mes)
     {
-        // $status: 0 - продолжить работу, 1 - остановить скрипт
-        echo $mes . "</br>";
-        if ($status == 1) {
-            exit();
-        }
+        exit($mes);
     }
 
     protected function loadConfig()
@@ -79,10 +73,10 @@ class ParseIt
         $config = __DIR__ . "/sitemap.php";
 
         if (!file_exists($config)) {
-            exit("Конфигурационный файл {$config} не найден!");
+            $this->stop("Конфигурационный файл {$config} не найден!");
         } else {
             $this->config = require($config);
-            rtrim($this->config['website'], '/');
+            $this->config['website'] = rtrim($this->config['website'], '/');
             $tmp = parse_url($this->config['website']);
             $this->host = $tmp['host'];
             if (isset($this->config['seo_urls'])) {
@@ -107,22 +101,21 @@ class ParseIt
         // Проверяем существует ли файл и доступен ли он для чтения и записи
         if (file_exists($xmlFile)) {
             if (!is_readable($xmlFile)) {
-                exit("Карта сайта {$xmlFile} не доступна для чтения!");
+                $this->stop("Карта сайта {$xmlFile} не доступна для чтения!");
             }
             if (!is_writable($xmlFile)) {
-                exit("Карта сайта {$xmlFile} не доступна для записи!");
-                return false;
+                $this->stop("Карта сайта {$xmlFile} не доступна для записи!");
             }
             // Проверяем, обновлялась ли сегодня карта сайта
             if (date('d:m:Y', filemtime($xmlFile)) == date('d:m:Y')) {
-                exit("Карта сайта {$xmlFile} уже создавалась сегодня!");
+                $this->stop("Карта сайта {$xmlFile} уже создавалась сегодня!");
             }
             return true;
         } else {
             // Файла нет, пытаемся создать
             if (file_put_contents($xmlFile, '') === false) {
                 // Создать файл не получилось
-                exit("Не удалось создать файл {$xmlFile} для карты сайта!");
+                $this->stop("Не удалось создать файл {$xmlFile} для карты сайта!");
             }
         }
 
@@ -169,7 +162,7 @@ class ParseIt
         while (count($this->links) > 0) {
             $time = microtime(1);
             // todo переделать условие на нормальное, зависящее от времени выполнения скрипта и времени на сохранение данных
-            if (($time - $this->start) > 58.00) {
+            if (($time - $this->start) > 56.00) {
                 break;
             }
 
@@ -244,7 +237,7 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
         foreach ($this->checked as $k => $v) {
             $ret[] = '<url>';
             $ret[] = sprintf('<loc>%s</loc>', $this->xmlEscape($k));
-            // Временно без частоты обновления, даты последнего изменения и приоритета
+            // Временно без даты последнего изменения
             /*
             if (isset($url['lastmod'])) {
                 if (is_numeric($url['lastmod'])) {
@@ -260,13 +253,13 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
                     $ret[] = sprintf('<lastmod>%s</lastmod>', $url['lastmod']);
                 }
             }
-            if (isset($url['changefreq'])) {
+            */
+            if (isset($this->config['change_freq'])) {
                 $ret[] = sprintf(
                     '<changefreq>%s</changefreq>',
-                    $this->xmlEscape($url['changefreq'])
+                    $this->config['change_freq']
                 );
             }
-            */
             if (isset($this->config['priority'])) {
                 $priorityStr = sprintf('<priority>%s</priority>', '%01.1f');
                 if (isset($this->config['seo_urls'][$k])) {
@@ -306,7 +299,7 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
 
         // Если страница недоступна прекращаем выполнение скрипта
         if ($info['http_code'] >= '400' && $info < '599') {
-            exit('Страница' . $k . 'недоступна. Ошибка' . $info['http_code'] . ". Переход с $place");
+            $this->stop('Страница' . $k . 'недоступна. Ошибка' . $info['http_code'] . ". Переход с $place");
         }
 
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
@@ -437,9 +430,6 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
 
         $url = parse_url($link);
 
-        $tmp = $this->config['website'];
-        $tmp = parse_url($tmp);
-        $this->host = $tmp['host'];
         //Начальная директория - хост из конфига
         $startDir = $this->host;
         // Текущая директория: хост переданной ссылки
