@@ -71,6 +71,8 @@ class Controller
                 $tplName = $this->tplName;
             }
         }
+
+        // TODO требуется пересмотреть проверку наличия шаблона, иначе администратор ограничен правилами переопределения
         if (!stream_resolve_include_path($tplName)) {
             echo 'Нет файла шаблона ' . $tplName;
             exit;
@@ -256,6 +258,11 @@ class Controller
      */
     private function getPathToTwigTemplate($tplName)
     {
+        // Если был введён полный путь то он используется напрямую иначе только имя
+        // Считаем что был введён полный путь если присутствует хотябы один слэш
+        if (strpos($tplName, '/') !== false) {
+            return $tplName;
+        }
         $parts = explode('\\', get_class($this));
         $moduleName = ($parts[0] == 'Ideal') ? '' : $parts[0] . '/';
         return $moduleName . $parts[1] . '/' . $parts[2] . '/Site/' . $tplName;
