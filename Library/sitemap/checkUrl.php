@@ -26,6 +26,9 @@ class ParseIt
     /** @var boolean Булева переменная: ссылки с www или без */
     private $withWWW;
 
+    /** @var string Перменная для base */
+    private $base;
+
     private $options = array(
         CURLOPT_RETURNTRANSFER => true, //  возвращать строку, а не выводить в браузере
         CURLOPT_VERBOSE => true, // вывод дополнительной информации (?)
@@ -66,11 +69,12 @@ class ParseIt
 
     /**
      * Вывод ошибки и завершение работы скрипта
-     * @param string $mes - сообщение для вывода
+     * @param string $message - сообщение для вывода
      */
-    protected function stop($mes)
+    protected function stop($message)
     {
-        exit($mes);
+        echo $message;
+        exit();
     }
 
     /** Загрузка конфига */
@@ -132,6 +136,7 @@ class ParseIt
                 // Создать файл не получилось
                 $this->stop("Не удалось создать файл {$xmlFile} для карты сайта!");
             }
+            return false;
         }
 
     }
@@ -176,7 +181,9 @@ class ParseIt
         /** Массив checked вида [ссылка] => пометка о том является ли ссылка корректной (1 - да, 0 - нет) */
         while (count($this->links) > 0) {
             $time = microtime(1);
-            // todo переделать условие на нормальное, зависящее от времени выполнения скрипта и времени на сохранение данных
+            /** todo переделать условие на нормальное,
+             * зависящее от времени выполнения скрипта и времени на сохранение данных
+             */
             if (($time - $this->start) > 56.00) {
                 break;
             }
@@ -246,7 +253,8 @@ class ParseIt
         $ret[] = sprintf(
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
+xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
         );
         $ret[] = sprintf(
             '<!-- Last update of sitemap %s -->',
@@ -394,7 +402,8 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
                 $url = parse_url($link);
                 // Если хост из данной ссылке не равен заданному хосту,
                 // но они равны при добавлении к одному из них www
-                if ($url['host'] != $this->host && ((("www." . $url['host']) == $this->host) && $this->withWWW == true || ($url['host'] == ("www." . $this->host)) && $this->withWWW == false)) {
+                if ($url['host'] != $this->host && ((("www." . $url['host']) == $this->host) &&
+                     $this->withWWW == true || ($url['host'] == ("www." . $this->host)) && $this->withWWW == false)) {
                     // заменяем хост из ссылки заданным хостом (из конфига)
                     $link = str_replace($url['host'], $this->host, $link);
                 }
@@ -433,7 +442,8 @@ xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitem
 
         // Если выбранный хост из ссылки не равен хосту из конфига,
         // но он все же есть в обрабатываемой ссылке, то задаем хост из конфига как текущий.
-        if ($url['host'] != $this->host && (strpos($url['host'], $this->host) != false || strpos($this->host, $url['host']) != false)) {
+        if ($url['host'] != $this->host &&
+            (strpos($url['host'], $this->host) != false || strpos($this->host, $url['host']) != false)) {
             $url['host'] = $this->host;
         }
 
