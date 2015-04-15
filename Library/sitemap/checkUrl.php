@@ -69,6 +69,7 @@ class ParseIt
 
     /**
      * Вывод ошибки и завершение работы скрипта
+     *
      * @param string $message - сообщение для вывода
      */
     protected function stop($message)
@@ -81,7 +82,7 @@ class ParseIt
     protected function loadConfig()
     {
         // Подгрузка конфига
-        $config = __DIR__ . "/sitemap.php";
+        $config = __DIR__ . '/sitemap.php';
 
         if (!file_exists($config)) {
             $this->stop("Конфигурационный файл {$config} не найден!");
@@ -227,6 +228,7 @@ class ParseIt
 
     /**
      * Преобразования специальных символов для xml файла карты сайта
+     *
      * @param string $str - ссылка для обработки
      * @return string - обработанная ссылка
      */
@@ -315,6 +317,7 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
 
     /**
      * Метод для получения html кода и парсинга текущей страницы в основном цикле
+     *
      * @param string $k - получение html кода из ссылки
      * @param string $place - страница, на которой получили ссылку (нужна только в случае ощибки)
      * @return string  - возвращается строка с html кодом
@@ -346,6 +349,7 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
 
     /**
      * Парсинг ссылок из обрабатываемой страницы
+     *
      * @param string $content - Обрабатываемая страницы
      * @return array - Список полученных ссылок
      */
@@ -359,13 +363,14 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
 
     /**
      * Обработка полученных ссылок, добавление в очередь новых ссылок
+     *
      * @param array $urls - массив ссылок на обработку
      * @param string $current - текущая страница
      */
     private function addLinks($urls, $current)
     {
         foreach ($urls as $url) {
-            //Убираем все флаги без ссылок
+            // Убираем все флаги без ссылок
             if (strpos($url, '#') === 0) {
                 continue;
             }
@@ -388,6 +393,7 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
 
     /**
      * Достраивание обрабатываемой ссылки до абсолютной
+     *
      * @param string $link - обрабатываемая ссылка
      * @param string $current - текущая страница с которой получена ссылка
      * @return string - возвращается абсолютная ссылка
@@ -472,6 +478,7 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
 
     /**
      * Проверка является ли ссылка внешней
+     *
      * @param string $link - проверяемая ссылка
      * @return boolean - true если ссылка внешняя, иначе false
      */
@@ -484,7 +491,7 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
 
         $url = parse_url($link);
 
-        //Начальная директория - хост из конфига
+        // Начальная директория - хост из конфига
         $startDir = $this->host;
         // Текущая директория: хост переданной ссылки
         $curentDir = $url["host"];
