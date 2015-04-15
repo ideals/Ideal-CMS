@@ -108,6 +108,7 @@ class Model
      *
      * @param  integer $id Идентификатор вкладки
      * @param string $addonVar Название аддона
+     * @param string $addonName Наименование вкладки аддона
      * @return array
      */
     public function getTab($id, $addonVar, $addonName = '')
@@ -120,9 +121,11 @@ class Model
         $groupName = explode('_', $addonVar);
         $groupName = strtolower(end($groupName));
         $model->setFieldsGroup($groupName . '-' . $id);
-        // Загрузка данных связанного объекта
+
+        // Если создаётся новая вкладка то данные из связанного объекта не нужны
         $pageData = $this->model->getPageData();
         if (isset($pageData['ID'])) {
+            // Загрузка данных связанного объекта
             $config = Config::getInstance();
             $path = $this->model->getPath();
             $end = end($path);
