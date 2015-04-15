@@ -11,6 +11,7 @@ namespace Ideal\Field\Url;
 
 use Ideal\Field\AbstractController;
 use Ideal\Core\Site;
+use Ideal\Core\Config;
 
 /**
  * Поле, содержащее финальный сегмент URL для редактируемого элемента
@@ -86,11 +87,9 @@ class Controller extends AbstractController
         $value = array('url' => htmlspecialchars($this->newValue));
         $link = $url->getUrlWithPrefix($value, $this->model->getParentUrl());
 
-        // Подменяем REQUEST_URI новой ссылкой и запускаем роутер
-        // для проверки существования страницы по этому URL
-        $_SERVER['REQUEST_URI'] = $link;
-        $router = new Site\Router();
-        if (!$router->is404()) {
+        // Проверяем url на существование
+        $httpCode = self::checkUrl($link);
+        if ($httpCode != 404) {
             $item['message'] = 'URL: ' . $link . ' уже используется!';
         }
 
@@ -105,5 +104,39 @@ class Controller extends AbstractController
         // В url не нужны пробелы ни спереди, ни сзади
         $value = trim(parent::pickupNewValue());
         return $value;
+    }
+
+    /**
+     * Проверяет url на существование
+     * TODO Учесть что могут быть проблемы с ответом от сервера при запуске на локальной машине (504 ошибка)
+     *
+     * @param string $url SEO ссылка на создаваемый/редактируемый материал
+     * @return mixed HTTP-код ответа сервера
+     */
+    private static function checkUrl($url)
+    {
+        // Получаем конфигурационные данные сайта
+        $config = Config::getInstance();
+        $domain = $config->domain;
+
+        // Инициализируем curl
+        $ch = curl_init();
+        curl_setopt(
+            $ch,
+            CURLOPT_USERAGENT,
+            "Mozilla/4.0 (Windows; U; Windows NT 5.0; En; rv:1.8.0.2) Gecko/20070306 Firefox/1.0.0.4"
+        );
+
+        // Подставляем значение куки для проверки страницы от пользователя
+        curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID=' . $_COOKIE['PHPSESSID']);
+
+        // Устанавливаем значение url дял проверки
+        curl_setopt($ch, CURLOPT_URL, "$domain$url");
+        curl_exec($ch);
+
+        // Получаем HTTP код
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        return $httpCode;
     }
 }
