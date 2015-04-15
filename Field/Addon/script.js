@@ -1,10 +1,16 @@
-$(document).ready(function() {
+$(document).ready(function () {
     var addonField = getAddonFieldName();
     // Получаем список подключенных к странице аддонов
     addons = $.parseJSON($('#' + addonField).val());
 
     // Получаем список доступных для добавления аддонов
     available = $.parseJSON($('#available_addons').val());
+
+    // Получаем количество табов на странице не являющихся аддонами
+    // Табами не относящимися к аддонам считаем те табы у ссылок которых нет атрибута "id"
+    var addonTabs = $('ul.nav-tabs li a[id]');
+    var allTabs = $('ul.nav-tabs li a');
+    var countNotAddonTabs = allTabs.length - addonTabs.length;
 
     // Строим список подключённых аддонов в html-виде
     addonsHtml = '<div class="list-group">';
@@ -17,20 +23,21 @@ $(document).ready(function() {
     addonsHtml += '</div>';
     // Отображаем список аддонов на странице
     $('#addonsList').html(addonsHtml).children().eq(0).sortable({
-        stop: function sortDayaArray( event, ui ) {
+        stop: function sortDayaArray(event, ui)
+        {
             var curr = $.parseJSON($('#' + addonField).val());
             var fr = ui.item.data("movedfrom"),
                 to = ui.item.index();
-            if(fr!=to){
-                var el = curr.splice(fr,1)[0];
-                curr.splice(to,0,el);
+            if (fr != to) {
+                var el = curr.splice(fr, 1)[0];
+                curr.splice(to, 0, el);
                 $('#' + addonField).val(JSON.stringify(curr));
                 var tabsOffset = 2;
-                var $el = $("#tabs").children().eq(fr+tabsOffset).remove();
-                $el.insertAfter($("#tabs").children().get(to+tabsOffset-1));
+                var $el = $("#tabs").children().eq(fr + tabsOffset).remove();
+                $el.insertAfter($("#tabs").children().get(to + tabsOffset - 1));
             }
-        },start:function(event,ui) {
-            ui.item.data("movedfrom",ui.item.index());
+        }, start: function (event, ui) {
+            ui.item.data("movedfrom", ui.item.index());
         }
     }).disableSelection();
 
@@ -43,35 +50,42 @@ $(document).ready(function() {
 
     // todo редактирование названия аддона для этого элемента
     // отражение в поле ввода addonField и в списке вкладок
-});
 
 // Навешиваем событие на удаление аддонов на странице
-$("#addon-confirm-modal .btn.btn-primary").click(function(e) {
-    var pos = +$('#addon-confirm-modal').data("related");
-    if(pos<0) return;
-    $('#addonsList > .list-group').children().eq(pos).remove();
-    var addonField = getAddonFieldName();
-    var curr = $.parseJSON($('#' + addonField).val());
-    curr.splice(pos,1);
-    $('#' + addonField).val(JSON.stringify(curr));
-    $("#tabs").children().eq(pos+2).remove();
+    $("#addon-confirm-modal .btn.btn-primary").click(function (e) {
+        var pos = +$('#addon-confirm-modal').data("related");
+        if (pos < 0) {
+            return;
+        }
+        $('#addonsList > .list-group').children().eq(pos).remove();
+        var addonField = getAddonFieldName();
+        var curr = $.parseJSON($('#' + addonField).val());
+        curr.splice(pos, 1);
+        $('#' + addonField).val(JSON.stringify(curr));
+        $("#tabs").children().eq(pos + countNotAddonTabs).remove();
+    });
+
 });
+
 // Навешиваем событие на список аддонов на странице
-$('#addonsList').click(function(e) {
+$('#addonsList').click(function (e) {
     var $b = $(e.target).closest('span.input-group-btn.remove-addon > button');
-    if($b.length) {
-        $('#addon-confirm-modal').data("related",$b.parents(".list-group-item").index()).modal({show:true,data:{item:$b}});
+    if ($b.length) {
+        $('#addon-confirm-modal').data("related", $b.parents(".list-group-item").index()).modal({
+            show: true,
+            data: {item: $b}
+        });
     }
 });
 // Навешиваем событие на кнопку для отображения поля ввода для выбора аддона для добавления
-$('#add-addon-button').click(function(){
+$('#add-addon-button').click(function () {
     $(this).toggle();
     $('#add-addon').toggleClass('hide');
     $('#addonsList').toggleClass('full-form');
 });
 
 // Навешиваем событие на кнопку добавления аддона после выбора из select
-$('#add-addon-add').click(function(){
+$('#add-addon-add').click(function () {
     addonName = $('select#add-addon-select').val();
     addonField = getAddonFieldName();
     addons = $.parseJSON($('#' + addonField).val()); // список подключенных к странице аддонов
@@ -109,14 +123,15 @@ $('#add-addon-add').click(function(){
 });
 
 // Навешиваем событие на кнопку отмены добавления аддона
-$('#add-addon-hide').click(function(){
+$('#add-addon-hide').click(function () {
     $('#add-addon-button').toggle();
     $('#add-addon').toggleClass('hide');
     $('#addonsList').toggleClass('full-form');
 });
 
 // Добавление новой вкладки ко вкладкам редактирования элемента
-function onAddNewTab(data) {
+function onAddNewTab(data)
+{
     // Скрываем поле добавления вкладки
     $('#add-addon-button').toggle();
     $('#add-addon').toggleClass('hide');
@@ -124,7 +139,7 @@ function onAddNewTab(data) {
 
     // Добавляем в список вкладок для редактирования
     $('div#addonsList > div.list-group')
-    .append('<div class="list-group-item"><div class="input-group"><span class="form-control">' + data['name'] + 
+        .append('<div class="list-group-item"><div class="input-group"><span class="form-control">' + data['name'] +
         '</span><span class="input-group-btn remove-addon"><button class="btn btn-default" type="button">&times;</button></span></div></div>');
 
     // Добавляем вкладку к списку вкладок
@@ -136,7 +151,7 @@ function onAddNewTab(data) {
     // Записываем в поле аддона новый список элементов
     addonField = getAddonFieldName();
     var curr = $.parseJSON($('#' + addonField).val());
-    if (curr  == null) {
+    if (curr == null) {
         curr = [];
     }
     var dataList = $.parseJSON(data['list']);
@@ -144,3 +159,5 @@ function onAddNewTab(data) {
     curr = JSON.stringify(curr);
     $('#' + addonField).val(curr);
 }
+
+
