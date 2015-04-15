@@ -23,7 +23,13 @@ class AjaxController extends \Ideal\Core\AjaxController
     public function addAction()
     {
         $request = new Request();
-        $this->model->setPageDataById($request->id);
+
+        if ($request->id == 0) {
+            // Если аддон подключается к ещё несозданному элементу, то данные модели из БД взять не получится
+            $this->model->setPageData(array());
+        } else {
+            $this->model->setPageDataById($request->id);
+        }
 
         $addonModel = new Model();
         $field = substr($request->addonField, strlen($request->groupName) + 1);
