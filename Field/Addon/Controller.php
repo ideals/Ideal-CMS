@@ -103,6 +103,9 @@ HTML;
     public function getValue()
     {
         $value = parent::getValue();
+        if (empty($value)) {
+            return json_encode(array());
+        }
 
         // Восстановление названия подключённых аддонов, т.к. по умолчанию текстовое название
         // аддона не указывается.
