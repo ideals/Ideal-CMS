@@ -30,7 +30,7 @@ class AjaxController extends \Ideal\Core\AjaxController
         $addonModel->setModel($this->model, $field, $request->groupName);
 
         // Получаем html-код новой вкладки, её заголовок и название
-        $result = $addonModel->getTab($request->newId, $request->addonName);
+        $result = $addonModel->getTab($request->newId, $request->addonName, '', $request->action);
 
         // Возвращаем информацию только о новом подключенном аддоне
         $json = array();

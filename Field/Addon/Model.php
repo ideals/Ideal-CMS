@@ -108,9 +108,11 @@ class Model
      *
      * @param  integer $id Идентификатор вкладки
      * @param string $addonVar Название аддона
+     * @param string $addonName Наименование вкладки аддона
+     * @param string $addonAction Цель вызова (add - создание новой вкладки)
      * @return array
      */
-    public function getTab($id, $addonVar, $addonName = '')
+    public function getTab($id, $addonVar, $addonName = '', $addonAction = '')
     {
         $class = Util::getClassName($addonVar, 'Addon') . '\\Model';
         /** @var \Ideal\Core\Admin\Model $model */
@@ -120,15 +122,20 @@ class Model
         $groupName = explode('_', $addonVar);
         $groupName = strtolower(end($groupName));
         $model->setFieldsGroup($groupName . '-' . $id);
-        // Загрузка данных связанного объекта
-        $pageData = $this->model->getPageData();
-        if (isset($pageData['ID'])) {
-            $config = Config::getInstance();
-            $path = $this->model->getPath();
-            $end = end($path);
-            $prevStructure = $config->getStructureByName($end['structure']);
-            $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
-            $model->setPageDataByPrevStructure($prevStructure);
+
+        // Если создаётся новая вкладка то не нужны данные из связанного объекта
+        // TODO продумать вариванты отличия новой вкладки от уже созданной
+        if ($addonAction != 'add') {
+            // Загрузка данных связанного объекта
+            $pageData = $this->model->getPageData();
+            if (isset($pageData['ID']) && !empty($addonName)) {
+                $config = Config::getInstance();
+                $path = $this->model->getPath();
+                $end = end($path);
+                $prevStructure = $config->getStructureByName($end['structure']);
+                $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
+                $model->setPageDataByPrevStructure($prevStructure);
+            }
         }
 
         $addonVar .= '_' . $id;
