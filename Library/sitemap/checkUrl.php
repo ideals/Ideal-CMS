@@ -29,6 +29,7 @@ class ParseIt
     /** @var string Перменная для base */
     private $base;
 
+    /** @var array Массив параметров curl для получения заголовков и html кода страниц */
     private $options = array(
         CURLOPT_RETURNTRANSFER => true, //  возвращать строку, а не выводить в браузере
         CURLOPT_VERBOSE => true, // вывод дополнительной информации (?)
@@ -41,6 +42,11 @@ class ParseIt
         CURLOPT_MAXREDIRS => 10, // максимальное число редиректов
     );
 
+    /**
+     * Инициализация счетчика времени работы скрипта, вызов метода загрузки конфига,
+     * определение хоста, вызов методов проверки существования карты сайта и загрузки временных
+     * данных (при их наличии), запуск метода основного цикла скрипта.
+     */
     public function __construct()
     {
         // Время начала работы скрипта
@@ -56,7 +62,7 @@ class ParseIt
         if ($this->isSiteMapExist()) {
             $this->stop('Карта сайта уже создана');
         }
-        //list($this->links, $this->checked) = $this->loadParsedUrls();
+
         $this->loadParsedUrls();
 
         if ((count($this->links) == 0) && (count($this->checked) == 0)) {
@@ -78,7 +84,9 @@ class ParseIt
         exit();
     }
 
-    /** Загрузка конфига */
+    /**
+     * Загрузка конфига
+     */
     protected function loadConfig()
     {
         // Подгрузка конфига
@@ -113,7 +121,9 @@ class ParseIt
         }
     }
 
-    /** Проверка существования xml файла карты сайта */
+    /**
+     * Проверка существования xml файла карты сайта
+     */
     protected function isSiteMapExist()
     {
         $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
@@ -142,7 +152,9 @@ class ParseIt
 
     }
 
-    /** Метод для загрузки распарсенных данных из временного файла */
+    /**
+     * Метод для загрузки распарсенных данных из временного файла
+     */
     protected function loadParsedUrls()
     {
         // Если существует файл хранения временных данных сканирования,
@@ -158,24 +170,30 @@ class ParseIt
         }
     }
 
-    /** Метод для сохранения распарсенных данных во временный файл */
+    /**
+     * Метод для сохранения распарсенных данных во временный файл
+     */
     protected function saveParsedUrls()
     {
-        $result[0] = $this->links;
-        $result[1] = $this->checked;
+        $result = array(
+            $this->links,
+            $this->checked
+        );
 
         $result = serialize($result);
 
         $tmp_file = __DIR__ . $this->config['tmp_file'];
 
-        $fp = fopen($tmp_file, "w");
+        $fp = fopen($tmp_file, 'w');
 
         fwrite($fp, $result);
 
         fclose($fp);
     }
 
-    /** Метод основного цикла для сборка карты сайта и парсинга товаров */
+    /**
+     * Метод основного цикла для сборка карты сайта и парсинга товаров
+     */
     private function run()
     {
         /** Массив links вида [ссылка] => пометка(не играет роли) */
@@ -229,12 +247,12 @@ class ParseIt
     /**
      * Преобразования специальных символов для xml файла карты сайта
      *
-     * @param string $str - ссылка для обработки
-     * @return string - обработанная ссылка
+     * @param string $str  Ссылка для обработки
+     * @return string  Обработанная ссылка
      */
     public function xmlEscape($str)
     {
-        static $trans;
+        $trans = array();
         if (!isset($trans)) {
             $trans = get_html_translation_table(HTML_ENTITIES, ENT_QUOTES);
             foreach ($trans as $key => $value) {
@@ -246,26 +264,28 @@ class ParseIt
         return preg_replace("/&(?![A-Za-z]{0,4}\w{2,3};|#[0-9]{2,4};)/", "&#38;", strtr($str, $trans));
     }
 
-    /** Метод создания xml файла с картой сайта */
+    /**
+     * Метод создания xml файла с картой сайта
+     */
     protected function saveSiteMap()
     {
-        $ret = array();
+        $ret = '';
 
-        $ret[] = sprintf('<?xml version="1.0" encoding="%s"?>', 'UTF-8');
-        $ret[] = sprintf(
+        $ret .= sprintf('<?xml version="1.0" encoding="%s"?>', 'UTF-8');
+        $ret .= sprintf(
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
         );
-        $ret[] = sprintf(
+        $ret .= sprintf(
             '<!-- Last update of sitemap %s -->',
             date('Y-m-d\TH:i:s') . substr(date("O"), 0, 3) . ":" . substr(date("O"), 3)
         );
 
         foreach ($this->checked as $k => $v) {
-            $ret[] = '<url>';
-            $ret[] = sprintf('<loc>%s</loc>', $this->xmlEscape($k));
+            $ret .= '<url>';
+            $ret .= sprintf('<loc>%s</loc>', $this->xmlEscape($k));
             // Временно без даты последнего изменения
             /*
             if (isset($url['lastmod'])) {
@@ -284,7 +304,7 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
             }
             */
             if (isset($this->config['change_freq'])) {
-                $ret[] = sprintf(
+                $ret .= sprintf(
                     '<changefreq>%s</changefreq>',
                     $this->config['change_freq']
                 );
@@ -296,21 +316,19 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
                 } else {
                     $priority = $this->config['priority'];
                 }
-                $ret[] = sprintf($priorityStr, $priority);
+                $ret .= sprintf($priorityStr, $priority);
             }
-            $ret[] = '</url>';
+            $ret .= '</url>';
         }
 
-        $ret[] = '</urlset>';
+        $ret .= '</urlset>';
 
         $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
+
         $fp = fopen($xmlFile, 'w');
-        foreach ($ret as $v) {
-            fwrite($fp, $v);
-        }
+        fwrite($fp, $ret);
         fclose($fp);
 
-        //echo "Карта сайта успешно создана!\n";
         $time = microtime(1);
         echo 'done ' . ($time - $this->start);
     }
@@ -318,9 +336,9 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
     /**
      * Метод для получения html кода и парсинга текущей страницы в основном цикле
      *
-     * @param string $k - получение html кода из ссылки
-     * @param string $place - страница, на которой получили ссылку (нужна только в случае ощибки)
-     * @return string  - возвращается строка с html кодом
+     * @param string $k  Получение html кода из ссылки
+     * @param string $place  Страница, на которой получили ссылку (нужна только в случае ощибки)
+     * @return string  Возвращается строка с html кодом
      */
     private function getUrl($k, $place)
     {
@@ -334,7 +352,7 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
 
         // Если страница недоступна прекращаем выполнение скрипта
         if ($info['http_code'] >= '400' && $info < '599') {
-            $this->stop('Страница' . $k . 'недоступна. Ошибка' . $info['http_code'] . ". Переход с $place");
+            $this->stop("Страница {$k} недоступна. Ошибка {$info['http_code']}. Переход с {$place}");
         }
 
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
@@ -350,8 +368,8 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
     /**
      * Парсинг ссылок из обрабатываемой страницы
      *
-     * @param string $content - Обрабатываемая страницы
-     * @return array - Список полученных ссылок
+     * @param string $content  Обрабатываемая страницы
+     * @return array  Список полученных ссылок
      */
     protected function parseLinks($content)
     {
@@ -364,8 +382,8 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
     /**
      * Обработка полученных ссылок, добавление в очередь новых ссылок
      *
-     * @param array $urls - массив ссылок на обработку
-     * @param string $current - текущая страница
+     * @param array $urls  Массив ссылок на обработку
+     * @param string $current  Текущая страница
      */
     private function addLinks($urls, $current)
     {
@@ -394,9 +412,9 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
     /**
      * Достраивание обрабатываемой ссылки до абсолютной
      *
-     * @param string $link - обрабатываемая ссылка
-     * @param string $current - текущая страница с которой получена ссылка
-     * @return string - возвращается абсолютная ссылка
+     * @param string $link  Обрабатываемая ссылка
+     * @param string $current  Текущая страница с которой получена ссылка
+     * @return string  Возвращается абсолютная ссылка
      */
     protected function getAbsoluteUrl($link, $current)
     {
@@ -408,8 +426,8 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
                 $url = parse_url($link);
                 // Если хост из данной ссылке не равен заданному хосту,
                 // но они равны при добавлении к одному из них www
-                if ($url['host'] != $this->host && ((("www." . $url['host']) == $this->host) &&
-                     $this->withWWW == true || ($url['host'] == ("www." . $this->host)) && $this->withWWW == false)) {
+                if ($url['host'] != $this->host && ((('www.' . $url['host']) == $this->host) &&
+                     $this->withWWW == true || ($url['host'] == ('www.' . $this->host)) && $this->withWWW == false)) {
                     // заменяем хост из ссылки заданным хостом (из конфига)
                     $link = str_replace($url['host'], $this->host, $link);
                 }
@@ -494,7 +512,7 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
         // Начальная директория - хост из конфига
         $startDir = $this->host;
         // Текущая директория: хост переданной ссылки
-        $curentDir = $url["host"];
+        $curentDir = $url['host'];
 
         // Если текущий хост с начала сторки НЕ равен хосту из конфига возвращаем true - т.е. пропускаем ссылку
         $extLink = (substr($curentDir, 0, strlen($startDir)) != $startDir);
