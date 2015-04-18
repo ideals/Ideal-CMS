@@ -87,8 +87,8 @@ class View
     /**
      * Установка значения элемента, передаваемого во View
      *
-     * @param string $name  Название переменной
-     * @param mixed  $value Значение переменной
+     * @param string $name Название переменной
+     * @param mixed $value Значение переменной
      */
     public function __set($name, $value)
     {
@@ -108,5 +108,26 @@ class View
     public function render()
     {
         return $this->template->render($this->vars);
+    }
+
+    /**
+     * Чистит все файлы twig кэширования
+     */
+    public static function clearTwigCache($path = '')
+    {
+        $config = Config::getInstance();
+        if (empty($path)) {
+            $cachePath = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/templates';
+        } else {
+            $cachePath = $path;
+        }
+        if ($objs = glob($cachePath . '/*')) {
+            foreach ($objs as $obj) {
+                is_dir($obj) ? self::clearTwigCache($obj) : unlink($obj);
+            }
+        }
+        if (!empty($path)) {
+            rmdir($cachePath);
+        }
     }
 }
