@@ -10,6 +10,7 @@
 namespace Ideal\Structure\Service\SiteData;
 
 use Ideal\Core\Util;
+use Ideal\Core\FileCache;
 
 /**
  * Чтение, отображение и запись специального формата конфигурационных php-файлов
@@ -35,6 +36,7 @@ class ConfigPhp
      */
     public function pickupValues()
     {
+        $response = array('res' => true, 'text' => '');
         $pageData = array();
         foreach ($this->params as $tabId => $tab) {
             foreach ($tab['arr'] as $field => $param) {
@@ -45,7 +47,7 @@ class ConfigPhp
                 $model->setPageData($pageData);
 
                 $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
-                /** @noinspection PhpUndefinedMethodInspection  */
+                /** @noinspection PhpUndefinedMethodInspection */
                 /** @var $fieldModel \Ideal\Field\AbstractController */
                 $fieldModel = $fieldClass::getInstance();
                 $fieldModel->setModel($model, $fieldName, 'general');
@@ -53,10 +55,17 @@ class ConfigPhp
                 // Получаем данные от пользователя
                 $value = $fieldModel->pickupNewValue();
 
+                // Обработка данных введённых пользователем
+                $item = $fieldModel->parseInputValue(false);
+
+                if (!empty($item['message'])) {
+                    $response = array('res' => false, 'text' => $item['message']);
+                    return $response;
+                }
                 $this->params[$tabId]['arr'][$field]['value'] = $value;
             }
         }
-
+        return $response;
     }
 
     /**
@@ -104,24 +113,62 @@ class ConfigPhp
      */
     public function changeAndSave($fileName)
     {
-        $class = 'alert';
+        $class = 'alert alert-block alert-success';
         $res = true;
         $text = 'Настройки сохранены!';
 
         // Заменяем настройки на введённые пользователем
-        $this->pickupValues();
-
-        if ($this->saveFile($fileName) === false) {
+        $response = $this->pickupValues();
+        if ($response['res'] === false) {
             $res = false;
-            $text = 'Не получилось сохранить настройки в файл ' . $fileName;
+            $text = $response['text'];
+            $class = 'alert alert-danger';
+        } else {
+            // Запускаем очистку кэша если он отключен
+            if (!$this->params['cache']['arr']['fileCache']['value']) {
+                FileCache::clearFileCache();
+            }
+
+            //Перезаписываем данные в исключениях кэша
+            $response = self::cacheExcludeProcessing($this->params['cache']['arr']['excludeFileCache']['value']);
+            if ($response['res'] === false) {
+                $res = false;
+                $text = $response['text'];
+            }
+
+            if ($this->saveFile($fileName) === false) {
+                $res = false;
+                $text = 'Не получилось сохранить настройки в файл ' . $fileName;
+            }
         }
 
         print <<<DONE
-        <div class="{$class} {$class}-block {$class}-success fade in">
-        <button type="button" class="close" data-dismiss="{$class}">&times;</button>
-        <span class="{$class}-heading">{$text}</span></div>
+        <div class="{$class} fade in">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <span class="alert-heading">{$text}</span></div>
 DONE;
         return $res;
+    }
+
+    /**
+     * Обрабатывает список исключений из настроек кэша
+     */
+    public static function cacheExcludeProcessing($string)
+    {
+        $response = array('res' => true);
+
+        // Экранируем переводы строки для обработки каждой строки
+        $string = str_replace("\r", '', $string);
+        $lines = explode("\n", $string);
+
+        foreach ($lines as $line) {
+            if (!FileCache::addExcludeFileCache($line)) {
+                $response['res'] = false;
+                $response['text'] = 'Не получилось сохранить настройки исключений в файл';
+            }
+        }
+
+        return $response;
     }
 
     /**
@@ -272,7 +319,7 @@ DONE;
                 $model->setPageData($pageData);
 
                 $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
-                /** @noinspection PhpUndefinedMethodInspection  */
+                /** @noinspection PhpUndefinedMethodInspection */
                 /** @var $fieldModel \Ideal\Field\AbstractController */
                 $fieldModel = $fieldClass::getInstance();
                 $fieldModel->setModel($model, $fieldName, 'general');

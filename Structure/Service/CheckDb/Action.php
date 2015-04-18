@@ -4,6 +4,16 @@ namespace Ideal\Structure\Service\CheckDb;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 
+echo '<ul class="nav nav-tabs">';
+
+echo '<li class="active"><a href="#bd" data-toggle="tab">База данных</a></li>';
+echo '<li><a href="#cache" data-toggle="tab">Кэш</a></li>';
+
+echo '</ul>';
+echo '<div class="tab-content">';
+
+echo '<div class="tab-pane well active" id="bd">';
+
 echo '<form method="POST" action="">';
 
 $db = Db::getInstance();
@@ -112,7 +122,7 @@ foreach ($dbTables as $table) {
 }
 
 // После нажатия на кнопку применить и совершения действий, нужно либо заново перечитывать БД, либо перегружать страницу
-if (isset($_POST['create']) OR isset($_POST['delete'])) {
+if (isset($_POST['create']) || isset($_POST['delete'])) {
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
 }
@@ -125,3 +135,35 @@ if ($isCool) {
 ?>
 
 </form>
+</div>
+
+<div class="tab-pane well" id="cache">
+    <button class="btn btn-info" value="Удаление файлов" onclick="dellCacheFiles()">
+        Удаление файлов
+    </button>
+</div>
+</div>
+
+
+<script type="application/javascript">
+    function dellCacheFiles()
+    {
+        var text = '';
+        $.ajax({
+            url: 'index.php',
+            data: {action: 'dellCacheFiles', controller: 'Ideal\\Structure\\Service\\Cache', mode: 'ajax'},
+            success: function (data)
+            {
+                if (data.text) {
+                    text = 'Удалённые файлы кэша: <br />' + data.text;
+                }
+                else{
+                    text = 'Информация о закэшированных страницах верна.';
+                }
+                $('.nav-tabs').parent().prepend('<div class="alert alert-block alert-success fade in"> <button type="button" class="close" data-dismiss="alert">&times;</button><span class="alert-heading">' + text + '</span></div>');
+            },
+            type: 'GET',
+            dataType: "json"
+        });
+    }
+</script>

@@ -21,5 +21,8 @@ return array(
         'templateSite' => "0", // Кэширование twig-шаблонов | Ideal_Checkbox
         'templateAdmin' => "0", // Кэширование twig-шаблонов админской части | Ideal_Checkbox
         'memcache' => "0", // Кэширование запросов к БД | Ideal_Checkbox
+        'indexFile' => "index.html", // Индексный файл в папке | Ideal_Text
+        'fileCache' => "0", // Кэширование страниц в файлы | Ideal_Checkbox
+        'excludeFileCache' => "", // Адреса для исключения из кэша (по одному на строку, формат "регулярные выражения") | Ideal_RegexpList
     ),
 );

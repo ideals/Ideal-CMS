@@ -62,6 +62,7 @@
                             <li>
                                 <a onClick="showModal('{{ user.par }}', {{ user.ID }}, 'showEdit'); return false;"
                                    href="#">Профиль</a></li>
+                            <li><a onClick="showClearCacheConfirm(); return false;" href="#">Очистить кэш</a></li>
                             <li><a href="index.php?action=logout">Выход</a></li>
                         </ul>
                     </li>
@@ -604,6 +605,24 @@
 
 
     {% endblock %}
+    <script>
+      // Запрос подтверждения на очистку кэша и инициализация его поной чистки
+        function showClearCacheConfirm()
+        {
+            if (confirm('Вы действительно хотите сбросить весь кэш?')) {
+                $.ajax({
+                    url: 'index.php',
+                    data: {action: 'clearCache', controller: 'Ideal\\Structure\\Service\\Cache', mode: 'ajax'},
+                    success: function ()
+                    {
+                        alert('Кэш успешно очищен!');
+                    },
+                    type: 'GET',
+                    dataType: "json"
+                });
+            }
+        }
+    </script>
 
 </div>
 
