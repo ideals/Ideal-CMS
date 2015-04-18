@@ -54,10 +54,6 @@ class ParseIt
 
         $this->loadConfig();
 
-        $tmp = $this->config['website'];
-        $tmp = parse_url($tmp);
-        $this->host = $tmp['host'];
-
         // Проверка существования файла sitemap.xml и его даты
         if ($this->isSiteMapExist()) {
             $this->stop('Карта сайта уже создана');
@@ -96,7 +92,7 @@ class ParseIt
             $this->stop("Конфигурационный файл {$config} не найден!");
         } else {
             $this->config = require($config);
-            $this->config['website'] = rtrim($this->config['website'], '/');
+
             $tmp = parse_url($this->config['website']);
             $this->host = $tmp['host'];
 
