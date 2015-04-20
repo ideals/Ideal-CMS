@@ -1,13 +1,33 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2015 Ideal CMS (http://idealcms.ru/)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Core;
 
 /**
+ * Класс-обёртка для работы с переменной $_REQUEST
+ *
  * @property string page Зарезервировано для листалки, в переменной содержится номер запрашиваемой страницы
+ * @property string action Зарезервировано для названия вызываемого экшена
  */
 class Request
 {
+    /**
+     * Магический метод для извлечения значения $name из $_REQUEST
+     *
+     * Если в $_REQUEST параметр $name отсутствует, то будет возвращена пустая строка.
+     *
+     * @param string $name Название параметра
+     * @return string Значение этого параметра в $_REQUEST
+     */
     public function __get($name)
     {
+        // Перенос в $_REQUEST значений из formValues (используется исключительно для работы в админке)
         if (isset($_REQUEST['formValues'])) {
             parse_str($_REQUEST['formValues'], $values);
             $_REQUEST = array_merge($_REQUEST, $values);
@@ -21,11 +41,23 @@ class Request
         return '';
     }
 
+    /**
+     * Установка значения в переменную $_REQUEST. Настоятельно не рекомендуется это делать
+     *
+     * @param string $name Название параметра, который нужно задать
+     * @param mixed $value Значение параметра
+     */
     public function __set($name, $value)
     {
         $_REQUEST[$name] = $value;
     }
 
+    /**
+     * Получение из query string строки за исключением параметра $without и его значения
+     *
+     * @param string $without Параметр, который нужно исключить из query string
+     * @return string Query string без параметра $without
+     */
     public function getQueryWithout($without)
     {
         // Убираем переменную $without стоящую внутри GET-строки
