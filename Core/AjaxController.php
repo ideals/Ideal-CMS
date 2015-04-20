@@ -3,19 +3,22 @@
  * Ideal CMS (http://idealcms.ru/)
  *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
- * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru/)
+ * @copyright Copyright (c) 2012-2015 Ideal CMS (http://idealcms.ru/)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
 namespace Ideal\Core;
 
 /**
- * Class AjaxController
+ * Контроллер, вызываемый при работе с ajax-вызовами
  */
 class AjaxController
 {
     /** @var Model Модель соответствующая этому контроллеру */
     protected $model;
+
+    /* @var View Объект вида — twig-шаблонизатор */
+    protected $view;
 
     /**
      * Генерация контента страницы для отображения в браузере
@@ -37,12 +40,14 @@ class AjaxController
 
         if (method_exists($this, $actionName)) {
             // Вызываемый action существует, запускаем его
-            $this->$actionName();
+            $text = $this->$actionName();
         } else {
             // Вызываемый action отсутствует, запускаем 404 ошибку
-            $this->error404Action();
+            $text = $this->error404Action();
             $this->model->is404 = true;
         }
+
+        return $text;
     }
 
     /**
@@ -78,7 +83,7 @@ class AjaxController
         $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
 
         $folders = array_merge(array($tplRoot, $cmsFolder));
-        $this->view = new \Ideal\Core\View($folders, $config->cache['templateSite']);
+        $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
 
@@ -99,5 +104,8 @@ class AjaxController
         $pageData = $this->model->getPageData();
         $pageData['title'] = $title;
         $this->model->setPageData($pageData);
+
+        // Twig рендерит текст странички из шаблона
+        return $this->view->render();
     }
 }
