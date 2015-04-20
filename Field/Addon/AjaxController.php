@@ -43,6 +43,6 @@ class AjaxController extends \Ideal\Core\AjaxController
         $json[] = array($request->newId, $request->addonName, $result['name']);
         $result['list'] = json_encode($json);
 
-        echo json_encode($result);
+        return json_encode($result);
     }
 }
