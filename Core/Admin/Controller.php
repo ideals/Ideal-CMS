@@ -255,6 +255,9 @@ class Controller
 
         $this->view->hideToolbarForm = !is_array($request->toolbar) || (count($request->toolbar) == 0);
 
+        // Определение места выполнения скрипта (на сайте в production, или локально в development)
+        $this->view->isProduction = $config->domain == str_replace('www.', '', $_SERVER['HTTP_HOST']);
+
         $this->finishMod($actionName);
 
         return $this->view->render();
