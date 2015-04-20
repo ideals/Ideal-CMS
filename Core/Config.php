@@ -10,6 +10,7 @@ namespace Ideal\Core;
 /**
  * Класс конфигурации, в котором хранятся все конфигурационные данные CMS
  * @property array db Массив с настройками подключения к БД
+ * @property array cache Массив с настройками кэширования
  * @property string cmsFolder Название папки с CMS
  */
 class Config
