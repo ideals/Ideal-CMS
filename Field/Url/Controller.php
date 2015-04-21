@@ -89,8 +89,13 @@ class Controller extends AbstractController
 
         // Проверяем url на существование
         $httpCode = self::checkUrl($link);
-        if ($httpCode != 404) {
+        if ($httpCode == 200) {
             $item['message'] = 'URL: ' . $link . ' уже используется!';
+        }
+
+        // Если не 404 ошибка, то уведомляем об этом польлзователя и не создаём страницу
+        if ($httpCode != 404) {
+            $item['message'] = 'URL: ' . $link . ' выдаёт ошибку с HTTP-кодом ' . $httpCode;
         }
 
         return $item;
@@ -115,10 +120,9 @@ class Controller extends AbstractController
      */
     private static function checkUrl($url)
     {
-        // Получаем конфигурационные данные сайта
+        // Выстраиваем ссылку к создаваемой странице
         $config = Config::getInstance();
-        $domain = $config->domain;
-        $url = "{$domain}{$url}";
+        $url = $_SERVER['HTTP_HOST'] . '/' . $config->cms['startUrl'] . '/' . $url;
 
         // Инициализируем curl
         $ch = curl_init();
@@ -130,7 +134,9 @@ class Controller extends AbstractController
 
         // Устанавливаем значение url дял проверки
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
         curl_exec($ch);
 
         // Получаем HTTP код
