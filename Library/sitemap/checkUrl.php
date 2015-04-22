@@ -1,8 +1,6 @@
 <?php
 namespace ParseIt;
 
-header('Content-Type: text/html; charset=utf-8');
-
 class ParseIt
 {
     /** Регулярное выражение для поиска ссылок */
@@ -11,7 +9,7 @@ class ParseIt
     /** @var float Время начала работы скрипта */
     private $start;
 
-    /** @var string Переменная содержащая адрес главной страницы сайты */
+    /** @var string Переменная содержащая адрес главной страницы сайта */
     private $host;
 
     /** @var  array Массив НЕпроверенных ссылок */
@@ -23,10 +21,7 @@ class ParseIt
     /** @var array Массив для данных из конфига */
     private $config = array();
 
-    /** @var boolean Булева переменная: ссылки с www или без */
-    private $withWWW;
-
-    /** @var string Перменная для base */
+    /** @var string Ссылка из мета-тега base, если он есть на странице */
     private $base;
 
     /** @var array Массив параметров curl для получения заголовков и html кода страниц */
@@ -52,13 +47,13 @@ class ParseIt
         // Время начала работы скрипта
         $this->start = microtime(1);
 
+        // Считываем настройки для создания карты сайта
         $this->loadConfig();
 
         // Проверка существования файла sitemap.xml и его даты
-        if ($this->isSiteMapExist()) {
-            $this->stop('Карта сайта уже создана');
-        }
+        $this->prepareSiteMapFile();
 
+        // Загружаем данные, собранные на предыдущих шагах работы скрипта
         $this->loadParsedUrls();
 
         if ((count($this->links) == 0) && (count($this->checked) == 0)) {
@@ -70,7 +65,7 @@ class ParseIt
     }
 
     /**
-     * Вывод ошибки и завершение работы скрипта
+     * Вывод сообщения и завершение работы скрипта
      *
      * @param string $message - сообщение для вывода
      */
@@ -81,7 +76,7 @@ class ParseIt
     }
 
     /**
-     * Загрузка конфига
+     * Загрузка конфига в переменную $this->config
      */
     protected function loadConfig()
     {
@@ -91,18 +86,14 @@ class ParseIt
         if (!file_exists($config)) {
             $this->stop("Конфигурационный файл {$config} не найден!");
         } else {
+            /** @noinspection PhpIncludeInspection */
             $this->config = require($config);
 
             $tmp = parse_url($this->config['website']);
             $this->host = $tmp['host'];
 
-            if (strpos($this->host, 'www') === 0) {
-                $this->withWWW = true;
-            } else {
-                $this->withWWW = false;
-            }
-
-            if (isset($this->config['seo_urls'])) {
+            // Если заданы страницы с приоритетом, парсим их в массив
+            if (!empty($this->config['seo_urls'])) {
                 $seo = array();
                 $tmp = explode(',', $this->config['seo_urls']);
                 foreach ($tmp as $v => $k) {
@@ -112,40 +103,33 @@ class ParseIt
                     $seo[$url] = $priority;
                 }
                 $this->config['seo_urls'] = $seo;
-
             }
         }
     }
 
     /**
-     * Проверка существования xml файла карты сайта
+     * Проверка наличия, доступности для записи и актуальности xml-файла карты сайта
      */
-    protected function isSiteMapExist()
+    protected function prepareSiteMapFile()
     {
         $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
 
         // Проверяем существует ли файл и доступен ли он для чтения и записи
         if (file_exists($xmlFile)) {
             if (!is_readable($xmlFile)) {
-                $this->stop("Карта сайта {$xmlFile} не доступна для чтения!");
+                $this->stop("Карта сайта {$xmlFile} недоступна для чтения!");
             }
             if (!is_writable($xmlFile)) {
-                $this->stop("Карта сайта {$xmlFile} не доступна для записи!");
+                $this->stop("Карта сайта {$xmlFile} недоступна для записи!");
             }
             // Проверяем, обновлялась ли сегодня карта сайта
             if (date('d:m:Y', filemtime($xmlFile)) == date('d:m:Y')) {
                 $this->stop("Карта сайта {$xmlFile} уже создавалась сегодня!");
             }
-            return true;
-        } else {
-            // Файла нет, пытаемся создать
-            if (file_put_contents($xmlFile, '') === false) {
-                // Создать файл не получилось
-                $this->stop("Не удалось создать файл {$xmlFile} для карты сайта!");
-            }
-            return false;
+        } elseif ((file_put_contents($xmlFile, '') === false)) {
+            // Файла нет и создать его не удалось
+            $this->stop("Не удалось создать файл {$xmlFile} для карты сайта!");
         }
-
     }
 
     /**
@@ -162,7 +146,6 @@ class ParseIt
 
             $this->links = $arr[0];
             $this->checked = $arr[1];
-
         }
     }
 
@@ -180,6 +163,8 @@ class ParseIt
 
         $tmp_file = __DIR__ . $this->config['tmp_file'];
 
+        // TODO сделать проверку на возможность записи в файл
+
         $fp = fopen($tmp_file, 'w');
 
         fwrite($fp, $result);
@@ -194,6 +179,7 @@ class ParseIt
     {
         /** Массив links вида [ссылка] => пометка(не играет роли) */
         /** Массив checked вида [ссылка] => пометка о том является ли ссылка корректной (1 - да, 0 - нет) */
+        $time = microtime(1);
         while (count($this->links) > 0) {
             $time = microtime(1);
             /** todo переделать условие на нормальное,
@@ -243,8 +229,8 @@ class ParseIt
     /**
      * Преобразования специальных символов для xml файла карты сайта
      *
-     * @param string $str  Ссылка для обработки
-     * @return string  Обработанная ссылка
+     * @param string $str Ссылка для обработки
+     * @return string Обработанная ссылка
      */
     public function xmlEscape($str)
     {
@@ -265,22 +251,12 @@ class ParseIt
      */
     protected function saveSiteMap()
     {
+        $lastDate = date('Y-m-d\TH:i:s') . substr(date("O"), 0, 3) . ":" . substr(date("O"), 3);
+
         $ret = '';
-
-        $ret .= sprintf('<?xml version="1.0" encoding="%s"?>', 'UTF-8');
-        $ret .= sprintf(
-            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
-        );
-        $ret .= sprintf(
-            '<!-- Last update of sitemap %s -->',
-            date('Y-m-d\TH:i:s') . substr(date("O"), 0, 3) . ":" . substr(date("O"), 3)
-        );
-
         foreach ($this->checked as $k => $v) {
             $ret .= '<url>';
+            // todo а разве вместо xmlEscape не подойдёт url_encode???
             $ret .= sprintf('<loc>%s</loc>', $this->xmlEscape($k));
             // Временно без даты последнего изменения
             /*
@@ -317,7 +293,17 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
             $ret .= '</url>';
         }
 
-        $ret .= '</urlset>';
+        $ret = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+            >
+    <!-- Last update of sitemap {$lastDate} -->
+    {$ret}
+    </urlset>
+XML;
 
         $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
 
@@ -330,11 +316,11 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
     }
 
     /**
-     * Метод для получения html кода и парсинга текущей страницы в основном цикле
+     * Метод для получения html-кода страницы по адресу $k в основном цикле
      *
-     * @param string $k  Получение html кода из ссылки
-     * @param string $place  Страница, на которой получили ссылку (нужна только в случае ощибки)
-     * @return string  Возвращается строка с html кодом
+     * @param string $k Ссылка на страницу для получения её контента
+     * @param string $place Страница, на которой получили ссылку (нужна только в случае ошибки)
+     * @return string Html-код страницы
      */
     private function getUrl($k, $place)
     {
@@ -342,9 +328,9 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
 
         curl_setopt_array($ch, $this->options);
 
-        $res = curl_exec($ch); //получаем html код страницы, включая заголовки
+        $res = curl_exec($ch); // получаем html код страницы, включая заголовки
 
-        $info = curl_getinfo($ch); // получаем инофрмацию о запрошенной странице
+        $info = curl_getinfo($ch); // получаем информацию о запрошенной странице
 
         // Если страница недоступна прекращаем выполнение скрипта
         if ($info['http_code'] >= '400' && $info < '599') {
@@ -355,7 +341,7 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
 
         curl_close($ch);
 
-        $res = substr($res, $header_size); //вырезаем html код страницы
+        $res = substr($res, $header_size); // вырезаем html код страницы
 
         return $res;
     }
@@ -364,8 +350,8 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
     /**
      * Парсинг ссылок из обрабатываемой страницы
      *
-     * @param string $content  Обрабатываемая страницы
-     * @return array  Список полученных ссылок
+     * @param string $content Обрабатываемая страницы
+     * @return array Список полученных ссылок
      */
     protected function parseLinks($content)
     {
@@ -378,8 +364,8 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
     /**
      * Обработка полученных ссылок, добавление в очередь новых ссылок
      *
-     * @param array $urls  Массив ссылок на обработку
-     * @param string $current  Текущая страница
+     * @param array $urls Массив ссылок на обработку
+     * @param string $current Текущая страница
      */
     private function addLinks($urls, $current)
     {
@@ -389,12 +375,12 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
                 continue;
             }
 
-            $link = $this->getAbsoluteUrl($url, $current);
-
-            if ($this->isExternalLink($link)) {
+            if ($this->isExternalLink($url, $current)) {
                 // Пропускаем ссылки на другие сайты
                 continue;
             }
+
+            $link = $this->getAbsoluteUrl($url, $current);
 
             if (isset($this->links[$link]) || isset($this->checked[$link])) {
                 // Пропускаем уже добавленные ссылки
@@ -414,23 +400,12 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
      */
     protected function getAbsoluteUrl($link, $current)
     {
-        if (preg_match(',^(https?://|ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:),i', $link)) {
-            // hostname is not the same (with/without www) than the one used in the link
-            // Если ссылка начинается с http
-            if (substr($link, 0, 4) == 'http') {
-                // То разбиваем её на части
-                $url = parse_url($link);
-                // Если хост из данной ссылке не равен заданному хосту,
-                // но они равны при добавлении к одному из них www
-                if ($url['host'] != $this->host && ((('www.' . $url['host']) == $this->host) &&
-                     $this->withWWW == true || ($url['host'] == ('www.' . $this->host)) && $this->withWWW == false)) {
-                    // заменяем хост из ссылки заданным хостом (из конфига)
-                    $link = str_replace($url['host'], $this->host, $link);
-                }
-                // Если передан только хост, то добавляем в конце "/"
-                if (!array_key_exists('path', $url) || $url['path'] == '' && substr($link, -1) != '/') {
-                    $link .= '/';
-                }
+        if (substr($link, 0, 4) == 'http') {
+            // Если ссылка начинается с http, то абсолютизировать её не надо
+            $url = parse_url($link);
+            if (empty($url['path'])) {
+                // Если ссылка на главную и в ней отсутствует последний слеш, добавляем его
+                $link .= '/';
             }
             return $link;
         }
@@ -493,28 +468,34 @@ http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">'
     /**
      * Проверка является ли ссылка внешней
      *
-     * @param string $link - проверяемая ссылка
-     * @return boolean - true если ссылка внешняя, иначе false
+     * @param string $link Проверяемая ссылка
+     * @param string $current Текущая страница с которой получена ссылка
+     * @return boolean true если ссылка внешняя, иначе false
      */
-    protected function isExternalLink($link)
+    protected function isExternalLink($link, $current)
     {
         // Если ссылка на приложение - пропускаем её
         if (preg_match(',^(ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:),i', $link)) {
             return true;
         }
 
+        if (substr($link, 0, 4) != 'http') {
+            // Если ссылка не начинается с http, то она точно не внешняя, все варианты мы исключили
+            return false;
+        }
+
         $url = parse_url($link);
 
-        // Начальная директория - хост из конфига
-        $startDir = $this->host;
-        // Текущая директория: хост переданной ссылки
-        $curentDir = $url['host'];
+        if ($this->host == $url['host']) {
+            // Хост сайта и хост ссылки совпадают, значит она локальная
+            return false;
+        }
 
-        // Если текущий хост с начала сторки НЕ равен хосту из конфига возвращаем true - т.е. пропускаем ссылку
-        $extLink = (substr($curentDir, 0, strlen($startDir)) != $startDir);
+        if (str_replace('www.', '', $this->host) == str_replace('www.', '', $url['host'])) {
+            // Хост сайта и хост ссылки не совпали, но с урезанием www совпали, значит неправильная ссылка
+            $this->stop("Неправильная абсолютная ссылка: {$link} на странице {$current}");
+        }
 
-        return $extLink;
+        return true;
     }
 }
-
-$A = new ParseIt();
