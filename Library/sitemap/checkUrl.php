@@ -92,6 +92,11 @@ class ParseIt
             $tmp = parse_url($this->config['website']);
             $this->host = $tmp['host'];
 
+            // Если существует строка с ненужными GET параметрами - разбиваем её на массив
+            if (!empty($this->config['disallow_key'])) {
+                $this->config['disallow_key'] = explode("\n", $this->config['disallow_key']);
+            }
+
             // Если заданы страницы с приоритетом, парсим их в массив
             if (!empty($this->config['seo_urls'])) {
                 $seo = array();
@@ -497,5 +502,51 @@ XML;
         }
 
         return true;
+    }
+
+    /**
+     * Метод для удаления ненужных GET параметров и якорей из ссылки
+     *
+     * @param $url Обрабатываемая ссылка
+     * @return string Возвращается ссылка без лишних GET параметров и якорей
+     */
+    protected function cutExcessGet($url)
+    {
+        $paramStart = strpos($url, '?');
+        // Если существуют GET параметры у ссылки - проверяем их
+        if ($paramStart !== false) {
+            foreach ($this->config['disallow_key'] as $id => $key) {
+                if ($key == '') {
+                    continue;
+                }
+                // Начальная позиция лишнего параметра
+                $start = strpos($url, $key, $paramStart);
+                while ($start != false) {
+                    // Конечная позиция параметра в ссылке
+                    $end = strpos($url, '&', $start);
+                    // Если в ссылке несколько параметров
+                    if ($end !== false) {
+                        // То ссылка равна себе же до заданного параметра + часть после '&' до конца строки
+                        $url = substr($url, 0, $start) . substr($url, $end + 1);
+                    } else { // Если в ссылкe только один параметр, то обрезаем его.
+                        $url = substr($url, 0, $start);
+                    }
+                    $start = strpos($url, $key, $paramStart);
+                }
+            }
+        }
+        // Если в сслыке есть '#' якорь, то обрезаем его
+        if (strpos($url, '#') !== false) {
+            $url = substr($url, 0, strpos($url, '#'));
+        }
+        // Если последний символ в ссылке '&' - обрезаем его
+        while (substr($url, strlen($url) - 1) == "&") {
+            $url = substr($url, 0, strlen($url) - 1);
+        }
+        // Если последний символ в ссылке '?' - обрезаем его
+        while (substr($url, strlen($url) - 1) == "?") {
+            $url = substr($url, 0, strlen($url) - 1);
+        }
+        return $url;
     }
 }
