@@ -1,6 +1,8 @@
 <?php
 namespace ParseIt;
 
+use Ideal\Field\Url;
+
 class ParseIt
 {
     /** Регулярное выражение для поиска ссылок */
@@ -519,20 +521,27 @@ XML;
                 if ($key == '') {
                     continue;
                 }
-                // Начальная позиция лишнего параметра
-                $start = strpos($url, $key, $paramStart);
-                while ($start != false) {
-                    // Конечная позиция параметра в ссылке
-                    $end = strpos($url, '&', $start);
-                    // Если в ссылке несколько параметров
-                    if ($end !== false) {
-                        // То ссылка равна себе же до заданного параметра + часть после '&' до конца строки
-                        $url = substr($url, 0, $start) . substr($url, $end + 1);
-                    } else { // Если в ссылкe только один параметр, то обрезаем его.
-                        $url = substr($url, 0, $start);
+                // Разбиваем ссылку на части
+                $link = parse_url($url);
+
+                // Разбиваем параметры
+                parse_str($link['query'], $parts);
+
+                foreach ($parts as $k => $v) {
+                    // Если параметр есть в исключениях - удаляем его из массива
+                    if ($v == $key) {
+                        unset($parts[$k]);
                     }
-                    $start = strpos($url, $key, $paramStart);
                 }
+                // Собираем оставшиеся параметры в строку
+                $query = http_build_query($parts);
+                // Заменяем GET параметры оставшимися
+                $link['query'] = $query;
+
+                $urlModel = new Url\Model();
+
+                $url = $urlModel->unparseUrl($link);
+
             }
         }
         // Если в сслыке есть '#' якорь, то обрезаем его
