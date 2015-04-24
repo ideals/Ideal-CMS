@@ -5,6 +5,8 @@ return array(
     'sitemap_file' => '/sitemap.xml', // Файл для записи xml-карты сайта | Ideal_Text
     'script_timeout' => '60', // Максимальное время выполнения скрипта (секунды) | Ideal_Text
     'load_timeout' => '10', // Максимальное время ожидания получения одного URL (секунды) | Ideal_Text
+    'script_time' => '60', // Максимальное время работы скрипта (секунды)
+    'recording' => '0.5', // Минимальное время на запись в промежуточный файл (секунды)
     'delay' => '1', // Задержка между запросами URL (секунды) | Ideal_Text
     'tmp_file' => '/tmp/sitemap.part', // Путь от корня сайта к временному файлу | Ideal_Text
     'old_sitemap' => '/tmp/sitemap-old.part', // Путь от корня сайта к файлу предыдущего сканирования | Ideal_Text
