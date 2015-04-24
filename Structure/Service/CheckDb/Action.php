@@ -8,6 +8,7 @@ echo '<ul class="nav nav-tabs">';
 
 echo '<li class="active"><a href="#bd" data-toggle="tab">База данных</a></li>';
 echo '<li><a href="#cache" data-toggle="tab">Кэш</a></li>';
+echo '<li><a href="#cmsFiles" data-toggle="tab">Файлы CMS</a></li>';
 
 echo '</ul>';
 echo '<div class="tab-content">';
@@ -142,6 +143,11 @@ if ($isCool) {
         Удаление файлов
     </button>
 </div>
+
+<div class="tab-pane well" id="cmsFiles">
+    <button class="btn btn-info" value="Проверка целостности файлов" onclick="checkCmsFiles()">
+        Проверка целостности файлов
+    </button>
 </div>
 
 
@@ -159,6 +165,39 @@ if ($isCool) {
                 }
                 else{
                     text = 'Информация о закэшированных страницах верна.';
+                }
+                $('.nav-tabs').parent().prepend('<div class="alert alert-block alert-success fade in"> <button type="button" class="close" data-dismiss="alert">&times;</button><span class="alert-heading">' + text + '</span></div>');
+            },
+            type: 'GET',
+            dataType: "json"
+        });
+    }
+
+    function checkCmsFiles()
+    {
+        var text = '';
+        $.ajax({
+            url: 'index.php',
+            data: {action: 'checkCmsFiles', controller: 'Ideal\\Structure\\Service\\checkCmsFiles', mode: 'ajax'},
+            success: function (data)
+            {
+                if (data.newFiles) {
+                    text += 'Были добавлены новые файлы: <br />' + data.newFiles;
+                }
+                if (data.changeFiles) {
+                    if (text != '') {
+                        text += '<br /><br />';
+                    }
+                    text += 'Были внесены изменения в следующие файлы: <br />' + data.changeFiles;
+                }
+                if (data.delFiles) {
+                    if (text != '') {
+                        text += '<br /><br />';
+                    }
+                    text += 'Были удалены следующие файлы: <br />' + data.delFiles;
+                }
+                if (text == '') {
+                    text = 'Системные файлы соответствуют актуальной версии'
                 }
                 $('.nav-tabs').parent().prepend('<div class="alert alert-block alert-success fade in"> <button type="button" class="close" data-dismiss="alert">&times;</button><span class="alert-heading">' + text + '</span></div>');
             },
