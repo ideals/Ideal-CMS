@@ -80,6 +80,9 @@ class ParseIt
         exit();
     }
 
+    /**
+     * Установка времени, необходимого для записи данных в временных файл
+     */
     protected function setTimeout()
     {
         $count = count($this->links) + count($this->checked);
@@ -181,8 +184,13 @@ class ParseIt
 
         $tmp_file = __DIR__ . $this->config['tmp_file'];
 
-        if (!is_writable($tmp_file)) {
-            $this->stop("Временный файл {$tmp_file} недоступен для записи!");
+        if (file_exists($tmp_file)) {
+            if (!is_writable($tmp_file)) {
+                $this->stop("Временный файл {$tmp_file} недоступен для записи!");
+            }
+        } elseif ((file_put_contents($tmp_file, '') === false)) {
+            // Файла нет и создать его не удалось
+            $this->stop("Не удалось создать временный файл {$tmp_file} для карты сайта!");
         }
 
         $fp = fopen($tmp_file, 'w');
@@ -398,7 +406,7 @@ XML;
                 // Пропускаем ссылки на другие сайты
                 continue;
             }
-            // Абсолютизируем ссылук
+            // Абсолютизируем ссылку
             $link = $this->getAbsoluteUrl($url, $current);
 
             // Убираем лишние GET параметры из ссылки
