@@ -58,6 +58,9 @@ class ParseIt
         // Загружаем данные, собранные на предыдущих шагах работы скрипта
         $this->loadParsedUrls();
 
+        // Задаем время на запись временного файла
+        $this->setTimeout();
+
         if ((count($this->links) == 0) && (count($this->checked) == 0)) {
             // Если это самое начало сканирования, добавляем в массив для сканирования первую ссылку
             $this->links[$this->config['website']] = 0;
@@ -75,6 +78,14 @@ class ParseIt
     {
         echo $message;
         exit();
+    }
+
+    protected function setTimeout()
+    {
+        $count = count($this->links) + count($this->checked);
+        if ($count > 1000) {
+            $this->config['recording'] = ($count/1000) * 0.05  + $this->config['recording'];
+        }
     }
 
     /**
@@ -170,7 +181,9 @@ class ParseIt
 
         $tmp_file = __DIR__ . $this->config['tmp_file'];
 
-        // TODO сделать проверку на возможность записи в файл
+        if (!is_writable($tmp_file)) {
+            $this->stop("Временный файл {$tmp_file} недоступен для записи!");
+        }
 
         $fp = fopen($tmp_file, 'w');
 
@@ -189,10 +202,9 @@ class ParseIt
         $time = microtime(1);
         while (count($this->links) > 0) {
             $time = microtime(1);
-            /** todo переделать условие на нормальное,
-             * зависящее от времени выполнения скрипта и времени на сохранение данных
-             */
-            if (($time - $this->start) > 56.00) {
+            // Если текущее время минус время начала работы скрипта больше чем разница
+            // заданного времени работы скрипта и времени на запись в файл - завершаем работу скрипта
+            if (($time - $this->start) > ($this->config['script_time'] - $this->config['recording'])) {
                 break;
             }
 
@@ -386,8 +398,11 @@ XML;
                 // Пропускаем ссылки на другие сайты
                 continue;
             }
-
+            // Абсолютизируем ссылук
             $link = $this->getAbsoluteUrl($url, $current);
+
+            // Убираем лишние GET параметры из ссылки
+            $link = $this->cutExcessGet($link);
 
             if (isset($this->links[$link]) || isset($this->checked[$link])) {
                 // Пропускаем уже добавленные ссылки
