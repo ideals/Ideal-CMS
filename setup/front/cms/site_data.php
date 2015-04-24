@@ -25,4 +25,8 @@ return array(
         'fileCache' => "0", // Кэширование страниц в файлы | Ideal_Checkbox
         'excludeFileCache' => "", // Адреса для исключения из кэша (по одному на строку, формат "регулярные выражения") | Ideal_RegexpList
     ),
+    'yandex' => array( // Яндекс
+        'yandexLogin' => "", // Яндекс логин | Ideal_Text
+        'yandexKey' => "", // Яндекс ключ | Ideal_Text
+    ),
 );
