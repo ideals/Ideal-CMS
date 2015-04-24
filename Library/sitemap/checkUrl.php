@@ -561,9 +561,7 @@ XML;
                 // Заменяем GET параметры оставшимися
                 $link['query'] = $query;
 
-                $urlModel = new Url\Model();
-
-                $url = $urlModel->unparseUrl($link);
+                $url = Url\Model::unparseUrl($link);
 
             }
         }
@@ -573,11 +571,11 @@ XML;
         }
         // Если последний символ в ссылке '&' - обрезаем его
         while (substr($url, strlen($url) - 1) == "&") {
-            $url = substr($url, 0, strlen($url) - 1);
+            $url = rtrim($url, '&');
         }
         // Если последний символ в ссылке '?' - обрезаем его
         while (substr($url, strlen($url) - 1) == "?") {
-            $url = substr($url, 0, strlen($url) - 1);
+            $url = rtrim($url, '?');
         }
         return $url;
     }
