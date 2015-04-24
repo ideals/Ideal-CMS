@@ -353,7 +353,7 @@ class Model
      * @param $parsed_url Массив полученный из функции parse_url
      * @return string Возвращается ссылка, собранная из элементов массива
      */
-    public function unparseUrl($parsed_url)
+    public static function unparseUrl($parsed_url)
     {
         $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
         $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
