@@ -254,7 +254,7 @@ class ParseIt
     }
 
     /**
-     * Преобразования специальных символов для xml файла карты сайта
+     * Преобразования специальных символов для xml файла карты сайта в HTML сущности
      *
      * @param string $str Ссылка для обработки
      * @return string Обработанная ссылка
@@ -268,8 +268,9 @@ class ParseIt
                 $trans[$key] = '&#' . ord($key) . ';';
             }
             // dont translate the '&' in case it is part of &xxx;
-            $trans[chr(38)] = '&amp;';
+            $trans[chr(38)] = '&amp;'; // chr(38) = '&'
         }
+        // Возваращается ссылка, в которой символы &,",<,>  заменены на HTML сущности
         return preg_replace("/&(?![A-Za-z]{0,4}\w{2,3};|#[0-9]{2,4};)/", "&#38;", strtr($str, $trans));
     }
 
@@ -283,7 +284,6 @@ class ParseIt
         $ret = '';
         foreach ($this->checked as $k => $v) {
             $ret .= '<url>';
-            // todo а разве вместо xmlEscape не подойдёт url_encode???
             $ret .= sprintf('<loc>%s</loc>', $this->xmlEscape($k));
             // Временно без даты последнего изменения
             /*
