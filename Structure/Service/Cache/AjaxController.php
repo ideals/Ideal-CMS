@@ -12,6 +12,7 @@ use Ideal\Core\FileCache;
 use Ideal\Core\Memcache;
 use Ideal\Core\View;
 use Ideal\Template\SiteMap;
+use Ideal\Core\Config;
 
 /**
  * Сброс всего кэширования
@@ -25,8 +26,13 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function clearCacheAction()
     {
+        $config = Config::getInstance();
+        $configCache = $config->cache;
+
         // Очищаем файловый кэш
-        FileCache::clearFileCache();
+        if (isset($configCache['fileCache']) && $configCache['fileCache']) {
+            FileCache::clearFileCache();
+        }
 
         // Очищаем Memcache
         $memcache = Memcache::getInstance();
