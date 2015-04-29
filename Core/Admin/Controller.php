@@ -7,6 +7,7 @@ use Ideal\Core\Request;
 use Ideal\Core\Util;
 use Ideal\Core\View;
 use Ideal\Structure;
+use Ideal\Core\FileCache;
 
 class Controller
 {
@@ -29,6 +30,7 @@ class Controller
 
         if ($result['isCorrect']) {
             $result = $this->model->createElement($result);
+            $this->runClearFileCache();
         }
 
         echo json_encode($result);
@@ -45,6 +47,10 @@ class Controller
         $this->model->setPageDataById($result['ID']);
 
         $result['isCorrect'] = $this->model->delete();
+
+        if ($result['isCorrect'] == 1) {
+            $this->runClearFileCache();
+        }
 
         echo json_encode($result);
         exit;
@@ -65,6 +71,7 @@ class Controller
 
         if ($result['isCorrect'] == 1) {
             $result = $this->model->saveElement($result);
+            $this->runClearFileCache();
         }
 
         echo json_encode($result);
@@ -320,5 +327,20 @@ class Controller
         // TODO доработать $this->model->getPath() так, чтобы в пути присутствовала и главная
         $this->showEditTabs();
         exit;
+    }
+
+    /**
+     * Запуск очищения файлового кэша.
+     */
+    public function runClearFileCache()
+    {
+        $config = Config::getInstance();
+        $configCache = $config->cache;
+
+        // Очищаем файловый кэш  при условии что кэширование включено.
+        // Если кэширование выключено кэш должен быть пуст
+        if (isset($configCache['fileCache']) && $configCache['fileCache']) {
+            FileCache::clearFileCache();
+        }
     }
 }
