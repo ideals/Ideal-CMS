@@ -5,6 +5,7 @@ use Ideal\Core;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Core\View;
+use Ideal\Structure\User;
 
 class Controller
 {
@@ -199,6 +200,10 @@ class Controller
 
         // Определение места выполнения скрипта (на сайте в production, или локально в development)
         $this->view->isProduction = $config->domain == str_replace('www.', '', $_SERVER['HTTP_HOST']);
+
+        // Определение залогинен пользователь в админку или нет
+        $user = new User\Model();
+        $this->view->isAdmin = $user->checkLogin();
 
         $helper = new Helper();
         $helpers = $helper->getVariables($this->model);
