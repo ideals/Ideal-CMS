@@ -50,7 +50,7 @@ class FrontController
         $configCache = $config->cache;
 
         // Если запрошена страница из пользовательской части и включён кэш, то сохранить её
-        if ($mode != 'admin' && $configCache['fileCache']) {
+        if ($mode != 'admin' && isset($configCache['fileCache']) && $configCache['fileCache']) {
             FileCache::saveCache($content, $_SERVER['REQUEST_URI']);
         }
 

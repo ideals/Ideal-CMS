@@ -342,8 +342,12 @@ abstract class Model extends Core\Model
             }
         }
 
+        $config = Config::getInstance();
+        $configCache = $config->cache;
+
         // Очищаем файловый кэш если введённые данные верны и происходит сохранение
-        if ($result['isCorrect']) {
+        // Только при условии что кэширование включено. Если кэширование выключено кэш должен быть пуст
+        if ($result['isCorrect'] && isset($configCache['fileCache']) && $configCache['fileCache']) {
             FileCache::clearFileCache();
         }
 
