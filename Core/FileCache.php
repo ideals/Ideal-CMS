@@ -77,6 +77,42 @@ class FileCache
     }
 
     /**
+     * Проверяет файл информации о кэшировании на возможность записи
+     */
+    public static function checkFileCache()
+    {
+        $config = Config::getInstance();
+        $cacheFile = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/cache/site_cache.php';
+        $cacheDir = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/cache';
+        // Проверяем файл на доступность для записи
+        if (!is_writable($cacheFile)) {
+            // Если не доступен, то для начала пробуем изменить права на всю папку со всеми волженностями
+            Util::chmod($cacheDir, '777', '777');
+
+            // Проверяем ещё раз на возможность записи
+            if (!is_writable($cacheFile)) {
+                // Если файл всё ещё недоступен, тогда проверяем папку на существование
+                self::checkDir($cacheDir);
+
+                // Затем проверяем на существование сам файл
+                if (!file_exists($cacheFile)) {
+                    // Если он не существует, то пытаемся его создать
+                    $file = "<?php\n// @codingStandardsIgnoreFile\nreturn array();\n";
+                    if (file_put_contents($cacheFile, $file) === false) {
+                        return 'Не удалось создать файл информации о кэшировании';
+                    } else {
+                        return 'ok';
+                    }
+                }
+            } else {
+                return 'ok';
+            }
+            return 'Файл информации о кэшировании не доступен для записи';
+        }
+        return 'ok';
+    }
+
+    /**
      * Очищает весь файловый кэш
      */
     public static function clearFileCache()
@@ -165,7 +201,7 @@ class FileCache
     /**
      * Проверяет на существование нужную директорию, если таковая отсутствует, то создаёт её
      *
-     * @param string $path путь к файлу
+     * @param string $path путь к папке
      */
     private static function checkDir($path)
     {
