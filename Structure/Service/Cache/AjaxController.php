@@ -11,7 +11,7 @@ namespace Ideal\Structure\Service\Cache;
 use Ideal\Core\FileCache;
 use Ideal\Core\Memcache;
 use Ideal\Core\View;
-use Ideal\Template\SiteMap;
+use Ideal\Addon\SiteMap;
 
 /**
  * Сброс всего кэширования
