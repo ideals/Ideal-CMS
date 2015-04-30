@@ -23,13 +23,13 @@ class AjaxController extends \Ideal\Core\AjaxController
     public function checkCmsFilesAction()
     {
         $config = Config::getInstance();
-        $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
+        $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal';
 
         // Получаем актуальную информацию о хэшах системных файлов
-        $actualSystemFilesHash = self::getAllSystemFiles($cmsFolder . '/Ideal', $cmsFolder);
+        $actualSystemFilesHash = self::getAllSystemFiles($cmsFolder, $cmsFolder);
 
         // Подгружаем имеющуюся информацию о хэшах системных файлов
-        $existingSystemFilesHash = require_once($cmsFolder . '/Ideal/setup/prepare/hash_files.php');
+        $existingSystemFilesHash = unserialize(file_get_contents($cmsFolder . '/setup/prepare/hash_files'));
 
         // Получаем список новых системных файлов
         $newFiles = array_diff_key($actualSystemFilesHash, $existingSystemFilesHash);
@@ -63,7 +63,7 @@ class AjaxController extends \Ideal\Core\AjaxController
         $files = scandir($folder);
         foreach ($files as $file) {
             // Отбрасываем не нужные каталоги и файлы
-            if (preg_match('/^\..*?|hash_files\.php$/isU', $file)) {
+            if (preg_match('/^\..*?|hash_files$/isU', $file)) {
                 continue;
             }
             // Если директория, то запускаем сбор внутри директории
