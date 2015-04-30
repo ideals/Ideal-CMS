@@ -13,9 +13,11 @@ require $cmsFolder . '/Core/AjaxController.php';
 require $cmsFolder . '/Structure/Service/CheckCmsFiles/AjaxController.php';
 
 // Собираем хэши файлов
-$scanFolder = $cmsFolder;
-$systemFiles = Ideal\Structure\Service\CheckCmsFiles\AjaxController::getAllSystemFiles($scanFolder, $cmsFolder);
+$systemFiles = Ideal\Structure\Service\CheckCmsFiles\AjaxController::getAllSystemFiles($cmsFolder, $cmsFolder);
 
 // Записываем данные в файл информации о хэшах файлов системы
-$file = "<?php\n// @codingStandardsIgnoreFile\nreturn " . var_export($systemFiles, true) . ";\n";
-file_put_contents($cmsFolder . '/setup/prepare/hash_files.php', $file);
+if (file_put_contents($cmsFolder . '/setup/prepare/hash_files', serialize($systemFiles))) {
+    echo "Информация о хэшах удачно записана\n";
+} else {
+    echo "Не удалось записать информацию о хэшах\n";
+}
