@@ -70,7 +70,7 @@ class AjaxController extends \Ideal\Core\AjaxController
             if (is_dir($folder . '/' . $file)) {
                 $systemFiles = array_merge($systemFiles, self::getAllSystemFiles($folder . '/' . $file, $cmsFolder));
             } else {
-                $fileKeyArray = str_replace($cmsFolder . '/', '', $folder) . '/' . $file;
+                $fileKeyArray = ltrim(str_replace($cmsFolder, '', $folder) . '/' . $file, '/');
                 $systemFiles[$fileKeyArray] = hash_file('crc32b', $folder . '/' . $file);
             }
         }
