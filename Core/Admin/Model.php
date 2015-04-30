@@ -5,7 +5,6 @@ use Ideal\Core;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Util;
-use Ideal\Core\FileCache;
 
 abstract class Model extends Core\Model
 {
@@ -340,11 +339,6 @@ abstract class Model extends Core\Model
             ) {
                 $result['errorTabs'][] = $item['realTab'];
             }
-        }
-
-        // Очищаем файловый кэш если введённые данные верны и происходит сохранение
-        if ($result['isCorrect']) {
-            FileCache::clearFileCache();
         }
 
         return $result;
