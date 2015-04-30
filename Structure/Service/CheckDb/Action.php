@@ -8,6 +8,7 @@ echo '<ul class="nav nav-tabs">';
 
 echo '<li class="active"><a href="#bd" data-toggle="tab">База данных</a></li>';
 echo '<li><a href="#cache" data-toggle="tab">Кэш</a></li>';
+echo '<li><a href="#cmsFiles" data-toggle="tab">Файлы CMS</a></li>';
 
 echo '</ul>';
 echo '<div class="tab-content">';
@@ -137,11 +138,54 @@ if ($isCool) {
 </form>
 </div>
 
+<style>
+    #iframe {
+        margin-top: 15px;
+    }
+
+    #loading {
+        -webkit-animation: loading 3s linear infinite;
+        animation: loading 3s linear infinite;
+    }
+
+    @-webkit-keyframes loading {
+        0% {
+            color: rgba(34, 34, 34, 1);
+        }
+        50% {
+            color: rgba(34, 34, 34, 0);
+        }
+        100% {
+            color: rgba(34, 34, 34, 1);
+        }
+    }
+
+    @keyframes loading {
+        0% {
+            color: rgba(34, 34, 34, 1);
+        }
+        50% {
+            color: rgba(34, 34, 34, 0);
+        }
+        100% {
+            color: rgba(34, 34, 34, 1);
+        }
+    }
+</style>
+
 <div class="tab-pane well" id="cache">
     <button class="btn btn-info" value="Удаление файлов" onclick="dellCacheFiles()">
         Удаление файлов
     </button>
 </div>
+
+<div class="tab-pane well" id="cmsFiles">
+    <button class="btn btn-info" value="Проверка целостности файлов" onclick="checkCmsFiles()">
+        Проверка целостности файлов
+    </button>
+    <span id="loading"></span>
+    <div id="iframe">
+    </div>
 </div>
 
 
@@ -161,6 +205,48 @@ if ($isCool) {
                     text = 'Информация о закэшированных страницах верна.';
                 }
                 $('.nav-tabs').parent().prepend('<div class="alert alert-block alert-success fade in"> <button type="button" class="close" data-dismiss="alert">&times;</button><span class="alert-heading">' + text + '</span></div>');
+            },
+            type: 'GET',
+            dataType: "json"
+        });
+    }
+
+    function checkCmsFiles()
+    {
+        $('#loading').html('Идёт сбор данных. Ждите.');
+        $('#iframe').html('');
+        var text = '';
+        $.ajax({
+            url: 'index.php',
+            data: {action: 'checkCmsFiles', controller: 'Ideal\\Structure\\Service\\CheckCmsFiles', mode: 'ajax'},
+            success: function (data)
+            {
+                if (data.newFiles) {
+                    text += 'Были добавлены новые файлы: <br />' + data.newFiles;
+                }
+                if (data.changeFiles) {
+                    if (text != '') {
+                        text += '<br /><br />';
+                    }
+                    text += 'Были внесены изменения в следующие файлы: <br />' + data.changeFiles;
+                }
+                if (data.delFiles) {
+                    if (text != '') {
+                        text += '<br /><br />';
+                    }
+                    text += 'Были удалены следующие файлы: <br />' + data.delFiles;
+                }
+                if (text == '') {
+                    text = 'Системные файлы соответствуют актуальной версии'
+                }
+                $('#loading').html('');
+                $('#iframe').html(text);
+            },
+            error: function (xhr) {
+                $('#loading').html('');
+                $('#iframe').html('<pre> Не удалось завершить сканирование. Статус: '
+                + xhr.statusCode().status +
+                '\n Попробуйте повторить позже.</pre>');
             },
             type: 'GET',
             dataType: "json"
