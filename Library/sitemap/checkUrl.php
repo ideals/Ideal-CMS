@@ -293,16 +293,36 @@ class ParseIt
 
         if (count($this->links) > 0) {
             $this->saveParsedUrls();
-            echo 'Всего пройденных ссылок: ' . count($this->checked) . "\n" . '</br>';
-            echo 'Всего непройденных ссылок: ' . count($this->links) . '</br>';
-            echo($time - $this->start);
-            echo "<pre>";
-            print_r($this->checked);
-            print_r($this->links);
-            echo "</pre>";
-            exit();
+            $message = "<pre>Выход по таймауту\n"
+                . 'Всего пройденных ссылок: ' . count($this->checked) . "\n"
+                . 'Всего непройденных ссылок: ' . count($this->links) . "\n"
+                . 'Затраченное время: ' . ($time - $this->start) . "\n\n"
+                . print_r($this->checked, true) . "\n\n"
+                . print_r($this->links, true);
+            $this->stop($message);
         }
+
+        if (count($this->checked) < 2) {
+            $this->sendEmail("Попытка записи в sitemap вместо списка ссылок:\n" .  print_r($this->checked, true));
+            $this->stop('В sitemap доступна только одна ссылка на запись');
+        }
+
         $this->saveSiteMap();
+    }
+
+    /**
+     * Функция отправки сообщение с отчетом о создании карты сайта
+     *
+     * @param string $text Сообщение(отчет)
+     */
+    private function sendEmail($text)
+    {
+        $header = "MIME-Version: 1.0\r\n"
+            . "Content-type: text/plain; charset=utf-8\r\n"
+            . 'From: sitemap@' . $this->host;
+
+        // Отправляем письма об изменениях
+        mail($this->config['email_notify'], $this->host, $text, $header);
     }
 
     /**
