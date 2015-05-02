@@ -64,13 +64,16 @@ class ParseIt
         // Считываем настройки для создания карты сайта
         $this->loadConfig();
 
+        // Установка максимального времени на загрузку страницы
+        $this->options['CURLOPT_TIMEOUT'] = $this->options['CURLOPT_CONNECTTIMEOUT'] = $this->config['load_timeout'];
+
         // Проверка существования файла sitemap.xml и его даты
         $this->prepareSiteMapFile();
 
         // Загружаем данные, собранные на предыдущих шагах работы скрипта
         $this->loadParsedUrls();
 
-        // Уточняем время, доступное для обхода ссылок $this->config['script_time']
+        // Уточняем время, доступное для обхода ссылок $this->config['script_timeout']
         $this->setTimeout();
 
         if ((count($this->links) == 0) && (count($this->checked) == 0)) {
@@ -99,7 +102,7 @@ class ParseIt
         if ($count > 1000) {
             $this->config['recording'] = ($count / 1000) * 0.05  + $this->config['recording'];
         }
-        $this->config['script_time'] -= $this->config['recording'];
+        $this->config['script_timeout'] -= $this->config['recording'];
     }
 
     /**
@@ -137,6 +140,7 @@ class ParseIt
             'delay' => 1,
             'old_sitemap' => '/images/map-old.part',
             'tmp_file' => '/images/map.part',
+            'pageroot' => '',
             'sitemap_file' => '/sitemap.xml',
             'crawler_url' => '/',
             'change_freq' => 'weekly',
@@ -151,7 +155,6 @@ class ParseIt
                 $this->config[$key] = $value;
             }
         }
-
 
         // Строим массивы для пропуска GET-параметров и URL по регулярным выражениям
         $this->config['disallow_key'] = explode("\n", $this->config['disallow_key']);
@@ -266,15 +269,32 @@ class ParseIt
         while (count($this->links) > 0) {
             // Если текущее время минус время начала работы скрипта больше чем разница
             // заданного времени работы скрипта - завершаем работу скрипта
-            if (($time - $this->start) > $this->config['script_time']) {
+            if (($time - $this->start) > $this->config['script_timeout']) {
                 break;
             }
+
+            // Делаем паузу между чтением страниц
+            usleep(intval($this->config['delay'] * 1000000));
 
             // Устанавливаем указатель на 1-й элемент
             reset($this->links);
 
             // Извлекаем ключ текущего элемента (то есть ссылку)
             $k = key($this->links);
+
+            /**
+            // handle lastmod
+            $res['lastmod'] = $lastmod;
+
+            // format timestamp appropriate to settings
+            if ($res['lastmod'] != '') {
+                if ($this->config['time_format'] == 'short') {
+                    $res['lastmod'] = $this->getDateTimeISO_short($res['lastmod']);
+                } else {
+                    $res['lastmod'] = $this->getDateTimeISO($res['lastmod']);
+                }
+            }
+            */
 
             // Получаем контент страницы
             $content = $this->getUrl($k, $this->links[$k]);
@@ -491,11 +511,17 @@ XML;
                 // Пропускаем ссылки на другие сайты
                 continue;
             }
+
             // Абсолютизируем ссылку
             $link = $this->getAbsoluteUrl($url, $current);
 
             // Убираем лишние GET параметры из ссылки
             $link = $this->cutExcessGet($link);
+
+            if ($this->skipUrl($link)) {
+                // Если ссылку не нужно добавлять, переходим к следующей
+                continue;
+            }
 
             if (isset($this->links[$link]) || isset($this->checked[$link])) {
                 // Пропускаем уже добавленные ссылки
@@ -612,7 +638,7 @@ XML;
     /**
      * Метод для удаления ненужных GET параметров и якорей из ссылки
      *
-     * @param $url Обрабатываемая ссылка
+     * @param string $url Обрабатываемая ссылка
      * @return string Возвращается ссылка без лишних GET параметров и якорей
      */
     protected function cutExcessGet($url)
@@ -658,5 +684,39 @@ XML;
             $url = rtrim($url, '?');
         }
         return $url;
+    }
+
+    /**
+     * Проверяем, нужно исключать этот URL или не надо
+     * @param $filename
+     * @return bool
+     */
+    protected function skipUrl($filename)
+    {
+        // Отрезаем доменную часть
+        $filename = substr($filename, strpos($filename, '/') + 1);
+
+        if (is_array($this->config['disallow_regexp']) && count($this->config['disallow_regexp']) > 0) {
+            // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
+            // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
+            $tmp = $this->config['disallow_regexp'];
+            $reduce = array_reduce(
+                $tmp,
+                function (&$res, $rule) {
+                    if ($res == 1 || preg_match($rule, $res)) {
+                        return 1;
+                    }
+                    return $res;
+                },
+                $filename
+            );
+            if ($filename !== $reduce) {
+                // Сработало одно из регулярных выражений, значит ссылку нужно исключить
+                return true;
+            }
+        }
+
+        // Ни одно из правил не сработало, значит страницу исключать не надо
+        return false;
     }
 }
