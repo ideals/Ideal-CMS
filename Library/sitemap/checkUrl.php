@@ -8,14 +8,8 @@ class ParseIt
     /** Регулярное выражение для поиска ссылок */
     const LINK = "/<[Aa][^>]*[Hh][Rr][Ee][Ff]=['\"]?([^\"'>]+)[^>]*>/";
 
-    /** @var float Время начала работы скрипта */
-    private $start;
-
-    /** @var string Переменная содержащая адрес главной страницы сайта */
-    private $host;
-
-    /** @var  array Массив НЕпроверенных ссылок */
-    private $links = array();
+    /** @var string Ссылка из мета-тега base, если он есть на странице */
+    private $base;
 
     /** @var array Массив проверенных ссылок */
     private $checked = array();
@@ -23,19 +17,25 @@ class ParseIt
     /** @var array Массив для данных из конфига */
     public $config = array();
 
-    /** @var string Ссылка из мета-тега base, если он есть на странице */
-    private $base;
+    /** @var string Переменная содержащая адрес главной страницы сайта */
+    private $host;
+
+    /** @var  array Массив НЕпроверенных ссылок */
+    private $links = array();
+
+    /** @var bool Флаг необходимости кэширования echo/print */
+    public $ob = false;
+
+    /** @var float Время начала работы скрипта */
+    private $start;
 
     /** @var string Статус запуска скрипта. Варианты cron|test */
     public $status = 'cron';
 
-    /** @var bool Флаг необходимости отправить вывод результатов работы скрипта почтой */
-    public $manualSend = false;
-
     /** @var array Массив параметров curl для получения заголовков и html кода страниц */
     private $options = array(
         CURLOPT_RETURNTRANSFER => true, //  возвращать строку, а не выводить в браузере
-        CURLOPT_VERBOSE => true, // вывод дополнительной информации (?)
+        CURLOPT_VERBOSE => false, // вывод дополнительной информации (?)
         CURLOPT_HEADER => true, // включать заголовки в вывод
         CURLOPT_ENCODING => "", // декодировать запрос используя все возможные кодировки
         CURLOPT_AUTOREFERER => true, // автоматическая установка поля referer в запросах, перенаправленных Location
@@ -55,17 +55,27 @@ class ParseIt
         // Время начала работы скрипта
         $this->start = microtime(1);
 
+        // Смотрим, где происходит запуск скрипта (в той же папке где он лежит или не в той)
+        $this->ob = file_exists(basename($_SERVER['PHP_SELF']));
+
         // Проверяем статус запуска - тестовый или по расписанию
-        if ($_SERVER['argv'][1] == 'w' || isset($_GET['w'])) {
+        if (isset($_GET['w']) || (isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] == 'w')) {
             // Если задан GET-параметр или ключ w в командной строке — это принудительный запуск
             $this->status = 'test';
+            $this->ob = false;
         }
+    }
 
+    /**
+     * Загрузка данных из конфига и из промежуточных файлов
+     */
+    public function loadData()
+    {
         // Считываем настройки для создания карты сайта
         $this->loadConfig();
 
         // Установка максимального времени на загрузку страницы
-        $this->options['CURLOPT_TIMEOUT'] = $this->options['CURLOPT_CONNECTTIMEOUT'] = $this->config['load_timeout'];
+        $this->options[CURLOPT_TIMEOUT] = $this->options[CURLOPT_CONNECTTIMEOUT] = $this->config['load_timeout'];
 
         // Проверка существования файла sitemap.xml и его даты
         $this->prepareSiteMapFile();
@@ -86,11 +96,11 @@ class ParseIt
      * Вывод сообщения и завершение работы скрипта
      *
      * @param string $message - сообщение для вывода
+     * @throws \Exception
      */
     protected function stop($message)
     {
-        echo $message;
-        exit();
+        throw new \Exception($message);
     }
 
     /**
@@ -111,7 +121,7 @@ class ParseIt
     protected function loadConfig()
     {
         // Подгрузка конфига
-        $config = __DIR__ . '/sitemap.php';
+        $config = __DIR__ . '/site_map.php';
         $message = 'Working with settings php-file from local directory';
 
         // Проверяем наличие файла рядом с запускаемым скриптом
@@ -132,6 +142,21 @@ class ParseIt
 
         $tmp = parse_url($this->config['website']);
         $this->host = $tmp['host'];
+        if (!isset($tmp['path'])) {
+            $tmp['path'] = '/';
+        }
+        $this->config['website'] = $tmp['scheme'] . '://' . $tmp['host'] . $tmp['path'];
+
+        if (empty($this->config['pageroot'])) {
+            if (empty($_SERVER['DOCUMENT_ROOT'])) {
+                // Обнаружение корня сайта, если скрипт запускается из стандартного места в Ideal CMS
+                $self = $_SERVER['PHP_SELF'];
+                $path = substr($self, 0, strpos($self, 'Ideal') - 1);
+                $this->config['pageroot'] = dirname($path);
+            } else {
+                $this->config['pageroot'] = $_SERVER['DOCUMENT_ROOT'];
+            }
+        }
 
         // Массив значений по умолчанию
         $default = array(
@@ -194,6 +219,7 @@ class ParseIt
             } else {
                 // Удаляем пустой файл, т.к. пустого файла не должно быть
                 unlink($xmlFile);
+                return;
             }
         }
 
@@ -237,7 +263,7 @@ class ParseIt
 
         $result = serialize($result);
 
-        $tmp_file = __DIR__ . $this->config['tmp_file'];
+        $tmp_file = $this->config['pageroot'] . $this->config['tmp_file'];
 
         if (file_exists($tmp_file)) {
             if (!is_writable($tmp_file)) {
@@ -260,11 +286,16 @@ class ParseIt
      */
     public function run()
     {
+        // Загружаем конфигурационные данные
+        $this->loadData();
+
         // Список страниц, которые не удалось прочитать с первого раза
         $broken = array();
 
-        /** Массив links вида [ссылка] => пометка(не играет роли) */
         /** Массив checked вида [ссылка] => пометка о том является ли ссылка корректной (1 - да, 0 - нет) */
+        $number = count($this->checked) + 1;
+
+        /** Массив links вида [ссылка] => пометка(не играет роли) */
         $time = microtime(1);
         while (count($this->links) > 0) {
             // Если текущее время минус время начала работы скрипта больше чем разница
@@ -281,6 +312,8 @@ class ParseIt
 
             // Извлекаем ключ текущего элемента (то есть ссылку)
             $k = key($this->links);
+
+            echo $number++ . '. ' . $k . "\n";
 
             /**
             // handle lastmod
@@ -327,12 +360,10 @@ class ParseIt
 
         if (count($this->links) > 0) {
             $this->saveParsedUrls();
-            $message = "<pre>Выход по таймауту\n"
+            $message = "\nВыход по таймауту\n"
                 . 'Всего пройденных ссылок: ' . count($this->checked) . "\n"
                 . 'Всего непройденных ссылок: ' . count($this->links) . "\n"
-                . 'Затраченное время: ' . ($time - $this->start) . "\n\n"
-                . print_r($this->checked, true) . "\n\n"
-                . print_r($this->links, true);
+                . 'Затраченное время: ' . ($time - $this->start) . "\n\n";
             $this->stop($message);
         }
 
@@ -341,22 +372,33 @@ class ParseIt
             $this->stop('В sitemap доступна только одна ссылка на запись');
         }
 
-        $this->saveSiteMap();
+        $this->compare();
+
+        $xmlFile = $this->saveSiteMap();
+
+        $time = microtime(1);
+
+        echo "\nSitemap successfuly created and saved to {$xmlFile}\n"
+            . 'Count of pages: ' . count($this->checked) . "\n"
+            . 'Time: ' . ($time - $this->start);
     }
 
     /**
      * Функция отправки сообщение с отчетом о создании карты сайта
      *
      * @param string $text Сообщение(отчет)
+     * @param string $to Email того, кому отправить письмо
      */
-    private function sendEmail($text)
+    public function sendEmail($text, $to = '')
     {
         $header = "MIME-Version: 1.0\r\n"
             . "Content-type: text/plain; charset=utf-8\r\n"
             . 'From: sitemap@' . $this->host;
 
+        $to = (empty($to)) ? $this->config['email_notify'] : $to;
+
         // Отправляем письма об изменениях
-        mail($this->config['email_notify'], $this->host, $text, $header);
+        mail($to, $this->host . ' sitemap', $text, $header);
     }
 
     /**
@@ -376,12 +418,63 @@ class ParseIt
             // dont translate the '&' in case it is part of &xxx;
             $trans[chr(38)] = '&amp;'; // chr(38) = '&'
         }
-        // Возваращается ссылка, в которой символы &,",<,>  заменены на HTML сущности
+        // Возвращается ссылка, в которой символы &,",<,>  заменены на HTML сущности
         return preg_replace("/&(?![A-Za-z]{0,4}\w{2,3};|#[0-9]{2,4};)/", "&#38;", strtr($str, $trans));
     }
 
     /**
+     * Поиск изменений в новой карте сайта, относительно предыдущей
+     */
+    protected function compare()
+    {
+        $file = $this->config['pageroot'] . $this->config['old_sitemap'];
+        $old = file_exists($file) ? unserialize(file_get_contents($file)) : '';
+
+        $new = $this->checked;
+
+        // Сохраним новый массив ссылок, что бы в следующий раз взять его как старый
+        file_put_contents($file, serialize($new));
+
+        $text = '';
+
+        if (empty($old)) {
+            $text = "Добавлены ссылки (первичная генерация карты)\n";
+            foreach ($new as $k => $v) {
+                $text .= $k;
+                $text .= "\n";
+            }
+        } else {
+            // Находим добавленные страницы
+            $add = array_diff_key($new, $old);
+            if (!empty($add)) {
+                $text .= "Добавлены ссылки\n";
+                foreach ($add as $k => $v) {
+                    $text .= $k;
+                    $text .= "\n";
+                }
+            } else {
+                $text .= "Ничего не добавлено\n";
+            }
+
+            // Находим удаленные страницы
+            $del = array_diff_key($old, $new);
+            if (!empty($del)) {
+                $text .= "Удалены ссылки \n";
+                foreach ($del as $k => $v) {
+                    $text .= $k;
+                    $text .= "\n";
+                }
+            } else {
+                $text .= "Ничего не удалено\n";
+            }
+        }
+        $this->sendEmail($text);
+    }
+
+    /**
      * Метод создания xml файла с картой сайта
+     *
+     * @return string Имя файла, в который сохраняется карта сайта
      */
     protected function saveSiteMap()
     {
@@ -439,13 +532,14 @@ class ParseIt
 XML;
 
         $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
-
         $fp = fopen($xmlFile, 'w');
         fwrite($fp, $ret);
         fclose($fp);
 
-        $time = microtime(1);
-        echo 'done ' . ($time - $this->start);
+        $tmp = $this->config['pageroot'] . $this->config['tmp_file'];
+        unlink($tmp);
+
+        return $xmlFile;
     }
 
     /**
@@ -467,7 +561,7 @@ XML;
 
         // Если страница недоступна прекращаем выполнение скрипта
         if ($info['http_code'] != 200) {
-            $this->stop("Страница {$k} недоступна. Ошибка {$info['http_code']}. Переход с {$place}");
+            $this->stop("Страница {$k} недоступна. Статус: {$info['http_code']}. Переход с {$place}");
         }
 
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
@@ -667,8 +761,7 @@ XML;
                 // Заменяем GET параметры оставшимися
                 $link['query'] = $query;
 
-                $url = Url\Model::unparseUrl($link);
-
+                $url = $this->unparseUrl($link);
             }
         }
         // Если в сслыке есть '#' якорь, то обрезаем его
@@ -684,6 +777,26 @@ XML;
             $url = rtrim($url, '?');
         }
         return $url;
+    }
+
+    /**
+     * Создание ссылки из частей
+     *
+     * @param array $parsedUrl Массив полученный из функции parse_url
+     * @return string Возвращается ссылка, собранная из элементов массива
+     */
+    protected function unparseUrl($parsedUrl)
+    {
+        $scheme   = isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '';
+        $host     = isset($parsedUrl['host']) ? $parsedUrl['host'] : '';
+        $port     = isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '';
+        $user     = isset($parsedUrl['user']) ? $parsedUrl['user'] : '';
+        $pass     = isset($parsedUrl['pass']) ? ':' . $parsedUrl['pass']  : '';
+        $pass     = ($user || $pass) ? "$pass@" : '';
+        $path     = isset($parsedUrl['path']) ? $parsedUrl['path'] : '';
+        $query    = isset($parsedUrl['query']) ? '?' . $parsedUrl['query'] : '';
+        $fragment = isset($parsedUrl['fragment']) ? '#' . $parsedUrl['fragment'] : '';
+        return "$scheme$user$pass$host$port$path$query$fragment";
     }
 
     /**
