@@ -33,7 +33,7 @@ class Model extends AbstractModel
         // Заносим уже введённое значение в список доступных шаблонов, так как оно может быть кастомным
         $pageData = $this->obj->getPageData();
         if (!empty($pageData['template'])) {
-            $list[$pageData['structure']][$pageData['template']] = $pageData['template'];
+            $list[$modelStructures[0]][$pageData['template']] = $pageData['template'];
         }
 
         // Проверяем какие типы можно создавать в этом разделе
