@@ -265,6 +265,7 @@ class myCrawler
             $crawler->setFiles($SETTINGS[PSNG_TIMEOUT_FILE]);
             $crawler->setTodo($SETTINGS[PSNG_TIMEOUT_TODO]);
             $crawler->beforeTimeout = $SETTINGS['beforeTimeout'];
+            $crawler->setExternalUrls($SETTINGS['external']);
         } else {
             $crawler->beforeTimeout = 1;
             // $crawler->setDone($SETTINGS[PSNG_TIMEOUT_DONE]);
@@ -292,6 +293,7 @@ class myCrawler
             $SETTINGS[PSNG_TIMEOUT_FILE] = $crawler->getFiles();
             $SETTINGS[PSNG_TIMEOUT_ACTION] = PSNG_TIMEOUT_ACTION_WEBSITE;
             $SETTINGS['beforeTimeout'] = $crawler->beforeTimeout;
+            $SETTINGS['external'] = $crawler->getExternalUrls();
             $this->code = 'timeout';
             // Записываем текущие результаты в файл
             $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
@@ -452,27 +454,36 @@ class myCrawler
 
     function compare()
     {
+        // Путь к старой карте сайта
         $file = $this->config['pageroot'] . $this->config['old_sitemap'];
 
         $new = $this->url;
+        // Получаем список ссылок из старой карты сайта
         $old = unserialize(file_get_contents($file));
+        $oldUrl = $old[0];
+        $oldExternal = $old[1];
+
         $text = "";
+        // Получаем список внешних ссылок
+        $external = Crawler::getExternalUrls();
+        // Записываем в файл, новый массив ссылок
+        $arr[0] = $new;
+        $arr[1] = $external;
         file_put_contents(
             $file,
-            serialize($new)
+            serialize($arr)
         ); // сохраним новый массив ссылок, что бы в следующий раз взять его как старый
 
-        if (empty($old)) {
+        if (empty($oldUrl)) {
             $text = "Добавлены ссылки(первичная генерация карты) \n";
             foreach ($new as $v) {
                 $text .= $v;
                 $text .= "\n";
             }
         } else {
-
             // Находим добавленные и удаленные страницы
-            $del = array_diff($old, $new);
-            $add = array_diff($new, $old);
+            $del = array_diff($oldUrl, $new);
+            $add = array_diff($new, $oldUrl);
 
             if (!empty($add)) {
                 $text .= "Добавлены ссылки \n";
@@ -491,6 +502,36 @@ class myCrawler
                 }
             } else {
                 $text .= "Ничего не удалено\n";
+            }
+        }
+        if (empty($oldExternal)) {
+            $text .= "\nДобавлены внешние ссылки(первичная генерация карты):\n";
+            foreach ($external as $v) {
+                $text .= $v;
+                $text .= "\n";
+            }
+        } else {
+            $del = array_diff($oldExternal, $external);
+            $add = array_diff($external, $oldExternal);
+
+            if (!empty($add)) {
+                $text .= "\nДобавлены внешние ссылки: \n";
+                foreach ($add as $v) {
+                    $text .= $v;
+                    $text .= "\n";
+                }
+            } else {
+                $text .= "\nНет новых внешних ссылок. \n";
+            }
+
+            if (!empty($del)) {
+                $text .= "\nУдалены внешние ссылки: \n";
+                foreach ($del as $v) {
+                    $text .= $v;
+                    $text .= "\n";
+                }
+            } else {
+                $text .= "\nУдаленных внешних ссылок нет \n";
             }
         }
         $this->sendEmail($text);
