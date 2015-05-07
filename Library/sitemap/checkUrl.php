@@ -477,7 +477,7 @@ class ParseIt
                 $text .= "Ничего не удалено\n";
             }
         }
-
+        
         if (empty($oldExternal)) {
             $text .= "\nДобавлены внешние ссылки(первичная генерация карты):\n";
             foreach ($external as $k => $v) {
