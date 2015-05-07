@@ -53,6 +53,8 @@ class Crawler
 
     var $withWWW = false;
 
+    var $external = array();
+
     function __construct($host, $deadline, $timeout, $delay)
     {
         $this->timeout = $timeout;
@@ -263,6 +265,7 @@ class Crawler
 
         if (!($this->_isLocal($url))) {
 //			debug($url, 'The url does not match the current host '.$this->host.', only relative links are allowed at the moment!');
+            $this->external[] = $url;
             return 'skipMe';
         }
 
@@ -901,5 +904,15 @@ class Crawler
 
         // Ни одно из правил не сработало, значит страницу исключать не надо
         return false;
+    }
+
+    function getExternalUrls()
+    {
+        return $this->external;
+    }
+
+    function setExternalUrls($externalUrls)
+    {
+        $this->external = $externalUrls;
     }
 }
