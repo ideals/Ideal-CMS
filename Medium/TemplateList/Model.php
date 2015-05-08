@@ -75,7 +75,7 @@ class Model extends AbstractModel
                     // Получаем список доступных для выбора шаблонов
                     foreach ($templates as $node) {
                         if (preg_match($nameTpl, $node)) {
-                            $list[$value][$node] = $node;
+                            $list[$value][$node] = $folderPartName . $folderName . '/' . $node;
                         }
                     }
                 }
