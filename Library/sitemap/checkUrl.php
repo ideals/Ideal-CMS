@@ -23,6 +23,9 @@ class ParseIt
     /** @var  array Массив НЕпроверенных ссылок */
     private $links = array();
 
+    /** @var array Массив внешних ссылок */
+    private $external = array();
+
     /** @var bool Флаг необходимости кэширования echo/print */
     public $ob = false;
 
@@ -248,6 +251,7 @@ class ParseIt
 
             $this->links = $arr[0];
             $this->checked = $arr[1];
+            $this->external = $arr[2];
         }
     }
 
@@ -258,7 +262,8 @@ class ParseIt
     {
         $result = array(
             $this->links,
-            $this->checked
+            $this->checked,
+            $this->external
         );
 
         $result = serialize($result);
@@ -321,13 +326,13 @@ class ParseIt
 
             // format timestamp appropriate to settings
             if ($res['lastmod'] != '') {
-                if ($this->config['time_format'] == 'short') {
-                    $res['lastmod'] = $this->getDateTimeISO_short($res['lastmod']);
-                } else {
-                    $res['lastmod'] = $this->getDateTimeISO($res['lastmod']);
-                }
+            if ($this->config['time_format'] == 'short') {
+            $res['lastmod'] = $this->getDateTimeISO_short($res['lastmod']);
+            } else {
+            $res['lastmod'] = $this->getDateTimeISO($res['lastmod']);
             }
-            */
+            }
+             */
 
             // Получаем контент страницы
             $content = $this->getUrl($k, $this->links[$k]);
@@ -430,14 +435,18 @@ class ParseIt
         $file = $this->config['pageroot'] . $this->config['old_sitemap'];
         $old = file_exists($file) ? unserialize(file_get_contents($file)) : '';
 
+        $oldUrl = $old[0];
+        $oldExternal = $old[1];
+
         $new = $this->checked;
+        $external = $this->external;
 
         // Сохраним новый массив ссылок, что бы в следующий раз взять его как старый
-        file_put_contents($file, serialize($new));
+        file_put_contents($file, serialize(array($new, $external)));
 
         $text = '';
 
-        if (empty($old)) {
+        if (empty($oldUrl)) {
             $text = "Добавлены ссылки (первичная генерация карты)\n";
             foreach ($new as $k => $v) {
                 $text .= $k;
@@ -445,7 +454,7 @@ class ParseIt
             }
         } else {
             // Находим добавленные страницы
-            $add = array_diff_key($new, $old);
+            $add = array_diff_key($new, $oldUrl);
             if (!empty($add)) {
                 $text .= "Добавлены ссылки\n";
                 foreach ($add as $k => $v) {
@@ -457,7 +466,7 @@ class ParseIt
             }
 
             // Находим удаленные страницы
-            $del = array_diff_key($old, $new);
+            $del = array_diff_key($oldUrl, $new);
             if (!empty($del)) {
                 $text .= "Удалены ссылки \n";
                 foreach ($del as $k => $v) {
@@ -468,6 +477,35 @@ class ParseIt
                 $text .= "Ничего не удалено\n";
             }
         }
+
+        if (empty($oldExternal)) {
+            $text .= "\nДобавлены внешние ссылки(первичная генерация карты):\n";
+            foreach ($external as $k => $v) {
+                $text .= "{$k} на странице {$v}\n";
+            }
+        } else {
+            // Определяем новые внешние ссылки
+            $add = array_diff_key($external, $oldExternal);
+            if (!empty($add)) {
+                $text .= "\nДобавлены внешние ссылки:\n";
+                foreach ($add as $k => $v) {
+                    $text .= "{$k} на странице {$v}\n";
+                }
+            } else {
+                $text .= "\nНет новых внешних ссылок\n";
+            }
+
+            $del = array_diff_key($oldExternal, $external);
+            if (!empty($del)) {
+                $text .= "\nУдалены внешние ссылки:\n";
+                foreach ($del as $k => $v) {
+                    $text .= "{$k} на странице {$v}\n";
+                }
+            } else {
+                $text .= "\nНет удаленных внешних ссылок";
+            }
+        }
+
         $this->sendEmail($text);
     }
 
@@ -602,6 +640,7 @@ XML;
             }
 
             if ($this->isExternalLink($url, $current)) {
+                $this->external[$url] = $current;
                 // Пропускаем ссылки на другие сайты
                 continue;
             }
