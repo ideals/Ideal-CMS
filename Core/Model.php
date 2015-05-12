@@ -472,4 +472,14 @@ abstract class Model
 
         return $this->pageNum;
     }
+
+    /**
+     * Получение номера отображаемой страницы
+     *
+     * @return int Номер отображаемой страницы
+     */
+    public function getPageNum()
+    {
+        return $this->pageNum;
+    }
 }
