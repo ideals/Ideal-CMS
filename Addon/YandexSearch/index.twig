@@ -1,10 +1,4 @@
-{% extends "site.twig" %}
-
-{% block content %}
-
-    <h1>{{ header|raw }}</h1>
-
-    <form accept-charset="UTF-8" id="search-form" method="get" action="" class="search-form">
+<form accept-charset="UTF-8" id="search-form" method="get" action="" class="search-form">
         <div>
             <div id="edit-basic" class="container-inline form-wrapper">
                 <div class="form-item form-type-textfield form-item-keys">
@@ -16,10 +10,6 @@
             <input type="hidden" value="search_form" name="form_id">
         </div>
     </form>
-
-    {{ template.content|raw }}
-    {{ content|raw }}
-
     {% if parts|length > 0 %}
         {% for part in parts %}
             <p>
@@ -48,5 +38,3 @@
             </ul>
         </div>
     {% endif %}
-
-{% endblock %}
