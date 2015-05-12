@@ -357,7 +357,7 @@ abstract class Model
 
         $pagination = new Pagination();
         // Номера и ссылки на доступные страницы
-        $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, 'page');
+        $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, $pageName);
         $pager['prev'] = $pagination->getPrev(); // ссылка на предыдущю страницу
         $pager['next'] = $pagination->getNext(); // cсылка на следующую страницу
         $pager['total'] = $countList; // общее количество элементов в списке
