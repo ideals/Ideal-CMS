@@ -374,6 +374,16 @@ abstract class Model
         return $list[0]['COUNT(e.ID)'];
     }
 
+    /**
+     * Получение номера отображаемой страницы
+     *
+     * @return int Номер отображаемой страницы
+     */
+    public function getPageNum()
+    {
+        return $this->pageNum;
+    }
+    
     public function getParentUrl()
     {
         if ($this->parentUrl != '') {
