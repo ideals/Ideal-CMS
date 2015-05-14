@@ -18,7 +18,7 @@ class YandexXmlClient
     /**
      * Base url to service
      */
-    const BASE_URL = 'http://xmlsearch.yandex.ru/xmlsearch';
+    const BASE_URL = 'https://yandex.ru/search/xml';
 
     /**
      * Response
