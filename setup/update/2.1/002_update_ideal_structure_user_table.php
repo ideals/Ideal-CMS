@@ -7,7 +7,7 @@
 $config = \Ideal\Core\Config::getInstance();
 
 // Создаём подключение к БД
-$dbConf = $config['db'];
+$dbConf = $config->db;
 $db = \Ideal\Core\Db::getInstance();
 
 $table = $dbConf['prefix'] . 'ideal_structure_user';
