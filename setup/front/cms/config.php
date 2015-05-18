@@ -34,7 +34,7 @@ return array(
             'ID' => 3,
             'structure' => 'Ideal_DataList',
             'name' => 'Справочники',
-            'isShow' => 0,
+            'isShow' => 1,
             'hasTable' => true
         ),
         // Подключаем сервисный модуль
