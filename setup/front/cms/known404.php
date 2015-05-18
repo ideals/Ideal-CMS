@@ -1,0 +1,3 @@
+<?php
+// @codingStandardsIgnoreFile
+return array();
