@@ -213,12 +213,15 @@ abstract class Model
      */
     public function getList($page = null)
     {
-        $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
-        $where = $this->getWhere($where);
-
         $db = Db::getInstance();
 
-        $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} ORDER BY e.{$this->params['field_sort']}";
+        if (!empty($this->filter)) {
+            $_sql = $this->filter->getSql();
+        } else {
+            $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
+            $where = $this->getWhere($where);
+            $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} ORDER BY e.{$this->params['field_sort']}";
+        }
 
         if (is_null($page)) {
             $this->setPageNum($page);
@@ -376,11 +379,15 @@ abstract class Model
     {
         $db = Db::getInstance();
 
-        $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
-        $where = $this->getWhere($where);
+        if (!empty($this->filter)) {
+            $_sql = $this->filter->getSqlCount();
+        } else {
+            $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
+            $where = $this->getWhere($where);
 
-        // Считываем все элементы первого уровня
-        $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
+            // Считываем все элементы первого уровня
+            $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
+        }
         $list = $db->select($_sql);
 
         return $list[0]['COUNT(e.ID)'];
