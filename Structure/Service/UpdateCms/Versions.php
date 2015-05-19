@@ -120,7 +120,7 @@ class Versions
      * @param array $mods Массив состоящий из названий модулей и полных путей к ним
      * @return array Версии модулей или false в случае ошибки
      */
-    protected function getVersionFromReadme($mods)
+    public function getVersionFromReadme($mods)
     {
         // Получаем файл README.md для cms
         $mdFile = 'README.md';
