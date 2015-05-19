@@ -27,6 +27,9 @@ class Model
     /** @var string Путь к файлу с логом обновлений */
     protected $log = '';
 
+    /** @var bool Признак тестового режима */
+    protected $testMode = false;
+
     /** @var array Массив папок для обновления */
     protected $updateFolders = array();
 
@@ -52,6 +55,16 @@ class Model
             $this->answer = $this->getAnswer();
             exit;
         }
+    }
+
+    /**
+     * Задаём признак тестового режима
+     *
+     * @param bool $testMode Признак тестового режима
+     */
+    public function setTestMode($testMode)
+    {
+        $this->testMode = $testMode;
     }
 
     /**
@@ -402,7 +415,9 @@ class Model
             default:
                 continue;
         };
-        $this->writeLog($script);
+        if (!$this->testMode) {
+            $this->writeLog($script);
+        }
         $this->addAnswer('Выполнен скрипт: ' . $script, 'success');
     }
 
