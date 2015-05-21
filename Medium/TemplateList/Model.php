@@ -58,6 +58,7 @@ class Model extends AbstractModel
             if ($moduleName == 'Ideal') {
                 $folderPartNames = array('Ideal', 'Ideal.c');
                 $moduleName = '';
+                $folderName = str_replace('/Ideal', '', $folderName);
             } else {
                 $folderPartNames = array('Mods', 'Mods.c');
                 $moduleName = $moduleName . '/';
