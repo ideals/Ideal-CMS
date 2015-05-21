@@ -18,7 +18,7 @@ class YandexXmlClient
     /**
      * Base url to service
      */
-    const BASE_URL = 'http://xmlsearch.yandex.ru/xmlsearch';
+    const BASE_URL = 'https://yandex.ru/search/xml';
 
     /**
      * Response
@@ -825,8 +825,8 @@ class YandexXmlClient
         $this->response = new \SimpleXMLElement($data);
         $this->response = $this->response->response;
 
-        $this->_checkErrors();
-        $this->_bindData();
+        $this->checkErrors();
+        $this->bindData();
 
         return $this;
     }
@@ -845,7 +845,7 @@ class YandexXmlClient
      * check response errors
      * @throws YandexXmlException
      */
-    protected function _checkErrors()
+    protected function checkErrors()
     {
         if (isset($this->response->error)) {
             $code = (int) $this->response->error->attributes()->code[0];
@@ -858,7 +858,7 @@ class YandexXmlClient
      *
      * @return void
      */
-    protected function _bindData()
+    protected function bindData()
     {
         $wordstat = preg_split('/,/', $this->response->wordstat);
         $this->wordstat = array();
@@ -968,7 +968,9 @@ class YandexXmlClient
                 $res->title = isset($group->doc->title) ? $this->highlight($group->doc->title) : $res->url;
                 $res->headline = isset($group->doc->headline) ? $this->highlight($group->doc->headline) : null;
                 $res->passages = isset($group->doc->passages->passage) ? $this->highlight($group->doc->passages) : null;
-                $res->sitelinks = isset($group->doc->snippets->sitelinks->link) ? $this->highlight($group->doc->snippets->sitelinks->link) : null;
+                $res->sitelinks = isset($group->doc->snippets->sitelinks->link)
+                    ? $this->highlight($group->doc->snippets->sitelinks->link)
+                    : null;
 
                 $this->results[] = $res;
             }

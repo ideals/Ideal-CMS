@@ -29,6 +29,13 @@ return array(
             'sql' => 'char(15)',
             'type' => 'Ideal_Hidden'
         ),
+        'template' => array(
+            'label' => 'Шаблон отображения',
+            'sql' => "varchar(255) default 'index.twig'",
+            'type' => 'Ideal_Template',
+            'medium' => '\\Ideal\\Medium\\TemplateList\\Model',
+            'default'   => 'index.twig',
+        ),
         'cid' => array(
             'label' => '№',
             'sql' => 'char(' . (6 * 3) . ') not null',
