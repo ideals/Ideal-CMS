@@ -115,7 +115,7 @@ $isCool = true;
 foreach ($cfgTables as $table) {
     if (!in_array($table, $dbTables)) {
         echo '<p class="well"><input type="checkbox" name="create[' . $table . ']">&nbsp; ';
-        echo 'Таблица <strong>' . $table . '</strong> strongтсутствует в базе данных. Создать?</p>';
+        echo 'Таблица <strong>' . $table . '</strong> отсутствует в базе данных. Создать?</p>';
         $isCool = false;
     }
 }
@@ -123,7 +123,7 @@ foreach ($cfgTables as $table) {
 foreach ($dbTables as $table) {
     if (!in_array($table, $cfgTables)) {
         echo '<p class="well"><input type="checkbox" name="delete[' . $table . ']">&nbsp; ';
-        echo 'Таблица <strong>' . $table . '</strong> strongтсутствует в конфигурации. Удалить?</p>';
+        echo 'Таблица <strong>' . $table . '</strong> отсутствует в конфигурации. Удалить?</p>';
         $isCool = false;
     }
 }
