@@ -156,8 +156,11 @@ class FileCache
             $params['cache']['arr']['excludeFileCache']['value'] = implode("\n", $excludeCacheFileValue);
             $configSD->setParams($params);
             $file = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php';
-            $configSD->saveFile($file);
-            return true;
+            if ($configSD->saveFile($file) === false) {
+                return false;
+            } else {
+                return true;
+            }
         } else {
             return true;
         }
