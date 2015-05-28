@@ -350,14 +350,10 @@ abstract class Model extends Core\Model
     }
 
     /**
-     * Заполнение pageData пустыми значениями полей
+     * Установка пустого pageData
      */
     public function setPageDataNew()
     {
-        $pageData = array();
-        foreach ($this->fields as $fieldName => $field) {
-            $pageData[$fieldName] = '';
-        }
-        $this->setPageData($pageData);
+        $this->setPageData(array());
     }
 }
