@@ -138,7 +138,7 @@ class FileCache
     {
         // Проверяем на существование файл кэша, при надобности удаляем
         preg_match('/^\/(.*)\/[imsxADSUXJu]{0,11}$/', $string, $cacheFiles);
-        $cacheFiles = glob(stripcslashes($cacheFiles[1]));
+        $cacheFiles = isset($cacheFiles[1]) ? glob(stripcslashes($cacheFiles[1])) : null;
         if (!empty($cacheFiles)) {
             foreach ($cacheFiles as $cacheFile) {
                 self::excludePathFromCache("/$cacheFile");

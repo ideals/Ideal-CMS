@@ -43,8 +43,10 @@ class AjaxController
             $text = $this->$actionName();
         } else {
             // Вызываемый action отсутствует, запускаем 404 ошибку
-            $text = $this->error404Action();
-            $this->model->is404 = true;
+            $this->error404Action();
+            $from = empty($_SERVER['HTTP_REFERER']) ? 'Прямой переход.' : 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
+            Util::addError('Страница не найдена (404). ' . $from);
+            exit;
         }
 
         return $text;
@@ -92,20 +94,7 @@ class AjaxController
      */
     public function error404Action()
     {
-        $name = $title = 'Страница не найдена';
-        $this->templateInit('404.twig');
-
-        // Добавляем в path пустой элемент
-        $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
-        $this->model->setPath($path);
-
-        // Устанавливаем нужный нам title
-        $pageData = $this->model->getPageData();
-        $pageData['title'] = $title;
-        $this->model->setPageData($pageData);
-
-        // Twig рендерит текст странички из шаблона
-        return $this->view->render();
+        header('HTTP/1.0 404 Not Found');
+        return true;
     }
 }
