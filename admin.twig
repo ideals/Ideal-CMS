@@ -579,9 +579,28 @@
                 finder.popup();
             }
 
+
             //
-            function setFileField(fileUrl)
+            function setFileField(fileUrl, data, allFiles)
             {
+                // Если было выбрано более одного файла
+                if (allFiles.length > 1) {
+                    var urls = [];
+                    $.each(allFiles, function (index, value) {
+                        urls.push(value.url);
+                    });
+                    $.ajax({
+                        url: 'index.php',
+                        data: {action: 'getImageList', controller: 'Ideal\\Field\\ImageGallery',
+                            mode: 'ajax', urls: urls},
+                        success: function (successData)
+                        {
+                            $(window.idObject['fieldName'] + '-list').html(successData);
+                        },
+                        type: 'GET',
+                        dataType: "html"
+                    });
+                }
                 text = window.idObject['fieldName'];
                 $(text).prop('value', fileUrl);
                 $(text).trigger('change'); // запуск события изменения
