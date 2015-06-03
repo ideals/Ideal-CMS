@@ -290,7 +290,8 @@ DONE;
         $param[$fieldName] = array(
             'label' => $label,
             'value' => $value,
-            'type' => $type
+            'type' => $type,
+            'sql' => '',
         );
         if ($type == 'Ideal_Select') {
             $param[$fieldName]['values'] = json_decode($fields[2]);
