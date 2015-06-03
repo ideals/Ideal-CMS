@@ -1,5 +1,5 @@
 <?php
-$cmsFolder = __DIR__ . '/../..';
+$cmsFolder = stream_resolve_include_path(__DIR__ . '/../..');
 
 // Если передан аргумент содержащий путь до папки CMS, то используем его
 if (isset($_SERVER['argv'][1])) {
@@ -16,8 +16,9 @@ require $cmsFolder . '/Structure/Service/CheckCmsFiles/AjaxController.php';
 $systemFiles = Ideal\Structure\Service\CheckCmsFiles\AjaxController::getAllSystemFiles($cmsFolder, $cmsFolder);
 
 // Записываем данные в файл информации о хэшах файлов системы
-if (file_put_contents($cmsFolder . '/setup/prepare/hash_files', serialize($systemFiles))) {
-    echo "Информация о хэшах удачно записана\n";
+$file = stream_resolve_include_path($cmsFolder . '/setup/prepare/hash_files');
+if (file_put_contents($file, serialize($systemFiles))) {
+    echo "Success!\n";
 } else {
-    echo "Не удалось записать информацию о хэшах\n";
+    echo "Write error in file {$file} \n";
 }
