@@ -39,7 +39,8 @@ return array(
         'last_visit' => array(
             'label' => 'Последний вход',
             'sql' => "int(11) DEFAULT '0' NOT NULL",
-            'type' => 'Ideal_Date'
+            'type' => 'Ideal_Date',
+            'default' => '0'
         ),
         'act_key' => array(
             'label' => 'Ключ активации',
@@ -69,7 +70,8 @@ return array(
         'counter_failures' => array(
             'label' => 'Счётчик неудачных попыток авторизации',
             'sql' => "int(11) DEFAULT '0' NOT NULL",
-            'type' => 'Ideal_Hidden'
+            'type' => 'Ideal_Hidden',
+            'default' => '0'
         ),
     ),
 );

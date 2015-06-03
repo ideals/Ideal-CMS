@@ -19,10 +19,4 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $this->path = $path;
         return $this;
     }
-
-    public function setPageDataNew()
-    {
-        parent::setPageDataNew();
-        $this->pageData['last_visit'] = '0';
-    }
 }
