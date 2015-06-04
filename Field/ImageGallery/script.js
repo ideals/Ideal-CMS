@@ -1,3 +1,15 @@
+$(document).ready(function () {
+    $('.imagesValues').each(function (index) {
+        var currentData = $(this).val();
+        if (currentData != '') {
+            var currentDataArray = JSON.parse(currentData);
+            var id = $(this).attr("id");
+            var imageList = getImageList(currentDataArray);
+            $('#' + id + '-list').html(imageList);
+        }
+    });
+});
+
 // Открывает окно CKFinder для возможности выбора изображений
 function imageGalleryShowFinder(fieldSelector) {
     var finder = new CKFinder();
@@ -47,7 +59,7 @@ function getImageList(imageList) {
         fieldList += '<div class="col-xs-5">'
         fieldList += '<input type="text" class="form-control galleryItemDescription"';
         fieldList += ' name="galleryItemDescription' + index + '"';
-        fieldList += ' id="galleryItemDescription' + index + '" value="" placeholder="Описание изображения">';
+        fieldList += ' id="galleryItemDescription' + index + '" value="' + value[1] + '" placeholder="Описание изображения">';
         fieldList += '</div>';
         fieldList += '</li>';
     });
