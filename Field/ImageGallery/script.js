@@ -1,7 +1,7 @@
 // Открывает окно CKFinder для возможности выбора изображений
 function imageGalleryShowFinder(fieldSelector) {
     var finder = new CKFinder();
-    finder.selectActionData = {"fieldSelector" : fieldSelector};
+    finder.selectActionData = {"fieldSelector": '#' + fieldSelector};
     finder.basePath = '{{ cmsFolder }}/Ideal/Library/ckfinder/';
     finder.selectActionFunction = imageGallerySetFileField;
     finder.popup();
@@ -14,12 +14,43 @@ function imageGallerySetFileField(fileUrl, data, allFiles) {
     $.each(allFiles, function (index, value) {
         urls.push([value.url, '']);
     });
-    var currentData = $('#' + data.selectActionData.fieldSelector).val();
+    var currentData = $(data.selectActionData.fieldSelector).val();
     // Если пока нет никаких данных по изображениям значит записываем только что выбранные
-    if (currentData == '') {
-        $('#' + data.selectActionData.fieldSelector).val(JSON.stringify(urls));
-    } else {
+    if (currentData != '') {
         var currentDataArray = JSON.parse(currentData);
-        $('#' + data.selectActionData.fieldSelector).val(JSON.stringify(currentDataArray.concat(urls)));
+        urls = currentDataArray.concat(urls)
     }
+    $(data.selectActionData.fieldSelector).val(JSON.stringify(urls));
+    var imageList = getImageList(urls);
+    $(data.selectActionData.fieldSelector + '-list').html(imageList);
+}
+
+// Генерирует html список изображений
+function getImageList(imageList) {
+    var fieldList = '';
+    fieldList += '<ul id="sortable">';
+    $.each(imageList, function (index, value) {
+        fieldList += '<li class="ui-state-default">';
+        fieldList += '<div class="col-xs-1">';
+        fieldList += '<span class="glyphicon glyphicon-sort" style="top: 7px;"></span>';
+        fieldList += '</div>';
+        fieldList += '<div class="col-xs-1">';
+        fieldList += '<span class="input-group-addon" style="padding: 0 5px">';
+        fieldList += '<img src="' + value[0] + '" style="max-height:32px" class="form-control galleryItemImage"';
+        fieldList += ' id="galleryItemImage' + index + '">';
+        fieldList += '</span>';
+        fieldList += '</div>';
+        fieldList += '<div class="col-xs-5">';
+        fieldList += '<input type="text" class="form-control galleryItemUrl" name="galleryItemUrl' + index + '"';
+        fieldList += ' id="galleryItemUrl' + index + '" value="' + value[0] + '">';
+        fieldList += '</div>';
+        fieldList += '<div class="col-xs-5">'
+        fieldList += '<input type="text" class="form-control galleryItemDescription"';
+        fieldList += ' name="galleryItemDescription' + index + '"';
+        fieldList += ' id="galleryItemDescription' + index + '" value="" placeholder="Описание изображения">';
+        fieldList += '</div>';
+        fieldList += '</li>';
+    });
+    fieldList += '</ul>';
+    return fieldList;
 }
