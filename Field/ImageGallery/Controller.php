@@ -48,7 +48,7 @@ class Controller extends AbstractController
                         </button>
                     </span>
                 </div>
-                <div id="{$this->htmlName}'-list" class="input-group"></div>
+                <div id="{$this->htmlName}-list" class="input-group"></div>
             </div>
 HTML;
         return $html;
