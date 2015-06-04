@@ -36,6 +36,7 @@ class Controller extends AbstractController
     public function showEdit()
     {
         $html = <<<HTML
+            <script type="text/javascript" src="Ideal/Field/ImageGallery/script.js"></script>
             <input type="hidden" id="' . $this->htmlName . '" name="' . $this->htmlName . '" value="">
             <div id="' . $this->htmlName . '-control-group">
                 <div class="text-center"><strong>{$this->getLabelText()}</strong></div><br />
