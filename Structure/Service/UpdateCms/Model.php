@@ -212,7 +212,6 @@ class Model
             );
             $this->addAnswer("Не удалось изменить права для следующих файлов/папок: <br />\n{$paths}", 'warning');
         }
-
         $this->addAnswer('Заменены файлы', 'success');
         return $updateCore . '_old';
     }
@@ -344,7 +343,7 @@ class Model
         }
 
         // Составление списка скриптов для обновления
-        $scripts = array();
+        $scripts = array('pre' => array(), 'after' => array());
         foreach ($updates as $folder) {
             $scriptFolder = $updateFolder . '/' . $folder;
             $files = array_diff(scandir($scriptFolder), array('.', '..'));
@@ -358,38 +357,20 @@ class Model
                     $scripts = array();
                     continue;
                 }
-                $scripts[] = $file;
+                if (preg_match("(\/new_\.*)", $file)) {
+                    $scripts['after'][] = $file;
+                } else {
+                    $scripts['pre'][] = $file;
+                }
             }
         }
 
         $this->addAnswer(
-            'Получен список скриптов в количестве: ' . count($scripts),
+            'Получен список скриптов в количестве: ' . ((int)count($scripts['pre']) + (int)count($scripts['after'])),
             'success',
-            array('count' =>count($scripts))
+            array('scripts' => json_encode($scripts))
         );
 
-        return $scripts;
-    }
-
-    /**
-     * Выполнение скриптов до замены файлов
-     *
-     * @param $scripts Список всех скриптов, используемых при обновлении
-     * @return array Список скриптов, которые нужно выполнить после замены файлов
-     */
-    public function runOldScript($scripts)
-    {
-        // Получаем элементы массива не содержащие в начале строки 'new_'
-        $scriptsOld = preg_grep("(\/new_\.*)", $scripts, PREG_GREP_INVERT);
-        foreach ($scriptsOld as $v) {
-            $this->runScript(SETUP_DIR . '/setup/update' . $v);
-        }
-        $scripts = array_diff_key($scripts, $scriptsOld);
-        $this->addAnswer(
-            'Выполнено скриптов: ' . count($scriptsOld),
-            'success',
-            array('count' =>count($scripts))
-        );
         return $scripts;
     }
 
@@ -410,7 +391,9 @@ class Model
                 break;
             case '.sql':
                 $query = file_get_contents($script);
-                $db->query($query);
+                if (!$db->query($query)) {
+                    $this->addAnswer('Ошибка при выполнении sql скрипта: ' . $script, 'error');
+                }
                 break;
             default:
                 continue;

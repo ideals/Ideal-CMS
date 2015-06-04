@@ -72,15 +72,15 @@ function Update(moduleName, version, currentVersion, url, modalBox) {
             dataType: 'json',
             data: data,
             success: function (result) {
-                var check = update.dataCheck(result);
+                var check = update.dataCheck(result, data.action);
                 if (check) {
                     update.run(result, data.action);
                 } else {
                     update.modalBox.find('.close, .btn-close').removeAttr('disabled');
                 }
             },
-            error: function (data) {
-                update.print('Не удалось выполнить ajax запрос <br />' + data.responseText, 'error');
+            error: function (result) {
+                update.print('Не удалось выполнить ajax запрос: ' + data.action + '<br />' + result.responseText, 'error');
                 update.modalBox.find('.close, .btn-close').removeAttr('disabled');
             }
         })
@@ -91,7 +91,7 @@ function Update(moduleName, version, currentVersion, url, modalBox) {
      * @param data
      * @returns {boolean}
      */
-    this.dataCheck = function(data) {
+    this.dataCheck = function(data, action) {
         // Если не получен структурированный результат выполнения действия и метод вызван не в первый раз,
         // выводим полученные данные
         if (data.error == 'undefined' && data != true ) {
@@ -126,10 +126,8 @@ function Update(moduleName, version, currentVersion, url, modalBox) {
     this.run = function(result, action) {
         // Выполненное действие
         action = action || null;
-
         var data = {};
         $.extend(data, this.ajaxData);
-        var scriptsExecutes = 0;
         switch (action) {
             case null:
                 data.action = 'ajaxDownload';
@@ -141,21 +139,49 @@ function Update(moduleName, version, currentVersion, url, modalBox) {
                 data.action = 'ajaxGetUpdateScript';
                 break;
             case 'ajaxGetUpdateScript':
+                this.phpScripts = JSON.parse(result.data.scripts);
+                if (typeof(this.phpScripts['pre']) != 'undefined') {
+                    this.phpScripts['pre']['count'] = this.phpScripts['pre'].length;
+                } else {
+                    this.phpScripts['pre'] = {};
+                    this.phpScripts['pre']['count'] = 0;
+                }
+                if (typeof(this.phpScripts['after']) != 'undefined') {
+                    this.phpScripts['after']['count'] = this.phpScripts['after'].length;
+                } else {
+                    this.phpScripts['after'] = {};
+                    this.phpScripts['after']['count'] = 0;
+                }
+                if (this.phpScripts['pre']['count'] > 0) {
+                    this.actionScript = this.phpScripts['pre'];
+                    this.actionScriptsequence = 'pre';
+                    data.action = 'ajaxRunScript';
+                    break;
+                }
                 data.action = 'ajaxSwap';
                 break;
             case 'ajaxSwap':
-                data.action = 'ajaxRunScript';
+                if (this.phpScripts['after']['count'] > 0) {
+                    this.actionScript = this.phpScripts['after'];
+                    this.actionScriptsequence = 'after';
+                    data.action = 'ajaxRunScript';
+                    break;
+                }
+                data.action = 'ajaxEndVersion';
                 break;
             case 'ajaxRunScript':
-                if (result.data != null && result.data.count != 'undefined') {
-                    scriptsExecutes = result.data.count;
+                if (result.data != null) {
+                    break;
                 }
-                if (scriptsExecutes > 0) {
+                if (this.actionScript['count'] > 0) {
                     data.action = 'ajaxRunScript';
-                    scriptsExecutes = scriptsExecutes--;
-                } else {
-                    data.action = 'ajaxEndVersion';
+                    this.actionScript['count']--;
+                    break;
+                } else if(this.actionScriptsequence == 'pre') {
+                    data.action = 'ajaxSwap';
+                    break
                 }
+                data.action = 'ajaxEndVersion';
                 break;
             case 'ajaxEndVersion':
                 if (result.data != null && result.data.next == 'true') {
