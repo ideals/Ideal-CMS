@@ -35,7 +35,16 @@ class Controller extends AbstractController
      */
     public function showEdit()
     {
-        $html = '';
+        $html = <<<HTML
+            <input type="hidden" id="' . $this->htmlName . '" name="' . $this->htmlName . '" value="">
+            <div id="' . $this->htmlName . '-control-group">
+                <div class="text-center"><strong>{$this->getLabelText()}</strong></div><br />
+                <div class="text-center">
+                    <span class="input-group-btn"><button class="btn">Выбрать</button></span>
+                </div>
+                {$this->getInputText()}
+            </div>
+HTML;
         return $html;
     }
 
@@ -44,6 +53,6 @@ class Controller extends AbstractController
      */
     public function getInputText()
     {
-        return '';
+        return '<div id="' . $this->htmlName . '-list" class="input-group"></div>';
     }
 }
