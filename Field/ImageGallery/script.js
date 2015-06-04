@@ -7,11 +7,12 @@ $(document).ready(function () {
             var id = $(this).attr("id");
             var imageList = getImageList(currentDataArray, id);
             $('#' + id + '-list').html(imageList);
+            startSortable('#' + id + '-list', '#' + id);
         }
     });
 
     // Вешаем событие на кнопку удаления изображения из списка
-    $('.remove-image').bind('click', function () {
+    $('.tab-pane').on('click', '.remove-image', function () {
         // Ищем поле содержащее адрес до изображения
         var imageUrl = $(this).closest('li').children('div').find('.gallery-item-url').val();
 
@@ -39,6 +40,24 @@ $(document).ready(function () {
 
 });
 
+// Запускаем возможность сортировки списка
+function startSortable(listSelector, infoSelector) {
+    $(listSelector + " .sortable").sortable({
+        stop: function (event, ui) {
+            var urls = [];
+            $(this).find('li').each(function (index) {
+                if ($(this).find('.gallery-item-url').val() != undefined) {
+                    var url = $(this).find('.gallery-item-url').val();
+                    var description = $(this).find('.gallery-item-description').val();
+                    urls.push([url, description]);
+                }
+            });
+            $(infoSelector).val(JSON.stringify(urls));
+        }
+    });
+    $(listSelector + " .sortable").disableSelection();
+}
+
 
 // Открывает окно CKFinder для возможности выбора изображений
 function imageGalleryShowFinder(fieldSelector) {
@@ -65,6 +84,7 @@ function imageGallerySetFileField(fileUrl, data, allFiles) {
     $(fieldSelector).val(JSON.stringify(urls));
     var imageList = getImageList(urls, data.selectActionData.fieldSelector);
     $(fieldSelector + '-list').html(imageList);
+    startSortable(fieldSelector + '-list', fieldSelector);
 }
 
 // Генерирует html список изображений
