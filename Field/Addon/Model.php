@@ -134,6 +134,11 @@ class Model
             $model->setPageDataByPrevStructure($prevStructure);
         }
 
+        // Принудительно устанавливаем tab_ID, т.к. при добавлении аддона его может и не быть
+        $pageData = $model->getPageData();
+        $pageData['tab_ID'] = $id;
+        $model->setPageData($pageData);
+
         $addonVar .= '_' . $id;
         $addonName = ($addonName == '') ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
 
