@@ -11,15 +11,19 @@
 
     {% if minifier == 1 %}
         <link media="all" rel="stylesheet" type="text/css" href="css/all.min.css?
-            css[]={{ startUrl }}/js/bootstrap/css/bootstrap.min.css"/>
+            css[]={{ startUrl }}/js/bootstrap/css/bootstrap.min.css
+            &css[]={{ startUrl }}/js/fancybox/jquery.fancybox.css"/>
         <script type="text/javascript" src="js/all.min.js?
             js[]={{ startUrl }}/js/jquery/jquery.min.js
-            &js[]={{ startUrl }}/js/bootstrap/js/bootstrap.min.js">
+            &js[]={{ startUrl }}/js/bootstrap/js/bootstrap.min.js
+            &js[]={{ startUrl }}/js/fancybox/jquery.fancybox.pack.js">
         </script>
     {% else %}
         <link href="js/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+        <link href="js/fancybox/jquery.fancybox.css" rel="stylesheet">
         <script type="text/javascript" src="js/jquery/jquery.min.js"></script>
         <script type="text/javascript" src="js/bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/fancybox/jquery.fancybox.pack.js"></script>
     {% endif %}
 </head>
 
