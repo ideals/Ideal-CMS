@@ -1,9 +1,7 @@
 <?php
-namespace ParseIt;
+namespace SiteMap;
 
-use Ideal\Field\Url;
-
-class ParseIt
+class Crawler
 {
     /** Регулярное выражение для поиска ссылок */
     const LINK = "/<[Aa][^>]*[Hh][Rr][Ee][Ff]=['\"]?([^\"'>]+)[^>]*>/";
