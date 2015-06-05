@@ -13,6 +13,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
 
     public function delete()
     {
+        parent::delete();
         $lvl = $this->pageData['lvl'] + 1;
         $cid = new Cid\Model($this->params['levels'], $this->params['digits']);
         $cid = $cid->getCidByLevel($this->pageData['cid'], $this->pageData['lvl'], false);
