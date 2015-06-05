@@ -18,7 +18,7 @@ table.table-hover tbody tr.inactive:hover td, table.table-hover tbody tr.not-men
     background-color: #BED1DB!important;
 }
 table.table tr.not-menu td a {
-	/*test*/
+    /*test*/
     color: slategray;
     font-weight: bold;
 }
@@ -87,4 +87,19 @@ div.checkbox {
 }
 #add-addon {
     width: 300px;
+}
+.sortable {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+.sortable li {
+    margin: 0 5px 5px 5px;
+    padding: 5px;
+    font-size: 1.2em;
+    height: 34px;
+}
+.ui-state-highlight {
+    height: 34px;
+    line-height: 1.2em;
 }
