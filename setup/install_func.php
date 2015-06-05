@@ -214,6 +214,7 @@ function installCopyRoot()
 
     copyDir('../Library/bootstrap', ROOT . '/js/bootstrap');
     copyDir('../Library/jquery', ROOT . '/js/jquery');
+    copyDir('../Library/fancybox', ROOT . '/js/fancybox');
     if (!file_exists(ROOT . '/tmp')) {
         mkdir(ROOT . '/tmp');
     }
