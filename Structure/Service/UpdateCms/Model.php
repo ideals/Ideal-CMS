@@ -27,6 +27,9 @@ class Model
     /** @var string Путь к файлу с логом обновлений */
     protected $log = '';
 
+    /** @var bool Признак тестового режима */
+    protected $testMode = false;
+
     /** @var array Массив папок для обновления */
     protected $updateFolders = array();
 
@@ -52,6 +55,16 @@ class Model
             $this->answer = $this->getAnswer();
             exit;
         }
+    }
+
+    /**
+     * Задаём признак тестового режима
+     *
+     * @param bool $testMode Признак тестового режима
+     */
+    public function setTestMode($testMode)
+    {
+        $this->testMode = $testMode;
     }
 
     /**
@@ -199,7 +212,6 @@ class Model
             );
             $this->addAnswer("Не удалось изменить права для следующих файлов/папок: <br />\n{$paths}", 'warning');
         }
-
         $this->addAnswer('Заменены файлы', 'success');
         return $updateCore . '_old';
     }
@@ -286,19 +298,18 @@ class Model
     {
         // Находим путь к последнему установленному скрипту модуля
         $logFile = file($this->log);
+        $updatePath = $this->updateName . '/setup/update';
         $updateFolder = SETUP_DIR . '/setup/update';
         $lastScript = '';
         foreach ($logFile as $v) {
-            if (strpos($v, $updateFolder) === 0) {
-                $lastScript = str_replace($updateFolder, '', trim($v));
+            if (strpos($v, $updatePath) === 0) {
+                $lastScript = str_replace($updatePath, '', trim($v));
             }
         }
 
         if ($lastScript != '') {
             // Находим номер версии и название файла последнего установленного скрипта
-            $scriptArr = explode('/', $lastScript);
-            $scriptEnd = array_pop($scriptArr);
-            $currentVersion = array_pop($scriptArr);
+            $currentVersion = basename(dirname($lastScript));
         } else {
             $version = new Versions();
             $versions = $version->getVersions(); // получаем список установленных модулей
@@ -331,52 +342,34 @@ class Model
         }
 
         // Составление списка скриптов для обновления
-        $scripts = array();
+        $scripts = array('pre' => array(), 'after' => array());
         foreach ($updates as $folder) {
             $scriptFolder = $updateFolder . '/' . $folder;
             $files = array_diff(scandir($scriptFolder), array('.', '..'));
             foreach ($files as $file) {
-                $file = '/' . $folder . '/' . $file;
+                $fileScript = '/' . $folder . '/' . $file;
                 if (is_dir($scriptFolder . '/' . $file)) {
                     continue;
                 }
-                if ($lastScript == $file) {
+                if ($lastScript == $fileScript) {
                     // Нашли последний установленный скрипт, значит отсекаем все предыдущие скрипты
                     $scripts = array();
                     continue;
                 }
-                $scripts[] = $file;
+                if (preg_match("(\/new_\.*)", $fileScript)) {
+                    $scripts['after'][] = $fileScript;
+                } else {
+                    $scripts['pre'][] = $fileScript;
+                }
             }
         }
 
         $this->addAnswer(
-            'Получен список скриптов в количестве: ' . count($scripts),
+            'Получен список скриптов в количестве: ' . ((int)count($scripts['pre']) + (int)count($scripts['after'])),
             'success',
-            array('count' =>count($scripts))
+            array('scripts' => json_encode($scripts))
         );
 
-        return $scripts;
-    }
-
-    /**
-     * Выполнение скриптов до замены файлов
-     *
-     * @param $scripts Список всех скриптов, используемых при обновлении
-     * @return array Список скриптов, которые нужно выполнить после замены файлов
-     */
-    public function runOldScript($scripts)
-    {
-        // Получаем элементы массива не содержащие в начале строки 'new_'
-        $scriptsOld = preg_grep("(\/new_\.*)", $scripts, PREG_GREP_INVERT);
-        foreach ($scriptsOld as $v) {
-            $this->runScript(SETUP_DIR . '/setup/update' . $v);
-        }
-        $scripts = array_diff_key($scripts, $scriptsOld);
-        $this->addAnswer(
-            'Выполнено скриптов: ' . count($scriptsOld),
-            'success',
-            array('count' =>count($scripts))
-        );
         return $scripts;
     }
 
@@ -389,21 +382,40 @@ class Model
     {
         // Производим запуск скриптов обновления
         $db = Db::getInstance();
-        $config = Config::getInstance();
         $ext = substr($script, strrpos($script, '.'));
+
+        if (strpos(basename($script), 'new') === 0) {
+            $file = 'update' .  $script;
+            if ($this->updateName !== 'Ideal-CMS') {
+                $file = $this->updateName . '/setup/update' . $script;
+            }
+        } else {
+            $file = SETUP_DIR . '/setup/update' . $script;
+        }
+        $fileForLog = $this->updateName . '/setup/update' . $script;
+
+        $text = '';
         switch ($ext) {
             case '.php':
-                include $script;
+                ob_start();
+                include $file;
+                $text = ob_get_contents();
+                ob_end_clean();
+                $text = ($text != '') ? "\n<br />Скрипт выдал: " . $text : '';
                 break;
             case '.sql':
-                $query = file_get_contents($script);
-                $db->query($query);
+                $query = file_get_contents($file . $script);
+                if (!$db->query($query)) {
+                    $this->addAnswer('Ошибка при выполнении sql скрипта: ' . $file, 'error');
+                }
                 break;
             default:
                 continue;
         };
-        $this->writeLog($script);
-        $this->addAnswer('Выполнен скрипт: ' . $script, 'success');
+        if (!$this->testMode) {
+            $this->writeLog($fileForLog);
+        }
+        $this->addAnswer('Выполнен скрипт: ' . $script . $text, 'success');
     }
 
     /**

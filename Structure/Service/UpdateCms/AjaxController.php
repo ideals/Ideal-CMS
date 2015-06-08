@@ -124,7 +124,6 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function ajaxSwapAction()
     {
-        $_SESSION['update']['scripts'] = $this->updateModel->runOldScript($_SESSION['update']['scripts']);
         $_SESSION['update']['oldFolder'] = $this->updateModel->swapUpdate();
         exit;
     }
@@ -137,15 +136,22 @@ class AjaxController extends \Ideal\Core\AjaxController
         if (!isset($_SESSION['update']['scripts'])) {
             exit;
         }
-        // Получаем скрипт, выполняемый в текущем ajax запросе
-        $script = array_shift($_SESSION['update']['scripts']);
-        // Если все скрипты были выполнены ранее, возвращаем false
-        if (!$script) {
+        $scripts = &$_SESSION['update']['scripts'];
+
+        // Проверяем, есть ли скрипты, которые нужно выполнить до замены файлов админки
+        if (isset($scripts['pre']) && count($scripts['pre']) > 0) {
+            $scriptFile = array_shift($scripts['pre']);
+        } elseif (isset($scripts['after']) && count($scripts['after']) > 0) {
+            $scriptFile = array_shift($scripts['after']);
+        } else {
             exit;
         }
-        $script = (($this->updateModel->updateName == 'Ideal-CMS') ? '/Ideal' : '/Mods') . '/setup/update' . $script;
+
         // Запускаем выполнение скриптов и запросов
-        $this->updateModel->runScript($script);
+        $displayErrors = ini_get('display_errors');
+        ini_set('display_errors', 'On');
+        $this->updateModel->runScript($scriptFile);
+        ini_set('display_errors', $displayErrors);
         exit;
     }
 
