@@ -102,14 +102,25 @@ class Versions
      */
     protected function getVersionFromFile($mods)
     {
-        // Получаем версии
+        // Получаем версии из файлов README
+        $version = $this->getVersionFromReadme($mods);
+
         if (filesize($this->log) == 0) {
-            $version = $this->getVersionFromReadme($mods);
-            if ($this->log) {
-                $this->putVersionLog($version, $this->log);
-            }
+            // Если update.log нет, создаём его
+            $this->putVersionLog($version, $this->log);
         } else {
-            $version = $this->getVersionFromLog($this->log);
+            // Если лог есть, проверяем все ли модули прописаны в нём
+            $versionLog = $this->getVersionFromLog($this->log);
+
+            foreach ($version as $mod => $ver) {
+                if (isset($versionLog[$mod])) {
+                    continue;
+                }
+                // Если этот модуль не записан в лог, добавляем его к списку
+                $versionLog[$mod] = $ver;
+                $this->writeLog('Installed ' . $mod . ' v.' . $ver);
+            }
+            $version = $versionLog;
         }
         return $version;
     }
@@ -236,5 +247,16 @@ class Versions
     public function getLogName()
     {
         return $this->log;
+    }
+
+    /**
+     * Запись строки в log-файл
+     *
+     * @param string $msg Строка для записи в log
+     */
+    public function writeLog($msg)
+    {
+        $msg = rtrim($msg) . "\n";
+        file_put_contents($this->log, $msg, FILE_APPEND);
     }
 }

@@ -140,11 +140,9 @@ class AjaxController extends \Ideal\Core\AjaxController
 
         // Проверяем, есть ли скрипты, которые нужно выполнить до замены файлов админки
         if (isset($scripts['pre']) && count($scripts['pre']) > 0) {
-            $scriptFile = SETUP_DIR . '/setup/update' . array_shift($scripts['pre']);
+            $scriptFile = array_shift($scripts['pre']);
         } elseif (isset($scripts['after']) && count($scripts['after']) > 0) {
-            $scriptFile = (($this->updateModel->updateName == 'Ideal-CMS') ? '/Ideal' : '/Mods')
-                . '/setup/update'
-                . array_shift($scripts['after']);
+            $scriptFile = array_shift($scripts['after']);
         } else {
             exit;
         }
