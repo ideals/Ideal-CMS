@@ -62,7 +62,17 @@ $(document).ready(function () {
         var curr = $.parseJSON($('#' + addonField).val());
         curr.splice(pos, 1);
         $('#' + addonField).val(JSON.stringify(curr));
+        var idDivContent = $("#tabs").children().eq(pos + countNotAddonTabs).find("a").attr("href");
+
+        if ($("#tabs").children().eq(pos + countNotAddonTabs).hasClass('active')) {
+            var idDivContentActive = $("#tabs").children().eq(pos + countNotAddonTabs - 1).find("a").attr("href");
+            $("#tabs").children().eq(pos + countNotAddonTabs - 1).addClass("active");
+            $(idDivContentActive).addClass("active");
+        }
+
         $("#tabs").children().eq(pos + countNotAddonTabs).remove();
+        $(idDivContent).remove();
+
     });
 
 });
