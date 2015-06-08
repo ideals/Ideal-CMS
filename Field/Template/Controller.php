@@ -108,7 +108,7 @@ class Controller extends Select\Controller
     {
         $request = new Request();
 
-        // Вычесляем последний префикс с учётом того что поля выбора типа структуры может не существовать
+        // Вычисляем последний префикс с учётом того что поля выбора типа структуры может не существовать
         if (isset($request->general_structure)) {
             $lastPrefix = strtolower($request->general_structure);
         } else {
