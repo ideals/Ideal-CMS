@@ -53,6 +53,17 @@ class Request
     }
 
     /**
+     * Проверка на существование переменной в $_REQUEST с помощью функции isset()
+     *
+     * @param string $name название переменной
+     * @return bool
+     */
+    public function __isset($name)
+    {
+        return isset($_REQUEST[$name]);
+    }
+
+    /**
      * Получение из query string строки за исключением параметра $without и его значения
      *
      * @param string $without Параметр, который нужно исключить из query string
