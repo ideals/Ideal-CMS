@@ -25,4 +25,11 @@ class AbstractModel extends \Ideal\Core\Admin\Model
             $this->setPageData($pageData[0]);
         }
     }
+
+    public function delete()
+    {
+        $db = Db::getInstance();
+        $db->delete($this->_table)->where('ID=:id', array('id' => $this->pageData['ID']));
+        $db->exec();
+    }
 }
