@@ -155,6 +155,7 @@ function Update(moduleName, version, currentVersion, url, modalBox) {
                 if (this.phpScripts['pre']['count'] > 0) {
                     this.actionScript = this.phpScripts['pre'];
                     this.actionScriptsequence = 'pre';
+                    this.actionScript['count']--;
                     data.action = 'ajaxRunScript';
                     break;
                 }
@@ -164,6 +165,7 @@ function Update(moduleName, version, currentVersion, url, modalBox) {
                 if (this.phpScripts['after']['count'] > 0) {
                     this.actionScript = this.phpScripts['after'];
                     this.actionScriptsequence = 'after';
+                    this.actionScript['count']--;
                     data.action = 'ajaxRunScript';
                     break;
                 }
