@@ -361,4 +361,28 @@ abstract class Model extends Core\Model
     {
         $this->setPageData(array());
     }
+
+    public function delete()
+    {
+        $config = Config::getInstance();
+        $pageData = $this->getPageData();
+
+        // Если есть подключенные аддоны, то сперва удаляем информацию из их таблиц
+        if (isset($pageData['addon']) && !empty($pageData['addon'])) {
+            $addonsInfo = json_decode($pageData['addon']);
+
+            $end = end($this->path);
+            $prevStructure = $config->getStructureByName($end['structure']);
+            $addonDataPrevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
+
+            foreach ($addonsInfo as $addonInfo) {
+                list(, $sliceAddonTableName) = explode('_', $addonInfo[1]);
+                $sliceAddonTableName = strtolower($sliceAddonTableName);
+                $tableName = $config->db['prefix'] . 'ideal_addon_' . $sliceAddonTableName;
+                $db = Db::getInstance();
+                $db->delete($tableName)->where('prev_structure=:ps', array('ps' => $addonDataPrevStructure));
+                $db->exec();
+            }
+        }
+    }
 }
