@@ -32,6 +32,12 @@ $config->cmsFolder = trim($subFolder . '/' . $cmsFolder, '/');
 // Загружаем список структур из конфигурационных файлов структур
 $config->loadSettings();
 
+if (isset($isConsole)) {
+    // Если инициализированная переменная $isConsole, значит этот скрипт используется
+    // только для инициализации окружения
+    return;
+}
+
 // Инициализируем фронт контроллер
 $page = new Core\FrontController();
 
