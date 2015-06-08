@@ -41,7 +41,7 @@ if (isset($isConsole)) {
 // Инициализируем фронт контроллер
 $page = new Core\FrontController();
 
-if (strpos($_SERVER['REQUEST_URI'], $config->cmsFolder) === 1) {
+if (strpos($_SERVER['REQUEST_URI'], $config->cmsFolder . '/') === 1) {
     // Обращение к административной части
 
     // Регистрируем плагин авторизации
