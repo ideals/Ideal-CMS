@@ -1,21 +1,24 @@
 <?php
 namespace Ideal\Structure\Service\CheckDb;
 
+?>
+
+<ul class="nav nav-tabs">
+
+    <li class="active"><a href="#bd" data-toggle="tab">База данных</a></li>
+    <li><a href="#cache" data-toggle="tab">Кэш</a></li>
+
+</ul>
+
+<div class="tab-content">
+
+    <div class="tab-pane well active" id="bd">
+
+        <form method="POST" action="">
+
+<?php
 use Ideal\Core\Config;
 use Ideal\Core\Db;
-
-echo '<ul class="nav nav-tabs">';
-
-echo '<li class="active"><a href="#bd" data-toggle="tab">База данных</a></li>';
-echo '<li><a href="#cache" data-toggle="tab">Кэш</a></li>';
-echo '<li><a href="#cmsFiles" data-toggle="tab">Файлы CMS</a></li>';
-
-echo '</ul>';
-echo '<div class="tab-content">';
-
-echo '<div class="tab-pane well active" id="bd">';
-
-echo '<form method="POST" action="">';
 
 $db = Db::getInstance();
 $config = Config::getInstance();
@@ -30,6 +33,27 @@ foreach ($result as $v) {
     }
 }
 
+$checkTypeFile = function ($dir, $module, &$cfgTables, &$cfgTablesFull, &$config, $type) {
+    if (!($handle = opendir($dir))) {
+        // Невозможно открыть папку, значит ничего делать не надо
+        return;
+    }
+    while (false !== ($file = readdir($handle))) {
+        if (($file != '.') && ($file != '..') && (is_dir($dir . '/' . $file))) {
+            /** @noinspection PhpIncludeInspection */
+            $c = require($dir . '/' . $file . '/config.php');
+            if (isset($c['params']['has_table']) && ($c['params']['has_table'] == false)) {
+                continue;
+            }
+            $t = strtolower($config->db['prefix'] . $module . '_' . $type . '_' . $file);
+            if (array_search($t, $cfgTables) === false) {
+                $cfgTables[] = $t;
+                $cfgTablesFull[$t] = ($module == 'Ideal') ? $type . '/' . $file : $module . '/' . $type . '/' . $file;
+            }
+        }
+    }
+};
+
 $cfgTables = array();
 $cfgTablesFull = array();
 foreach ($config->structures as $v) {
@@ -40,45 +64,26 @@ foreach ($config->structures as $v) {
     $table = strtolower($config->db['prefix'] . $module . '_structure_' . $structure);
     $cfgTables[] = $table;
 
-    // Обработка папки с кастомными шаблонами
+    // Обработка папки с кастомными аддонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
-    $dir = stream_resolve_include_path($dir . $module . '/Template');
-    checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
-    // Обработка папки с шаблонами
+    $dir = stream_resolve_include_path($dir . $module . '/Addon');
+    $checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Addon');
+    // Обработка папки с аддонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/' : $config->cmsFolder . '/' . 'Mods/';
-    $dir = stream_resolve_include_path($dir . $module . '/Template');
-    checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config);
+    $dir = stream_resolve_include_path($dir . $module . '/Addon');
+    $checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Addon');
 
     // Обработка папки с кастомными связующими таблицами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
     $dir = stream_resolve_include_path($dir . $module . '/Medium');
-    checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Medium');
+    $checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Medium');
     // Обработка папки с связующими таблицами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/' : $config->cmsFolder . '/' . 'Mods/';
     $dir = stream_resolve_include_path($dir . $module . '/Medium');
-    checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Medium');
+    $checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Medium');
 
     $module = ($module == 'Ideal') ? '' : $module . '/';
     $cfgTablesFull[$table] = $module . 'Structure/' . $structure;
-}
-
-function checkTypeFile($dir, $module, &$cfgTables, &$cfgTablesFull, &$config, $type = 'Template')
-{
-    if ($handle = opendir($dir)) {
-        while (false !== ($file = readdir($handle))) {
-            if (($file != '.') && ($file != '..') && (is_dir($dir . '/' . $file))) {
-                $c = require($dir . '/' . $file . '/config.php');
-                if (isset($c['params']['has_table']) && ($c['params']['has_table'] == false)) {
-                    continue;
-                }
-                $t = strtolower($config->db['prefix'] . $module . '_' . $type . '_' . $file);
-                if (array_search($t, $cfgTables) === false) {
-                    $cfgTables[] = $t;
-                    $cfgTablesFull[$t] = ($module == 'Ideal') ? $type . '/' . $file : $module . '/' . $type . '/' . $file;
-                }
-            }
-        }
-    }
 }
 
 // Если есть таблицы, которые надо создать
@@ -86,6 +91,7 @@ if (isset($_POST['create'])) {
     foreach ($_POST['create'] as $table => $v) {
         echo '<p>Создаём таблицу ' . $table . '…';
         $file = $cfgTablesFull[$table] . '/config.php';
+        /** @noinspection PhpIncludeInspection */
         $data = include($file);
         $db->create($table, $data['fields']);
         echo ' Готово.</p>';
@@ -109,7 +115,7 @@ $isCool = true;
 foreach ($cfgTables as $table) {
     if (!in_array($table, $dbTables)) {
         echo '<p class="well"><input type="checkbox" name="create[' . $table . ']">&nbsp; ';
-        echo 'Таблица <b>' . $table . '</b> отсутствует в базе данных. Создать?</p>';
+        echo 'Таблица <strong>' . $table . '</strong> отсутствует в базе данных. Создать?</p>';
         $isCool = false;
     }
 }
@@ -117,7 +123,7 @@ foreach ($cfgTables as $table) {
 foreach ($dbTables as $table) {
     if (!in_array($table, $cfgTables)) {
         echo '<p class="well"><input type="checkbox" name="delete[' . $table . ']">&nbsp; ';
-        echo 'Таблица <b>' . $table . '</b> отсутствует в конфигурации. Удалить?</p>';
+        echo 'Таблица <strong>' . $table . '</strong> отсутствует в конфигурации. Удалить?</p>';
         $isCool = false;
     }
 }
@@ -138,54 +144,11 @@ if ($isCool) {
 </form>
 </div>
 
-<style>
-    #iframe {
-        margin-top: 15px;
-    }
-
-    #loading {
-        -webkit-animation: loading 3s linear infinite;
-        animation: loading 3s linear infinite;
-    }
-
-    @-webkit-keyframes loading {
-        0% {
-            color: rgba(34, 34, 34, 1);
-        }
-        50% {
-            color: rgba(34, 34, 34, 0);
-        }
-        100% {
-            color: rgba(34, 34, 34, 1);
-        }
-    }
-
-    @keyframes loading {
-        0% {
-            color: rgba(34, 34, 34, 1);
-        }
-        50% {
-            color: rgba(34, 34, 34, 0);
-        }
-        100% {
-            color: rgba(34, 34, 34, 1);
-        }
-    }
-</style>
-
 <div class="tab-pane well" id="cache">
     <button class="btn btn-info" value="Удаление файлов" onclick="dellCacheFiles()">
         Удаление файлов
     </button>
 </div>
-
-<div class="tab-pane well" id="cmsFiles">
-    <button class="btn btn-info" value="Проверка целостности файлов" onclick="checkCmsFiles()">
-        Проверка целостности файлов
-    </button>
-    <span id="loading"></span>
-    <div id="iframe">
-    </div>
 </div>
 
 
@@ -204,49 +167,9 @@ if ($isCool) {
                 else{
                     text = 'Информация о закэшированных страницах верна.';
                 }
-                $('.nav-tabs').parent().prepend('<div class="alert alert-block alert-success fade in"> <button type="button" class="close" data-dismiss="alert">&times;</button><span class="alert-heading">' + text + '</span></div>');
-            },
-            type: 'GET',
-            dataType: "json"
-        });
-    }
-
-    function checkCmsFiles()
-    {
-        $('#loading').html('Идёт сбор данных. Ждите.');
-        $('#iframe').html('');
-        var text = '';
-        $.ajax({
-            url: 'index.php',
-            data: {action: 'checkCmsFiles', controller: 'Ideal\\Structure\\Service\\CheckCmsFiles', mode: 'ajax'},
-            success: function (data)
-            {
-                if (data.newFiles) {
-                    text += 'Были добавлены новые файлы: <br />' + data.newFiles;
-                }
-                if (data.changeFiles) {
-                    if (text != '') {
-                        text += '<br /><br />';
-                    }
-                    text += 'Были внесены изменения в следующие файлы: <br />' + data.changeFiles;
-                }
-                if (data.delFiles) {
-                    if (text != '') {
-                        text += '<br /><br />';
-                    }
-                    text += 'Были удалены следующие файлы: <br />' + data.delFiles;
-                }
-                if (text == '') {
-                    text = 'Системные файлы соответствуют актуальной версии'
-                }
-                $('#loading').html('');
-                $('#iframe').html(text);
-            },
-            error: function (xhr) {
-                $('#loading').html('');
-                $('#iframe').html('<pre> Не удалось завершить сканирование. Статус: '
-                + xhr.statusCode().status +
-                '\n Попробуйте повторить позже.</pre>');
+                $('.nav-tabs').parent().prepend('<div class="alert alert-block alert-success fade in">'
+                    + '<button type="button" class="close" data-dismiss="alert">&times;</button>'
+                    + '<span class="alert-heading">' + text + '</span></div>');
             },
             type: 'GET',
             dataType: "json"

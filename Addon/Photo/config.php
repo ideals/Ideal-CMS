@@ -1,8 +1,8 @@
 <?php
-// Страница
+// Фотогалерея
 return array(
     'params' => array(
-        'name' => 'Текст',
+        'name' => 'Фотогалерея',
     ),
     'fields' => array(
         'ID' => array(
@@ -15,10 +15,15 @@ return array(
             'sql' => 'char(15)',
             'type' => 'Ideal_Hidden'
         ),
-        'content' => array(
-            'label' => 'Текст',
+        'tab_ID' => array(
+            'label' => 'ID таба аддона',
+            'sql' => 'int not null default 0',
+            'type' => 'Ideal_Hidden'
+        ),
+        'images' => array(
+            'label' => 'Фотогалерея',
             'sql' => 'mediumtext',
-            'type' => 'Ideal_RichEdit'
-        )
+            'type' => 'Ideal_ImageGallery'
+        ),
     )
 );

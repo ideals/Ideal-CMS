@@ -214,6 +214,7 @@ function installCopyRoot()
 
     copyDir('../Library/bootstrap', ROOT . '/js/bootstrap');
     copyDir('../Library/jquery', ROOT . '/js/jquery');
+    copyDir('../Library/fancybox', ROOT . '/js/fancybox');
     if (!file_exists(ROOT . '/tmp')) {
         mkdir(ROOT . '/tmp');
     }
@@ -309,12 +310,12 @@ function createTables()
         )
     );
 
-    if ($handle = opendir('../Template')) {
+    if ($handle = opendir('../Addon')) {
         while (false !== ($file = readdir($handle))) {
             if ($file != '.' && $file != '..') {
-                if (is_dir('../Template/' . $file)) {
-                    $table = $config->db['prefix'] . 'ideal_template_' . strtolower($file);
-                    $fields = require('../Template/' . $file . '/config.php');
+                if (is_dir('../Addon/' . $file)) {
+                    $table = $config->db['prefix'] . 'ideal_addon_' . strtolower($file);
+                    $fields = require('../Addon/' . $file . '/config.php');
                     $db->create($table, $fields['fields']);
                 }
             }

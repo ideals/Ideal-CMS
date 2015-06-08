@@ -64,11 +64,6 @@ class Controller
         // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
         $result = $this->model->parseInputParams();
 
-        // Проверяем не выбран ли другой прикреплённый шаблон
-        if ($request->changeTemplate == 0) {
-            $result = $this->model->checkTemplateChange($result);
-        }
-
         if ($result['isCorrect'] == 1) {
             $result = $this->model->saveElement($result);
             $this->runClearFileCache();

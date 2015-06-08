@@ -11,54 +11,14 @@ abstract class Model extends Core\Model
 
     protected $fieldsGroup = 'general';
 
-    public function checkTemplateChange($result)
-    {
-        foreach ($result['items'] as $fieldName => $field) {
-            $result['items'][$fieldName]['confirm'] = '';
-            $fieldsGroup = $this->fieldsGroup . '_';
-            if (substr($fieldName, 0, strlen($fieldsGroup)) != $fieldsGroup) {
-                continue;
-            }
-            $realName = substr($fieldName, strlen($fieldsGroup));
-            if (!isset($this->fields[$realName])) {
-                continue;
-            }
-            if ($this->fields[$realName]['type'] != 'Template') {
-                continue;
-            }
-            if ($this->pageData[$realName] == '') {
-                // Если изначально шаблон не был задан - просто сохраняем введённое значение
-                continue;
-            }
-            if ($field['value'] != $this->pageData[$realName]) {
-                $result['isCorrect'] = 2;
-
-                $oldTemplateName = Util::getClassName($this->pageData[$realName], 'Template') . '\\Model';
-                $oldTemplate = new $oldTemplateName($this->pageData[$realName], '');
-                $oldTemplateCap = $oldTemplate->params['name'];
-
-                $newTemplateName = Util::getClassName($field['value'], 'Template') . '_Model';
-                $newTemplate = new $newTemplateName($field['value'], '');
-                $newTemplateCap = $newTemplate->params['name'];
-
-                $result['items'][$fieldName]['confirm'] = 'шаблон «'
-                    . $this->fields[$realName]['label']
-                    . '» с «' . $oldTemplateCap
-                    . '» на «' . $newTemplateCap . '»';
-            }
-        }
-        return $result;
-    }
-
+    // Создание нового элемента структуры
     public function createElement($result, $groupName = 'general')
     {
         // Из общего списка введённых данных выделяем те, что помечены general
         foreach ($result['items'] as $v) {
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
-            if ($group == $groupName
-                && $field == 'prev_structure' && $v['value'] == ''
-            ) {
+            if ($group == $groupName && $field == 'prev_structure' && $v['value'] == '') {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
                 $v['value'] = $this->prevStructure;
             }
@@ -101,12 +61,12 @@ abstract class Model extends Core\Model
     }
 
     /**
-     * Обработка переменных от дополнительных табов с шаблонами
+     * Обработка переменных от дополнительных табов с аддонами
      *
-     * @param array  $result
-     * @param array  $groups
+     * @param array $result
+     * @param array $groups
      * @param string $groupName
-     * @param bool   $isCreate
+     * @param bool $isCreate
      * @return array
      */
     public function saveAddData($result, $groups, $groupName, $isCreate = false)
@@ -115,32 +75,68 @@ abstract class Model extends Core\Model
 
         // Считываем данные дополнительных табов
         foreach ($this->fields as $fieldName => $field) {
-            if (strpos($field['type'], '_Template') === false) {
+            if (strpos($field['type'], '_Addon') === false) {
                 continue;
             }
 
-            $templateData = $groups[$fieldName];
-            $end = end($this->path);
-            $prevStructure = $config->getStructureByName($end['structure']);
-            $templateData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
-            if (empty($templateData['ID'])) {
-                // Для случая, если вдруг элемент был создан, а шаблон у него был непрописан
-                $isCreate = true;
-            }
-            if ($isCreate) {
-                unset($templateData['ID']);
+            $addonsInfo = json_decode($groups[$groupName][$fieldName]);
+
+            // Сохраняем информацию из аддонов
+            foreach ($addonsInfo as $addonInfo) {
+                $tempAddonInfo = explode('_', $addonInfo[1]);
+                $addonGroupName = strtolower(end($tempAddonInfo)) . '-' . $addonInfo[0];
+                $addonData = $groups[$addonGroupName];
+                $end = end($this->path);
+                $prevStructure = $config->getStructureByName($end['structure']);
+
+                // значение преструктуры основной структуры
+                // TODO переделать собирание преструктуры, чтобы значение брались из правильного места
+                $addonData['prev_structure'] = $prevStructure['ID'] . '-' . $groups[$groupName]['ID'];
+                if (empty($addonData['ID'])) {
+                    // Для случая, если вдруг элемент был создан, а аддон у него был непрописан
+                    $isCreate = true;
+                }
+                if ($isCreate) {
+                    unset($addonData['ID']);
+                }
+
+                $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
+
+                /* @var $addonModelName \Ideal\Core\Admin\Model */
+                $addonModel = new $addonModelName($addonData['prev_structure']);
+                if ($isCreate) {
+                    // Записываем данные шаблона в БД и в $result
+                    $result = $addonModel->createElement($result, $addonGroupName);
+                } else {
+                    $addonModel->setPageDataById($addonData['ID']);
+                    $result = $addonModel->saveElement($result, $addonGroupName);
+                }
             }
 
-            $templateModelName = Util::getClassName($groups[$groupName][$fieldName], 'Template') . '\\Model';
 
-            /* @var $templateModel \Ideal\Core\Admin\Model */
-            $templateModel = new $templateModelName($templateData['prev_structure']);
-            if ($isCreate) {
-                // Записываем данные шаблона в БД и в $result
-                $result = $templateModel->createElement($result, $fieldName);
-            } else {
-                $templateModel->setPageDataById($groups[$fieldName]['ID']);
-                $result = $templateModel->saveElement($result, $fieldName);
+            // Удаляем информацию об удалённых аддонах
+            $pageData = $this->getPageData();
+            $preSaveAddonsInfo = json_decode($pageData['addon']);
+            foreach ($preSaveAddonsInfo as $key => $preSaveAddonInfo) {
+                // Удаляем информацию об аддоне из старого списка, если его нет в новом.
+                if (!in_array($preSaveAddonInfo, $addonsInfo)) {
+                    $tempPreSaveAddonInfo = explode('_', $preSaveAddonInfo[1]);
+                    $preSaveAddonGroupName = strtolower(end($tempPreSaveAddonInfo)) . '-' . $preSaveAddonInfo[0];
+                    $end = end($this->path);
+                    $preSaveAddonPrevStructure = $config->getStructureByName($end['structure']);
+
+                    // значение преструктуры основной структуры
+                    // TODO переделать собирание преструктуры, чтобы значение брались из правильного места
+                    $preSaveAddonDataPrevStructure = $preSaveAddonPrevStructure['ID'] . '-' . $groups[$groupName]['ID'];
+                    $addonModelName = Util::getClassName($preSaveAddonInfo[1], 'Addon') . '\\Model';
+
+                    /* @var $addonModelName \Ideal\Core\Admin\Model */
+                    $preSaveAddonModel = new $addonModelName($preSaveAddonDataPrevStructure);
+                    $preSaveAddonModel->setFieldsGroup($preSaveAddonGroupName);
+                    $preSaveAddonModel->setPageDataByPrevStructure($preSaveAddonDataPrevStructure);
+                    // Удаляем данные об аддоне
+                    $preSaveAddonModel->delete();
+                }
             }
         }
         return $result;
@@ -152,9 +148,7 @@ abstract class Model extends Core\Model
         foreach ($result['items'] as $v) {
             list($group, $field) = explode('_', $v['fieldName'], 2);
 
-            if ($group == $groupName
-                && $field == 'prev_structure' && $v['value'] == ''
-            ) {
+            if ($group == $groupName && $field == 'prev_structure' && $v['value'] == '') {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
                 $v['value'] = $this->prevStructure;
             }
@@ -287,7 +281,7 @@ abstract class Model extends Core\Model
             $tab = 'tab1';
             if (isset($field['tab'])) {
                 if (!array_key_exists($field['tab'], $tabs)) {
-                    $tabs[$field['tab']] = 'tab' . ((int)substr(end($tabs), 3) + 1);
+                    $tabs[$field['tab']] = 'tab' . ((int) substr(end($tabs), 3) + 1);
                 }
                 $tab = $tabs[$field['tab']];
             }
@@ -310,9 +304,22 @@ abstract class Model extends Core\Model
 
             if (isset($item['items'])) {
                 // Если есть вложенные элементы - добавляем их к результатам
-                $result['items'] = array_merge($result['items'], $item['items']['items']);
-                if (!$item['items']['isCorrect']) {
-                    $result['isCorrect'] = false;
+                // Проверяем на наличие нескольких вложенностей
+                if (is_array($item['items']) && !isset($item['items']['items'])) {
+                    foreach ($item['items'] as $value) {
+                        $result['items'] = array_merge($result['items'], $value['items']);
+
+                        // Добавляем дополнительные запросы от вложенных элементов
+                        $result['sqlAdd'] = array_merge($result['sqlAdd'], $value['sqlAdd']);
+                        if (!$value['isCorrect']) {
+                            $result['isCorrect'] = false;
+                        }
+                    }
+                } else {
+                    $result['items'] = array_merge($result['items'], $item['items']['items']);
+                    if (!$item['items']['isCorrect']) {
+                        $result['isCorrect'] = false;
+                    }
                 }
                 unset($item['items']);
             }
@@ -334,9 +341,7 @@ abstract class Model extends Core\Model
             $result['isCorrect'] = (($item['message'] === '') && ($result['isCorrect'] == true));
 
             // Составляем список вкладок, в которых возникли ошибки
-            if (($item['message'] !== '')
-                && (!in_array($item['realTab'], $result['errorTabs']))
-            ) {
+            if (($item['message'] !== '') && (!in_array($item['realTab'], $result['errorTabs']))) {
                 $result['errorTabs'][] = $item['realTab'];
             }
         }
@@ -355,5 +360,29 @@ abstract class Model extends Core\Model
     public function setPageDataNew()
     {
         $this->setPageData(array());
+    }
+
+    public function delete()
+    {
+        $config = Config::getInstance();
+        $pageData = $this->getPageData();
+
+        // Если есть подключенные аддоны, то сперва удаляем информацию из их таблиц
+        if (isset($pageData['addon']) && !empty($pageData['addon'])) {
+            $addonsInfo = json_decode($pageData['addon']);
+
+            $end = end($this->path);
+            $prevStructure = $config->getStructureByName($end['structure']);
+            $addonDataPrevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
+
+            foreach ($addonsInfo as $addonInfo) {
+                list(, $sliceAddonTableName) = explode('_', $addonInfo[1]);
+                $sliceAddonTableName = strtolower($sliceAddonTableName);
+                $tableName = $config->db['prefix'] . 'ideal_addon_' . $sliceAddonTableName;
+                $db = Db::getInstance();
+                $db->delete($tableName)->where('prev_structure=:ps', array('ps' => $addonDataPrevStructure));
+                $db->exec();
+            }
+        }
     }
 }

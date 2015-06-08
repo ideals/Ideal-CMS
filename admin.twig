@@ -8,8 +8,10 @@
 
     <base href="{{ cmsFolder }}/">
 
+    <link href="Ideal/Library/jquery/jquery-ui.min.css" rel="stylesheet">
     <link href="Ideal/Library/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="Ideal/style.css" rel="stylesheet">
+    <link href="Ideal/selectize.css" rel="stylesheet">
 </head>
 
 <body>
@@ -18,11 +20,14 @@
         src="Ideal/Library/jquery/jquery.min.js"></script>
 <script type="text/javascript"
         src="Ideal/Library/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript"
+        src="Ideal/Library/jquery/jquery-ui.min.js"></script>
 
 <script type="text/javascript"
         src="Ideal/Library/ckeditor/ckeditor.js"></script>
 <script type="text/javascript"
         src="Ideal/Library/ckfinder/ckfinder.js"></script>
+<script type="text/javascript" src="Ideal/selectize.js"></script>
 
 {% block jsAdmin %}
 {% endblock %}
@@ -164,6 +169,12 @@
                         <button type="button" class="close" data-dismiss="modal"
                                 aria-hidden="true"
                                 style="padding-right:13px;">&times;</button>
+                        <button type="button" class="close hide" id="modalTabsEdit"
+                                onclick="$('#tabsModal').toggle()">
+                            <span class="glyphicon glyphicon-list"></span>
+                        </button>
+                        <div id="tabsModal">
+                        </div>
                         <h4 class="modal-title"
                             style="float:left; padding: 6px 25px 0 25px;"
                             id="myModalLabel">Редактирование</h4>
@@ -193,6 +204,24 @@
                 <!-- /.modal-content -->
             </div>
             <!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+        <div class="modal fade" id="addon-confirm-modal">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Удаление аддона</h4>
+                    </div>
+                    <div class="modal-body">
+                        Действительно удалить?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Удалить</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
         </div><!-- /.modal -->
 
         <!-- Modal Login-->
@@ -263,7 +292,6 @@
                     window.idObject['id'] = id;
                     window.idObject['action'] = action;
 
-                    window.idObject['changeTemplate'] = 0;
                     dataToAjax = {action: action, par: par, id: id}
 
                 }
@@ -276,7 +304,7 @@
                         if (action == 'login') { // если пользователь не авторизован показываем окно авторизации
                             onShowModalLogin()
                         }
-                        else { // В случае удачного получения данных от сервереа - отображаем окно редактирования
+                        else { // В случае удачного получения данных от сервера - отображаем окно редактирования
                             onShowModalSuccess(data)
                         }
                     },
@@ -409,7 +437,6 @@
                         par: window.idObject['par'],
                         id: window.idObject['id'],
                         action: action,
-                        changeTemplate: window.idObject['changeTemplate'],
                         formValues: formValues
                     },
                     beforeSend: function ()
@@ -470,8 +497,6 @@
                                 text = text + "\n" + 'данные изменённых параметров будут удалены!!!';
                                 // Если требуется подтверждение на смену шаблона
                                 if (confirm(text)) {
-                                    window.idObject['changeTemplate'] = 1;
-                                    // Даём команду на стирание старых данных
                                     onSubmit(window.idObject['closeWindow']);
                                 } else {
                                     // Ничего не делаем
@@ -542,8 +567,6 @@
                 $('#message').removeClass('hide alert-success alert-error')
                 // Снимаем подсветку с вкладок
                 $('.nav-tabs > li > a').removeClass('error');
-                // Сбрасываем флаг разрешения на изменение шаблона
-                window.idObject['changeTemplate'] = 0;
             }
 
             //

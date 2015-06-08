@@ -1,7 +1,7 @@
 <?php
-namespace Ideal\Template\Page;
+namespace Ideal\Addon\Page;
 
-class Model extends \Ideal\Core\Admin\Model
+class Model extends \Ideal\Addon\AbstractModel
 {
 
     public function getPageData()

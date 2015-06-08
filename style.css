@@ -18,7 +18,7 @@ table.table-hover tbody tr.inactive:hover td, table.table-hover tbody tr.not-men
     background-color: #BED1DB!important;
 }
 table.table tr.not-menu td a {
-	/*test*/
+    /*test*/
     color: slategray;
     font-weight: bold;
 }
@@ -48,4 +48,58 @@ div.checkbox {
 .form-horizontal div.checkbox {
     margin-left: 25%;
     margin-bottom: 10px;
+}
+
+#modalTabsEdit {float: right; margin-right: 20px; font-size: 12px; margin-top: 1px;}
+
+#tabsModal {
+    background-color: #fff;
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    position: absolute;
+    right: 45px;
+    margin-top: 16px;
+    display: none;
+}
+#addon-confirm-modal {
+    display: none;
+    z-index: 10000;
+}
+#addonsList{
+    width: 300px;
+}
+#addonsList .list-group-item {
+    padding: 0;
+}
+#addonsList span.form-control {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+}
+#addonsList span.input-group-btn.remove-addon > button {
+    padding-top: 8px;
+    border: 0;
+    border-left: 1px solid #CCC;
+    z-index: 99999;
+}
+#add-addon {
+    width: 300px;
+}
+.sortable {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+.sortable li {
+    margin: 0 5px 5px 5px;
+    padding: 5px;
+    font-size: 1.2em;
+    height: 34px;
+}
+.ui-state-highlight {
+    height: 34px;
+    line-height: 1.2em;
 }

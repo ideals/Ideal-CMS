@@ -4,7 +4,8 @@
 
     <h1>{{ header|raw }}</h1>
 
-    {{ template.content|raw }}
+    {# Выводим контент первого аддона #}
+    {{ addons.0.content|raw }}
 
     {% if parts|length > 0 %}
         <ul>
