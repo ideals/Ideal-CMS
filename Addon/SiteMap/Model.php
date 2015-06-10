@@ -154,6 +154,9 @@ class Model extends \Ideal\Addon\AbstractModel
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }
+                if (empty($v['link'])) {
+                    continue;
+                }
                 $str .= '<li><a href="' . $v['link'] . '">' . $v['name'] . '</a>';
             }
             $lvl = $v['lvl'];
