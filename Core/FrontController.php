@@ -27,6 +27,7 @@ class FrontController
             $router = new Admin\Router();
         } else {
             $router = new Site\Router();
+            $this->getReffer();
         }
 
         // Определяем имя контроллера для отображения запрошенной страницы
@@ -121,5 +122,17 @@ class FrontController
         }
         $from = empty($_SERVER['HTTP_REFERER']) ? 'Прямой переход.' : 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
         Util::addError('Страница не найдена (404). ' . $from);
+    }
+
+    /**
+     * Получение реффера пользователя и установка реффера в куки если реффера ещё нет
+     */
+    public function getReffer()
+    {
+        // Проверяем есть ли в куках информация о реффере
+        if (!isset($_COOKIE['reffer'])) {
+            // Если информации о реффере нет в куках то добавляем её туда
+            setcookie("reffer", $_SERVER['HTTP_REFERER']);
+        }
     }
 }
