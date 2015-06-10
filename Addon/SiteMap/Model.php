@@ -62,10 +62,50 @@ class Model extends \Ideal\Addon\AbstractModel
         $startStructure = new $className($structure['ID']);
         $elements = $startStructure->getStructureElements();
 
+        // Удаляем из списка элементы без родителей
+        $this->removeNotParent($elements);
+
         $path = array($structure);
         $elements = $this->recursive($path, $elements);
 
         return $elements;
+    }
+
+    /**
+     * Удаление из списка элементов без родителей
+     *
+     * @param array $elements Список элементов структур для построения карты сайта
+     */
+    public function removeNotParent(&$elements)
+    {
+        $tempElements = $elements;
+        foreach ($tempElements as $key => $element) {
+            if ($element['lvl'] > 1) {
+                $parentCid = substr($element['cid'], 0, 3 * ($element['lvl'] - 1));
+                $parentCid .= str_repeat('000', 7 - $element['lvl']);
+                if ($this->secondLevelFind($elements, $parentCid) === false) {
+                    unset($elements[$key]);
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * Ищет cid на втором уровне двумерного массива и возвращет ключ первого уровня
+     *
+     * @param array $arr Массив в котором производится поиск
+     * @param string $needleValue Значение cid, которое нужно найти
+     * @return bool|int|string Ключ в случае если значение нашлось или false в обратном случае
+     */
+    public function secondLevelFind($arr, $needleValue)
+    {
+        foreach ($arr as $key => $value) {
+            if ($value['cid'] == $needleValue) {
+                return $key;
+            }
+        }
+        return false;
     }
 
     /**
