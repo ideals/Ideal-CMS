@@ -129,7 +129,7 @@ class Model extends \Ideal\Core\Admin\Model
         $lvl = 0;
         foreach ($list as $k => $v) {
             if ($v['lvl'] > $lvl) {
-                $str .= "\n<ul>\n";
+                $str .= "\n<ul class=\"site-map\">\n";
             } elseif ($v['lvl'] == $lvl) {
                 $str .= "</li>\n";
             } elseif ($v['lvl'] < $lvl) {
