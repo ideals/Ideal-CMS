@@ -134,6 +134,10 @@ class ModelAbstract extends Site\Model
                     $newPath = array_merge($path, $branch['branch']);
                     $url = array_slice($url, count($newPath) - 2);
                     $model = $structure->detectPageByUrl($newPath, $url);
+                    if ($model->is404) {
+                        // Если во вложенной структуре ничего не нашлось, перебираем ветки дальше
+                        continue;
+                    }
                     return $model;
                 }
                 continue;
