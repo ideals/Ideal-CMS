@@ -174,6 +174,11 @@ DONE;
         $lines = explode("\n", $string);
 
         foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                // Пропускаем пустые линии в списке исключений из кэша
+                continue;
+            }
             if (!FileCache::addExcludeFileCache($line)) {
                 $response['res'] = false;
                 $response['text'] = 'Не получилось сохранить настройки исключений в файл';
