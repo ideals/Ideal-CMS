@@ -134,6 +134,10 @@ class ModelAbstract extends Site\Model
                     $newPath = array_merge($path, $branch['branch']);
                     $url = array_slice($url, count($newPath) - 2);
                     $model = $structure->detectPageByUrl($newPath, $url);
+                    if ($model->is404) {
+                        // Если во вложенной структуре ничего не нашлось, перебираем ветки дальше
+                        continue;
+                    }
                     return $model;
                 }
                 continue;
@@ -189,7 +193,7 @@ class ModelAbstract extends Site\Model
     protected function checkDetectedUrlCount($url, $newPath)
     {
         // В случае, если новый путь состоит из одного элемента, который пропускается
-        if (count($newPath) == 1 && $newPath[0]['is_skip'] == 1) {
+        if (count($newPath) == 1 && isset($newPath[0]['is_skip']) && $newPath[0]['is_skip'] == 1) {
             return 1;
         }
 
@@ -198,7 +202,7 @@ class ModelAbstract extends Site\Model
         $count = 0;
         $parsedUrl = $sep = '';
         foreach ($newPath as $v) {
-            if ($v['is_skip'] == 0) {
+            if (!isset($v['is_skip']) || ($v['is_skip'] == 0)) {
                 $parsedUrl .= $sep . $v['url'];
                 $sep = '/';
                 $count++;
