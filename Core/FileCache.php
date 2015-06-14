@@ -120,10 +120,15 @@ class FileCache
         $config = Config::getInstance();
         $cacheFile = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/cache/site_cache.php';
         $cacheFileValue = self::getConfigArrayFile($cacheFile);
-        if (!empty($cacheFileValue)) {
-            foreach ($cacheFileValue as $path) {
-                self::delCacheFileDir($path);
-            }
+
+        if (empty($cacheFileValue)) {
+            // Если в кэше ничего нет, то и делать ничего не надо
+            return;
+        }
+
+        // Удаляем закэшированные файлы
+        foreach ($cacheFileValue as $path) {
+            self::delCacheFileDir($path);
         }
 
         // Очищаем файл хранящий информацию о кэшировании
@@ -217,6 +222,7 @@ class FileCache
      * Удаляет файл кэша и директории его нахождения, если они пустые
      *
      * @param string $path путь до удаляемого файла
+     * @return bool
      */
     public static function delCacheFileDir($path)
     {
