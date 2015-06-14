@@ -311,7 +311,7 @@ class ModelAbstract extends Site\Model
         $config = Config::getInstance();
         $urlModel = new Url\Model();
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE is_active=1 ORDER BY cid";
+        $_sql = "SELECT * FROM {$this->_table} ORDER BY cid";
         $list = $db->select($_sql);
 
         if (count($this->path) == 0) {
@@ -321,7 +321,20 @@ class ModelAbstract extends Site\Model
         }
 
         $lvl = 0;
+        $lvlExit = false;
         foreach ($list as $k => $v) {
+            if ($v['is_active'] == 0) {
+                // Пропускаем неактивный элемент и ставим флаг для пропуска вложенных элементов
+                $lvlExit = $v['lvl'];
+                unset($list[$k]);
+                continue;
+            }
+            if ($lvlExit !== false && $v['lvl'] > $lvlExit) {
+                // Если это элемент, вложенный в скрытый, то не включаем его в карту сайта
+                unset($list[$k]);
+                continue;
+            }
+            $lvlExit = false;
             if ($v['lvl'] > $lvl) {
                 if (($v['url'] != '/') && ($k > 0)) {
                     $url[] = $list[$k - 1];
