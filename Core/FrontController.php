@@ -27,7 +27,7 @@ class FrontController
             $router = new Admin\Router();
         } else {
             $router = new Site\Router();
-            $this->getReffer();
+            $this->referrer();
         }
 
         // Определяем имя контроллера для отображения запрошенной страницы
@@ -125,14 +125,27 @@ class FrontController
     }
 
     /**
-     * Получение реффера пользователя и установка реффера в куки если реффера ещё нет
+     * Получение реферра пользователя и установка реферра в куки
      */
-    public function getReffer()
+    public function referrer($referrer = '')
     {
-        // Проверяем есть ли в куках информация о реффере
-        if (!isset($_COOKIE['reffer'])) {
-            // Если информации о реффере нет в куках то добавляем её туда
-            setcookie("reffer", $_SERVER['HTTP_REFERER']);
+        // Если не было передано значение реферра, то запускаем проверку надобности его получения
+        if (empty($referrer)) {
+            // Проверяем есть ли в куках информация о реферре
+            if (!isset($_COOKIE['referrer'])) {
+                // Если информации о реферре нет в куках то добавляем её туда
+                if (!empty($_SERVER['HTTP_REFERER'])) {
+                    $referrer = $_SERVER['HTTP_REFERER'];
+                } else {
+                    $referrer = 'null';
+                }
+            }
+        }
+
+        // Если в итоге значение реферра так и остаётся пустым, то скорее всего в оно уже хранится в куках.
+        // И следовательно новая запись не требуется
+        if (!empty($referrer)) {
+            setcookie("referrer", $referrer);
         }
     }
 }
