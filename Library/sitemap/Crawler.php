@@ -685,6 +685,18 @@ XML;
         // Разбираем текущую ссылку на компоненты
         $url = parse_url($current);
 
+        if ($link{0} == ' ' || $link{strlen($link)-1} == ' ') {
+            $link = str_replace(' ', '%20', $link);
+            if (strlen($url['path']) > 1) {
+                $pos = stripos($url['path'], '/', 1);
+                if ($pos === false) {
+                    $dir = '';
+                } else {
+                    $dir = substr($url['path'], 0, $pos+1);
+                }
+            }
+        }
+
         // Если последний символ в "path" текущей это слэш "/"
         if ($url['path']{strlen($url['path']) - 1} == '/') {
             // Промежуточная директория равна "path" текущей ссылки без слэша
@@ -726,10 +738,8 @@ XML;
         }
 
         // Возвращаем абсолютную ссылку
-        // todo нужно разобраться, почему тут РАСКОДИРУЕТСЯ ссылка, а не кодируется?
-        // Ведь она берётся со страницы, а там может быть что угодно. Может быть лучше оставить как есть?
-        return sprintf('%s://%s%s/%s', $url['scheme'], $url['host'], $dir, urldecode($link));
-
+        $result = $url['scheme'] . '://' . $url['host'] . '/' . $dir . $link;
+        return $result;
     }
 
     /**
