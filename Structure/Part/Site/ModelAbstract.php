@@ -134,6 +134,10 @@ class ModelAbstract extends Site\Model
                     $newPath = array_merge($path, $branch['branch']);
                     $url = array_slice($url, count($newPath) - 2);
                     $model = $structure->detectPageByUrl($newPath, $url);
+                    if ($model->is404) {
+                        // Если во вложенной структуре ничего не нашлось, перебираем ветки дальше
+                        continue;
+                    }
                     return $model;
                 }
                 continue;
@@ -189,7 +193,7 @@ class ModelAbstract extends Site\Model
     protected function checkDetectedUrlCount($url, $newPath)
     {
         // В случае, если новый путь состоит из одного элемента, который пропускается
-        if (count($newPath) == 1 && $newPath[0]['is_skip'] == 1) {
+        if (count($newPath) == 1 && isset($newPath[0]['is_skip']) && $newPath[0]['is_skip'] == 1) {
             return 1;
         }
 
@@ -198,7 +202,7 @@ class ModelAbstract extends Site\Model
         $count = 0;
         $parsedUrl = $sep = '';
         foreach ($newPath as $v) {
-            if ($v['is_skip'] == 0) {
+            if (!isset($v['is_skip']) || ($v['is_skip'] == 0)) {
                 $parsedUrl .= $sep . $v['url'];
                 $sep = '/';
                 $count++;
@@ -307,7 +311,7 @@ class ModelAbstract extends Site\Model
         $config = Config::getInstance();
         $urlModel = new Url\Model();
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE is_active=1 ORDER BY cid";
+        $_sql = "SELECT * FROM {$this->_table} ORDER BY cid";
         $list = $db->select($_sql);
 
         if (count($this->path) == 0) {
@@ -317,7 +321,20 @@ class ModelAbstract extends Site\Model
         }
 
         $lvl = 0;
+        $lvlExit = false;
         foreach ($list as $k => $v) {
+            if ($v['is_active'] == 0) {
+                // Пропускаем неактивный элемент и ставим флаг для пропуска вложенных элементов
+                $lvlExit = $v['lvl'];
+                unset($list[$k]);
+                continue;
+            }
+            if ($lvlExit !== false && $v['lvl'] > $lvlExit) {
+                // Если это элемент, вложенный в скрытый, то не включаем его в карту сайта
+                unset($list[$k]);
+                continue;
+            }
+            $lvlExit = false;
             if ($v['lvl'] > $lvl) {
                 if (($v['url'] != '/') && ($k > 0)) {
                     $url[] = $list[$k - 1];

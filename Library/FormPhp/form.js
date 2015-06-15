@@ -271,11 +271,27 @@ jQuery.fn.form = function (options, messages, methods) {
                 this.yaCounter.reachGoal = function (opt) {}
             }
         },
+        // Инициализация googleAnalytics
+        initGoogleAnalytics: function () {
+            if (typeof this.ga != 'undefined') {
+                return;
+            }
+            this.ga = {};
+            if (typeof('GoogleAnalyticsObject') != 'undefined') {
+                this.ga = function (metka) {
+                    metka = '/' + metka.toLowerCase();
+                    ga('send', 'pageview', metka);
+                }
+            } else {
+                this.ga = function (opt) {}
+            }
+        },
         // Отправка метрики, при нажатии на кнопку отправки формы
         metrikaOnButtonClick: function () {
             var metka = $(this).data('click');
             if (metka) {
                 this.yaCounter.reachGoal(metka);
+                this.ga(metka);
             }
         },
         // Отправка метрики, при успешной отправке формы
@@ -283,6 +299,7 @@ jQuery.fn.form = function (options, messages, methods) {
             var metka = $(this).data('send');
             if (metka) {
                 this.yaCounter.reachGoal(metka);
+                this.ga(metka);
             }
         },
         // Отправка формы
@@ -333,6 +350,7 @@ jQuery.fn.form = function (options, messages, methods) {
         $(this)
             .submit(function () {
                 methods.initYaCounter.apply(this);
+                methods.initGoogleAnalytics.apply(this);
                 if (this.defaultSubmit === true) {
                     return true;
                 }

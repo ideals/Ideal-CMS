@@ -129,7 +129,7 @@ class Model extends \Ideal\Core\Admin\Model
         $lvl = 0;
         foreach ($list as $k => $v) {
             if ($v['lvl'] > $lvl) {
-                $str .= "\n<ul>\n";
+                $str .= "\n<ul class=\"site-map\">\n";
             } elseif ($v['lvl'] == $lvl) {
                 $str .= "</li>\n";
             } elseif ($v['lvl'] < $lvl) {
@@ -138,7 +138,9 @@ class Model extends \Ideal\Core\Admin\Model
                 $str .= str_repeat("</li>\n</ul>\n</li>\n", $c);
             }
 
-            if ((!isset($v['link'])) || (isset($v['is_skip']) && $v['is_skip'] == 1)) {
+            if ((!isset($v['link']) || empty($v['link'] ))
+                || (isset($v['is_skip']) && ($v['is_skip'] == 1) && ($v['url'] == '---'))) {
+                // Если у элемента нет ссылки, или у него прописан is_skip=1 и url='--', то не выводим ссылку
                 $str .= '<li>' . $v['name'];
             } else {
                 // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
