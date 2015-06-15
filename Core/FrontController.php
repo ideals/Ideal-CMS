@@ -127,24 +127,16 @@ class FrontController
     /**
      * Получение реферра пользователя и установка реферра в куки
      */
-    public function referrer($referrer = '')
+    public function referrer()
     {
-        // Если не было передано значение реферра, то запускаем проверку надобности его получения
-        if (empty($referrer)) {
-            // Проверяем есть ли в куках информация о реферре
-            if (!isset($_COOKIE['referrer'])) {
-                // Если информации о реферре нет в куках то добавляем её туда
-                if (!empty($_SERVER['HTTP_REFERER'])) {
-                    $referrer = $_SERVER['HTTP_REFERER'];
-                } else {
-                    $referrer = 'null';
-                }
+        // Проверяем есть ли в куках информация о реферре
+        if (!isset($_COOKIE['referrer'])) {
+            // Если информации о реферре нет в куках то добавляем её туда
+            if (!empty($_SERVER['HTTP_REFERER'])) {
+                $referrer = $_SERVER['HTTP_REFERER'];
+            } else {
+                $referrer = 'null';
             }
-        }
-
-        // Если в итоге значение реферра так и остаётся пустым, то скорее всего в оно уже хранится в куках.
-        // И следовательно новая запись не требуется
-        if (!empty($referrer)) {
             setcookie("referrer", $referrer);
         }
     }
