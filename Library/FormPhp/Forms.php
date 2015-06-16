@@ -135,15 +135,25 @@ class Forms
      * @param string $name Имя параметра
      * @return mixed Значение параметра (если не указан, то null)
      */
-    public function getParam($name)
+    public function getValue($name)
     {
         $method = '_' . $this->method; // приводим к виду _POST или _GET
         if (!isset($GLOBALS[$method][$name])) {
             // Если параметр не указан, то null
             return null;
         }
-        $value = $GLOBALS[$method][$name];
+        $value = htmlspecialchars($GLOBALS[$method][$name]);
         return $value;
+    }
+
+    /**
+     * @param string $name Имя параметра
+     * @return mixed Значение параметра (если не указан, то null)
+     * @deprecated
+     */
+    public function getParam($name)
+    {
+        return $this->getValue($name);
     }
 
     /**
