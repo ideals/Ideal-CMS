@@ -9,6 +9,8 @@
 
 namespace FormPhp;
 
+use Mail\Sender;
+
 /**
  * Класс для работы с веб-формами
  *
@@ -339,5 +341,68 @@ class Forms
             . "\n"  . '})';
 
         return $this->js;
+    }
+
+
+    /**
+     * Отправление писем получателям
+     *
+     * @param $to string|array Список получателей
+     * @param $title string Заголовок письма
+     * @param $body string Тело письма
+     * @param $html bool Флаг, если true значит текст содержит html, false - обычный текст.
+     * @return bool Признак принятия почты к отправке
+     */
+    public function sendMail($to, $title, $body, $html = false)
+    {
+        // Подключаем класс для отправки почты
+        require_once __DIR__ . '/../Mail/Sender.php';
+
+        // Получаем конфигурационные данные сайта
+        $config = require_once __DIR__ . '/../../../site_data.php';
+
+        $mailSender = new Sender();
+        $response = true;
+
+        // Если в качестве списка получателей была передана строка, то преобразовываем его в массив
+        if (!is_array($to)) {
+            $to = explode(',', $to);
+            array_walk($to, function (&$val) {
+                $val = trim($val);
+            });
+        }
+
+        // К списку получателей добавляем почтовый ящик менеджера сайта
+        $to[] = $config['mailForm'];
+
+        // Устанавливаем заголовок письма
+        $mailSender->setSubj($title);
+
+        // Если были переданы файлы, то прикрепляем их к письму
+        if (isset($_FILES['file']['name']) && !empty($_FILES['file']['name'])) {
+            foreach ($_FILES as $file) {
+                if ($file['name'] == '') {
+                    continue;
+                }
+                $mailSender->fileAttach($file['tmp_name'], $file['type'], $file['name']);
+            }
+        }
+
+        // Если был установлен флаг html, то устанавливаем текст как html.
+        // В противном случае тело письма устанавливается как обычный текст
+        if ($html) {
+            $mailSender->setHtmlBody($body);
+        } else {
+            $mailSender->setPlainBody($body);
+        }
+
+        // Пытаемся отправить почту каждому из списка получателей
+        foreach ($to as $oneEmailAddress) {
+            if (!$mailSender->sent($config['robotEmail'], $oneEmailAddress)) {
+                $response = false;
+            }
+        }
+
+        return $response;
     }
 }
