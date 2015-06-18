@@ -39,6 +39,9 @@ class Forms
     /** @var object Класс отправки формы */
     protected $senderClass;
 
+    /** @var object Экземпляр класса Db для связи с базой данных */
+    protected $db;
+
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -59,6 +62,18 @@ class Forms
 
         $this->xhtml = $xhtml;
         $this->formName = $formName;
+    }
+
+    /**
+     * Устанавливает объект для связи с базой данных
+     *
+     * @param object $db Экземпляр класса Db для связи с базой данных
+     */
+    public function setDb($db)
+    {
+        if (is_object($db)) {
+            $this->db = $db;
+        }
     }
 
     /**
