@@ -29,9 +29,17 @@ class Router
         if ($request->mode == 'ajax') {
             $controllerName = $request->controller . '\\AjaxController';
             if ($request->controller != '' && class_exists($controllerName)) {
+                // Если передан параметр getModel, значит для работы требуются данные модели.
+                if (isset($request->getModel) && $request->getModel == true) {
+                    if (is_null($this->model)) {
+                        $this->model = $this->routeByUrl();
+                    }
+                }
+
                 // Если контроллер в запросе указан И запрошенный класс существует
                 // то устанавливаем контроллер и завершаем роутинг
                 $this->controllerName = $controllerName;
+
                 return;
             }
             // Если параметры ajax-вызова неправильные, то обрабатываем запрос как не-ajax
