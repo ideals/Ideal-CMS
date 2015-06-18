@@ -204,7 +204,10 @@ jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
 jQuery.fn.form = function (options, messages, methods) {
     options = $.extend({
         ajaxUrl: '/',
-        ajaxDataType: 'text'
+        ajaxDataType: 'text',
+        action: '',
+        controller: '',
+        mode: ''
     }, options);
     var messagesOrig = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
@@ -289,6 +292,11 @@ jQuery.fn.form = function (options, messages, methods) {
         submit: function () {
             var $form = $(this);
             var data = $form.serialize();
+            if (options.action != '' && options.controller != '' && options.mode != '') {
+                // В случае ajax запроса через cms, всегда потребуется параметр getModel
+                var extData = {action: options.action, controller: options.controller, mode: options.mode, getModel: true};
+                data += '&' + jQuery.param(extData);
+            }
             $.ajax({
                 type: 'post',
                 url: options.ajaxUrl,
