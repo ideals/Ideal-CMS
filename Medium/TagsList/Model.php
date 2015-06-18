@@ -31,6 +31,10 @@ class Model extends AbstractModel
         $arr = $db->select($sql);
 
         $list = array();
+        if (count($arr) == 0) {
+            return $list;
+        }
+
         foreach ($arr as $item) {
             $list[$item['ID']] = $item['name'];
         }
