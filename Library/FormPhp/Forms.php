@@ -36,9 +36,6 @@ class Forms
     /** @var bool Флаг отображения html-сущностей в XHTML или в HTML стиле */
     protected $xhtml = true;
 
-    /** @var object Класс отправки формы */
-    protected $senderClass;
-
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -339,5 +336,52 @@ class Forms
             . "\n"  . '})';
 
         return $this->js;
+    }
+
+    /**
+     * Отправление писем получателям
+     *
+     * @param string $from От имени кого отправляется почта
+     * @param string $to Список получателей
+     * @param string $title Заголовок письма
+     * @param string $body Тело письма
+     * @param $html bool Флаг, если true значит текст содержит html, false - обычный текст.
+     * @return bool Признак принятия почты к отправке
+     */
+    public function sendMail($from, $to, $title, $body, $html = false)
+    {
+        if (!class_exists('\Mail\Sender')) {
+            // Окружение не инициализировано и продвинутого класса отправки почты нет
+            // Поэтому шлём самое простое письмо
+            $response = mail($to, $title, $body, 'From: ' . $from);
+            return $response;
+        }
+
+        $sender = new \Mail\Sender();
+
+        // Устанавливаем заголовок письма
+        $sender->setSubj($title);
+
+        // Если были переданы файлы, то прикрепляем их к письму
+        if (isset($_FILES['file']['name']) && !empty($_FILES['file']['name'])) {
+            foreach ($_FILES as $file) {
+                if ($file['name'] == '') {
+                    continue;
+                }
+                $sender->fileAttach($file['tmp_name'], $file['type'], $file['name']);
+            }
+        }
+
+        // Если был установлен флаг html, то устанавливаем текст как html.
+        // В противном случае тело письма устанавливается как обычный текст
+        if ($html) {
+            $sender->setHtmlBody($body);
+        } else {
+            $sender->setPlainBody($body);
+        }
+
+        $response = $sender->sent($from, $to);
+
+        return $response;
     }
 }
