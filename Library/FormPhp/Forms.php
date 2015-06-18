@@ -62,6 +62,18 @@ class Forms
     }
 
     /**
+     * Устанавливает объект для отправки формы
+     *
+     * @param object $senderClass Класс отправки формы
+     */
+    public function setSenderClass($senderClass)
+    {
+        if (is_object($senderClass)) {
+            $this->senderClass = $senderClass;
+        }
+    }
+
+    /**
      * Добавление элемента к форме
      *
      * Options:
@@ -339,5 +351,60 @@ class Forms
             . "\n"  . '})';
 
         return $this->js;
+    }
+
+
+    /**
+     * Отправление писем получателям
+     *
+     * @param $from string От имени кого отправляется почта
+     * @param $to string|array Список получателей
+     * @param $title string Заголовок письма
+     * @param $body string Тело письма
+     * @param $html bool Флаг, если true значит текст содержит html, false - обычный текст.
+     * @return bool Признак принятия почты к отправке
+     */
+    public function sendMail($from, $to, $title, $body, $html = false)
+    {
+
+        $response = true;
+
+        // Если в качестве списка получателей была передана строка, то преобразовываем его в массив
+        if (!is_array($to)) {
+            $to = explode(',', $to);
+            array_walk($to, function (&$val) {
+                $val = trim($val);
+            });
+        }
+
+        // Устанавливаем заголовок письма
+        $this->senderClass->setSubj($title);
+
+        // Если были переданы файлы, то прикрепляем их к письму
+        if (isset($_FILES['file']['name']) && !empty($_FILES['file']['name'])) {
+            foreach ($_FILES as $file) {
+                if ($file['name'] == '') {
+                    continue;
+                }
+                $this->senderClass->fileAttach($file['tmp_name'], $file['type'], $file['name']);
+            }
+        }
+
+        // Если был установлен флаг html, то устанавливаем текст как html.
+        // В противном случае тело письма устанавливается как обычный текст
+        if ($html) {
+            $this->senderClass->setHtmlBody($body);
+        } else {
+            $this->senderClass->setPlainBody($body);
+        }
+
+        // Пытаемся отправить почту каждому из списка получателей
+        foreach ($to as $oneEmailAddress) {
+            if (!$this->senderClass->sent($from, $oneEmailAddress)) {
+                $response = false;
+            }
+        }
+
+        return $response;
     }
 }
