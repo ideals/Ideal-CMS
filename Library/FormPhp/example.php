@@ -28,7 +28,10 @@ if ($form->isPostRequest()) {
 
         // Получаем из сессии объект для связи с базой данный
         if (isset($_SESSION['db'])) {
-            $form->setDb(unserialize($_SESSION['db']));
+            $db = unserialize($_SESSION['db']);
+            // Восстанавливаем соединение с базой для класса Db
+            $db = $db::getInstance();
+            $form->setDb($db);
         }
 
         // Получаем из сессии объект обеспечивающий отправление почты
@@ -57,6 +60,11 @@ LETTER;
 
         // Посылаем данные для отправки на почту
         $send = json_encode($form->sendMail($from, $toMails, $title, $message));
+
+        $fields = array('field1', 'field2', 'field3');
+        $values = array('value1', 'value2', 'value3');
+        $newRowId = $form->insertIntoDb('table_name', $fields, $values);
+
         */
 
         echo 'Форма заполнена правильно<br />';

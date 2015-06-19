@@ -422,4 +422,25 @@ class Forms
 
         return $response;
     }
+
+    /**
+     * Записывает переданную информацию в базу данных
+     *
+     * @param string $tableName Название таблицы в которую требуется записать данные
+     * @param array $fields Список полей для записи
+     * @param array $values Список значений для записи в соответствующие поля
+     * @return mixed
+     */
+    public function insertIntoDb($tableName, $fields, $values)
+    {
+        $params = array();
+        foreach ($fields as $key => $field) {
+            if (isset($values[$key])) {
+                $params[$field] = $values[$key];
+            }
+        }
+        if (!empty($params)) {
+            return $this->db->insert($tableName, $params);
+        }
+    }
 }
