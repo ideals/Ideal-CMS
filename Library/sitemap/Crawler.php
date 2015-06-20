@@ -672,6 +672,15 @@ XML;
      */
     protected function getAbsoluteUrl($link, $current)
     {
+        // Раскодируем ссылку, чтобы привести её к единому формату хранения в списке
+        $link = urldecode($link);
+
+        $len = mb_strlen($link);
+        if ($len > 1 && $link{$len - 1} == ' ') {
+            // Если последний символ — пробел, то сообщаем об ошибке
+            $this->stop("На странице {$current} неправильная ссылка, оканчивающаяся на пробел: '{$link}'");
+        }
+
         if (substr($link, 0, 4) == 'http') {
             // Если ссылка начинается с http, то абсолютизировать её не надо
             $url = parse_url($link);
@@ -686,12 +695,16 @@ XML;
         $url = parse_url($current);
 
         // Если последний символ в "path" текущей это слэш "/"
-        if ($url['path']{strlen($url['path']) - 1} == '/') {
+        if ($url['path']{mb_strlen($url['path']) - 1} == '/') {
             // Промежуточная директория равна "path" текущей ссылки без слэша
-            $dir = substr($url['path'], 0, strlen($url['path']) - 1);
+            $dir = substr($url['path'], 0, mb_strlen($url['path']) - 1);
         } else {
             // Устанавливаем родительский элемент
             $dir = dirname($url['path']);
+
+            // Если в $dir - корень сайта, то он должен быть пустым
+            $dir = (mb_strlen($dir) == 1) ? '' : $dir;
+
             // Если ссылка начинается с "?"
             if ($link{0} == '?') {
                 // То обрабатываемая ссылка равна последней части текущей ссылки + сама ссылка
@@ -722,13 +735,12 @@ XML;
 
         // Если задано base - добавляем его
         if (strlen($this->base)) {
-            return $this->base . urldecode($link);
+            return $this->base . $link;
         }
 
         // Возвращаем абсолютную ссылку
-        // todo нужно разобраться, почему тут РАСКОДИРУЕТСЯ ссылка, а не кодируется?
-        // Ведь она берётся со страницы, а там может быть что угодно. Может быть лучше оставить как есть?
-        return sprintf('%s://%s%s/%s', $url['scheme'], $url['host'], $dir, urldecode($link));
+        $result = $url['scheme'] . '://' . $url['host'] . $dir . '/' . $link;
+        return $result;
 
     }
 
@@ -868,5 +880,20 @@ XML;
 
         // Ни одно из правил не сработало, значит страницу исключать не надо
         return false;
+    }
+
+    /**
+     * Примитивный mock-метод для доступа к закрытым методам для их тестирования
+     *
+     * @param string $methodName Название вызываемого метода класса
+     * @param array $parameters Массив передаваемых методу параметров
+     * @return mixed Результат работы метода
+     */
+    public function mock($methodName, $parameters)
+    {
+        $r = '';
+        $str = '$r = $this->' . $methodName . '(' . implode(',', $parameters) . ');';
+        eval($str);
+        return $r;
     }
 }
