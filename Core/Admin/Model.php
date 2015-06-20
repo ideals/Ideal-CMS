@@ -116,7 +116,7 @@ abstract class Model extends Core\Model
 
             // Удаляем информацию об удалённых аддонах
             $pageData = $this->getPageData();
-            $preSaveAddonsInfo = json_decode($pageData['addon']);
+            $preSaveAddonsInfo = (isset($pageData['addon'])) ? json_decode($pageData['addon']) : array();
             foreach ($preSaveAddonsInfo as $key => $preSaveAddonInfo) {
                 // Удаляем информацию об аддоне из старого списка, если его нет в новом.
                 if (!in_array($preSaveAddonInfo, $addonsInfo)) {
