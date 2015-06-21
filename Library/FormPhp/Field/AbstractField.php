@@ -133,4 +133,25 @@ class AbstractField
     {
         return '';
     }
+
+    /**
+     * Получение текста, подписывающего это поле ввода (тег label)
+     *
+     * @return string Строка содержащая текст подписи
+     */
+    public function getLabelText()
+    {
+        return '';
+    }
+
+    /**
+     * Возвращает строку, содержащую html-код элемента ввода данных
+     *
+     * @return string html-код элементов ввода
+     */
+    public function getInputText()
+    {
+        return '';
+    }
+
 }

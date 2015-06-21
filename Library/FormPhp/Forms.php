@@ -175,6 +175,7 @@ class Forms
             /** @var \FormPhp\Field\AbstractField $field */
             $valid = $field->isValid();
             $result = $result && $valid;
+            // todo сделать к каждому полю уведомление об ошибках и метод, выдающий все сообщения об ошибках
         }
 
         return $result;
