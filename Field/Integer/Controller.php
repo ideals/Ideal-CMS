@@ -34,7 +34,7 @@ class Controller extends AbstractController
     {
         $value = intval($this->getValue());
         return
-            '<input type="text" class="form-control" name="' . $this->htmlName
+            '<input type="number" class="form-control" name="' . $this->htmlName
             . '" id="' . $this->htmlName
             . '" value="' . $value . '">';
     }
