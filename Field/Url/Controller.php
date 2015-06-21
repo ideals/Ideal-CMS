@@ -84,17 +84,21 @@ class Controller extends AbstractController
 
         // Получаем SEO ссылку на создаваемый/редактируемый материал
         $url = new Model();
-        $value = array('url' => htmlspecialchars($this->newValue));
-        $link = $url->getUrlWithPrefix($value, $this->model->getParentUrl());
+        $value = htmlspecialchars($this->newValue);
+        $link = $url->getUrlWithPrefix(array('url' => $value), $this->model->getParentUrl());
+
+        if ($value{0} == '/' || parse_url($link, PHP_URL_SCHEME) != '') {
+            // Если введённый url фактически является ссылкой, а не реальным URL,
+            // то проверять его существование не надо
+            return $item;
+        }
 
         // Проверяем url на существование
         $httpCode = self::checkUrl($link);
         if ($httpCode == 200) {
             $item['message'] = 'URL: ' . $link . ' уже используется!';
-        }
-
-        // Если не 404 ошибка, то уведомляем об этом польлзователя и не создаём страницу
-        if ($httpCode != 404) {
+        } elseif ($httpCode != 404) {
+            // Если не 404 ошибка, то уведомляем об этом польлзователя и не создаём страницу
             $item['message'] = 'URL: ' . $link . ' выдаёт ошибку с HTTP-кодом ' . $httpCode;
         }
 

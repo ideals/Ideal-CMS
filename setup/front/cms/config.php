@@ -45,7 +45,7 @@ return array(
             'isShow' => 1,
             'hasTable' => false,
         ),
-        // Подключаем модуль тегов
+        // Подключаем структуру тегов
         array(
             'ID' => 5,
             'structure' => 'Ideal_Tag',
@@ -53,11 +53,19 @@ return array(
             'isShow' => 0,
             'hasTable' => true
         ),
-        // Подключаем модуль новостей
+        // Подключаем структуру новостей
         array(
             'ID' => 6,
             'structure' => 'Ideal_News',
             'name' => 'Новости',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
+        // Подключаем структуру регистрации заказов
+        array(
+            'ID' => 7,
+            'structure' => 'Ideal_Order',
+            'name' => 'Заказы с сайта',
             'isShow' => 0,
             'hasTable' => true
         ),

@@ -1,8 +1,20 @@
 <?php
-// Указание папки, где находится папка FormPhp
-// define('PATHFORMPHP', '/cms-folder/Ideal/Library');
+/**
+ * Есть два варианта подключения фреймворка форм:
+ * 1. Без окружения Ideal CMS (более быстрый)
+ * 2. С подключение автозагрузчика Ideal CMS
+ */
 
-require_once 'autoloader.php';
+// 1 ВАРИАНТ
+// Указание папки, где находится папка FormPhp от корня сервера
+// define('PATHFORMPHP', '/cms-folder/Ideal/Library');
+// require_once 'autoloader.php';
+
+// 2 ВАРИАНТ
+$isConsole = true;
+require_once $_SERVER['DOCUMENT_ROOT'] . '/_.php';
+
+// Начало работы с фреймворком форм
 
 $form = new FormPhp\Forms('myForm');
 
@@ -17,6 +29,19 @@ $form->add('file', 'fileMulti', array('id' => 'fileMyForm')); // добавля�
 if ($form->isPostRequest()) {
     // Если отправлена форма, проверяем правильность её заполнения
     if ($form->isValid()) {
+        $body = <<<HTML
+Имя: {$form->getValue('name')}<br />
+Телефон: {$form->getValue('phone')}<br />
+Email: {$form->getValue('email')}
+HTML;
+        // Отправляем письмо пользователю
+        $topic = 'Вы заполнили форму на сайте example.com';
+        $form->sendMail('robot@example.com', $form->getValue('email'), $topic, $body, true);
+
+        // Отправляем письмо менеджеру
+        $topic = 'Вы заполнили форму на сайте example.com';
+        $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true);
+
         echo 'Форма заполнена правильно<br />';
     } else {
         echo 'Форма заполнена неправильно<br />';
@@ -33,9 +58,12 @@ $ymOnClick = 'SEND-FORM';
 $ymOnSend = 'SENT-FORM';
 $yaCounter = 'yaCounter17315254';
 $text = <<<TEXT
-<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
-<script type="text/javascript" src="jquery.placeholder.min.js"></script>
-<script type="text/javascript" src="example.php?mode=js"></script>
+<script type="text/javascript"
+        src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery-placeholder/2.0.8/jquery.placeholder.min.js"></script>
+<script type="text/javascript"
+        src="example.php?mode=js"></script>
 <link media="all" rel="stylesheet" type="text/css" href="example.php?mode=css"/>
 <form method="post" id="myForm" data-click="{$ymOnClick}" data-send="{$ymOnSend}">
     {$form->getTokenInput()}
@@ -50,8 +78,7 @@ $text = <<<TEXT
         Просто почта
         <input type="text" name="email"/>
     </label>
-        {$form->fields['file']->getFileInput()}
-        {$form->fields['file']->getAddFileButton()}
+        {$form->fields['file']->getInputText()}
     <input type="submit">
 </form>
 

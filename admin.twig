@@ -140,8 +140,7 @@
                     </td>
                     {{ item.row | raw }}
                     <td style="vertical-align: middle;">
-                        <div class="btn-group btn-group-xs button-edit"
-                             style="position: absolute; margin-top: -11px;">
+                        <div class="btn-group btn-group-xs button-edit">
                             <button class="btn btn-info" title="Изменить"
                                     onClick="showModal('{{ par }}', {{ item.ID }}, 'showEdit');"
                                     style="width: 47px;">
@@ -609,7 +608,6 @@
                 switch (data['isCorrect']) {
                     case 1:
                         $('#row' + data['ID']).remove();
-                        alert('Элемент удалён');
                         break;
                     case 2:
                         alert('Ошибка. Нельзя удалить раздел со вложенными элементами.');
