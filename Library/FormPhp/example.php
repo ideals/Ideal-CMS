@@ -29,6 +29,19 @@ $form->add('file', 'fileMulti', array('id' => 'fileMyForm')); // добавля�
 if ($form->isPostRequest()) {
     // Если отправлена форма, проверяем правильность её заполнения
     if ($form->isValid()) {
+        $body = <<<HTML
+Имя: {$form->getValue('name')}<br />
+Телефон: {$form->getValue('phone')}<br />
+Email: {$form->getValue('email')}
+HTML;
+        // Отправляем письмо пользователю
+        $topic = 'Вы заполнили форму на сайте example.com';
+        $form->sendMail('robot@example.com', $form->getValue('email'), $topic, $body, true);
+
+        // Отправляем письмо менеджеру
+        $topic = 'Вы заполнили форму на сайте example.com';
+        $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true);
+
         echo 'Форма заполнена правильно<br />';
     } else {
         echo 'Форма заполнена неправильно<br />';
