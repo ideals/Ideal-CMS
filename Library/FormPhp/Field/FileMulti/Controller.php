@@ -13,11 +13,11 @@ use FormPhp\Forms;
 class Controller extends \FormPhp\Field\File\Controller
 {
     /**
-     * Получение поля отправки файла
+     * Возвращает строку, содержащую html-код элемента ввода данных
      *
-     * @return string Поле отправки файла
+     * @return string html-код элементов ввода
      */
-    public function getFileInputBlock()
+    public function getInputText()
     {
         $input = $this->getFileInput();
         $button = $this->getAddFileButton();

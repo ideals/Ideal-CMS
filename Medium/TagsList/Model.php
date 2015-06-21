@@ -72,6 +72,12 @@ class Model extends AbstractModel
 
         $db = Db::getInstance();
         $owner = $this->obj->getPageData();
+
+        if (!isset($owner['ID'])) {
+            // Если владелец списка ещё не создан, то и выбранных элементов в нём нет
+            return array();
+        }
+
         $_sql = "SELECT {$elementsField} FROM {$this->table}
                   WHERE {$ownerField}='{$owner['ID']}' AND structure_id='{$structure['ID']}'";
         $arr = $db->select($_sql);
