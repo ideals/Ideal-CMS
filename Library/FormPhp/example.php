@@ -78,7 +78,7 @@ $text = <<<TEXT
         <input type="text" name="email"/>
     </label>
         {$form->fields['file']->getInputText()}
-    <input type="submit">
+    <input type="submit" onclick="document.getElementById('token').value = '{$form->fields['_token']->getValueForNoSpam()}';">
 </form>
 
 TEXT;

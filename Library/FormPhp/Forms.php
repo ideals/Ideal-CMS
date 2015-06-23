@@ -159,7 +159,7 @@ class Forms
     public function isValid()
     {
         $token = $this->getValue('_token');
-        if (is_null($token)) {
+        if (is_null($token) || empty($token)) {
             // Токен не установлен
             return false;
         }

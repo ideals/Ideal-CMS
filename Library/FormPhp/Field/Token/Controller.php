@@ -14,6 +14,11 @@ class Controller extends AbstractField
     public function getInputText()
     {
         $xhtml = ($this->xhtml) ? '/' : '';
-        return '<input type="hidden" name="_token" value="' . crypt(session_id()) . '" ' . $xhtml . '>' . "\n";
+        return '<input id="token" type="hidden" name="_token" value="" ' . $xhtml . '>' . "\n";
+    }
+
+    public function getValueForNoSpam()
+    {
+        return crypt(session_id());
     }
 }
