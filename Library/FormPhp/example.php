@@ -66,8 +66,7 @@ $text = <<<TEXT
         src="example.php?mode=js"></script>
 <link media="all" rel="stylesheet" type="text/css" href="example.php?mode=css"/>
 <form method="post" id="myForm" data-click="{$ymOnClick}" data-send="{$ymOnSend}">
-    {$form->getTokenInput()}
-    {$form->getValidatorsInput()}
+    {$form->start()}
     <input type="hidden" value="{$mailTitle}" name="mailTitle">
     <input type="hidden" value="{$yaCounter}" name="_yaCounter">
     <div>
