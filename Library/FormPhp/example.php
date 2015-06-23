@@ -42,6 +42,10 @@ HTML;
         $topic = 'Вы заполнили форму на сайте example.com';
         $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true);
 
+        // Отправляем рефер менеджеру
+        $topic = 'Изначальный реферер пользователя заполнившего форму';
+        $form->sendMail('robot@example.com', 'manager@example.com', $topic, $this->fields['referer']->getValue());
+
         echo 'Форма заполнена правильно<br />';
     } else {
         echo 'Форма заполнена неправильно<br />';
