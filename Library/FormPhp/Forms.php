@@ -131,20 +131,14 @@ class Forms
     }
 
     /**
-     * Получение параметра переданного формой
+     * Получение значения переданного полем формы
      *
      * @param string $name Имя параметра
      * @return mixed Значение параметра (если не указан, то null)
      */
     public function getValue($name)
     {
-        $method = '_' . $this->method; // приводим к виду _POST или _GET
-        if (!isset($GLOBALS[$method][$name])) {
-            // Если параметр не указан, то null
-            return null;
-        }
-        $value = htmlspecialchars($GLOBALS[$method][$name]);
-        return $value;
+        return $this->fields[$name]->getValue();
     }
 
     /**
@@ -164,7 +158,7 @@ class Forms
      */
     public function isValid()
     {
-        $token = $this->getParam('_token');
+        $token = $this->getValue('_token');
         if (is_null($token)) {
             // Токен не установлен
             return false;
