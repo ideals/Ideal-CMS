@@ -11,7 +11,7 @@ use FormPhp\Field\AbstractField;
  */
 class Controller extends AbstractField
 {
-    protected function getValue()
+    public function getValue()
     {
         return (isset($_COOKIE['referrer'])) ? $_COOKIE['referrer'] : 'empty';
     }
