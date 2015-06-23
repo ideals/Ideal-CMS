@@ -27,7 +27,7 @@ class FrontController
             $router = new Admin\Router();
         } else {
             $router = new Site\Router();
-            $this->referrer();
+            $this->referer();
         }
 
         // Определяем имя контроллера для отображения запрошенной страницы
@@ -125,19 +125,19 @@ class FrontController
     }
 
     /**
-     * Получение реферра пользователя и установка реферра в куки
+     * Получение реферера пользователя и установка реферера в куки
      */
-    public function referrer()
+    public function referer()
     {
-        // Проверяем есть ли в куках информация о реферре
-        if (!isset($_COOKIE['referrer'])) {
-            // Если информации о реферре нет в куках то добавляем её туда
+        // Проверяем есть ли в куках информация о реферере
+        if (!isset($_COOKIE['referer'])) {
+            // Если информации о реферере нет в куках то добавляем её туда
             if (!empty($_SERVER['HTTP_REFERER'])) {
-                $referrer = $_SERVER['HTTP_REFERER'];
+                $referer = $_SERVER['HTTP_REFERER'];
             } else {
-                $referrer = 'null';
+                $referer = 'null';
             }
-            setcookie("referrer", $referrer);
+            setcookie("referer", $referer);
         }
     }
 }

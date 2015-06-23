@@ -20,7 +20,7 @@ $db->insert(
     array(
         'ID' => 1,
         'prev_structure' => '0-3',
-        'structure' => 'Ideal_Referrer',
+        'structure' => 'Ideal_Order',
         'pos' => $newPos,
         'name' => 'Заказы с сайта',
         'url' => 'zakazy-s-sajta',

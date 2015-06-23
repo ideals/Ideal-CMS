@@ -13,6 +13,6 @@ class Controller extends AbstractField
 {
     public function getValue()
     {
-        return (isset($_COOKIE['referrer'])) ? $_COOKIE['referrer'] : 'empty';
+        return (isset($_COOKIE['referer'])) ? $_COOKIE['referer'] : 'empty';
     }
 }

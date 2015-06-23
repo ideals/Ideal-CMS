@@ -7,24 +7,24 @@
  */
 $(document).ready(function() {
     var mySwfStore = new SwfStore({
-        namespace: "referrer_detector",
+        namespace: "referer_detector",
         swf_url: "/js/jsFlashCookies/storage.swf",
 
         // Если удалось подключиться к хранилищу флеш куков
         onready: function () {
-            // Получаем значение реферра, которое было установлено на php
-            var referrerCookiePhp = getCookie('referrer');
+            // Получаем значение реферера, которое было установлено на php
+            var refererCookiePhp = getCookie('referer');
 
-            // Получаем значение флеш куки реферра
-            var referrerCookieFlash = mySwfStore.get('referrer');
+            // Получаем значение флеш куки реферера
+            var refererCookieFlash = mySwfStore.get('referer');
 
-            if (referrerCookieFlash == null) {
-                mySwfStore.set('referrer', referrerCookiePhp);
+            if (refererCookieFlash == null) {
+                mySwfStore.set('referer', refererCookiePhp);
             } else {
                 // Если флешевое значение не пустое то сравниваем его со значением из php
-                if (referrerCookiePhp != referrerCookieFlash) {
+                if (refererCookiePhp != refererCookieFlash) {
                     // Если значения не равны то приорететнее считается флешевое значение
-                    document.cookie = "referrer=" + referrerCookieFlash + "; path=/;";
+                    document.cookie = "referer=" + refererCookieFlash + "; path=/;";
                 }
             }
         },
