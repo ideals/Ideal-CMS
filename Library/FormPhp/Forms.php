@@ -56,6 +56,21 @@ class Forms
 
         $this->xhtml = $xhtml;
         $this->formName = $formName;
+        $this->add('_token', 'token');
+        $this->add('referer', 'referer');
+    }
+
+    /**
+     * Возвращает токен и валидацию для присутствия на форме
+     *
+     * @return string
+     */
+    public function start()
+    {
+        $start = '';
+        $start .= $this->fields['_token']->getInputText();
+        $start .= $this->getValidatorsInput();
+        return $start;
     }
 
     /**
@@ -113,17 +128,6 @@ class Forms
     public function isPostRequest()
     {
         return (isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'));
-    }
-
-    /**
-     * Получение скрытого поля с токеном для CSRF-защиты
-     *
-     * @return string Скрытое поле с токеном
-     */
-    public function getTokenInput()
-    {
-        $xhtml = ($this->xhtml) ? '/' : '';
-        return '<input type="hidden" name="_token" value="' . crypt(session_id()) . '" ' . $xhtml . '>' . "\n";
     }
 
     /**
