@@ -277,7 +277,7 @@ jQuery.fn.form = function (options, messages, methods) {
                 return;
             }
             this.ga = {};
-            if (typeof('GoogleAnalyticsObject') != 'undefined') {
+            if (typeof(GoogleAnalyticsObject) != 'undefined') {
                 this.ga = function (metka) {
                     metka = '/' + metka.toLowerCase();
                     ga('send', 'pageview', metka);
