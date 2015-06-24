@@ -204,6 +204,16 @@ class Forms
     }
 
     /**
+     * Получение текста на отображение
+     *
+     * @return string
+     */
+    public function getText()
+    {
+        return $this->text;
+    }
+
+    /**
      * Установка метода передачи данных формы
      *
      * @param string $method Метод передачи данных формы (POST||GET)
