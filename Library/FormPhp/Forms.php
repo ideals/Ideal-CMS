@@ -407,4 +407,51 @@ class Forms
 
         return $response;
     }
+
+    /**
+     *
+     * Сохраняем в базу информацию о заказе
+     *
+     * @param string $name Имя заказчика
+     * @param string $email E-mail заказчика
+     * @param string $content Текст заказа
+     * @param int $price Сумма заказа
+     */
+    public function saveOrder($name, $email, $content = '', $price = 0)
+    {
+        // Записываем в базу, только если доступны нужные классы
+        if (class_exists('\Ideal\Core\Db') && class_exists('\Ideal\Core\Config')) {
+
+            // Получаем подключение к базе
+            $db = \Ideal\Core\Db::getInstance();
+
+            // Получаем конфигурационные данные сайта
+            $config = \Ideal\Core\Config::getInstance();
+
+            // Формируем название таблицы, в которую записывается информация о заказе
+            $orderTable = $config->db['prefix'] . 'ideal_structure_order';
+
+            // Получаем идентификатор справочника "Заказы с сайта" для построения поля "prev_structure"
+            $prevStructure = '3-';
+            $par = array('structure' => 'Ideal_Order');
+            $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
+            $row = $db->select('SELECT ID FROM &table WHERE structure = :structure', $par, $fields);
+            $prevStructure .= $row[0]['ID'];
+
+            // Записываем данные
+            $db->insert(
+                $orderTable,
+                array(
+                    'prev_structure' => $prevStructure,
+                    'date_create' => time(),
+                    'name' => $name,
+                    'email' => $email,
+                    'price' => $price,
+                    'referer' => $this->getValue('referer'),
+                    'content' => $content,
+                    'order_type' => $this->orderType
+                )
+            );
+        }
+    }
 }

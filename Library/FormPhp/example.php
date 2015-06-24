@@ -46,6 +46,9 @@ HTML;
         $body .= '<br />Источник перехода: ' . $this->getValue('referer');
         $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true);
 
+        // Сохраняем информацию о заказе, только если используется второй вариант подключения фреймворка форм.
+        $form->saveOrder($form->getValue('name'), $form->getValue('email'));
+
         echo 'Форма заполнена правильно<br />';
     } else {
         echo 'Форма заполнена неправильно<br />';
