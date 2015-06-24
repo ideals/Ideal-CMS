@@ -6,7 +6,7 @@
  * @copyright Copyright (c) 2012-2015 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-namespace CatalogPlus\Field\Price;
+namespace Ideal\Field\Price;
 
 use Ideal\Core\Request;
 
