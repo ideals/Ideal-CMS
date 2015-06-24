@@ -38,8 +38,9 @@ HTML;
         $topic = 'Вы заполнили форму на сайте example.com';
         $form->sendMail('robot@example.com', $form->getValue('email'), $topic, $body, true);
 
-        // Отправляем письмо менеджеру
-        $topic = 'Вы заполнили форму на сайте example.com';
+        // Отправляем письмо менеджеру с добавлением источника перехода
+        $topic = 'Заявка с сайта example.com';
+        $body .= '<br />Источник перехода: ' . $this->getValue('referer');
         $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true);
 
         echo 'Форма заполнена правильно<br />';
