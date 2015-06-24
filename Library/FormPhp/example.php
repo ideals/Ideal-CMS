@@ -16,7 +16,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/_.php';
 
 // Начало работы с фреймворком форм
 
-$form = new FormPhp\Forms('myForm');
+$form = new FormPhp\Forms('myForm', true, 'Тип заказа');
 
 $form->add('name', 'text'); // добавляем одно текстовое поле ввода
 $form->add('phone', 'text'); // добавляем одно текстовое поле ввода

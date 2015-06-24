@@ -41,8 +41,9 @@ class Forms
      *
      * @param string $formName Название формы (используется в html-теге form)
      * @param bool $xhtml Если истина, то код полей ввода будет отображается в xhtml-стиле
+     * @param string $orderType Тип заказа
      */
-    public function __construct($formName, $xhtml = true)
+    public function __construct($formName, $xhtml = true, $orderType = '')
     {
         /**  Будет работать только на PHP 5.4, здесь можно проверить не запрещены ли сессии PHP_SESSION_DISABLED
         if(session_status() != PHP_SESSION_ACTIVE) {
@@ -56,8 +57,13 @@ class Forms
 
         $this->xhtml = $xhtml;
         $this->formName = $formName;
+
+        // Добавляем поля токена, реферера и типа заказа.
         $this->add('_token', 'token');
         $this->add('referer', 'referer');
+        if (!empty($orderType)) {
+            $this->add('order_type', 'orderType', array('value' => $orderType));
+        }
     }
 
     /**
@@ -70,6 +76,9 @@ class Forms
         $start = '';
         $start .= $this->fields['_token']->getInputText();
         $start .= $this->getValidatorsInput();
+        if (isset($this->fields['order_type'])) {
+            $start .= $this->fields['order_type']->getInputText();
+        }
         return $start;
     }
 
