@@ -46,6 +46,9 @@ HTML;
         $topic = 'Изначальный реферер пользователя заполнившего форму';
         $form->sendMail('robot@example.com', 'manager@example.com', $topic, $this->fields['referer']->getValue());
 
+        // Сохраняем информацию о заказе, только если используется второй вариант подключения фреймворка форм.
+        $form->saveOrder($form->getValue('name'), $form->getValue('email'));
+
         echo 'Форма заполнена правильно<br />';
     } else {
         echo 'Форма заполнена неправильно<br />';

@@ -391,4 +391,50 @@ class Forms
 
         return $response;
     }
+
+    /**
+     *
+     * Сохраняем в базу информацию о заказе
+     *
+     * @param string $name Имя заказчика
+     * @param string $email E-mail заказчика
+     * @param string $content Текст заказа
+     * @param int $price Сумма заказа
+     */
+    public function saveOrder($name, $email, $content = '', $price = 0)
+    {
+        // Записываем в базу, только если доступны нужные классы
+        if (class_exists('\Ideal\Core\Db') && class_exists('\Ideal\Core\Config')) {
+
+            // Получаем подключение к базе
+            $db = \Ideal\Core\Db::getInstance();
+
+            // Получаем конфигурационные данные сайта
+            $config = \Ideal\Core\Config::getInstance();
+
+            // Формируем название таблицы, в которую записывается информация о заказе
+            $orderTable = $config->db['prefix'] . 'ideal_structure_order';
+
+            // Получаем тип заказа
+            $orderType = '';
+            if (isset($this->fields['order_type'])) {
+                $orderType = $this->getValue('order_type');
+            }
+
+            // Записываем данные
+            $db->insert(
+                $orderTable,
+                array(
+                    'prev_structure' => '3-1',
+                    'date_create' => time(),
+                    'name' => $name,
+                    'email' => $email,
+                    'price' => $price,
+                    'referer' => $this->getValue('referer'),
+                    'content' => $content,
+                    'order_type' => $orderType
+                )
+            );
+        }
+    }
 }
