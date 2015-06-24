@@ -11,7 +11,7 @@ use FormPhp\Validator\AbstractValidator;
  */
 class Controller extends AbstractValidator
 {
-    protected $errorMsg = "Заполните все поля, отмеченные звездочкой!";
+    protected $errorMsg = "Заполните обязательное поле!";
     /**
      * Проверка введённого пользователем значения
      *
