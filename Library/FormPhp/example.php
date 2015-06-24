@@ -70,14 +70,18 @@ $text = <<<TEXT
     {$form->getValidatorsInput()}
     <input type="hidden" value="{$mailTitle}" name="mailTitle">
     <input type="hidden" value="{$yaCounter}" name="_yaCounter">
-    <label for="name">
-        Просто текст
-        <input type="text" name="name" placeholder="123"/>
-        Просто телефон
-        <input type="text" name="phone"/>
-        Просто почта
-        <input type="text" name="email"/>
-    </label>
+    <div>
+    <label for="name">Просто текст</label>
+    <input type="text" name="name" placeholder="123"/>
+    </div>
+    <div>
+    <label for="name">Просто телефон</label>
+    <input type="text" name="phone"/>
+    </div>
+    <div>
+    <label for="name">Просто почта</label>
+    <input type="text" name="email"/>
+    </div>
         {$form->fields['file']->getInputText()}
     <input type="submit">
 </form>
