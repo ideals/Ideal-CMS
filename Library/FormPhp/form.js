@@ -366,6 +366,7 @@ jQuery.fn.form = function (options, messages, methods) {
                     } else {
                         alert(messages.errors[0]);
                     }
+                    messages.errors.length = 0;
                     return false;
                 }
 
