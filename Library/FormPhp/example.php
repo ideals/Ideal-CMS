@@ -18,6 +18,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/_.php';
 
 $form = new FormPhp\Forms('myForm');
 
+// Устанавливаем "Тип заказа" для формы
+$form->setOrderType('Заявка с сайта');
+
 $form->add('name', 'text'); // добавляем одно текстовое поле ввода
 $form->add('phone', 'text'); // добавляем одно текстовое поле ввода
 $form->add('email', 'text'); // добавляем одно текстовое поле ввода
@@ -42,6 +45,9 @@ HTML;
         $topic = 'Заявка с сайта example.com';
         $body .= '<br />Источник перехода: ' . $this->getValue('referer');
         $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true);
+
+        // Сохраняем информацию о заказе, только если используется второй вариант подключения фреймворка форм.
+        $form->saveOrder($form->getValue('name'), $form->getValue('email'));
 
         echo 'Форма заполнена правильно<br />';
     } else {
