@@ -353,7 +353,7 @@ class Model
                 }
                 if ($lastScript == $fileScript) {
                     // Нашли последний установленный скрипт, значит отсекаем все предыдущие скрипты
-                    $scripts = array();
+                    $scripts = array('pre' => array(), 'after' => array());
                     continue;
                 }
                 if (preg_match("(\/new_\.*)", $fileScript)) {
