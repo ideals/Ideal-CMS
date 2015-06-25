@@ -18,6 +18,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/_.php';
 
 $form = new FormPhp\Forms('myForm');
 
+// Устанавливаем "Тип заказа" для формы
+$form->setOrderType('Заявка с сайта');
+
 $form->add('name', 'text'); // добавляем одно текстовое поле ввода
 $form->add('phone', 'text'); // добавляем одно текстовое поле ввода
 $form->add('email', 'text'); // добавляем одно текстовое поле ввода

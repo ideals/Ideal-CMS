@@ -36,6 +36,9 @@ class Forms
     /** @var bool Флаг отображения html-сущностей в XHTML или в HTML стиле */
     protected $xhtml = true;
 
+    /** @var string Тип заказа */
+    protected $orderType = 'Заявка с сайта';
+
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -56,6 +59,8 @@ class Forms
 
         $this->xhtml = $xhtml;
         $this->formName = $formName;
+
+        // Добавляем поля токена и реферера.
         $this->add('_token', 'token');
         $this->add('referer', 'referer');
     }
@@ -71,6 +76,16 @@ class Forms
         $start .= $this->fields['_token']->getInputText();
         $start .= $this->getValidatorsInput();
         return $start;
+    }
+
+    /**
+     * Устанавливает тип заказа
+     *
+     * @param $orderType
+     */
+    public function setOrderType($orderType)
+    {
+        $this->orderType = $orderType;
     }
 
     /**
