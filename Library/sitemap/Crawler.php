@@ -111,7 +111,7 @@ class Crawler
     {
         $count = count($this->links) + count($this->checked);
         if ($count > 1000) {
-            $this->config['recording'] = ($count / 1000) * 0.05  + $this->config['recording'];
+            $this->config['recording'] = ($count / 1000) * 0.05 + $this->config['recording'];
         }
         $this->config['script_timeout'] -= $this->config['recording'];
     }
@@ -319,17 +319,17 @@ class Crawler
             echo $number++ . '. ' . $k . "\n";
 
             /**
-            // handle lastmod
-            $res['lastmod'] = $lastmod;
-
-            // format timestamp appropriate to settings
-            if ($res['lastmod'] != '') {
-            if ($this->config['time_format'] == 'short') {
-            $res['lastmod'] = $this->getDateTimeISO_short($res['lastmod']);
-            } else {
-            $res['lastmod'] = $this->getDateTimeISO($res['lastmod']);
-            }
-            }
+             * // handle lastmod
+             * $res['lastmod'] = $lastmod;
+             *
+             * // format timestamp appropriate to settings
+             * if ($res['lastmod'] != '') {
+             * if ($this->config['time_format'] == 'short') {
+             * $res['lastmod'] = $this->getDateTimeISO_short($res['lastmod']);
+             * } else {
+             * $res['lastmod'] = $this->getDateTimeISO($res['lastmod']);
+             * }
+             * }
              */
 
             // Получаем контент страницы
@@ -371,7 +371,7 @@ class Crawler
         }
 
         if (count($this->checked) < 2) {
-            $this->sendEmail("Попытка записи в sitemap вместо списка ссылок:\n" .  print_r($this->checked, true));
+            $this->sendEmail("Попытка записи в sitemap вместо списка ссылок:\n" . print_r($this->checked, true));
             $this->stop('В sitemap доступна только одна ссылка на запись');
         }
 
@@ -666,12 +666,15 @@ XML;
     /**
      * Достраивание обрабатываемой ссылки до абсолютной
      *
-     * @param string $link  Обрабатываемая ссылка
-     * @param string $current  Текущая страница с которой получена ссылка
+     * @param string $link Обрабатываемая ссылка
+     * @param string $current Текущая страница с которой получена ссылка
      * @return string  Возвращается абсолютная ссылка
      */
     protected function getAbsoluteUrl($link, $current)
     {
+        // Закодированные амперсанды возвращаем к стандартному виду
+        $link = str_replace('&amp;', '&', $link);
+
         // Раскодируем ссылку, чтобы привести её к единому формату хранения в списке
         $link = urldecode($link);
 
@@ -836,14 +839,14 @@ XML;
      */
     protected function unparseUrl($parsedUrl)
     {
-        $scheme   = isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '';
-        $host     = isset($parsedUrl['host']) ? $parsedUrl['host'] : '';
-        $port     = isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '';
-        $user     = isset($parsedUrl['user']) ? $parsedUrl['user'] : '';
-        $pass     = isset($parsedUrl['pass']) ? ':' . $parsedUrl['pass']  : '';
-        $pass     = ($user || $pass) ? "$pass@" : '';
-        $path     = isset($parsedUrl['path']) ? $parsedUrl['path'] : '';
-        $query    = isset($parsedUrl['query']) ? '?' . $parsedUrl['query'] : '';
+        $scheme = isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '';
+        $host = isset($parsedUrl['host']) ? $parsedUrl['host'] : '';
+        $port = isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '';
+        $user = isset($parsedUrl['user']) ? $parsedUrl['user'] : '';
+        $pass = isset($parsedUrl['pass']) ? ':' . $parsedUrl['pass'] : '';
+        $pass = ($user || $pass) ? "$pass@" : '';
+        $path = isset($parsedUrl['path']) ? $parsedUrl['path'] : '';
+        $query = isset($parsedUrl['query']) ? '?' . $parsedUrl['query'] : '';
         $fragment = isset($parsedUrl['fragment']) ? '#' . $parsedUrl['fragment'] : '';
         return "$scheme$user$pass$host$port$path$query$fragment";
     }
@@ -895,5 +898,15 @@ XML;
         $str = '$r = $this->' . $methodName . '(' . implode(',', $parameters) . ');';
         eval($str);
         return $r;
+    }
+
+    /**
+     * Метод для выполнения произвольного кода внутри класса в целях тестирования
+     *
+     * @param string $code Код, выполняемый внутри класса
+     */
+    public function evalMe($code)
+    {
+        eval($code);
     }
 }
