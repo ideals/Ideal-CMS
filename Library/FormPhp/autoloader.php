@@ -21,7 +21,7 @@ spl_autoload_register(
         if (defined('PATHFORMPHP')) {
             $base_dir = $_SERVER['DOCUMENT_ROOT'] . '/' . trim(PATHFORMPHP, '/') . '/FormPhp/';
         } else {
-            $base_dir = '';
+            $base_dir = str_replace('\\', '/', $prefix);
         }
 
         // does the class use the namespace prefix?
