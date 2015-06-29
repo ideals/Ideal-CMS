@@ -23,6 +23,9 @@ conversionTemplateField($db, $tablesForConversion['structure']);
 // Преобразование таблиц в аддоны
 conversionTemplateTables($db, $tablesForConversion['template']);
 
+// Заменяем template.* в index.twig на addon.0.*
+fixIncludedTemplates($config);
+
 /**
  * Набор действий для преобразования таблиц структур
  *
@@ -65,7 +68,7 @@ function getTablesForConversion($db, $config)
 {
     $sql = "SHOW TABLES";
     $tablesName = $db->query($sql);
-    $listTableName = [];
+    $listTableName = array();
     while ($tableName = $tablesName->fetch_array()) {
         $pattern = '/' . $config->db['prefix'] . '.*_structure.*?/i';
         if (preg_match($pattern, $tableName[0])) {
@@ -150,4 +153,41 @@ function conversionTemplateTable($db, $templateTableName, $addonTableName)
     $db->query($sql);
     $sql = "ALTER TABLE $addonTableName ADD tab_ID int not null default 1 AFTER prev_structure";
     $db->query($sql);
+}
+
+/**
+ * Заменяем содержимое шаблона template на addons.0
+ *
+ * @param $config \Ideal\Core\Config
+ */
+function fixIncludedTemplates($config)
+{
+    $files = findTwigTemplates(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal.c');
+    foreach ($files as $file) {
+        $src = file_get_contents(realpath($file));
+        $src = str_replace('template.', 'addons.0.', $src);
+        file_put_contents(realpath($file), $src);
+    }
+}
+
+/**
+ * Рекурсивный сбор файлов twig
+ *
+ * @param $dir string Директория для поиска
+ * @return array Массив путей к файлам
+ */
+function findTwigTemplates($dir)
+{
+    $files = array();
+    if ($handle = opendir($dir)) {
+        while (false !== ($item = readdir($handle))) {
+            if (is_file("$dir/$item") && strpos($item, '.twig') !== false) {
+                $files[] = "$dir/$item";
+            } elseif (is_dir("$dir/$item") && ($item != ".") && ($item != "..")) {
+                $files = array_merge($files, findTwigTemplates("$dir/$item"));
+            }
+        }
+        closedir($handle);
+    }
+    return $files;
 }
