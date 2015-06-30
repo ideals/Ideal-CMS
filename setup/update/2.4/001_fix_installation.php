@@ -5,7 +5,13 @@ $config = \Ideal\Core\Config::getInstance();
 $directory = $config->getStructureByName('Ideal_DataList');
 
 if ($directory === false) {
-    $ID = count($config->structures) + 1;
+    $ID = 0;
+    foreach ($config->structures as $val) {
+        if ($val['ID'] > $ID) {
+            $ID = $val['ID'];
+        }
+    }
+    $ID++;
     $add = <<<ADD
 
         // Подключаем справочники
@@ -25,6 +31,8 @@ ADD;
     $file = substr($file, 0, $pos + 1) . $add . substr($file, $pos + 1);
 
     file_put_contents($fileName, $file);
+} else {
+    $ID = $directory['ID'];
 }
 
 // 2. Если отсутствует таблица справочников - создаем её
@@ -39,7 +47,6 @@ $res = $db->select("SHOW TABLES LIKE '{$table}'");
 
 // Если таблицы ideal_structure_datalist не существует - создаем её
 if (empty($res)) {
-    // Дописать считывание Structure/Datalist/config.php и создание таблицы
     $filename = CMS_ROOT . '/Ideal/Structure/DataList/config.php';
     $file = require($filename);
     $db->create($table, $file['fields']);
@@ -49,19 +56,18 @@ if (empty($res)) {
 
 $dataListTable = $config->db['prefix'] . 'ideal_structure_datalist';
 
-$_sql = "SELECT MAX(pos) as maxPos FROM {$dataListTable}";
-$max = $db->select($_sql);
 $_sql = "SELECT * FROM {$dataListTable} WHERE structure='Ideal_Order'";
 $order = $db->select($_sql);
+if (empty($order)) {
+    $_sql = "SELECT MAX(pos) as maxPos FROM {$dataListTable}";
+    $max = $db->select($_sql);
 
-// Создаем запись Заказы с сайта в Справочниках
-if ($max[0]['maxPos'] == null || $order == null) {
     $newPos = intval($max[0]['maxPos']) + 1;
-    $conf = $config->getStructureByName('Ideal_DataList');
+    // Создаем запись Заказы с сайта в Справочниках
     $db->insert(
         $dataListTable,
         array(
-            'prev_structure' => "0-{$conf['ID']}",
+            'prev_structure' => "0-{$ID}",
             'structure' => 'Ideal_Order',
             'pos' => $newPos,
             'name' => 'Заказы с сайта',
@@ -73,7 +79,7 @@ if ($max[0]['maxPos'] == null || $order == null) {
 }
 
 // 4. Если отсутствует таблица для Ideal_Order - создаем её
-
+$cfg = $config->getStructureByName('Ideal_Order');
 $table = $config->db['prefix'] . 'ideal_structure_order';
 $sql = "SHOW TABLES LIKE '{$table}'";
 $res = $db->select($sql);
