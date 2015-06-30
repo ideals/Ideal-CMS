@@ -15,17 +15,29 @@ $(document).ready(function() {
             // Получаем значение реферера, которое было установлено на php
             var refererCookiePhp = getCookie('referer');
 
+            // Если на php не было задано значение реферера, то инициализируем переменную с текущим значением
+            if (refererCookiePhp == undefined) {
+                refererCookiePhp = document.referrer;
+            }
+
             // Получаем значение флеш куки реферера
             var refererCookieFlash = mySwfStore.get('referer');
 
             if (refererCookieFlash == null) {
                 mySwfStore.set('referer', refererCookiePhp);
-            } else {
-                // Если флешевое значение не пустое то сравниваем его со значением из php
-                if (refererCookiePhp != refererCookieFlash) {
-                    // Если значения не равны то приорететнее считается флешевое значение
-                    document.cookie = "referer=" + refererCookieFlash + "; path=/;";
+            }
+
+            // Сравниваем флешевое значение со значением из php
+            if (refererCookiePhp != refererCookieFlash) {
+                var currentRefererValue = '';
+
+                // Если значения не равны и флешевая кука существует, то она считается приорететной
+                if (refererCookieFlash != null) {
+                    currentRefererValue = refererCookieFlash;
+                } else {
+                    currentRefererValue = refererCookiePhp;
                 }
+                document.cookie = "referer=" + currentRefererValue + "; path=/;";
             }
         },
         onerror: function () {
