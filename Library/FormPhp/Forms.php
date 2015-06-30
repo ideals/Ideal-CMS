@@ -432,7 +432,8 @@ class Forms
             $orderTable = $config->db['prefix'] . 'ideal_structure_order';
 
             // Получаем идентификатор справочника "Заказы с сайта" для построения поля "prev_structure"
-            $prevStructure = '3-';
+            $dataList = $config->getStructureByName('Ideal_DataList');
+            $prevStructure = $dataList['ID'] . '-';
             $par = array('structure' => 'Ideal_Order');
             $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
             $row = $db->select('SELECT ID FROM &table WHERE structure = :structure', $par, $fields);
