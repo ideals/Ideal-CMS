@@ -18,7 +18,6 @@ $db->create($config->db['prefix'] . 'ideal_structure_order', $cfg['fields']);
 $db->insert(
     $dataListTable,
     array(
-        'ID' => 1,
         'prev_structure' => '0-3',
         'structure' => 'Ideal_Order',
         'pos' => $newPos,
