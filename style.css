@@ -103,3 +103,6 @@ div.checkbox {
     height: 34px;
     line-height: 1.2em;
 }
+.ui-autocomplete {
+    z-index: 1050;
+}

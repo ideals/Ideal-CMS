@@ -61,37 +61,27 @@ class Controller extends Select\Controller
             $structureValue == $key ? $display = "block" : $display = "none";
 
             // Построение тега "select" со списком доступных шаблонов
-            $html .= '<select class="form-control" name="' . $this->htmlName . '_' . strtolower($key) . '" id="' . $this->htmlName . '_' . strtolower($key) . '" >';
-            $defaultValue = $this->getValue();
-            foreach ($value as $k => $v) {
-                $selected = '';
-                if ($k == $defaultValue) {
-                    $selected = ' selected="selected"';
-                }
-                $html .= '<option value="' . $k . '"' . $selected . '>' . $v . '</option>';
+            $html .= '<input type="text" class="form-control" name="' . $this->htmlName . '_' . strtolower($key) . '" id="' . $this->htmlName . '_' . strtolower($key) . '" value="' . $this->getValue() . '"/>';
+            $availableTemplates = array();
+            foreach ($value as $v) {
+                $availableTemplates[] = $v;
             }
-            $html .= '</select>';
 
-            // js скрипт инициализирующий модификацию тега "select" для возможности вставки собственного значения
             $html .= '
             <script>
-            $(\'.general_template-controls select[name="general_template_' . strtolower($key) . '"]\').selectize({
-                persist: false,
-                create: function(input) {
-                    return {
-                        value: input,
-                        text: input
-                    }
-                }
-            });
+                $(function() {
+                    var availableTemplates_' . strtolower($key) . ' = [
+                        "' . implode('",
+                        "', $availableTemplates) . '"
+                    ];
+                    $("#' . $this->htmlName . '_' . strtolower($key) . '").autocomplete({
+                        source: availableTemplates_' . strtolower($key) . '
+                    });
+                });
             </script>
             <script>
-            // Скрываем лишние теги "select" и следующие за ними теги "div" и открываем только одну пару.
-            // Это необходимо потому что при инициализации js скрипта скрываются все теги select.
-            // Из за этого едет вёрстка
-            $(\'.general_template-controls select[name="general_template_' . strtolower($key) . '"]\').next("div").css("display",
-            "' . $display . '");
-            $(\'.general_template-controls select[name="general_template_' . strtolower($key) . '"]\').css("display",
+            // Скрываем лишние теги "input".
+            $(\'.general_template-controls input[name="general_template_' . strtolower($key) . '"]\').css("display",
             "' . $display . '");
             </script>';
 
@@ -118,7 +108,10 @@ class Controller extends Select\Controller
         }
 
         $fieldName = $this->groupName . '_' . $this->name . '_' . $lastPrefix;
-        $this->newValue = $request->$fieldName;
+
+        // Получаем название файла, так как полный путь используется только для удобства представления
+        $fileName = end(explode('/', $request->$fieldName));
+        $this->newValue = $fileName;
         return $this->newValue;
     }
 }
