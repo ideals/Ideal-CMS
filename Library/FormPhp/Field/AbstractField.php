@@ -58,15 +58,21 @@ class AbstractField
      *
      * @return mixed
      */
-    protected function getValue()
+    public function getValue()
     {
-        $method = '_' . $this->method; // приводим к виду _POST или _GET
-        if (!isset($GLOBALS[$method][$this->name])) {
-            // Если параметр не указан, то null
-            return null;
+        if (class_exists('\Ideal\Core\Request')) {
+            $request = new \Ideal\Core\Request();
+            $fieldName = $this->name;
+            return $request->$fieldName;
+        } else {
+            $method = '_' . $this->method; // приводим к виду _POST или _GET
+            if (!isset($GLOBALS[$method][$this->name])) {
+                // Если параметр не указан, то null
+                return null;
+            }
+            $value = htmlspecialchars($GLOBALS[$method][$this->name]);
+            return $value;
         }
-        $value = $GLOBALS[$method][$this->name];
-        return $value;
     }
 
     /**
@@ -153,5 +159,4 @@ class AbstractField
     {
         return '';
     }
-
 }

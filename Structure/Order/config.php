@@ -52,5 +52,10 @@ return array(
             'sql'   => 'mediumtext',
             'type'  => 'Ideal_RichEdit'
         ),
+        'order_type' => array(
+            'label' => 'Тип заказа',
+            'sql' => 'varchar(255) not null',
+            'type' => 'Ideal_Text'
+        ),
     ),
 );
