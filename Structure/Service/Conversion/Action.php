@@ -18,11 +18,9 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
     .no-border-radius {
         border-radius: 0;
     }
-
     .grouping {
         margin: 10px 0;
     }
-
     .first-label {
         margin: 0 5px 0 0;
     }
@@ -41,9 +39,10 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
 
         function drawChart() {
 
-            var data = google.visualization.arrayToDataTable(<?php print $visualConfig; ?>);
+            <?php if (isset($visualConfig['stacked']) && !empty($visualConfig['stacked'])) { ?>
+            var stackedData = google.visualization.arrayToDataTable(<?php print $visualConfig['stacked']; ?>);
 
-            var options_stacked = {
+            var optionsStacked = {
                 title: "Общее кол-во заказов за определённый срок",
                 isStacked: true,
                 height: 300,
@@ -51,8 +50,20 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
                 vAxis: {minValue: 0}
             };
 
-            var chart = new google.visualization.ColumnChart(document.getElementById('graphContent'));
-            chart.draw(data, options_stacked);
+            var stackedChart = new google.visualization.ColumnChart(document.getElementById('stackedChart'));
+            stackedChart.draw(stackedData, optionsStacked);
+            <?php } ?>
+
+            <?php if (isset($visualConfig['pie']) && !empty($visualConfig['pie'])) { ?>
+            var piechartData = google.visualization.arrayToDataTable(<?php print $visualConfig['pie']; ?>);
+            var pieChartOptions = {
+                title: 'Распределение заказов по источникам переходов'
+            };
+
+            var pieChart = new google.visualization.PieChart(document.getElementById('pieChart'));
+            pieChart.draw(piechartData, pieChartOptions);
+            <?php
+            }?>
         }
     </script>
 <?php } ?>
@@ -89,7 +100,9 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
     <input type="button" value="Перестроить графики" class="btn btn-primary btn-large"/>
 </form>
 
-<div id="graphContent">
+<div id="graphsContent">
+    <div id="stackedChart"></div>
+    <div id="pieChart"></div>
 </div>
 
 <script type="text/javascript">
