@@ -17,6 +17,8 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/_.php';
 // Начало работы с фреймворком форм
 
 $form = new FormPhp\Forms('myForm');
+// Если включено файловое кэширование, то необходимо установить изначальную валидацию по странице отправки формы
+//$form->setLocationValidation(true);
 
 // Устанавливаем "Тип заказа" для формы
 $form->setOrderType('Заявка с сайта');
@@ -55,8 +57,12 @@ HTML;
     }
 }
 // todo перенести прикрепление формы к плагину и здание опций в класс Form
+// Если включено файловое кэширование, то для правильной валидации необходимо установить параметр 'location: true'
 $script = <<<JS
-$('#myForm').form({ajaxUrl : "/example.php"});
+$('#myForm').form({
+    ajaxUrl : "/example.php"
+//    location: true
+    });
 JS;
 $form->setJs($script);
 

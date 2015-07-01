@@ -39,6 +39,9 @@ class Forms
     /** @var string Тип заказа */
     protected $orderType = 'Заявка с сайта';
 
+    /** @var bool Флаг для осуществления изначальной валидации по местонахождению формы */
+    protected $locationValidation = false;
+
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -60,9 +63,10 @@ class Forms
         $this->xhtml = $xhtml;
         $this->formName = $formName;
 
-        // Добавляем поля токена и реферера.
+        // Добавляем поля токена, реферера и текущей страницы.
         $this->add('_token', 'token');
         $this->add('referer', 'referer');
+        $this->add('_location', 'text');
     }
 
     /**
@@ -86,6 +90,16 @@ class Forms
     public function setOrderType($orderType)
     {
         $this->orderType = $orderType;
+    }
+
+    /**
+     * Устанавливает флаг для осуществления изначальной валидации по местонахождению формы
+     *
+     * @param $locationValidation
+     */
+    public function setLocationValidation($locationValidation)
+    {
+        $this->locationValidation = $locationValidation;
     }
 
     /**
@@ -173,14 +187,22 @@ class Forms
      */
     public function isValid()
     {
-        $token = $this->getValue('_token');
-        if (is_null($token)) {
-            // Токен не установлен
-            return false;
-        }
-        if (crypt(session_id(), $token) != $token) {
-            // Токен не сопадает с сессией
-            return false;
+        // Если установлен флаг проверки по странице отправки формы, то проверяем по рефереру, иначе по токену.
+        if ($this->locationValidation) {
+            $location = $this->getValue('_location');
+            if (empty($location) || $_SERVER['HTTP_REFERER'] != $location) {
+                return false;
+            }
+        } else {
+            $token = $this->getValue('_token');
+            if (is_null($token)) {
+                // Токен не установлен
+                return false;
+            }
+            if (crypt(session_id(), $token) != $token) {
+                // Токен не сопадает с сессией
+                return false;
+            }
         }
 
         $result = true;
