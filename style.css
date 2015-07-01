@@ -126,11 +126,14 @@ div.checkbox {
 .general_template-controls .custom-combobox-toggle .arrow-down {
     width: 0px;
     height: 0px;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #000;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 6px solid #000;
     top: 15px;
-    left:12px;
+    left: 26px;
     display: block;
     position: relative;
+}
+.ui-widget {
+    font-family: inherit;
 }
