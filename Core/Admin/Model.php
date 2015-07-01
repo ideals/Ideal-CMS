@@ -116,26 +116,29 @@ abstract class Model extends Core\Model
 
             // Удаляем информацию об удалённых аддонах
             $pageData = $this->getPageData();
-            $preSaveAddonsInfo = json_decode($pageData['addon']);
-            foreach ($preSaveAddonsInfo as $key => $preSaveAddonInfo) {
-                // Удаляем информацию об аддоне из старого списка, если его нет в новом.
-                if (!in_array($preSaveAddonInfo, $addonsInfo)) {
-                    $tempPreSaveAddonInfo = explode('_', $preSaveAddonInfo[1]);
-                    $preSaveAddonGroupName = strtolower(end($tempPreSaveAddonInfo)) . '-' . $preSaveAddonInfo[0];
-                    $end = end($this->path);
-                    $preSaveAddonPrevStructure = $config->getStructureByName($end['structure']);
+            if (isset($pageData['addon'])) {
+                $preSaveAddonsInfo = json_decode($pageData['addon']);
+                foreach ($preSaveAddonsInfo as $key => $preSaveAddonInfo) {
+                    // Удаляем информацию об аддоне из старого списка, если его нет в новом.
+                    if (!in_array($preSaveAddonInfo, $addonsInfo)) {
+                        $tempPreSaveAddonInfo = explode('_', $preSaveAddonInfo[1]);
+                        $preSaveAddonGroupName = strtolower(end($tempPreSaveAddonInfo)) . '-' . $preSaveAddonInfo[0];
+                        $end = end($this->path);
+                        $preSaveAddonPrevStructure = $config->getStructureByName($end['structure']);
 
-                    // значение преструктуры основной структуры
-                    // TODO переделать собирание преструктуры, чтобы значение брались из правильного места
-                    $preSaveAddonDataPrevStructure = $preSaveAddonPrevStructure['ID'] . '-' . $groups[$groupName]['ID'];
-                    $addonModelName = Util::getClassName($preSaveAddonInfo[1], 'Addon') . '\\Model';
+                        // значение преструктуры основной структуры
+                        // TODO переделать собирание преструктуры, чтобы значение брались из правильного места
+                        $preSaveAddonDataPrevStructure = $preSaveAddonPrevStructure['ID'] . '-'
+                            . $groups[$groupName]['ID'];
+                        $addonModelName = Util::getClassName($preSaveAddonInfo[1], 'Addon') . '\\Model';
 
-                    /* @var $addonModelName \Ideal\Core\Admin\Model */
-                    $preSaveAddonModel = new $addonModelName($preSaveAddonDataPrevStructure);
-                    $preSaveAddonModel->setFieldsGroup($preSaveAddonGroupName);
-                    $preSaveAddonModel->setPageDataByPrevStructure($preSaveAddonDataPrevStructure);
-                    // Удаляем данные об аддоне
-                    $preSaveAddonModel->delete();
+                        /* @var $addonModelName \Ideal\Core\Admin\Model */
+                        $preSaveAddonModel = new $addonModelName($preSaveAddonDataPrevStructure);
+                        $preSaveAddonModel->setFieldsGroup($preSaveAddonGroupName);
+                        $preSaveAddonModel->setPageDataByPrevStructure($preSaveAddonDataPrevStructure);
+                        // Удаляем данные об аддоне
+                        $preSaveAddonModel->delete();
+                    }
                 }
             }
         }
