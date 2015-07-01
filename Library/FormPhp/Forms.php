@@ -36,6 +36,12 @@ class Forms
     /** @var bool Флаг отображения html-сущностей в XHTML или в HTML стиле */
     protected $xhtml = true;
 
+    /** @var string Тип заказа */
+    protected $orderType = 'Заявка с сайта';
+
+    /** @var bool Флаг для осуществления изначальной валидации по местонахождению формы */
+    protected $locationValidation = false;
+
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -56,6 +62,44 @@ class Forms
 
         $this->xhtml = $xhtml;
         $this->formName = $formName;
+
+        // Добавляем поля токена, реферера и текущей страницы.
+        $this->add('_token', 'token');
+        $this->add('referer', 'referer');
+        $this->add('_location', 'text');
+    }
+
+    /**
+     * Возвращает токен и валидацию для присутствия на форме
+     *
+     * @return string
+     */
+    public function start()
+    {
+        $start = '';
+        $start .= $this->fields['_token']->getInputText();
+        $start .= $this->getValidatorsInput();
+        return $start;
+    }
+
+    /**
+     * Устанавливает тип заказа
+     *
+     * @param $orderType
+     */
+    public function setOrderType($orderType)
+    {
+        $this->orderType = $orderType;
+    }
+
+    /**
+     * Устанавливает флаг для осуществления изначальной валидации по местонахождению формы
+     *
+     * @param $locationValidation
+     */
+    public function setLocationValidation($locationValidation)
+    {
+        $this->locationValidation = $locationValidation;
     }
 
     /**
@@ -116,31 +160,14 @@ class Forms
     }
 
     /**
-     * Получение скрытого поля с токеном для CSRF-защиты
-     *
-     * @return string Скрытое поле с токеном
-     */
-    public function getTokenInput()
-    {
-        $xhtml = ($this->xhtml) ? '/' : '';
-        return '<input type="hidden" name="_token" value="' . crypt(session_id()) . '" ' . $xhtml . '>' . "\n";
-    }
-
-    /**
-     * Получение параметра переданного формой
+     * Получение значения переданного полем формы
      *
      * @param string $name Имя параметра
      * @return mixed Значение параметра (если не указан, то null)
      */
     public function getValue($name)
     {
-        $method = '_' . $this->method; // приводим к виду _POST или _GET
-        if (!isset($GLOBALS[$method][$name])) {
-            // Если параметр не указан, то null
-            return null;
-        }
-        $value = htmlspecialchars($GLOBALS[$method][$name]);
-        return $value;
+        return $this->fields[$name]->getValue();
     }
 
     /**
@@ -160,14 +187,22 @@ class Forms
      */
     public function isValid()
     {
-        $token = $this->getParam('_token');
-        if (is_null($token)) {
-            // Токен не установлен
-            return false;
-        }
-        if (crypt(session_id(), $token) != $token) {
-            // Токен не сопадает с сессией
-            return false;
+        // Если установлен флаг проверки по странице отправки формы, то проверяем по рефереру, иначе по токену.
+        if ($this->locationValidation) {
+            $location = $this->getValue('_location');
+            if (empty($location) || $_SERVER['HTTP_REFERER'] != $location) {
+                return false;
+            }
+        } else {
+            $token = $this->getValue('_token');
+            if (is_null($token)) {
+                // Токен не установлен
+                return false;
+            }
+            if (crypt(session_id(), $token) != $token) {
+                // Токен не сопадает с сессией
+                return false;
+            }
         }
 
         $result = true;
@@ -393,5 +428,53 @@ class Forms
         $response = $sender->sent($from, $to);
 
         return $response;
+    }
+
+    /**
+     *
+     * Сохраняем в базу информацию о заказе
+     *
+     * @param string $name Имя заказчика
+     * @param string $email E-mail заказчика
+     * @param string $content Текст заказа
+     * @param int $price Сумма заказа
+     */
+    public function saveOrder($name, $email, $content = '', $price = 0)
+    {
+        // Записываем в базу, только если доступны нужные классы
+        if (class_exists('\Ideal\Core\Db') && class_exists('\Ideal\Core\Config')) {
+
+            // Получаем подключение к базе
+            $db = \Ideal\Core\Db::getInstance();
+
+            // Получаем конфигурационные данные сайта
+            $config = \Ideal\Core\Config::getInstance();
+
+            // Формируем название таблицы, в которую записывается информация о заказе
+            $orderTable = $config->db['prefix'] . 'ideal_structure_order';
+
+            // Получаем идентификатор справочника "Заказы с сайта" для построения поля "prev_structure"
+            $dataList = $config->getStructureByName('Ideal_DataList');
+            $prevStructure = $dataList['ID'] . '-';
+            $par = array('structure' => 'Ideal_Order');
+            $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
+            $row = $db->select('SELECT ID FROM &table WHERE structure = :structure', $par, $fields);
+            $prevStructure .= $row[0]['ID'];
+
+            // Записываем данные
+            $db->insert(
+                $orderTable,
+                array(
+                    'prev_structure' => $prevStructure,
+                    'date_create' => time(),
+                    'name' => $name,
+                    'email' => $email,
+                    'price' => $price,
+                    'referer' => $this->getValue('referer'),
+                    'content' => $content,
+                    'order_type' => $this->orderType
+                )
+            );
+        }
     }
 }

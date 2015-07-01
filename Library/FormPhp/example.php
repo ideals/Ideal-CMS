@@ -17,6 +17,11 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/_.php';
 // Начало работы с фреймворком форм
 
 $form = new FormPhp\Forms('myForm');
+// Если включено файловое кэширование, то необходимо установить изначальную валидацию по странице отправки формы
+//$form->setLocationValidation(true);
+
+// Устанавливаем "Тип заказа" для формы
+$form->setOrderType('Заявка с сайта');
 
 $form->add('name', 'text'); // добавляем одно текстовое поле ввода
 $form->add('phone', 'text'); // добавляем одно текстовое поле ввода
@@ -38,9 +43,13 @@ HTML;
         $topic = 'Вы заполнили форму на сайте example.com';
         $form->sendMail('robot@example.com', $form->getValue('email'), $topic, $body, true);
 
-        // Отправляем письмо менеджеру
-        $topic = 'Вы заполнили форму на сайте example.com';
+        // Отправляем письмо менеджеру с добавлением источника перехода
+        $topic = 'Заявка с сайта example.com';
+        $body .= '<br />Источник перехода: ' . $this->getValue('referer');
         $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true);
+
+        // Сохраняем информацию о заказе, только если используется второй вариант подключения фреймворка форм.
+        $form->saveOrder($form->getValue('name'), $form->getValue('email'));
 
         echo 'Форма заполнена правильно<br />';
     } else {
@@ -48,8 +57,12 @@ HTML;
     }
 }
 // todo перенести прикрепление формы к плагину и здание опций в класс Form
+// Если включено файловое кэширование, то для правильной валидации необходимо установить параметр 'location: true'
 $script = <<<JS
-$('#myForm').form({ajaxUrl : "/example.php"});
+$('#myForm').form({
+    ajaxUrl : "/example.php"
+//    location: true
+    });
 JS;
 $form->setJs($script);
 
@@ -66,8 +79,7 @@ $text = <<<TEXT
         src="example.php?mode=js"></script>
 <link media="all" rel="stylesheet" type="text/css" href="example.php?mode=css"/>
 <form method="post" id="myForm" data-click="{$ymOnClick}" data-send="{$ymOnSend}">
-    {$form->getTokenInput()}
-    {$form->getValidatorsInput()}
+    {$form->start()}
     <input type="hidden" value="{$mailTitle}" name="mailTitle">
     <input type="hidden" value="{$yaCounter}" name="_yaCounter">
     <div>
