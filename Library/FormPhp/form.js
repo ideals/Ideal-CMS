@@ -204,7 +204,8 @@ jQuery('input, textarea').placeholder({customClass: 'form-placeholder'});
 jQuery.fn.form = function (options, messages, methods) {
     options = $.extend({
         ajaxUrl: '/',
-        ajaxDataType: 'text'
+        ajaxDataType: 'text',
+        location: false
     }, options);
     var messagesOrig = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
@@ -302,6 +303,10 @@ jQuery.fn.form = function (options, messages, methods) {
                 this.ga(metka);
             }
         },
+        // Добавление проверочного поля при нажатии на кнопку отправки формы
+        locationOnButtonClick: function () {
+            $(this).prepend('<input type="hidden" name="_location" value="' + window.location.href + '">');
+        },
         // Отправка формы
         submit: function () {
             var $form = $(this);
@@ -378,6 +383,9 @@ jQuery.fn.form = function (options, messages, methods) {
             })
             .on('form.buttonClick', function () {
                 methods.metrikaOnButtonClick.apply(this);
+                if (options.location) {
+                    methods.locationOnButtonClick.apply(this);
+                }
                 this.disableSubmit = false;
             })
             .on('form.successSend', function () {
