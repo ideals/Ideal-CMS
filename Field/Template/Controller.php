@@ -59,31 +59,122 @@ class Controller extends Select\Controller
         foreach ($this->list as $key => $value) {
             // индикатор показа списка по умолчанию
             $structureValue == $key ? $display = "block" : $display = "none";
+            $key = strtolower($key);
+            $nameId = $this->htmlName . '_' . $key;
 
             // Построение тега "select" со списком доступных шаблонов
-            $html .= '<input type="text" class="form-control" name="' . $this->htmlName . '_' . strtolower($key) . '" id="' . $this->htmlName . '_' . strtolower($key) . '" value="' . $this->getValue() . '"/>';
-            $availableTemplates = array();
-            foreach ($value as $v) {
-                $availableTemplates[] = $v;
+            $html .= '<select class="form-control" id="' . $nameId . '" >';
+            $defaultValue = $this->getValue();
+            foreach ($value as $k => $v) {
+                $selected = '';
+                if ($k == $defaultValue) {
+                    $selected = ' selected="selected"';
+                }
+                $html .= '<option value="' . $k . '"' . $selected . '>' . $v . '</option>';
             }
+            $html .= '</select>';
 
-            $html .= '
+            // js скрипт инициализирующий модификацию тега "select" для возможности вставки собственного значения
+            $html .= <<<SCRIPT
             <script>
+                (function( $ ) {
+                    $.widget( "custom.combobox", {
+                        _create: function() {
+                                this.element.hide();
+                                this._createAutocomplete();
+                                this._createShowAllButton();
+                        },
+
+                        _createAutocomplete: function() {
+                            var selected = this.element.children( ":selected" );
+                            value = selected.val() ? selected.text() : "";
+
+                            this.input = $( "<input>" )
+                                .insertAfter( this.element )
+                                .val( value )
+                                .attr( "title", "" )
+                                .attr( "name", "{$nameId}" )
+                                .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left general_template_{$key} form-control")
+                                .css("display", "{$display}")
+
+                                .autocomplete({
+                                    delay: 0,
+                                    minLength: 0,
+                                    appendTo: ".general_template-controls",
+                                    source: $.proxy( this, "_source" )
+                                })
+                                .tooltip({
+                                    tooltipClass: "ui-state-highlight"
+                                });
+
+                                this._on( this.input, {
+                                    autocompleteselect: function( event, ui ) {
+                                        ui.item.option.selected = true;
+                                        this._trigger( "select", event, {
+                                            item: ui.item.option
+                                        });
+                                    },
+                                });
+                        },
+
+                        _createShowAllButton: function() {
+                            var input = this.input,
+                            wasOpen = false;
+
+                            $( "<a>" )
+                                .attr( "tabIndex", -1 )
+                                .tooltip()
+                                .insertAfter( this.element )
+                                .button({
+                                    icons: {
+                                        primary: "ui-icon-triangle-1-s"
+                                    },
+                                    text: false
+                                })
+                                .removeClass( "ui-corner-all" )
+                                .addClass( "custom-combobox-toggle ui-corner-right general_template_{$key}" )
+                                .css("display", "{$display}")
+                                .html("<span class=\"arrow-down\"></span>")
+                                .mousedown(function() {
+                                    wasOpen = input.autocomplete( "widget" ).is(":visible");
+                                })
+                                .click(function() {
+                                    input.focus();
+
+                                    if ( wasOpen ) {
+                                        return;
+                                    }
+
+                                    input.autocomplete( "search", "" );
+                                });
+                        },
+
+                        _source: function( request, response ) {
+                            var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+                            response( this.element.children( "option" ).map(function() {
+                                var text = $( this ).text();
+                                if ( this.value && ( !request.term || matcher.test(text) ) )
+                                return {
+                                    label: text,
+                                    value: text,
+                                    option: this
+                                };
+                             }) );
+                        },
+                    });
+                })( jQuery );
                 $(function() {
-                    var availableTemplates_' . strtolower($key) . ' = [
-                        "' . implode('",
-                        "', $availableTemplates) . '"
-                    ];
-                    $("#' . $this->htmlName . '_' . strtolower($key) . '").autocomplete({
-                        source: availableTemplates_' . strtolower($key) . '
+                    $("#{$nameId}").combobox();
+                    $("#{$nameId}").siblings('input.{$nameId}').click(function(){
+                        if ($(this).autocomplete( "widget" ).is(":visible")) {
+                            $(this).autocomplete( "close" );
+                        } else {
+                            $(this).autocomplete( "search", "" );
+                        }
                     });
                 });
             </script>
-            <script>
-            // Скрываем лишние теги "input".
-            $(\'.general_template-controls input[name="general_template_' . strtolower($key) . '"]\').css("display",
-            "' . $display . '");
-            </script>';
+SCRIPT;
 
         }
         return $html;
