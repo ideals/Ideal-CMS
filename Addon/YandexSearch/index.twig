@@ -1,0 +1,40 @@
+<form accept-charset="UTF-8" id="search-form" method="get" action="" class="search-form">
+        <div>
+            <div id="edit-basic" class="container-inline form-wrapper">
+                <div class="form-item form-type-textfield form-item-keys">
+                    <label for="edit-keys">Введите ключевые слова для поиска </label>
+                    <input type="text" class="form-text" maxlength="255" size="40" value="{{ query }}" name="search" id="edit-keys">
+                </div>
+                <input type="submit" class="form-submit" value="Поиск" id="edit-submit">
+            </div>
+            <input type="hidden" value="search_form" name="form_id">
+        </div>
+    </form>
+    {% if parts|length > 0 %}
+        {% for part in parts %}
+            <p>
+                <strong>
+                    <a href="{{ part.url }}">{{ part.title|raw }}</a>
+                </strong>
+                <br />
+                    {% for passage in part.passages %}
+                        {{ passage | raw }}
+                        <br />
+                    {% endfor %}
+            </p>
+        {% endfor %}
+    {% endif %}
+
+    {% if pager.pages|length > 1 %}
+        <div class="pagination pagination-left">
+            <ul>
+                {% for page in pager.pages %}
+                    {% if page.current == 1 %}
+                        <li class="active"><a>{{ page.num }}</a></li>
+                    {% else %}
+                        <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}

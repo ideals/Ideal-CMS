@@ -64,10 +64,25 @@ abstract class Model extends Core\Model
     public function getHeader()
     {
         $header = '';
-        if (isset($this->pageData['template']['content'])) {
-            // Если есть шаблон с контентом, пытаемся из него извлечь заголовок H1
-            list($header, $text) = $this->extractHeader($this->pageData['template']['content']);
-            $this->pageData['template']['content'] = $text;
+        // Если есть шаблон с контентом, пытаемся из него извлечь заголовок H1
+        if (isset($this->pageData['content']) && !empty($this->pageData['content'])) {
+            list($header, $text) = $this->extractHeader($this->pageData['content']);
+            $this->pageData['content'] = $text;
+        } elseif (!empty($this->pageData['addon'])) {
+            // Последовательно пытаемся получить заголовок из всех аддонов до первого найденного
+            if (isset($this->pageData['addons'])) {
+                for ($i = 0; $i < count($this->pageData['addons']); $i++) {
+                    if (isset($this->pageData['addons'][$i]['content'])
+                        && $this->pageData['addons'][$i]['content'] !== ''
+                    ) {
+                        list($header, $text) = $this->extractHeader($this->pageData['addons'][$i]['content']);
+                        if (!empty($header)) {
+                            $this->pageData['addons'][$i]['content'] = $text;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         if ($header == '') {

@@ -47,8 +47,8 @@ class Controller
     /**
      * Инициализация twig-шаблона сайта
      *
-     * @param string $tplName    Название файла шаблона (с путём к нему), если не задан - будет index.twig
-     * @param array  $tplFolders Список дополнительных папок с файлами шаблонов
+     * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
+     * @param array $tplFolders Список дополнительных папок с файлами шаблонов
      */
     public function templateInit($tplName = '', $tplFolders = array())
     {
@@ -64,20 +64,16 @@ class Controller
         }
         $gblRoot = dirname(stream_resolve_include_path($gblName));
 
-        $parts = explode('\\', get_class($this));
-
-        $moduleName = $parts[0];
-        $moduleName = ($moduleName == 'Ideal') ? '' : $moduleName . '/';
-        $structureName = $parts[2];
-
         // Инициализация шаблона страницы
         if ($tplName == '') {
             if ($this->tplName == '') {
-                $tplName = $moduleName . 'Structure/' . $structureName . '/Site/index.twig';
+                $tplName = $this->getPathToTwigTemplate('index.twig');
             } else {
                 $tplName = $this->tplName;
             }
         }
+
+        // TODO требуется пересмотреть проверку наличия шаблона, иначе администратор ограничен правилами переопределения
         if (!stream_resolve_include_path($tplName)) {
             echo 'Нет файла шаблона ' . $tplName;
             exit;
@@ -132,13 +128,23 @@ class Controller
      */
     public function indexAction()
     {
-        $this->templateInit();
 
-        // Выдёргиваем заголовок из template['content']
-        $this->view->header = $this->model->getHeader();
+        // Выдёргиваем заголовок из addonName[key]['content']
+        $header = $this->model->getHeader();
+
+        $tplName = '';
+        $pageData = $this->model->getPageData();
+
+        //Определяем шаблон для отображения
+        if (!empty($pageData['template'])) {
+            $tplName = $this->getPathToTwigTemplate($pageData['template']);
+        }
+
+        $this->templateInit($tplName);
+
+        $this->view->header = $header;
 
         // Перенос данных страницы в шаблон
-        $pageData = $this->model->getPageData();
         foreach ($pageData as $k => $v) {
             $this->view->$k = $v;
         }
@@ -148,9 +154,11 @@ class Controller
 
         if ($page > 1) {
             // На страницах листалки описание категории отображать не надо
-            $template = $this->view->template;
-            $template['content'] = '';
-            $this->view->template = $template;
+            if (isset($pageData['addons'])) {
+                for ($i = 0; $i < count($pageData['addons']); $i++) {
+                    $this->view->addons[$i]['content'] = '';
+                }
+            }
             // Страницы листалки неиндексируются, но ссылки с них — индексируются
             $this->model->metaTags['robots'] = 'follow, noindex';
         }
@@ -245,5 +253,23 @@ class Controller
     public function setTemplate($tplName)
     {
         $this->tplName = $tplName;
+    }
+
+    /**
+     * Получение пути до twig шаблона структуры
+     *
+     * @param string $tplName Тип класса (например, Structure или Field)
+     * @return string
+     */
+    private function getPathToTwigTemplate($tplName)
+    {
+        // Если был введён полный путь то он используется напрямую иначе только имя
+        // Считаем что был введён полный путь если присутствует хотябы один слэш
+        if (strpos($tplName, '/') !== false) {
+            return $tplName;
+        }
+        $parts = explode('\\', get_class($this));
+        $moduleName = ($parts[0] == 'Ideal') ? '' : $parts[0] . '/';
+        return $moduleName . $parts[1] . '/' . $parts[2] . '/Site/' . $tplName;
     }
 }

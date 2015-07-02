@@ -1,0 +1,29 @@
+<table class="table">
+    <tbody>
+    {% for row in images|batch(3, '') %}
+        <tr>
+            {% for column in row %}
+                <td class="col-md-4">
+                    {% if column.0 is defined %}
+                        <a class="fancybox" href="{{ column.0 }}" rel="{{ imagesRel }}"><img src="{{ column.0 }}"/></a>
+                    {% endif %}
+                </td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(".fancybox").fancybox({
+            prevEffect: 'none',
+            nextEffect: 'none',
+            closeBtn: false,
+            helpers: {
+                title: {type: 'inside'},
+                buttons: {}
+            }
+        });
+    });
+</script>
+

@@ -216,6 +216,7 @@ function installCopyRoot()
     copyDir('../Library/jquery', ROOT . '/js/jquery');
     copyDir('../Library/fancybox', ROOT . '/js/fancybox');
     copyDir('../Library/jsFlashCookies', ROOT . '/js/jsFlashCookies');
+
     if (!file_exists(ROOT . '/tmp')) {
         mkdir(ROOT . '/tmp');
     }

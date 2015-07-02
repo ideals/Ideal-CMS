@@ -39,7 +39,7 @@ abstract class Model
         $parts = preg_split('/[_\\\\]+/', get_class($this));
         $this->module = $parts[0];
         $module = ($this->module == 'Ideal') ? '' : $this->module . '/';
-        $type = $parts[1]; // Structure или Template
+        $type = $parts[1]; // Structure или Addon
         $structureName = $parts[2];
         $structureFullName = $this->module . '_' . $structureName;
 
@@ -59,8 +59,8 @@ abstract class Model
             case 'Structure':
                 $structure = $config->getStructureByName($structureFullName);
                 break;
-            case 'Template':
-                $includeFile = $module . 'Template/' . $structureName . '/config.php';
+            case 'Addon':
+                $includeFile = $module . 'Addon/' . $structureName . '/config.php';
                 $structure = include($includeFile);
                 if (!is_array($structure)) {
                     throw new \Exception('Не удалось подключить файл: ' . $includeFile);
@@ -213,12 +213,15 @@ abstract class Model
      */
     public function getList($page = null)
     {
-        $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
-        $where = $this->getWhere($where);
-
         $db = Db::getInstance();
 
-        $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} ORDER BY e.{$this->params['field_sort']}";
+        if (!empty($this->filter)) {
+            $_sql = $this->filter->getSql();
+        } else {
+            $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
+            $where = $this->getWhere($where);
+            $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} ORDER BY e.{$this->params['field_sort']}";
+        }
 
         if (is_null($page)) {
             $this->setPageNum($page);
@@ -281,8 +284,8 @@ abstract class Model
         // Получаем переменные шаблона
         $config = Config::getInstance();
         foreach ($this->fields as $k => $v) {
-            // Пропускаем все поля, которые не являются шаблоном
-            if (strpos($v['type'], '_Template') === false) {
+            // Пропускаем все поля, которые не являются аддоном
+            if (strpos($v['type'], '_Addon') === false) {
                 continue;
             }
 
@@ -306,12 +309,24 @@ abstract class Model
                 }
             }
 
-            // Инициализируем модель шаблона
-            $className = Util::getClassName($this->pageData[$k], 'Template') . '\\Model';
-            $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
-            $template = new $className($prevStructure);
-            $template->setParentModel($this);
-            $this->pageData[$k] = $template->getPageData();
+            // Обходим все аддоны, подключенные к странице
+            $addonsInfo = json_decode($this->pageData[$k]);
+
+            if (is_array($addonsInfo)) {
+                foreach ($addonsInfo as $addonInfo) {
+                    // Инициализируем модель аддона
+                    $className = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
+                    $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
+                    $addon = new $className($prevStructure);
+                    $addon->setParentModel($this);
+                    list(, $fildsGroup) = explode('_', $addonInfo[1]);
+                    $addon->setFieldsGroup(strtolower($fildsGroup) . '-' . $addonInfo[0]);
+                    $addon->pageData = $addon->getPageData();
+                    if (!empty($addon->pageData)) {
+                        $this->pageData['addons'][] = $addon->pageData;
+                    }
+                }
+            }
         }
     }
 
@@ -347,7 +362,7 @@ abstract class Model
 
         $pagination = new Pagination();
         // Номера и ссылки на доступные страницы
-        $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, 'page');
+        $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, $pageName);
         $pager['prev'] = $pagination->getPrev(); // ссылка на предыдущю страницу
         $pager['next'] = $pagination->getNext(); // cсылка на следующую страницу
         $pager['total'] = $countList; // общее количество элементов в списке
@@ -364,11 +379,15 @@ abstract class Model
     {
         $db = Db::getInstance();
 
-        $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
-        $where = $this->getWhere($where);
+        if (!empty($this->filter)) {
+            $_sql = $this->filter->getSqlCount();
+        } else {
+            $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
+            $where = $this->getWhere($where);
 
-        // Считываем все элементы первого уровня
-        $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
+            // Считываем все элементы первого уровня
+            $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
+        }
         $list = $db->select($_sql);
 
         return $list[0]['COUNT(e.ID)'];
@@ -383,7 +402,7 @@ abstract class Model
     {
         return $this->pageNum;
     }
-    
+
     public function getParentUrl()
     {
         if ($this->parentUrl != '') {
@@ -447,18 +466,6 @@ abstract class Model
         }
     }
 
-    public function setPageDataByPrevStructure($prevStructure)
-    {
-        $db = Db::getInstance();
-
-        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps";
-        $pageData = $db->select($_sql, array('ps' => $prevStructure));
-        if (isset($pageData[0]['ID'])) {
-            // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
-            $this->setPageData($pageData[0]);
-        }
-    }
-
     /**
      * Установка номера отображаемой страницы
      *
@@ -466,7 +473,7 @@ abstract class Model
      * суффикса для листалки " | Страница [N]" на любой другой суффикс, где
      * вместе [N] будет подставляться номер страницы.
      *
-     * @param int  $pageNum      Номер отображаемой страницы
+     * @param int $pageNum Номер отображаемой страницы
      * @param null $pageNumTitle Строка для замены стандартного суффикса листалки в тайтле
      * @return int Безопасный номер страницы
      */

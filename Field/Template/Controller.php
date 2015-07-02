@@ -9,30 +9,23 @@
 
 namespace Ideal\Field\Template;
 
-use Ideal\Core\Config;
-use Ideal\Core\Request;
-use Ideal\Core\Util;
 use Ideal\Field\Select;
+use Ideal\Core\Request;
 
 /**
- * Специальное поле, предоставляющее возможность добавить к редактируемому элементу дополнительные поля
+ * Специальное поле, предоставляющее возможность выбрать шаблон для отображения структуры
  *
- * Эти дополнительные поля хранятся в отдельной таблице и связаны с редактируемым элементом
- * через prev_structure.
  *
  * Пример объявления в конфигурационном файле структуры:
  *
  *     'template' => array(
- *         'label'     => 'Тип документа',
- *         'sql'       => "varchar(30) not null default 'Ideal_Page'",
- *         'type'      => 'Ideal_Template',
- *         'medium'    => '\\Ideal\\Medium\\TemplateList\\Model',
- *         'templates' =>  array('Ideal_Page', 'Ideal_SimpleNote', 'Ideal_PhpFile', 'Ideal_SiteMap'),
- *     ),
+ *         'label' => 'Шаблон отображения',
+ *         'sql' => "varchar(255) default 'index.twig'",
+ *         'type' => 'Ideal_Template',
+ *         'medium' => '\\Ideal\\Medium\\TemplateList\\Model',
+ *         'default'   => 'index.twig',
  *
  * В поле medium указывается класс, отвечающий за предоставление списка элементов для select.
- * Кроме того Ideal_Template, при выборе одного из значений в списке, добавляет вкладку, в которой
- * находятся поля таблицы выбранного Template.
  */
 class Controller extends Select\Controller
 {
@@ -45,78 +38,171 @@ class Controller extends Select\Controller
      */
     public function getInputText()
     {
-        $modelName = $this->getValue();
-        $class = Util::getClassName($modelName, 'Template') . '\\Model';
-        $model = new $class('');
-        $model->setFieldsGroup($this->name);
-        // Загрузка данных связанного объекта
-        $id = '';
-        $pageData = $this->model->getPageData();
-        if (isset($pageData['ID'])) {
-            $config = Config::getInstance();
-            $path = $this->model->getPath();
-            $end = end($path);
-            $prevStructure = $config->getStructureByName($end['structure']);
-            $prevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
-            $model->setPageDataByPrevStructure($prevStructure);
-            $id = $pageData['ID'];
-        }
-        // Получение содержимого вкладки
-        $tabContent = $model->getFieldsList($model->fields);
-        // Убираем переводы строки, иначе текст не обрабатывается в JS
-        $tabContent = str_replace(
-            array("\\", '<script>', '</script>', "'"),
-            array("\\\\", '\<script>', '<\/script>', "\\'"),
-            $tabContent
-        );
-        $tabContent = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tabContent);
-        $html = parent::getInputText();
-        // Добавляем обработчик на изменение select
-        $html = str_replace('<select', '<select onchange="changeTemplate(this, \'' . $this->name . '\')"', $html);
-        $tabName = $this->list[$this->getValue()];
-        $html .= "<script>
-            $(document).ready(function() {
-                // Добавляем элемент к списку вкладок
-                var data = '<li>'
-                     + '<a data-toggle=\"tab\" id=\"tab{$this->name}Head\" href=\"#tab{$this->name}\">{$tabName}</a>'
-                     + '</li>';
-                $('#tabs').append(data);
 
-                // Добавляем собственно саму страничку вкладки
-                data = '<div id=\"tab{$this->name}\" class=\"tab-pane\">{$tabContent}</div>';
-                $('#tabs-content').append(data);
-            });
-            </script>";
-        $request = new Request();
-        $par = $request->par;
-        $action = $request->action . "Template";
-        $html .= "<script>
-            function changeTemplate(tab, name){
-                // Заменяем текст заголовка вкладки
-                var w = tab.selectedIndex;
-                var selectedText = tab.options[w].text;
-                $('#tab' + name + 'Head').html(selectedText);
-                // Заменяем внутренности вкладки с полями шаблона
-                var url = 'index.php?par={$par}&action={$action}&id={$id}&template=' + tab.value + '&name=' + name;
-                $('#tab' + name).load(url);
-            }</script>";
+        $html = '';
+
+        // Подключаем скрипт смены списка шабонов, только если доступна более чем одна структура
+        if (count($this->list) > 1) {
+            $html .= '<script type="text/javascript" src="Ideal/Field/Template/templateShowing.js" />';
+        }
+
+        // Получаем значение поумолчанию для структуры
+        $pageData = $this->model->getPageData();
+        if (isset($pageData['structure']) && !empty($pageData['structure'])) {
+            $structureValue = $pageData['structure'];
+        } else {
+            reset($this->list);
+            $structureValue = key($this->list);
+        }
+
+        // Составляем списки шаблонов
+        foreach ($this->list as $key => $value) {
+            // индикатор показа списка по умолчанию
+            $structureValue == $key ? $display = "block" : $display = "none";
+            $key = strtolower($key);
+            $nameId = $this->htmlName . '_' . $key;
+
+            // Построение тега "select" со списком доступных шаблонов
+            $html .= '<select class="form-control" id="' . $nameId . '" >';
+            $defaultValue = $this->getValue();
+            foreach ($value as $k => $v) {
+                $selected = '';
+                if ($k == $defaultValue) {
+                    $selected = ' selected="selected"';
+                }
+                $html .= '<option value="' . $k . '"' . $selected . '>' . $v . '</option>';
+            }
+            $html .= '</select>';
+
+            // js скрипт инициализирующий модификацию тега "select" для возможности вставки собственного значения
+            $html .= <<<SCRIPT
+            <script>
+                (function( $ ) {
+                    $.widget( "custom.combobox", {
+                        _create: function() {
+                                this.element.hide();
+                                this._createAutocomplete();
+                                this._createShowAllButton();
+                        },
+
+                        _createAutocomplete: function() {
+                            var selected = this.element.children( ":selected" );
+                            value = selected.val() ? selected.text() : "";
+
+                            this.input = $( "<input>" )
+                                .insertAfter( this.element )
+                                .val( value )
+                                .attr( "title", "" )
+                                .attr( "name", "{$nameId}" )
+                                .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left general_template_{$key} form-control")
+                                .css("display", "{$display}")
+
+                                .autocomplete({
+                                    delay: 0,
+                                    minLength: 0,
+                                    appendTo: ".general_template-controls",
+                                    source: $.proxy( this, "_source" )
+                                })
+                                .tooltip({
+                                    tooltipClass: "ui-state-highlight"
+                                });
+
+                                this._on( this.input, {
+                                    autocompleteselect: function( event, ui ) {
+                                        ui.item.option.selected = true;
+                                        this._trigger( "select", event, {
+                                            item: ui.item.option
+                                        });
+                                    },
+                                });
+                        },
+
+                        _createShowAllButton: function() {
+                            var input = this.input,
+                            wasOpen = false;
+
+                            $( "<a>" )
+                                .attr( "tabIndex", -1 )
+                                .tooltip()
+                                .insertAfter( this.element )
+                                .button({
+                                    icons: {
+                                        primary: "ui-icon-triangle-1-s"
+                                    },
+                                    text: false
+                                })
+                                .removeClass( "ui-corner-all" )
+                                .addClass( "custom-combobox-toggle ui-corner-right general_template_{$key}" )
+                                .css("display", "{$display}")
+                                .html("<span class=\"arrow-down\"></span>")
+                                .mousedown(function() {
+                                    wasOpen = input.autocomplete( "widget" ).is(":visible");
+                                })
+                                .click(function() {
+                                    input.focus();
+
+                                    if ( wasOpen ) {
+                                        return;
+                                    }
+
+                                    input.autocomplete( "search", "" );
+                                });
+                        },
+
+                        _source: function( request, response ) {
+                            var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+                            response( this.element.children( "option" ).map(function() {
+                                var text = $( this ).text();
+                                if ( this.value && ( !request.term || matcher.test(text) ) )
+                                return {
+                                    label: text,
+                                    value: text,
+                                    option: this
+                                };
+                             }) );
+                        },
+                    });
+                })( jQuery );
+                $(function() {
+                    $("#{$nameId}").combobox();
+                    $("#{$nameId}").siblings('input.{$nameId}').click(function(){
+                        if ($(this).autocomplete( "widget" ).is(":visible")) {
+                            $(this).autocomplete( "close" );
+                        } else {
+                            $(this).autocomplete( "search", "" );
+                        }
+                    });
+                });
+            </script>
+SCRIPT;
+
+        }
         return $html;
     }
 
     /**
-     * {@inheritdoc}
+     * Получение нового значения поля шаблона из данных, введённых пользователем, с учётом "Типа раздела"
+     *
+     * @return string
      */
-    public function parseInputValue($isCreate)
+    public function pickupNewValue()
     {
-        $item = parent::parseInputValue($isCreate);
+        $request = new Request();
 
-        // TODO Дли типа данных шаблон - нужно распарсить его элементы
-        $templateName = Util::getClassName($this->newValue, 'Template') . '\\Model';
-        /* @var $template \Ideal\Core\Admin\Model */
-        $template = new $templateName('не имеет значения, т.к. только парсим ввод пользователя');
-        $template->setFieldsGroup($this->name);
-        $item['items'] = $template->parseInputParams($isCreate);
+        // Вычисляем последний префикс с учётом того что поля выбора типа структуры может не существовать
+        if (isset($request->general_structure)) {
+            $lastPrefix = strtolower($request->general_structure);
+        } else {
+            $objClassName = get_class($this->model);
+            $objClassNameSlice = explode('\\', $objClassName);
+            $lastPrefix = strtolower($objClassNameSlice[0] . '_' . $objClassNameSlice[2]);
+        }
 
-        return $item;
+        $fieldName = $this->groupName . '_' . $this->name . '_' . $lastPrefix;
+
+        // Получаем название файла, так как полный путь используется только для удобства представления
+        $fileName = end(explode('/', $request->$fieldName));
+        $this->newValue = $fileName;
+        return $this->newValue;
     }
 }

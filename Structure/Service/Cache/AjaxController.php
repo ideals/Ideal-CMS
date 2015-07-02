@@ -8,10 +8,10 @@
  */
 namespace Ideal\Structure\Service\Cache;
 
+use Ideal\Addon\SiteMap;
 use Ideal\Core\FileCache;
 use Ideal\Core\Memcache;
 use Ideal\Core\View;
-use Ideal\Template\SiteMap;
 use Ideal\Core\Config;
 
 /**

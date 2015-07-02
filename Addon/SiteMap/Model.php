@@ -7,7 +7,7 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Template\SiteMap;
+namespace Ideal\Addon\SiteMap;
 
 use Ideal\Core\Config;
 use Ideal\Core\Util;
@@ -16,7 +16,7 @@ use Ideal\Core\Util;
  * Класс построения html-карты сайта на основании структуры БД
  *
  */
-class Model extends \Ideal\Core\Admin\Model
+class Model extends \Ideal\Addon\AbstractModel
 {
 
     /** @var array Массив правил для запрещения отображения ссылок в карте сайта */
@@ -35,11 +35,13 @@ class Model extends \Ideal\Core\Admin\Model
         $this->pageData['disallow'] = str_replace("\r\n", "\n", $this->pageData['disallow']);
         $this->disallow = explode("\n", $this->pageData['disallow']);
 
+        $this->pageData['content'] = '';
+
         $mode = explode('\\', get_class($this->parentModel));
         if ($mode[3] == 'Site') {
             // Для фронтенда к контенту добавляется карта сайта в виде ul-списка разделов
             $list = $this->getList(1); // считываем из БД все открытые разделы
-            $this->pageData['content'] .= $this->createSiteMap($list); // строим html-код карты сайта
+            $this->pageData['content'] = $this->createSiteMap($list); // строим html-код карты сайта
         }
 
         return $this->pageData;
@@ -80,13 +82,10 @@ class Model extends \Ideal\Core\Admin\Model
         $config = Config::getInstance();
         $end = end($path);
         $newElements = array();
-        if (empty($elements)) {
-            return array();
-        }
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
         foreach ($elements as $element) {
             $newElements[] = $element;
-            if (!isset($element['structure']) OR ($element['structure'] == $end['structure'])) {
+            if (!isset($element['structure']) || ($element['structure'] == $end['structure'])) {
                 continue;
             }
             // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
@@ -146,16 +145,16 @@ class Model extends \Ideal\Core\Admin\Model
                 // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
                 // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
                 $tmp = $this->disallow;
-                if ($v['link'] !== array_reduce(
-                    $tmp,
-                    function (&$res, $rule) {
-                        if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
+
+                $link = array_reduce($tmp, function (&$res, $rule) {
+                    if (!empty($rule)) {
+                        if ($res == 1 || preg_match($rule, $res)) {
                             return 1;
                         }
-                        return $res;
-                    },
-                    $v['link']
-                )) {
+                    }
+                    return $res;
+                }, $v['link']);
+                if ($v['link'] !== $link) {
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }

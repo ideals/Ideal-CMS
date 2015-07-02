@@ -39,7 +39,9 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
 
         $_sql = "SELECT * FROM {$this->_table} WHERE url=:url {$checkActive}";
-        $par = array('url' => $url[0], 'time' => time());
+        $par = array();
+        $par['url'] = !empty($url) ? $url[0] : null;
+        $par['time'] = time();
 
         $tags = $db->select($_sql, $par); // запрос на получение всех страниц, соответствующих частям url
 
@@ -145,11 +147,11 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         // Формируем правильные ссылки
         // todo формирование правильных ссылок для разных структур
         /**
-        foreach ($result as $k => $v) {
-            $url = new \Ideal\Field\Url\Model();
-            $result[$k]['link'] = $url->getUrlWithPrefix($v, $prefix);
-        }
-        **/
+         * foreach ($result as $k => $v) {
+         * $url = new \Ideal\Field\Url\Model();
+         * $result[$k]['link'] = $url->getUrlWithPrefix($v, $prefix);
+         * }
+         **/
 
         return $result;
     }
@@ -240,5 +242,14 @@ class ModelAbstract extends \Ideal\Core\Site\Model
 
         $sql = " LIMIT {$start}, {$onPage}";
         return $sql;
+    }
+
+    public function getCurrent()
+    {
+        if (isset($this->pageData)) {
+            return $this->pageData;
+        } else {
+            return false;
+        }
     }
 }
