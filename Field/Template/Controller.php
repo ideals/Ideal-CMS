@@ -59,9 +59,11 @@ class Controller extends Select\Controller
         foreach ($this->list as $key => $value) {
             // индикатор показа списка по умолчанию
             $structureValue == $key ? $display = "block" : $display = "none";
+            $key = strtolower($key);
+            $nameId = $this->htmlName . '_' . $key;
 
             // Построение тега "select" со списком доступных шаблонов
-            $html .= '<select class="form-control" name="' . $this->htmlName . '_' . strtolower($key) . '" id="' . $this->htmlName . '_' . strtolower($key) . '" >';
+            $html .= '<select class="form-control" id="' . $nameId . '" >';
             $defaultValue = $this->getValue();
             foreach ($value as $k => $v) {
                 $selected = '';
@@ -73,27 +75,106 @@ class Controller extends Select\Controller
             $html .= '</select>';
 
             // js скрипт инициализирующий модификацию тега "select" для возможности вставки собственного значения
-            $html .= '
+            $html .= <<<SCRIPT
             <script>
-            $(\'.general_template-controls select[name="general_template_' . strtolower($key) . '"]\').selectize({
-                persist: false,
-                create: function(input) {
-                    return {
-                        value: input,
-                        text: input
-                    }
-                }
-            });
+                (function( $ ) {
+                    $.widget( "custom.combobox", {
+                        _create: function() {
+                                this.element.hide();
+                                this._createAutocomplete();
+                                this._createShowAllButton();
+                        },
+
+                        _createAutocomplete: function() {
+                            var selected = this.element.children( ":selected" );
+                            value = selected.val() ? selected.text() : "";
+
+                            this.input = $( "<input>" )
+                                .insertAfter( this.element )
+                                .val( value )
+                                .attr( "title", "" )
+                                .attr( "name", "{$nameId}" )
+                                .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left general_template_{$key} form-control")
+                                .css("display", "{$display}")
+
+                                .autocomplete({
+                                    delay: 0,
+                                    minLength: 0,
+                                    appendTo: ".general_template-controls",
+                                    source: $.proxy( this, "_source" )
+                                })
+                                .tooltip({
+                                    tooltipClass: "ui-state-highlight"
+                                });
+
+                                this._on( this.input, {
+                                    autocompleteselect: function( event, ui ) {
+                                        ui.item.option.selected = true;
+                                        this._trigger( "select", event, {
+                                            item: ui.item.option
+                                        });
+                                    },
+                                });
+                        },
+
+                        _createShowAllButton: function() {
+                            var input = this.input,
+                            wasOpen = false;
+
+                            $( "<a>" )
+                                .attr( "tabIndex", -1 )
+                                .tooltip()
+                                .insertAfter( this.element )
+                                .button({
+                                    icons: {
+                                        primary: "ui-icon-triangle-1-s"
+                                    },
+                                    text: false
+                                })
+                                .removeClass( "ui-corner-all" )
+                                .addClass( "custom-combobox-toggle ui-corner-right general_template_{$key}" )
+                                .css("display", "{$display}")
+                                .html("<span class=\"arrow-down\"></span>")
+                                .mousedown(function() {
+                                    wasOpen = input.autocomplete( "widget" ).is(":visible");
+                                })
+                                .click(function() {
+                                    input.focus();
+
+                                    if ( wasOpen ) {
+                                        return;
+                                    }
+
+                                    input.autocomplete( "search", "" );
+                                });
+                        },
+
+                        _source: function( request, response ) {
+                            var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+                            response( this.element.children( "option" ).map(function() {
+                                var text = $( this ).text();
+                                if ( this.value && ( !request.term || matcher.test(text) ) )
+                                return {
+                                    label: text,
+                                    value: text,
+                                    option: this
+                                };
+                             }) );
+                        },
+                    });
+                })( jQuery );
+                $(function() {
+                    $("#{$nameId}").combobox();
+                    $("#{$nameId}").siblings('input.{$nameId}').click(function(){
+                        if ($(this).autocomplete( "widget" ).is(":visible")) {
+                            $(this).autocomplete( "close" );
+                        } else {
+                            $(this).autocomplete( "search", "" );
+                        }
+                    });
+                });
             </script>
-            <script>
-            // Скрываем лишние теги "select" и следующие за ними теги "div" и открываем только одну пару.
-            // Это необходимо потому что при инициализации js скрипта скрываются все теги select.
-            // Из за этого едет вёрстка
-            $(\'.general_template-controls select[name="general_template_' . strtolower($key) . '"]\').next("div").css("display",
-            "' . $display . '");
-            $(\'.general_template-controls select[name="general_template_' . strtolower($key) . '"]\').css("display",
-            "' . $display . '");
-            </script>';
+SCRIPT;
 
         }
         return $html;
@@ -118,7 +199,10 @@ class Controller extends Select\Controller
         }
 
         $fieldName = $this->groupName . '_' . $this->name . '_' . $lastPrefix;
-        $this->newValue = $request->$fieldName;
+
+        // Получаем название файла, так как полный путь используется только для удобства представления
+        $fileName = end(explode('/', $request->$fieldName));
+        $this->newValue = $fileName;
         return $this->newValue;
     }
 }

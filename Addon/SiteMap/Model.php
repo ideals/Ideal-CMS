@@ -35,11 +35,13 @@ class Model extends \Ideal\Addon\AbstractModel
         $this->pageData['disallow'] = str_replace("\r\n", "\n", $this->pageData['disallow']);
         $this->disallow = explode("\n", $this->pageData['disallow']);
 
+        $this->pageData['content'] = '';
+
         $mode = explode('\\', get_class($this->parentModel));
         if ($mode[3] == 'Site') {
             // Для фронтенда к контенту добавляется карта сайта в виде ul-списка разделов
             $list = $this->getList(1); // считываем из БД все открытые разделы
-            $this->pageData['content'] .= $this->createSiteMap($list); // строим html-код карты сайта
+            $this->pageData['content'] = $this->createSiteMap($list); // строим html-код карты сайта
         }
 
         return $this->pageData;
