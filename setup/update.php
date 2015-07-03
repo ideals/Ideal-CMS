@@ -37,7 +37,7 @@ if (isset($_SERVER['REQUEST_URI'])) {
 }
 
 // Определяем папку админки
-$cms = dirname(dirname($_SERVER['PHP_SELF']));
+$cms = dirname(dirname(__FILE__));
 
 // Определяем папку, где находится устанавливаемое обновление
 $modDir = ($mod === 'Ideal-CMS') ? $cms : dirname($cms) . '/' . "Mods" . '/' . $mod;
