@@ -29,8 +29,9 @@ class Model
      */
     public function getOrdersInfo($fromTimestamp, $toTimestamp, $interval = 'day')
     {
-        $visualConfig['stacked'] = $this->getOrdersInfoStacked($fromTimestamp, $toTimestamp, $interval);
-        $visualConfig['pie'] = $this->getOrdersInfoPie($fromTimestamp, $toTimestamp, $interval);
+        $visualConfig['quantityOfOrders'] = $this->getQuantityOfOrdersInfo($fromTimestamp, $toTimestamp, $interval);
+        $visualConfig['referer'] = $this->getRefererOrdersInfo($fromTimestamp, $toTimestamp, $interval);
+        $visualConfig['orderType'] = $this->getOrderTypeInfo($fromTimestamp, $toTimestamp, $interval);
         return $visualConfig;
     }
 
@@ -42,7 +43,7 @@ class Model
      * @param string $interval Строковое представление временного интервала для отображения на графике
      * @return string Строка содержащая конфигурационные данные для первого графика.
      */
-    public function getOrdersInfoStacked($fromTimestamp, $toTimestamp, $interval = 'day')
+    public function getQuantityOfOrdersInfo($fromTimestamp, $toTimestamp, $interval = 'day')
     {
         $visualConfig = '';
 
@@ -125,13 +126,13 @@ class Model
     }
 
     /**
-     * Получает конфигурационные данные для первого графика
+     * Получает конфигурационные данные для второго графика
      *
      * @param integer $fromTimestamp Дата с которой начинать собирать информацию
      * @param integer $toTimestamp Дата до которой нужно собрать информацию
      * @return string Строка содержащая конфигурационные данные для первого графика.
      */
-    public function getOrdersInfoPie($fromTimestamp, $toTimestamp)
+    public function getRefererOrdersInfo($fromTimestamp, $toTimestamp)
     {
         $visualConfig = '';
         $db = Db::getInstance();
@@ -162,6 +163,51 @@ class Model
             $lastKey = key($groupedOrders);
             foreach ($groupedOrders as $key => $value) {
                 $visualConfig .= "['{$key}', {$value}]";
+                if ($key != $lastKey) {
+                    $visualConfig .= ',';
+                }
+            }
+            $visualConfig .= ']';
+        }
+        return $visualConfig;
+    }
+
+    /**
+     * Получает конфигурационные данные для третьего графика
+     *
+     * @param integer $fromTimestamp Дата с которой начинать собирать информацию
+     * @param integer $toTimestamp Дата до которой нужно собрать информацию
+     * @return string Строка содержащая конфигурационные данные для первого графика.
+     */
+    public function getOrderTypeInfo($fromTimestamp, $toTimestamp)
+    {
+        $visualConfig = '';
+        $db = Db::getInstance();
+        $config = Config::getInstance();
+        $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
+        $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY order_type', $par, $fields);
+
+        if (count($row) > 0) {
+            $visualConfig .= "[['Order type', 'Percentage of total'],";
+            // Разбиваем заказы по типам
+            $groupedOrders = array();
+            $orderType = '';
+            $orderTypeId = 0;
+            foreach ($row as $key => $value) {
+                if ($orderType != $value['order_type']) {
+                    $orderTypeId++;
+                    $orderType = $value['order_type'];
+                    $groupedOrders[$orderTypeId]['name'] = $orderType;
+                    $groupedOrders[$orderTypeId]['counter'] = 0;
+                }
+                $groupedOrders[$orderTypeId]['counter']++;
+            }
+            // Собираем строки для js конфигурации
+            end($groupedOrders);
+            $lastKey = key($groupedOrders);
+            foreach ($groupedOrders as $key => $value) {
+                $visualConfig .= "['{$value['name']}', {$value['counter']}]";
                 if ($key != $lastKey) {
                     $visualConfig .= ',';
                 }
