@@ -28,5 +28,6 @@ return array(
     'yandex' => array( // Яндекс
         'yandexLogin' => "", // Яндекс логин | Ideal_Text
         'yandexKey' => "", // Яндекс ключ | Ideal_Text
+        'proxyUrl' => "", // Адрес прокси скрипта | Ideal_Text
     ),
 );

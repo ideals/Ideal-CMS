@@ -203,6 +203,12 @@ class YandexXmlClient
     protected $proxy = array();
 
     /**
+     * Proxy script URL
+     * @var String
+     */
+    protected $proxyUrl = '';
+
+    /**
      * __construct
      *
      * @param  string $user
@@ -229,6 +235,18 @@ class YandexXmlClient
     public function query($query)
     {
         $this->query = $query;
+        return $this;
+    }
+
+    /**
+     * set proxyUrl
+     *
+     * @access  public
+     * @param  string $proxyUrl
+     */
+    public function setProxyUrl($proxyUrl)
+    {
+        $this->proxyUrl = $proxyUrl;
         return $this;
     }
 
@@ -808,6 +826,11 @@ class YandexXmlClient
 
         if ($this->lr) {
             $url .= '&lr=' . $this->lr;
+        }
+
+        // Если задан адрес прокси скрипта, то вносим изменения в $url
+        if (!empty($this->proxyUrl)) {
+            $url = str_replace(self::BASE_URL, $this->proxyUrl, $url);
         }
 
         curl_setopt($ch, CURLOPT_URL, $url);
