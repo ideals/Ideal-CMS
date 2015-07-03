@@ -89,7 +89,7 @@ class ModelAbstract extends \Ideal\Addon\AbstractModel
                     $View->pager = $this->getPager('num');
 
                 } else {
-                    $this->pageData['content'] .= 'Поле логин или пароль от яндекса имеет пустое значене';
+                    $this->pageData['content'] .= 'Поле логин или ключ от яндекса имеет пустое значене';
                 }
             }
             $this->pageData['content'] .= $View->render();
