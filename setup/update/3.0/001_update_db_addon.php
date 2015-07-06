@@ -104,8 +104,12 @@ function getTablesForConversion($db, $config)
  */
 function addAddonColumn($db, $tableName)
 {
-    $sql = "ALTER TABLE $tableName ADD addon varchar(255) not null default '{\"1\":\"Ideal_Page\"}' AFTER template";
-    $db->query($sql);
+    $sql = "SHOW COLUMNS FROM $tableName WHERE Field = 'addon'";
+    $res = $db->select($sql);
+    if (empty($res)) {
+        $sql = "ALTER TABLE $tableName ADD addon varchar(255) not null default '{\"1\":\"Ideal_Page\"}' AFTER template";
+        $db->query($sql);
+    }
 }
 
 /**
