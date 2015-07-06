@@ -183,11 +183,11 @@ class Config
     {
         // Подключаем описание данных для БД
         /** @noinspection PhpIncludeInspection */
-        $this->import(require_once($this->cmsFolder . '/config.php'));
+        $this->import(include($this->cmsFolder . '/config.php'));
 
         // Подключаем файл с переменными изменяемыми в админке
         /** @noinspection PhpIncludeInspection */
-        $this->import(require_once($this->cmsFolder . '/site_data.php'));
+        $this->import(include($this->cmsFolder . '/site_data.php'));
 
         // Загрузка данных из конфигурационных файлов подключённых структур
         $this->loadStructures();
