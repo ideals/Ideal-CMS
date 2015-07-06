@@ -30,8 +30,9 @@ class Model
     public function getOrdersInfo($fromTimestamp, $toTimestamp, $interval = 'day')
     {
         $visualConfig['quantityOfOrders'] = $this->getQuantityOfOrdersInfo($fromTimestamp, $toTimestamp, $interval);
-        $visualConfig['referer'] = $this->getRefererOrdersInfo($fromTimestamp, $toTimestamp, $interval);
-        $visualConfig['orderType'] = $this->getOrderTypeInfo($fromTimestamp, $toTimestamp, $interval);
+        $visualConfig['referer'] = $this->getRefererOrdersInfo($fromTimestamp, $toTimestamp);
+        $visualConfig['orderType'] = $this->getOrderTypeInfo($fromTimestamp, $toTimestamp);
+        $visualConfig['sumOfOrder'] = $this->getSumOfOrdersInfo($fromTimestamp, $toTimestamp, $interval);
         return $visualConfig;
     }
 
@@ -213,6 +214,76 @@ class Model
                 }
             }
             $visualConfig .= ']';
+        }
+        return $visualConfig;
+    }
+
+    /**
+     * Получает конфигурационные данные для четвёртого графика
+     *
+     * @param integer $fromTimestamp Дата с которой начинать собирать информацию
+     * @param integer $toTimestamp Дата до которой нужно собрать информацию
+     * @param string $interval Строковое представление временного интервала для отображения на графике
+     * @return string Строка содержащая конфигурационные данные для первого графика.
+     */
+    public function getSumOfOrdersInfo($fromTimestamp, $toTimestamp, $interval = 'day')
+    {
+        $visualConfig = '';
+
+        // Задаём интервал для распределения заказов
+        switch ($interval) {
+            case 'day':
+                $interval = 86400;
+                break;
+            case 'week':
+                $interval = 604800;
+                break;
+            case 'month':
+                $interval = 2592000;
+                break;
+        }
+        $db = Db::getInstance();
+        $config = Config::getInstance();
+        $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
+        $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY date_create', $par, $fields);
+
+        if (count($row) > 0) {
+            $groupedOrders = array();
+
+            // Берём первй день из списка заказов
+            $date = $row[0]['date_create'];
+            $nextDate = $date + $interval;
+            $date = date('d.m.Y', $date);
+
+            // Разбиваем заказы по датам с заданным интервалом
+            foreach ($row as $order) {
+                if ($order['date_create'] < $nextDate) {
+                    $groupedOrders[$date] += $order['price'];
+                } else {
+                    $date = $order['date_create'];
+                    $nextDate = $date + $interval;
+                    $date = date('d.m.Y', $date);
+                    $groupedOrders[$date] = intval($order['price']);
+                }
+            }
+
+            $checkArray = array_filter($groupedOrders);
+
+            if (!empty($checkArray)) {
+                $visualConfig .= "[['Interveal', 'Sum'],";
+
+                // Собираем строки для js конфигурации
+                end($groupedOrders);
+                $lastKey = key($groupedOrders);
+                foreach ($groupedOrders as $key => $value) {
+                    $visualConfig .= "['{$key}', {$value}]";
+                    if ($key != $lastKey) {
+                        $visualConfig .= ',';
+                    }
+                }
+                $visualConfig .= ']';
+            }
         }
         return $visualConfig;
     }
