@@ -76,6 +76,17 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
             orderTypeChart.draw(orderTypeChartData, orderTypeChartOptions);
             <?php
             }?>
+
+            <?php if (isset($visualConfig['sumOfOrder']) && !empty($visualConfig['sumOfOrder'])) { ?>
+            var sumOfOrdersData = google.visualization.arrayToDataTable(<?php print $visualConfig['sumOfOrder']; ?>);
+            var sumOfOrdersDataOptions = {
+                title: 'Сумма заказов'
+            };
+
+            var sumOfOrdersDataChart = new google.visualization.ColumnChart(document.getElementById('sumOfOrdersChart'));
+            sumOfOrdersDataChart.draw(sumOfOrdersData, sumOfOrdersDataOptions);
+            <?php
+            }?>
         }
     </script>
 <?php } ?>
@@ -116,6 +127,7 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
     <div id="quantityOfOrdersChart"></div>
     <div id="refererChart"></div>
     <div id="orderTypeChart"></div>
+    <div id="sumOfOrdersChart"></div>
 </div>
 
 <script type="text/javascript">
