@@ -271,8 +271,7 @@ class Model
             return '';
         }
 
-        $url = $path[0]['url'];
-        unset($path[0]);
+        $prefix = $url = '';
 
         // Объединяем все участки пути
         foreach ($path as $v) {
@@ -285,7 +284,8 @@ class Model
                 // Если в одном из элементов пути есть ссылки на другие страницы, то путь построить нельзя
                 return '---';
             }
-            $url .= '/' . $v['url'];
+            $url .= $prefix . $v['url'];
+            $prefix = '/';
         }
 
         $this->parentUrl = $url;

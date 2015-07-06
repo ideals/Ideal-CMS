@@ -2,9 +2,10 @@
 
 // 1. Если в config.php отсутствует структура справочников, добавляем её
 $config = \Ideal\Core\Config::getInstance();
-$directory = $config->getStructureByName('Ideal_DataList');
+$cmsDir = DOCUMENT_ROOT . '/' . $config->cmsFolder;
 
-if ($directory === false) {
+$structure = $config->getStructureByName('Ideal_DataList');
+if ($structure === false) {
     $ID = 0;
     foreach ($config->structures as $val) {
         if ($val['ID'] > $ID) {
@@ -23,7 +24,10 @@ if ($directory === false) {
             'hasTable' => true
         ),
 ADD;
-    $fileName = CMS_ROOT . '/config.php';
+    $fileName = $cmsDir . '/config.php';
+    if (!file_exists($fileName)) {
+        throw new \Exception('Файл не найден: ' . $fileName);
+    }
     $file = file_get_contents($fileName);
 
     $pos = strrpos($file, ',');
@@ -31,8 +35,21 @@ ADD;
     $file = substr($file, 0, $pos + 1) . $add . substr($file, $pos + 1);
 
     file_put_contents($fileName, $file);
+
+    $config->loadSettings();
 } else {
-    $ID = $directory['ID'];
+    $ID = $structure['ID'];
+    if ($structure['isShow'] == 0) {
+        $fileName = $cmsDir . '/config.php';
+        if (!file_exists($fileName)) {
+            throw new \Exception('Файл не найден: ' . $fileName);
+        }
+        $file = file_get_contents($fileName);
+        $pattern = 'Справочники\',(\r*)\n(\s*)\'isShow\'(\s*)=>(\s*)(\d)';
+        $replacement = "Справочники',\\1\n\\2'isShow'\\3=>\\41";
+        $file = mb_ereg_replace($pattern, $replacement, $file);
+        file_put_contents($fileName, $file);
+    }
 }
 
 // 2. Если отсутствует таблица справочников - создаем её
@@ -47,12 +64,52 @@ $res = $db->select("SHOW TABLES LIKE '{$table}'");
 
 // Если таблицы ideal_structure_datalist не существует - создаем её
 if (empty($res)) {
-    $filename = CMS_ROOT . '/Ideal/Structure/DataList/config.php';
-    $file = require($filename);
+    $fileName = $cmsDir . '/Ideal/Structure/DataList/config.php';
+    if (!file_exists($fileName)) {
+        throw new \Exception('Файл не найден: ' . $fileName);
+    }
+    /** @noinspection PhpIncludeInspection */
+    $file = require($fileName);
     $db->create($table, $file['fields']);
 }
 
-// 3. Если в таблице справочников отсутствует элемент со структурой Ideal_Order - создаем его
+// 3. Если в config.php отсутствует подключение Ideal_Order - подключаем
+$order = $config->getStructureByName('Ideal_Order');
+if ($order === false) {
+    $orderId = 0;
+    foreach ($config->structures as $val) {
+        if ($val['ID'] > $orderId) {
+            $orderId = $val['ID'];
+        }
+    }
+    $orderId++;
+    $add = <<<ADD
+
+        // Подключаем заказы
+        array(
+            'ID' => {$orderId},
+            'structure' => 'Ideal_Order',
+            'name' => 'Заказы с сайта',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
+ADD;
+    $fileName = $cmsDir . '/config.php';
+    if (!file_exists($fileName)) {
+        throw new \Exception('Файл не найден: ' . $fileName);
+    }
+    $file = file_get_contents($fileName);
+
+    $pos = strrpos($file, ',');
+
+    $file = substr($file, 0, $pos + 1) . $add . substr($file, $pos + 1);
+
+    file_put_contents($fileName, $file);
+
+    $config->loadSettings();
+}
+
+// 4. Если в таблице справочников отсутствует элемент со структурой Ideal_Order - создаем его
 
 $dataListTable = $config->db['prefix'] . 'ideal_structure_datalist';
 
