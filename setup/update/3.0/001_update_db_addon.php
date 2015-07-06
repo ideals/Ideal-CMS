@@ -66,6 +66,10 @@ function conversionTemplateTables($db, $templateTables)
  */
 function getTablesForConversion($db, $config)
 {
+    $listTableName = array(
+        'template' => array(),
+        'structure' => array(),
+    );
     $sql = "SHOW TABLES";
     $tablesName = $db->query($sql);
     $listTableName = array();
@@ -107,7 +111,7 @@ function addAddonColumn($db, $tableName)
     $sql = "SHOW COLUMNS FROM $tableName WHERE Field = 'addon'";
     $res = $db->select($sql);
     if (empty($res)) {
-        $sql = "ALTER TABLE $tableName ADD addon varchar(255) not null default '{\"1\":\"Ideal_Page\"}' AFTER template";
+        $sql = "ALTER TABLE $tableName ADD addon varchar(255) not null default '[[\"1\",\"Ideal_Page\",\"\"]]' AFTER template";
         $db->query($sql);
     }
 }
