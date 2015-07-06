@@ -25,5 +25,9 @@ $db = \Ideal\Core\Db::getInstance();
 
 $tableName = $dbConf['prefix'] . 'ideal_addon_yandexsearch';
 
-$sql = "ALTER TABLE $tableName ADD proxyUrl varchar(255) AFTER yandexKey";
-$db->query($sql);
+$sql = "SHOW COLUMNS FROM $tableName WHERE Field = 'proxyUrl'";
+$res = $db->select($sql);
+if (empty($res)) {
+    $sql = "ALTER TABLE $tableName ADD proxyUrl varchar(255) AFTER yandexKey";
+    $db->query($sql);
+}
