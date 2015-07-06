@@ -15,7 +15,7 @@ namespace FormPhp;
  */
 class Forms
 {
-    /** @var array Список полей ввода в форме */
+    /** @var \FormPhp\Field\AbstractField[] Список полей ввода в форме */
     public $fields = array();
 
     /** @var string Название формы  */
@@ -41,6 +41,10 @@ class Forms
 
     /** @var bool Флаг для осуществления изначальной валидации по местонахождению формы */
     protected $locationValidation = false;
+
+    protected $targets;
+    protected $counters;
+    protected $ajaxUrl;
 
     /**
      * Инициализируем сессии, если это нужно
@@ -76,10 +80,44 @@ class Forms
      */
     public function start()
     {
-        $start = '';
-        $start .= $this->fields['_token']->getInputText();
-        $start .= $this->getValidatorsInput();
+        /** @var \FormPhp\Field\Token\Controller $token */
+        $token = $this->fields['_token'];
+
+        $start = '<form method="' . $this->method . '" id="' . $this->formName . '" '
+            . 'data-click="' . $this->targets['click'] . '" ' 
+            . 'data-send="' . $this->targets['send'] . '">' . "\n"
+            . $token->getInputText() . "\n"
+            . $this->getValidatorsInput();
+
+        if (isset($this->counters['yandex'])) {
+            $start .= "\n" . '<input type="hidden" value="' . $this->counters['yandex'] . '" name="_yaCounter">';
+        }
+
         return $start;
+    }
+
+    /**
+     * Установка целей, срабатывающих при клике на кнопку Отправить и на реальной отправке формы
+     *
+     * @param string $click Цель на нажатие на кнопку Отправить
+     * @param string $send Цель на отправку формы
+     */
+    public function setClickAndSend($click, $send)
+    {
+        $this->targets = array(
+            'click' => $click,
+            'send' => $send,
+        );
+    }
+
+    /**
+     * Установка идентификатора счётчика Яндекс.Метрики
+     *
+     * @param string $counterId Счётчик Яндекс.Метрики (например, yaCounter12345678)
+     */
+    public function setMetrika($counterId)
+    {
+        $this->counters['yandex'] = $counterId;
     }
 
     /**
@@ -167,7 +205,9 @@ class Forms
      */
     public function getValue($name)
     {
-        return $this->fields[$name]->getValue();
+        /** @var \FormPhp\Field\AbstractField $field */
+        $field = $this->fields[$name];
+        return $field->getValue();
     }
 
     /**
@@ -246,6 +286,16 @@ class Forms
     public function getText()
     {
         return $this->text;
+    }
+
+    /**
+     * Установка url, по которому будет производиться ajax-запрос отправки формы
+     *
+     * @param string $url url скрипта для обработки формы
+     */
+    public function setAjaxUrl($url)
+    {
+        $this->ajaxUrl = $url;
     }
 
     /**
@@ -374,10 +424,14 @@ class Forms
 
         $js[] = $this->getSenderJs();
 
+        $location = ($this->locationValidation) ? ', location: true' : '';
+        $ajaxUrl = "$('#{$this->formName}').form({ajaxUrl : \"{$this->ajaxUrl}\"{$location}})";
+
         $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)
             . file_get_contents(__DIR__ .'/form.js')
             . $this->js
+            . "\n" . $ajaxUrl
             . "\n"  . '})';
 
         return $this->js;
@@ -402,6 +456,7 @@ class Forms
             return $response;
         }
 
+        /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
         $sender = new \Mail\Sender();
 
         // Устанавливаем заголовок письма
@@ -445,9 +500,11 @@ class Forms
         if (class_exists('\Ideal\Core\Db') && class_exists('\Ideal\Core\Config')) {
 
             // Получаем подключение к базе
+            /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
             $db = \Ideal\Core\Db::getInstance();
 
             // Получаем конфигурационные данные сайта
+            /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
             $config = \Ideal\Core\Config::getInstance();
 
             // Формируем название таблицы, в которую записывается информация о заказе
@@ -458,7 +515,7 @@ class Forms
             $prevStructure = $dataList['ID'] . '-';
             $par = array('structure' => 'Ideal_Order');
             $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
-            $row = $db->select('SELECT ID FROM &table WHERE structure = :structure', $par, $fields);
+            $row = $db->select('SELECT ID FROM `&table` WHERE structure = :structure', $par, $fields);
             $prevStructure .= $row[0]['ID'];
 
             // Записываем данные

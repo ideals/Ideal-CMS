@@ -17,11 +17,22 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/_.php';
 // Начало работы с фреймворком форм
 
 $form = new FormPhp\Forms('myForm');
+
 // Если включено файловое кэширование, то необходимо установить изначальную валидацию по странице отправки формы
 //$form->setLocationValidation(true);
 
 // Устанавливаем "Тип заказа" для формы
 $form->setOrderType('Заявка с сайта');
+
+// Устанавливаем цели Метрики срабатывающие на клике на кнопку и на отправке формы
+$form->setClickAndSend('SEND-FORM', 'SENT-FORM');
+
+// Устанавливаем нормер счётчика Метрики
+$form->setCounters('yaCounter12345678');
+
+// Устанавливаем url, используемый при ajax-отправке формы
+$form->setAjaxUrl('/sendForm.php');
+
 
 $form->add('name', 'text'); // добавляем одно текстовое поле ввода
 $form->add('phone', 'text'); // добавляем одно текстовое поле ввода
@@ -56,21 +67,8 @@ HTML;
         echo 'Форма заполнена неправильно<br />';
     }
 }
-// todo перенести прикрепление формы к плагину и здание опций в класс Form
-// Если включено файловое кэширование, то для правильной валидации необходимо установить параметр 'location: true'
-$script = <<<JS
-$('#myForm').form({
-    ajaxUrl : "/example.php"
-//    location: true
-    });
-JS;
-$form->setJs($script);
 
-$mailTitle = 'Заявка';
-$ymOnClick = 'SEND-FORM';
-$ymOnSend = 'SENT-FORM';
-$yaCounter = 'yaCounter17315254';
-$text = <<<TEXT
+$text = <<<HTML
 <script type="text/javascript"
         src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
 <script type="text/javascript"
@@ -78,27 +76,24 @@ $text = <<<TEXT
 <script type="text/javascript"
         src="example.php?mode=js"></script>
 <link media="all" rel="stylesheet" type="text/css" href="example.php?mode=css"/>
-<form method="post" id="myForm" data-click="{$ymOnClick}" data-send="{$ymOnSend}">
-    {$form->start()}
-    <input type="hidden" value="{$mailTitle}" name="mailTitle">
-    <input type="hidden" value="{$yaCounter}" name="_yaCounter">
+{$form->start()}
     <div>
-    <label for="name">Просто текст</label>
-    <input type="text" name="name" placeholder="123"/>
+        <label for="name">Просто текст</label>
+        <input type="text" name="name" placeholder="123"/>
     </div>
     <div>
-    <label for="name">Просто телефон</label>
-    <input type="text" name="phone"/>
+        <label for="name">Просто телефон</label>
+        <input type="text" name="phone"/>
     </div>
     <div>
-    <label for="name">Просто почта</label>
-    <input type="text" name="email"/>
+        <label for="name">Просто почта</label>
+        <input type="text" name="email"/>
     </div>
         {$form->fields['file']->getInputText()}
     <input type="submit">
 </form>
 
-TEXT;
+HTML;
 
 $form->setText($text);
 
