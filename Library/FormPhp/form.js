@@ -307,6 +307,10 @@ jQuery.fn.form = function (options, messages, methods) {
         locationOnButtonClick: function () {
             $(this).prepend('<input type="hidden" name="_location" value="' + window.location.href + '">');
         },
+        // Удаление проверочного поля
+        locationOnButtonClickRemove: function () {
+            $("input[name='_location']").remove();
+        },
         // Отправка формы
         submit: function () {
             var $form = $(this);
@@ -390,9 +394,11 @@ jQuery.fn.form = function (options, messages, methods) {
             })
             .on('form.successSend', function () {
                 methods.metrikaOnSuccessSend.apply(this);
+                methods.locationOnButtonClickRemove.apply(this);
             })
             .on('form.errorSend', function () {
                 this.disableSubmit = false;
+                methods.locationOnButtonClickRemove.apply(this);
             });
         this.disableSubmit = false;
         this.defaultSubmit = false;

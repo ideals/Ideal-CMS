@@ -33,6 +33,12 @@ class ModelAbstract extends \Ideal\Addon\AbstractModel
             // Ключ от сервиса Яндекс
             $yandexKey = trim($this->pageData['yandexKey']);
 
+            // Адрес прокси скрипта
+            $proxyUrl = trim($this->pageData['proxyUrl']);
+            if (empty($proxyUrl)) {
+                $proxyUrl = trim($config->yandex['proxyUrl']);
+            }
+
             // Номер отображаемой страницы
             $request = new Request();
             $page = intval($request->{'num'});
@@ -58,6 +64,7 @@ class ModelAbstract extends \Ideal\Addon\AbstractModel
                     try {
                         $yandex->query($query)// устанавливаем поисковый запрос
                         ->site($config->domain)// ограничиваемся поиском по сайту
+                        ->setProxyUrl($proxyUrl)
                         ->page($page)
                             ->limit($this->pageData['elements_site'])// результатов на странице
                             ->request()                            // отправляем запрос
@@ -82,7 +89,7 @@ class ModelAbstract extends \Ideal\Addon\AbstractModel
                     $View->pager = $this->getPager('num');
 
                 } else {
-                    $this->pageData['content'] .= 'Поле логин или пароль от яндекса имеет пустое значене';
+                    $this->pageData['content'] .= 'Поле логин или ключ от яндекса имеет пустое значене';
                 }
             }
             $this->pageData['content'] .= $View->render();

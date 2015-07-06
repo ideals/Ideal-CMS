@@ -18,9 +18,11 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
     .no-border-radius {
         border-radius: 0;
     }
+
     .grouping {
         margin: 10px 0;
     }
+
     .first-label {
         margin: 0 5px 0 0;
     }
@@ -39,10 +41,10 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
 
         function drawChart() {
 
-            <?php if (isset($visualConfig['stacked']) && !empty($visualConfig['stacked'])) { ?>
-            var stackedData = google.visualization.arrayToDataTable(<?php print $visualConfig['stacked']; ?>);
+            <?php if (isset($visualConfig['quantityOfOrders']) && !empty($visualConfig['quantityOfOrders'])) { ?>
+            var quantityOfOrdersData = google.visualization.arrayToDataTable(<?php print $visualConfig['quantityOfOrders']; ?>);
 
-            var optionsStacked = {
+            var quantityOfOrdersOptions = {
                 title: "Общее кол-во заказов за определённый срок",
                 isStacked: true,
                 height: 300,
@@ -50,18 +52,39 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
                 vAxis: {minValue: 0}
             };
 
-            var stackedChart = new google.visualization.ColumnChart(document.getElementById('stackedChart'));
-            stackedChart.draw(stackedData, optionsStacked);
+            var quantityOfOrdersChart = new google.visualization.ColumnChart(document.getElementById('quantityOfOrdersChart'));
+            quantityOfOrdersChart.draw(quantityOfOrdersData, quantityOfOrdersOptions);
             <?php } ?>
 
-            <?php if (isset($visualConfig['pie']) && !empty($visualConfig['pie'])) { ?>
-            var piechartData = google.visualization.arrayToDataTable(<?php print $visualConfig['pie']; ?>);
-            var pieChartOptions = {
+            <?php if (isset($visualConfig['referer']) && !empty($visualConfig['referer'])) { ?>
+            var refererChartData = google.visualization.arrayToDataTable(<?php print $visualConfig['referer']; ?>);
+            var refererChartOptions = {
                 title: 'Распределение заказов по источникам переходов'
             };
 
-            var pieChart = new google.visualization.PieChart(document.getElementById('pieChart'));
-            pieChart.draw(piechartData, pieChartOptions);
+            var refererChart = new google.visualization.PieChart(document.getElementById('refererChart'));
+            refererChart.draw(refererChartData, refererChartOptions);
+            <?php } ?>
+
+            <?php if (isset($visualConfig['orderType']) && !empty($visualConfig['orderType'])) { ?>
+            var orderTypeChartData = google.visualization.arrayToDataTable(<?php print $visualConfig['orderType']; ?>);
+            var orderTypeChartOptions = {
+                title: 'Распределение заказов по видам'
+            };
+
+            var orderTypeChart = new google.visualization.PieChart(document.getElementById('orderTypeChart'));
+            orderTypeChart.draw(orderTypeChartData, orderTypeChartOptions);
+            <?php
+            }?>
+
+            <?php if (isset($visualConfig['sumOfOrder']) && !empty($visualConfig['sumOfOrder'])) { ?>
+            var sumOfOrdersData = google.visualization.arrayToDataTable(<?php print $visualConfig['sumOfOrder']; ?>);
+            var sumOfOrdersDataOptions = {
+                title: 'Сумма заказов'
+            };
+
+            var sumOfOrdersDataChart = new google.visualization.ColumnChart(document.getElementById('sumOfOrdersChart'));
+            sumOfOrdersDataChart.draw(sumOfOrdersData, sumOfOrdersDataOptions);
             <?php
             }?>
         }
@@ -101,8 +124,10 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
 </form>
 
 <div id="graphsContent">
-    <div id="stackedChart"></div>
-    <div id="pieChart"></div>
+    <div id="quantityOfOrdersChart"></div>
+    <div id="refererChart"></div>
+    <div id="orderTypeChart"></div>
+    <div id="sumOfOrdersChart"></div>
 </div>
 
 <script type="text/javascript">
