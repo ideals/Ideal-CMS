@@ -17,6 +17,7 @@ class Controller extends AbstractField
             session_start();
         }
         $xhtml = ($this->xhtml) ? '/' : '';
-        return '<input type="hidden" name="_token" value="' . crypt(session_id()) . '" ' . $xhtml . '>' . "\n";
+        $val = crypt(session_id(), session_id());
+        return '<input type="hidden" name="_token" value="' . $val . '" ' . $xhtml . '>' . "\n";
     }
 }
