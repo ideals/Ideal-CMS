@@ -28,7 +28,7 @@ $form->setOrderType('Заявка с сайта');
 $form->setClickAndSend('SEND-FORM', 'SENT-FORM');
 
 // Устанавливаем нормер счётчика Метрики
-$form->setCounters('yaCounter12345678');
+$form->setMetrika('yaCounter12345678');
 
 // Устанавливаем url, используемый при ajax-отправке формы
 $form->setAjaxUrl('/sendForm.php');
