@@ -84,7 +84,7 @@ class Forms
         $token = $this->fields['_token'];
 
         $start = '<form method="' . $this->method . '" id="' . $this->formName . '" '
-            . 'data-click="' . $this->targets['click'] . '" ' 
+            . 'data-click="' . $this->targets['click'] . '" '
             . 'data-send="' . $this->targets['send'] . '">' . "\n"
             . $token->getInputText() . "\n"
             . $this->getValidatorsInput();
@@ -515,7 +515,7 @@ class Forms
             $prevStructure = $dataList['ID'] . '-';
             $par = array('structure' => 'Ideal_Order');
             $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
-            $row = $db->select('SELECT ID FROM `&table` WHERE structure = :structure', $par, $fields);
+            $row = $db->select('SELECT ID FROM &table WHERE structure = :structure', $par, $fields);
             $prevStructure .= $row[0]['ID'];
 
             // Записываем данные
