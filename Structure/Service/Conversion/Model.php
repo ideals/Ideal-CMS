@@ -255,34 +255,38 @@ class Model
             $date = $row[0]['date_create'];
             $nextDate = $date + $interval;
             $date = date('d.m.Y', $date);
+            $groupedOrders[$date] = $row[0]['price'];
+            unset($row[0]);
+            if (count($row) > 0) {
 
-            // Разбиваем заказы по датам с заданным интервалом
-            foreach ($row as $order) {
-                if ($order['date_create'] < $nextDate) {
-                    $groupedOrders[$date] += $order['price'];
-                } else {
-                    $date = $order['date_create'];
-                    $nextDate = $date + $interval;
-                    $date = date('d.m.Y', $date);
-                    $groupedOrders[$date] = intval($order['price']);
-                }
-            }
-
-            $checkArray = array_filter($groupedOrders);
-
-            if (!empty($checkArray)) {
-                $visualConfig .= "[['Interveal', 'Sum'],";
-
-                // Собираем строки для js конфигурации
-                end($groupedOrders);
-                $lastKey = key($groupedOrders);
-                foreach ($groupedOrders as $key => $value) {
-                    $visualConfig .= "['{$key}', {$value}]";
-                    if ($key != $lastKey) {
-                        $visualConfig .= ',';
+                // Разбиваем заказы по датам с заданным интервалом
+                foreach ($row as $order) {
+                    if ($order['date_create'] < $nextDate) {
+                        $groupedOrders[$date] += $order['price'];
+                    } else {
+                        $date = $order['date_create'];
+                        $nextDate = $date + $interval;
+                        $date = date('d.m.Y', $date);
+                        $groupedOrders[$date] = intval($order['price']);
                     }
                 }
-                $visualConfig .= ']';
+
+                $checkArray = array_filter($groupedOrders);
+
+                if (!empty($checkArray)) {
+                    $visualConfig .= "[['Interveal', 'Sum'],";
+
+                    // Собираем строки для js конфигурации
+                    end($groupedOrders);
+                    $lastKey = key($groupedOrders);
+                    foreach ($groupedOrders as $key => $value) {
+                        $visualConfig .= "['{$key}', {$value}]";
+                        if ($key != $lastKey) {
+                            $visualConfig .= ',';
+                        }
+                    }
+                    $visualConfig .= ']';
+                }
             }
         }
         return $visualConfig;

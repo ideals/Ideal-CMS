@@ -1,7 +1,23 @@
 <?php
 // @codingStandardsIgnoreFile
-$fromTimestamp = time() - 2678400;
-$toTimestamp = time();
+$interval = 'day';
+parse_str($_SERVER['QUERY_STRING'], $queryString);
+if (isset($queryString['fromDate'])) {
+    $fromTimestamp = strtotime(str_replace('.', '-', $queryString['fromDate']));
+    unset($queryString['fromDate']);
+} else {
+    $fromTimestamp = time() - 2678400;
+}
+if (isset($queryString['toDate'])) {
+    $toTimestamp = strtotime(str_replace('.', '-', $queryString['toDate']));
+    unset($queryString['toDate']);
+} else {
+    $toTimestamp = time();
+}
+if (isset($queryString['grouping'])) {
+    $interval = $queryString['grouping'];
+    unset($queryString['grouping']);
+}
 
 // Получаем дату с которой формировать графики. По умолчанию 30 дней назад
 $fromDate = date('d.m.Y', $fromTimestamp);
@@ -11,7 +27,7 @@ $toDate = date('d.m.Y');
 
 // Собираем строку/js-массив для настройки отображения первого графика
 $conversion = new Ideal\Structure\Service\Conversion\Model();
-$visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
+$visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interval);
 ?>
 
 <style>
@@ -115,12 +131,18 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
 
     <div class="input-group grouping">
         <label class="first-label">Сгруппировать по:</label>
-        <label class="radio-inline"><input type="radio" name="grouping" value="day" checked/>дням</label>
-        <label class="radio-inline"><input type="radio" name="grouping" value="week"/>неделям</label>
-        <label class="radio-inline"><input type="radio" name="grouping" value="month"/>месяцам</label>
+        <label class="radio-inline"><input type="radio" name="grouping" value="day" <?php if ($interval == 'day') { echo 'checked'; } ?> />дням</label>
+        <label class="radio-inline"><input type="radio" name="grouping" value="week" <?php if ($interval == 'week') { echo 'checked'; } ?>/>неделям</label>
+        <label class="radio-inline"><input type="radio" name="grouping" value="month" <?php if ($interval == 'month') { echo 'checked'; } ?>/>месяцам</label>
     </div>
-
-    <input type="button" value="Перестроить графики" class="btn btn-primary btn-large"/>
+    <?php
+     if (count($queryString) != 0) {
+         foreach($queryString as $key => $value) {
+             echo '<input type="hidden" value="'.$value.'" name="'.$key.'"/>';
+         }
+     }
+     ?>
+    <input type="submit" value="Перестроить графики" class="btn btn-primary btn-large"/>
 </form>
 
 <div id="graphsContent">
