@@ -36,6 +36,8 @@ class FileCache
 
         $excludeCacheFileValue = explode("\n", $configCache['excludeFileCache']);
 
+        $excludeCacheFileValue = array_filter($excludeCacheFileValue);
+
         // Удаляем первый слэш, для использования пути в проверке на исключения
         $stringToCheck = preg_replace('/\//', '', $uri, 1);
 
