@@ -78,9 +78,12 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
                 title: 'Распределение заказов по источникам переходов'
             };
 
+            $('#refererChartTab').addClass('active');
             var refererChart = new google.visualization.PieChart(document.getElementById('refererChart'));
             refererChart.draw(refererChartData, refererChartOptions);
-            <?php } ?>
+            $('#refererChartTab').removeClass('active');
+            <?php
+            }?>
 
             <?php if (isset($visualConfig['orderType']) && !empty($visualConfig['orderType'])) { ?>
             var orderTypeChartData = google.visualization.arrayToDataTable(<?php print $visualConfig['orderType']; ?>);
@@ -88,8 +91,10 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
                 title: 'Распределение заказов по видам'
             };
 
+            $('#orderTypeChartTab').addClass('active');
             var orderTypeChart = new google.visualization.PieChart(document.getElementById('orderTypeChart'));
             orderTypeChart.draw(orderTypeChartData, orderTypeChartOptions);
+            $('#orderTypeChartTab').removeClass('active');
             <?php
             }?>
 
@@ -99,8 +104,10 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
                 title: 'Сумма заказов'
             };
 
+            $('#sumOfOrdersChartTab').addClass('active');
             var sumOfOrdersDataChart = new google.visualization.ColumnChart(document.getElementById('sumOfOrdersChart'));
             sumOfOrdersDataChart.draw(sumOfOrdersData, sumOfOrdersDataOptions);
+            $('#sumOfOrdersChartTab').removeClass('active');
             <?php
             }?>
         }
@@ -145,11 +152,30 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
     <input type="submit" value="Перестроить графики" class="btn btn-primary btn-large"/>
 </form>
 
-<div id="graphsContent">
-    <div id="quantityOfOrdersChart"></div>
-    <div id="refererChart"></div>
-    <div id="orderTypeChart"></div>
-    <div id="sumOfOrdersChart"></div>
+<br/>
+<br/>
+<br/>
+
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#quantityOfOrdersChartTab" data-toggle="tab">Общее кол-во</a></li>
+    <li><a href="#refererChartTab" data-toggle="tab">Источники переходов</a></li>
+    <li><a href="#orderTypeChartTab" data-toggle="tab">Виды заказов</a></li>
+    <li><a href="#sumOfOrdersChartTab" data-toggle="tab">Сумма заказов</a></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane active" id="quantityOfOrdersChartTab">
+        <div id="quantityOfOrdersChart"></div>
+    </div>
+    <div class="tab-pane" id="refererChartTab">
+        <div id="refererChart"></div>
+    </div>
+    <div class="tab-pane" id="orderTypeChartTab">
+        <div id="orderTypeChart"></div>
+    </div>
+    <div class="tab-pane" id="sumOfOrdersChartTab">
+        <div id="sumOfOrdersChart" style="width: 600px;"></div>
+    </div>
 </div>
 
 <script type="text/javascript">
