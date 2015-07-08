@@ -30,15 +30,11 @@ class FileCache
         $configCache = $config->cache;
 
         // Получаем чистый $uri без GET параметров
-        $queryString = http_build_query($_GET);
-        if (!empty($queryString)) {
-            $uri = str_replace('?' . $queryString, '', $uri);
-        }
+        list($uri) = explode('?', $uri, 2);
 
         $uriArray = self::getModifyUri($uri);
 
         $excludeCacheFileValue = explode("\n", $configCache['excludeFileCache']);
-
 
         // Удаляем первый слэш, для использования пути в проверке на исключения
         $stringToCheck = preg_replace('/\//', '', $uri, 1);
