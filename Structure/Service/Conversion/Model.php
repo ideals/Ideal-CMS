@@ -56,9 +56,6 @@ class Model
             case 'week':
                 $interval = 604800;
                 break;
-            case 'month':
-                $interval = 2592000;
-                break;
         }
 
         $db = Db::getInstance();
@@ -76,6 +73,7 @@ class Model
 
             // Формируем массив где ключи являются точками интевала
             while ($date <= $toTimestamp) {
+                $tempInterval = 0;
                 switch ($interval) {
                     case 604800:
                         // Определяем интервал до следующего понедельника
@@ -93,7 +91,10 @@ class Model
                         }
                         $key = date('d.m.Y', $date) . ' - ' . $toLabel;
                         break;
-                    case 2592000:
+                    case 'month':
+                        // Определяем интервал до первого числа следующего месяца
+                        $tempInterval = 'month';
+                        $interval = strtotime('first day of next month', $date) - $date;
                         $key = date('m.Y', $date);
                         break;
                     default:
@@ -102,8 +103,8 @@ class Model
                 $groupedOrders[$key] = self::searchData($row, date('d-m-Y', $date), $interval, 'referer');
                 $date += $interval;
 
-                // Возвращаем интервалу первоналачльное значение
-                if (isset($tempInterval)) {
+                // Возвращаем интервалу первоналачльное значение, если оно было изменено
+                if (!empty($tempInterval)) {
                     $interval = $tempInterval;
                 }
             }
@@ -258,9 +259,6 @@ class Model
             case 'week':
                 $interval = 604800;
                 break;
-            case 'month':
-                $interval = 2592000;
-                break;
         }
         $db = Db::getInstance();
         $config = Config::getInstance();
@@ -275,6 +273,7 @@ class Model
 
             // Формируем массив где ключи являются точками интевала
             while ($date <= $toTimestamp) {
+                $tempInterval = 0;
                 switch ($interval) {
                     case 604800:
                         // Определяем интервал до следующего понедельника
@@ -292,7 +291,10 @@ class Model
                         }
                         $key = date('d.m.Y', $date) . ' - ' . $toLabel;
                         break;
-                    case 2592000:
+                    case 'month':
+                        // Определяем интервал до первого числа следующего месяца
+                        $tempInterval = 'month';
+                        $interval = strtotime('first day of next month', $date) - $date;
                         $key = date('m.Y', $date);
                         break;
                     default:
@@ -308,7 +310,7 @@ class Model
                 $date += $interval;
 
                 // Возвращаем интервалу первоналачльное значение
-                if (isset($tempInterval)) {
+                if (!empty($tempInterval)) {
                     $interval = $tempInterval;
                 }
             }
