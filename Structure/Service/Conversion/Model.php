@@ -76,12 +76,23 @@ class Model
 
             // Формируем массив где ключи являются точками интевала
             while ($date <= $toTimestamp) {
-                $groupedOrders[date('d.m.Y', $date)] = array();
+                switch ($interval) {
+                    case 604800:
+                        if ($date + $interval <= $toTimestamp) {
+                            $toLabel = date('d.m.Y', $date + $interval);
+                        } else {
+                            $toLabel = date('d.m.Y', $toTimestamp);
+                        }
+                        $key = date('d.m.Y', $date) . ' - ' . $toLabel;
+                        break;
+                    case 2592000:
+                        $key = date('m.Y', $date);
+                        break;
+                    default:
+                        $key = date('d.m.Y', $date);
+                }
+                $groupedOrders[$key] = self::searchData($row, date('d-m-Y', $date), $interval, 'referer');
                 $date += $interval;
-            }
-
-            foreach ($groupedOrders as $key => $value) {
-                $groupedOrders[$key] = self::searchData($row, $key, $interval, 'referer');
             }
 
             // Разбиваем даты по реферам
@@ -251,18 +262,29 @@ class Model
 
             // Формируем массив где ключи являются точками интевала
             while ($date <= $toTimestamp) {
-                $groupedOrders[date('d.m.Y', $date)] = array();
-                $date += $interval;
-            }
-
-            foreach ($groupedOrders as $key => $value) {
+                switch ($interval) {
+                    case 604800:
+                        if ($date + $interval <= $toTimestamp) {
+                            $toLabel = date('d.m.Y', $date + $interval);
+                        } else {
+                            $toLabel = date('d.m.Y', $toTimestamp);
+                        }
+                        $key = date('d.m.Y', $date) . ' - ' . $toLabel;
+                        break;
+                    case 2592000:
+                        $key = date('m.Y', $date);
+                        break;
+                    default:
+                        $key = date('d.m.Y', $date);
+                }
                 $groupedOrders[$key] = 0;
-                $tempPrice = self::searchData($row, $key, $interval, 'price');
+                $tempPrice = self::searchData($row, date('d-m-Y', $date), $interval, 'price');
                 if (!empty($tempPrice)) {
                     foreach ($tempPrice as $price) {
                         $groupedOrders[$key] += $price;
                     }
                 }
+                $date += $interval;
             }
 
             $visualConfig .= "[['Interveal', 'Sum'],";
@@ -293,7 +315,7 @@ class Model
     protected function searchData(&$array, $date, $interval, $target)
     {
         // Переводим дату для поиска в timestamp
-        $timestamp = strtotime(str_replace('.', '-', $date));
+        $timestamp = strtotime($date);
         $resultArray = array();
 
         // Проходим по всему массиву данных и собираем подходящие
