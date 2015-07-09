@@ -92,8 +92,19 @@ class Controller
         $config = Config::getInstance();
         $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
 
+        // Папки от которых строится путь до шаблона
+        $idealFolders = array('Ideal.c', 'Ideal', 'Mods.c', 'Mods');
+        foreach ($idealFolders as $k => $v) {
+            $fileCheck = file_exists($cmsFolder . '/' . $v);
+            if ($fileCheck === false) {
+                unset($idealFolders[$k]);
+            } else {
+                $idealFolders[$k] = $cmsFolder . '/' . $v;
+            }
+        }
+
         $config = Config::getInstance();
-        $folders = array_merge(array($tplRoot, $gblRoot, $cmsFolder), $tplFolders);
+        $folders = array_merge(array($tplRoot, $gblRoot, $cmsFolder), $tplFolders, $idealFolders);
         $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
