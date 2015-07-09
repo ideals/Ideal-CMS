@@ -2,7 +2,7 @@
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
- * @link      http://github.com/ideals/idealcms ÂÔÓÁËÚÓËÈ ËÒıÓ‰ÌÓ„Ó ÍÓ‰‡
+ * @link      http://github.com/ideals/idealcms —Ä–µ–ø–æ–∑–∏—Ç–æ—Ä–∏–π –∏—Å—Ö–æ–¥–Ω–æ–≥–æ –∫–æ–¥–∞
  * @copyright Copyright (c) 2012-2015 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
@@ -12,11 +12,11 @@ namespace Ideal\Field\Referer;
 use Ideal\Field\AbstractController;
 
 /**
- * œÓÎÂ ‰Îˇ ‡·ÓÚ˚ Ò ËÒÚÓ˜ÌËÍÓÏ ÔÓÒÂ˘ÂÌËÈ
+ * –ü–æ–ª–µ –¥–ª—è —Ä–∞–±–æ—Ç—ã —Å –∏—Å—Ç–æ—á–Ω–∏–∫–æ–º –ø–æ—Å–µ—â–µ–Ω–∏–π
  *
- * œËÏÂ Ó·˙ˇ‚ÎÂÌËˇ ‚ ÍÓÌÙË„Û‡ˆËÓÌÌÓÏ Ù‡ÈÎÂ ÒÚÛÍÚÛ˚:
+ * –ü—Ä–∏–º–µ—Ä –æ–±—ä—è–≤–ª–µ–Ω–∏—è –≤ –∫–æ–Ω—Ñ–∏–≥—É—Ä–∞—Ü–∏–æ–Ω–Ω–æ–º —Ñ–∞–π–ª–µ —Å—Ç—Ä—É–∫—Ç—É—Ä—ã:
  *     'name' => array(
- *         'label' => '»ÒÚÓ˜ÌËÍ ÔÓÒÂ˘ÂÌËˇ',
+ *         'label' => '–ò—Å—Ç–æ—á–Ω–∏–∫ –ø–æ—Å–µ—â–µ–Ω–∏—è',
  *         'sql'   => 'varchar(255) not null',
  *         'type'  => 'Ideal_Referer'
  *     ),
@@ -34,5 +34,24 @@ class Controller extends AbstractController
     {
         $value = htmlspecialchars(nl2br($this->getValue()));
         return '<div class="well">' . $value . '</div>';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getValueForList($values, $fieldName)
+    {
+        $value = parent::getValueForList($values, $fieldName);
+        // –û—Ç–ª–∞–≤–ª–∏–≤–∞–µ–º –ø—Ä—è–º–æ–π –ø–µ—Ä–µ—Ö–æ–¥
+        if ($value == 'null') {
+            $value = '–ü—Ä—è–º–æ–π –ø–µ—Ä–µ—Ö–æ–¥';
+        } elseif (strripos($value, 'yandex') !== false) { // –û—Ç–ª–∞–≤–ª–∏–≤–∞–µ–º —è–Ω–¥–µ–∫—Å
+            $value = '–Ø–Ω–¥–µ–∫—Å';
+        } elseif (strripos($value, 'google') !== false) { // –û—Ç–ª–∞–≤–ª–∏–≤–∞–µ–º –≥—É–≥–ª
+            $value = 'Google';
+        } else { // –û—Ç–ª–∞–≤–ª–∏–≤–∞–µ–º –¥—Ä—É–≥–∏–µ —Å–∞–π—Ç—ã
+            $value = '–î—Ä—É–≥–∏–µ —Å–∞–π—Ç—ã';
+        }
+        return $value;
     }
 }

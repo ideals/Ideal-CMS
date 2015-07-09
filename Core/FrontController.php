@@ -137,7 +137,7 @@ class FrontController
             } else {
                 $referer = 'null';
             }
-            setcookie("referer", $referer);
+            setcookie("referer", $referer, time() + 3153600000);
         }
     }
 }

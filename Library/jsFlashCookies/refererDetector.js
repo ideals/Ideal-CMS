@@ -37,7 +37,12 @@ $(document).ready(function() {
                 } else {
                     currentRefererValue = refererCookiePhp;
                 }
-                document.cookie = "referer=" + currentRefererValue + "; path=/;";
+
+                var now = new Date();
+                var time = now.getTime();
+                var expireTime = time + 3153600000;
+                now.setTime(expireTime);
+                document.cookie = 'referer=' + currentRefererValue + ';expires=' + now.toGMTString() + ';path=/';
             }
         },
         onerror: function () {
