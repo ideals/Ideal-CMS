@@ -65,7 +65,7 @@ class Model
         $config = Config::getInstance();
         $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY date_create ', $par, $fields);
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER BY date_create ', $par, $fields);
 
         // Запускаем процесс построения строки/js-массива для настройки отображения первого графика
         if (count($row) > 0) {
@@ -78,8 +78,16 @@ class Model
             while ($date <= $toTimestamp) {
                 switch ($interval) {
                     case 604800:
+                        // Определяем интервал до следующего понедельника
+                        $dotw = date('w', $date);
+                        if ($dotw != 1) {
+                            $tempInterval = $interval;
+                            $interval = strtotime('next Monday', $date) - $date;
+                        }
+
+                        // Определяем конечную дату интервала для подписи
                         if ($date + $interval <= $toTimestamp) {
-                            $toLabel = date('d.m.Y', $date + $interval);
+                            $toLabel = date('d.m.Y', $date + $interval - 86400);
                         } else {
                             $toLabel = date('d.m.Y', $toTimestamp);
                         }
@@ -93,6 +101,11 @@ class Model
                 }
                 $groupedOrders[$key] = self::searchData($row, date('d-m-Y', $date), $interval, 'referer');
                 $date += $interval;
+
+                // Возвращаем интервалу первоналачльное значение
+                if (isset($tempInterval)) {
+                    $interval = $tempInterval;
+                }
             }
 
             // Разбиваем даты по реферам
@@ -147,7 +160,7 @@ class Model
         $config = Config::getInstance();
         $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY date_create ', $par, $fields);
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER BY date_create ', $par, $fields);
 
         if (count($row) > 0) {
             $visualConfig .= "[['Referer', 'Percentage of total'],";
@@ -194,7 +207,7 @@ class Model
         $config = Config::getInstance();
         $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY order_type', $par, $fields);
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER BY order_type', $par, $fields);
 
         if (count($row) > 0) {
             $visualConfig .= "[['Order type', 'Percentage of total'],";
@@ -253,7 +266,7 @@ class Model
         $config = Config::getInstance();
         $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY date_create', $par, $fields);
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER BY date_create', $par, $fields);
 
         if (count($row) > 0) {
 
@@ -264,8 +277,16 @@ class Model
             while ($date <= $toTimestamp) {
                 switch ($interval) {
                     case 604800:
+                        // Определяем интервал до следующего понедельника
+                        $dotw = date('w', $date);
+                        if ($dotw != 1) {
+                            $tempInterval = $interval;
+                            $interval = strtotime('next Monday', $date) - $date;
+                        }
+
+                        // Определяем конечную дату интервала для подписи
                         if ($date + $interval <= $toTimestamp) {
-                            $toLabel = date('d.m.Y', $date + $interval);
+                            $toLabel = date('d.m.Y', $date + $interval - 86400);
                         } else {
                             $toLabel = date('d.m.Y', $toTimestamp);
                         }
@@ -285,6 +306,11 @@ class Model
                     }
                 }
                 $date += $interval;
+
+                // Возвращаем интервалу первоналачльное значение
+                if (isset($tempInterval)) {
+                    $interval = $tempInterval;
+                }
             }
 
             $visualConfig .= "[['Interveal', 'Sum'],";
