@@ -1,7 +1,23 @@
 <?php
 // @codingStandardsIgnoreFile
-$fromTimestamp = time() - 2678400;
-$toTimestamp = time();
+$interval = 'day';
+parse_str($_SERVER['QUERY_STRING'], $queryString);
+if (isset($queryString['fromDate'])) {
+    $fromTimestamp = strtotime(str_replace('.', '-', $queryString['fromDate']));
+    unset($queryString['fromDate']);
+} else {
+    $fromTimestamp = time() - 2678400;
+}
+if (isset($queryString['toDate'])) {
+    $toTimestamp = strtotime(str_replace('.', '-', $queryString['toDate']));
+    unset($queryString['toDate']);
+} else {
+    $toTimestamp = time();
+}
+if (isset($queryString['grouping'])) {
+    $interval = $queryString['grouping'];
+    unset($queryString['grouping']);
+}
 
 // Получаем дату с которой формировать графики. По умолчанию 30 дней назад
 $fromDate = date('d.m.Y', $fromTimestamp);
@@ -11,7 +27,7 @@ $toDate = date('d.m.Y');
 
 // Собираем строку/js-массив для настройки отображения первого графика
 $conversion = new Ideal\Structure\Service\Conversion\Model();
-$visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
+$visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interval);
 ?>
 
 <style>
@@ -62,9 +78,12 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
                 title: 'Распределение заказов по источникам переходов'
             };
 
+            $('#refererChartTab').addClass('active');
             var refererChart = new google.visualization.PieChart(document.getElementById('refererChart'));
             refererChart.draw(refererChartData, refererChartOptions);
-            <?php } ?>
+            $('#refererChartTab').removeClass('active');
+            <?php
+            }?>
 
             <?php if (isset($visualConfig['orderType']) && !empty($visualConfig['orderType'])) { ?>
             var orderTypeChartData = google.visualization.arrayToDataTable(<?php print $visualConfig['orderType']; ?>);
@@ -72,8 +91,10 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
                 title: 'Распределение заказов по видам'
             };
 
+            $('#orderTypeChartTab').addClass('active');
             var orderTypeChart = new google.visualization.PieChart(document.getElementById('orderTypeChart'));
             orderTypeChart.draw(orderTypeChartData, orderTypeChartOptions);
+            $('#orderTypeChartTab').removeClass('active');
             <?php
             }?>
 
@@ -83,8 +104,10 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
                 title: 'Сумма заказов'
             };
 
+            $('#sumOfOrdersChartTab').addClass('active');
             var sumOfOrdersDataChart = new google.visualization.ColumnChart(document.getElementById('sumOfOrdersChart'));
             sumOfOrdersDataChart.draw(sumOfOrdersData, sumOfOrdersDataOptions);
+            $('#sumOfOrdersChartTab').removeClass('active');
             <?php
             }?>
         }
@@ -115,19 +138,44 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp);
 
     <div class="input-group grouping">
         <label class="first-label">Сгруппировать по:</label>
-        <label class="radio-inline"><input type="radio" name="grouping" value="day" checked/>дням</label>
-        <label class="radio-inline"><input type="radio" name="grouping" value="week"/>неделям</label>
-        <label class="radio-inline"><input type="radio" name="grouping" value="month"/>месяцам</label>
+        <label class="radio-inline"><input type="radio" name="grouping" value="day" <?php if ($interval == 'day') { echo 'checked'; } ?> />дням</label>
+        <label class="radio-inline"><input type="radio" name="grouping" value="week" <?php if ($interval == 'week') { echo 'checked'; } ?>/>неделям</label>
+        <label class="radio-inline"><input type="radio" name="grouping" value="month" <?php if ($interval == 'month') { echo 'checked'; } ?>/>месяцам</label>
     </div>
-
-    <input type="button" value="Перестроить графики" class="btn btn-primary btn-large"/>
+    <?php
+     if (count($queryString) != 0) {
+         foreach($queryString as $key => $value) {
+             echo '<input type="hidden" value="'.$value.'" name="'.$key.'"/>';
+         }
+     }
+     ?>
+    <input type="submit" value="Перестроить графики" class="btn btn-primary btn-large"/>
 </form>
 
-<div id="graphsContent">
-    <div id="quantityOfOrdersChart"></div>
-    <div id="refererChart"></div>
-    <div id="orderTypeChart"></div>
-    <div id="sumOfOrdersChart"></div>
+<br/>
+<br/>
+<br/>
+
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#quantityOfOrdersChartTab" data-toggle="tab">Общее кол-во</a></li>
+    <li><a href="#refererChartTab" data-toggle="tab">Источники переходов</a></li>
+    <li><a href="#orderTypeChartTab" data-toggle="tab">Виды заказов</a></li>
+    <li><a href="#sumOfOrdersChartTab" data-toggle="tab">Сумма заказов</a></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane active" id="quantityOfOrdersChartTab">
+        <div id="quantityOfOrdersChart"></div>
+    </div>
+    <div class="tab-pane" id="refererChartTab">
+        <div id="refererChart"></div>
+    </div>
+    <div class="tab-pane" id="orderTypeChartTab">
+        <div id="orderTypeChart"></div>
+    </div>
+    <div class="tab-pane" id="sumOfOrdersChartTab">
+        <div id="sumOfOrdersChart" style="width: 600px;"></div>
+    </div>
 </div>
 
 <script type="text/javascript">

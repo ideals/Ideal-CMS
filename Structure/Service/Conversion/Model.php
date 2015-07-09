@@ -72,22 +72,16 @@ class Model
             $visualConfig .= "[['Section', 'Яндекс', 'Google', 'Другие сайты', 'Прямой заход', { role: 'annotation' }],";
 
             $groupedOrders = array();
+            $date = $fromTimestamp;
 
-            // Берём первй день из списка заказов
-            $date = $row[0]['date_create'];
-            $nextDate = $date + $interval;
-            $date = date('d.m.Y', $date);
+            // Формируем массив где ключи являются точками интевала
+            while ($date <= $toTimestamp) {
+                $groupedOrders[date('d.m.Y', $date)] = array();
+                $date += $interval;
+            }
 
-            // Разбиваем заказы по датам с заданным интервалом
-            foreach ($row as $order) {
-                if ($order['date_create'] < $nextDate) {
-                    $groupedOrders[$date][] = $order['referer'];
-                } else {
-                    $date = $order['date_create'];
-                    $nextDate = $date + $interval;
-                    $date = date('d.m.Y', $date);
-                    $groupedOrders[$date][] = $order['referer'];
-                }
+            foreach ($groupedOrders as $key => $value) {
+                $groupedOrders[$key] = self::searchData($row, $key, $interval, 'referer');
             }
 
             // Разбиваем даты по реферам
@@ -97,18 +91,20 @@ class Model
                 $groupedOrders[$key]['google'] = 0;
                 $groupedOrders[$key]['other'] = 0;
                 $groupedOrders[$key]['straight'] = 0;
-                foreach ($ordersInIterval as $refKey => $referer) {
-                    // Отлавливаем прямой переход
-                    if ($referer == 'null') {
-                        $groupedOrders[$key]['straight']++;
-                    } elseif (strripos($referer, 'yandex') !== false) { // Отлавливаем яндекс
-                        $groupedOrders[$key]['yandex']++;
-                    } elseif (strripos($referer, 'google') !== false) { // Отлавливаем гугл
-                        $groupedOrders[$key]['google']++;
-                    } else { // Отлавливаем другие сайты
-                        $groupedOrders[$key]['other']++;
+                if (!empty($ordersInIterval)) {
+                    foreach ($ordersInIterval as $refKey => $referer) {
+                        // Отлавливаем прямой переход
+                        if ($referer == 'null') {
+                            $groupedOrders[$key]['straight']++;
+                        } elseif (strripos($referer, 'yandex') !== false) { // Отлавливаем яндекс
+                            $groupedOrders[$key]['yandex']++;
+                        } elseif (strripos($referer, 'google') !== false) { // Отлавливаем гугл
+                            $groupedOrders[$key]['google']++;
+                        } else { // Отлавливаем другие сайты
+                            $groupedOrders[$key]['other']++;
+                        }
+                        unset($groupedOrders[$key][$refKey]);
                     }
-                    unset($groupedOrders[$key][$refKey]);
                 }
             }
 
@@ -249,42 +245,66 @@ class Model
         $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY date_create', $par, $fields);
 
         if (count($row) > 0) {
+
             $groupedOrders = array();
+            $date = $fromTimestamp;
 
-            // Берём первй день из списка заказов
-            $date = $row[0]['date_create'];
-            $nextDate = $date + $interval;
-            $date = date('d.m.Y', $date);
-
-            // Разбиваем заказы по датам с заданным интервалом
-            foreach ($row as $order) {
-                if ($order['date_create'] < $nextDate) {
-                    $groupedOrders[$date] += $order['price'];
-                } else {
-                    $date = $order['date_create'];
-                    $nextDate = $date + $interval;
-                    $date = date('d.m.Y', $date);
-                    $groupedOrders[$date] = intval($order['price']);
-                }
+            // Формируем массив где ключи являются точками интевала
+            while ($date <= $toTimestamp) {
+                $groupedOrders[date('d.m.Y', $date)] = array();
+                $date += $interval;
             }
 
-            $checkArray = array_filter($groupedOrders);
-
-            if (!empty($checkArray)) {
-                $visualConfig .= "[['Interveal', 'Sum'],";
-
-                // Собираем строки для js конфигурации
-                end($groupedOrders);
-                $lastKey = key($groupedOrders);
-                foreach ($groupedOrders as $key => $value) {
-                    $visualConfig .= "['{$key}', {$value}]";
-                    if ($key != $lastKey) {
-                        $visualConfig .= ',';
+            foreach ($groupedOrders as $key => $value) {
+                $groupedOrders[$key] = 0;
+                $tempPrice = self::searchData($row, $key, $interval, 'price');
+                if (!empty($tempPrice)) {
+                    foreach ($tempPrice as $price) {
+                        $groupedOrders[$key] += $price;
                     }
                 }
-                $visualConfig .= ']';
             }
+
+            $visualConfig .= "[['Interveal', 'Sum'],";
+
+            // Собираем строки для js конфигурации
+            end($groupedOrders);
+            $lastKey = key($groupedOrders);
+            foreach ($groupedOrders as $key => $value) {
+                $visualConfig .= "['{$key}', {$value}]";
+                if ($key != $lastKey) {
+                    $visualConfig .= ',';
+                }
+            }
+            $visualConfig .= ']';
         }
         return $visualConfig;
+    }
+
+    /**
+     * Производит поиск нужных данных в общем объёме полученной информации
+     *
+     * @param array $array Общий массив выбранных данных
+     * @param string $date Дата начала интервала
+     * @param int $interval Интервал в секундах
+     * @param string $target Значение ключа искомого элемента
+     * @return array Массив данных, удовлетворяющих заданному интервалу
+     */
+    protected function searchData(&$array, $date, $interval, $target)
+    {
+        // Переводим дату для поиска в timestamp
+        $timestamp = strtotime(str_replace('.', '-', $date));
+        $resultArray = array();
+
+        // Проходим по всему массиву данных и собираем подходящие
+        foreach ($array as $key => $value) {
+            if ($value['date_create'] >= $timestamp && $value['date_create'] <= $timestamp + $interval) {
+                $resultArray[] = $value[$target];
+                // Удаляем найденные значения чтобы в следующей итерации сузить область поиска
+                unset($array[$key]);
+            }
+        }
+        $array = array_values($array);
+        return $resultArray;
     }
 }
