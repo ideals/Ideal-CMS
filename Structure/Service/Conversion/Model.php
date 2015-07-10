@@ -56,16 +56,13 @@ class Model
             case 'week':
                 $interval = 604800;
                 break;
-            case 'month':
-                $interval = 2592000;
-                break;
         }
 
         $db = Db::getInstance();
         $config = Config::getInstance();
         $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY date_create ', $par, $fields);
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER BY date_create ', $par, $fields);
 
         // Запускаем процесс построения строки/js-массива для настройки отображения первого графика
         if (count($row) > 0) {
@@ -76,12 +73,40 @@ class Model
 
             // Формируем массив где ключи являются точками интевала
             while ($date <= $toTimestamp) {
-                $groupedOrders[date('d.m.Y', $date)] = array();
-                $date += $interval;
-            }
+                $tempInterval = 0;
+                switch ($interval) {
+                    case 604800:
+                        // Определяем интервал до следующего понедельника
+                        $dotw = date('w', $date);
+                        if ($dotw != 1) {
+                            $tempInterval = $interval;
+                            $interval = strtotime('next Monday', $date) - $date;
+                        }
 
-            foreach ($groupedOrders as $key => $value) {
-                $groupedOrders[$key] = self::searchData($row, $key, $interval, 'referer');
+                        // Определяем конечную дату интервала для подписи
+                        if ($date + $interval <= $toTimestamp) {
+                            $toLabel = date('d.m.Y', $date + $interval - 86400);
+                        } else {
+                            $toLabel = date('d.m.Y', $toTimestamp);
+                        }
+                        $key = date('d.m.Y', $date) . ' - ' . $toLabel;
+                        break;
+                    case 'month':
+                        // Определяем интервал до первого числа следующего месяца
+                        $tempInterval = 'month';
+                        $interval = strtotime('first day of next month', $date) - $date;
+                        $key = date('m.Y', $date);
+                        break;
+                    default:
+                        $key = date('d.m.Y', $date);
+                }
+                $groupedOrders[$key] = self::searchData($row, date('d-m-Y', $date), $interval, 'referer');
+                $date += $interval;
+
+                // Возвращаем интервалу первоналачльное значение, если оно было изменено
+                if (!empty($tempInterval)) {
+                    $interval = $tempInterval;
+                }
             }
 
             // Разбиваем даты по реферам
@@ -136,7 +161,7 @@ class Model
         $config = Config::getInstance();
         $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY date_create ', $par, $fields);
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER BY date_create ', $par, $fields);
 
         if (count($row) > 0) {
             $visualConfig .= "[['Referer', 'Percentage of total'],";
@@ -183,7 +208,7 @@ class Model
         $config = Config::getInstance();
         $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY order_type', $par, $fields);
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER BY order_type', $par, $fields);
 
         if (count($row) > 0) {
             $visualConfig .= "[['Order type', 'Percentage of total'],";
@@ -234,15 +259,12 @@ class Model
             case 'week':
                 $interval = 604800;
                 break;
-            case 'month':
-                $interval = 2592000;
-                break;
         }
         $db = Db::getInstance();
         $config = Config::getInstance();
         $par = array('fromDate' => $fromTimestamp, 'toDate' => $toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create <= :toDate ORDER BY date_create', $par, $fields);
+        $row = $db->select('SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER BY date_create', $par, $fields);
 
         if (count($row) > 0) {
 
@@ -251,17 +273,45 @@ class Model
 
             // Формируем массив где ключи являются точками интевала
             while ($date <= $toTimestamp) {
-                $groupedOrders[date('d.m.Y', $date)] = array();
-                $date += $interval;
-            }
+                $tempInterval = 0;
+                switch ($interval) {
+                    case 604800:
+                        // Определяем интервал до следующего понедельника
+                        $dotw = date('w', $date);
+                        if ($dotw != 1) {
+                            $tempInterval = $interval;
+                            $interval = strtotime('next Monday', $date) - $date;
+                        }
 
-            foreach ($groupedOrders as $key => $value) {
+                        // Определяем конечную дату интервала для подписи
+                        if ($date + $interval <= $toTimestamp) {
+                            $toLabel = date('d.m.Y', $date + $interval - 86400);
+                        } else {
+                            $toLabel = date('d.m.Y', $toTimestamp);
+                        }
+                        $key = date('d.m.Y', $date) . ' - ' . $toLabel;
+                        break;
+                    case 'month':
+                        // Определяем интервал до первого числа следующего месяца
+                        $tempInterval = 'month';
+                        $interval = strtotime('first day of next month', $date) - $date;
+                        $key = date('m.Y', $date);
+                        break;
+                    default:
+                        $key = date('d.m.Y', $date);
+                }
                 $groupedOrders[$key] = 0;
-                $tempPrice = self::searchData($row, $key, $interval, 'price');
+                $tempPrice = self::searchData($row, date('d-m-Y', $date), $interval, 'price');
                 if (!empty($tempPrice)) {
                     foreach ($tempPrice as $price) {
                         $groupedOrders[$key] += $price;
                     }
+                }
+                $date += $interval;
+
+                // Возвращаем интервалу первоналачльное значение
+                if (!empty($tempInterval)) {
+                    $interval = $tempInterval;
                 }
             }
 
@@ -293,7 +343,7 @@ class Model
     protected function searchData(&$array, $date, $interval, $target)
     {
         // Переводим дату для поиска в timestamp
-        $timestamp = strtotime(str_replace('.', '-', $date));
+        $timestamp = strtotime($date);
         $resultArray = array();
 
         // Проходим по всему массиву данных и собираем подходящие

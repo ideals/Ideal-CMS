@@ -101,6 +101,7 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
             <?php if (isset($visualConfig['sumOfOrder']) && !empty($visualConfig['sumOfOrder'])) { ?>
             var sumOfOrdersData = google.visualization.arrayToDataTable(<?php print $visualConfig['sumOfOrder']; ?>);
             var sumOfOrdersDataOptions = {
+                height: 300,
                 title: 'Сумма заказов'
             };
 
