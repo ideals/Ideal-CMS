@@ -11,6 +11,9 @@ if (isset($queryString['fromDate'])) {
 if (isset($queryString['toDate'])) {
     $toTimestamp = strtotime(str_replace('.', '-', $queryString['toDate']));
     unset($queryString['toDate']);
+    if ($toTimestamp > time()) {
+        $toTimestamp = time();
+    }
 } else {
     $toTimestamp = time();
 }
@@ -23,7 +26,7 @@ if (isset($queryString['grouping'])) {
 $fromDate = date('d.m.Y', $fromTimestamp);
 
 // Получаем дату до которой формировать графики. По умолчанию текущий день.
-$toDate = date('d.m.Y');
+$toDate = date('d.m.Y', $toTimestamp);
 
 // Собираем строку/js-массив для настройки отображения первого графика
 $conversion = new Ideal\Structure\Service\Conversion\Model();
