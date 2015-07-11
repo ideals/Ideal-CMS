@@ -11,6 +11,9 @@ if (isset($queryString['fromDate'])) {
 if (isset($queryString['toDate'])) {
     $toTimestamp = strtotime(str_replace('.', '-', $queryString['toDate']));
     unset($queryString['toDate']);
+    if ($toTimestamp > time()) {
+        $toTimestamp = time();
+    }
 } else {
     $toTimestamp = time();
 }
@@ -23,11 +26,11 @@ if (isset($queryString['grouping'])) {
 $fromDate = date('d.m.Y', $fromTimestamp);
 
 // Получаем дату до которой формировать графики. По умолчанию текущий день.
-$toDate = date('d.m.Y');
+$toDate = date('d.m.Y', $toTimestamp);
 
 // Собираем строку/js-массив для настройки отображения первого графика
-$conversion = new Ideal\Structure\Service\Conversion\Model();
-$visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interval);
+$conversion = new Ideal\Structure\Service\Conversion\Model($fromTimestamp, $toTimestamp, $interval);
+$visualConfig = $conversion->getOrdersInfo();
 ?>
 
 <style>
@@ -70,6 +73,8 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
 
             var quantityOfOrdersChart = new google.visualization.ColumnChart(document.getElementById('quantityOfOrdersChart'));
             quantityOfOrdersChart.draw(quantityOfOrdersData, quantityOfOrdersOptions);
+            <?php } else { ?>
+                $('#quantityOfOrdersChart').html('Нет данных');
             <?php } ?>
 
             <?php if (isset($visualConfig['referer']) && !empty($visualConfig['referer'])) { ?>
@@ -82,8 +87,9 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
             var refererChart = new google.visualization.PieChart(document.getElementById('refererChart'));
             refererChart.draw(refererChartData, refererChartOptions);
             $('#refererChartTab').removeClass('active');
-            <?php
-            }?>
+            <?php } else { ?>
+                $('#refererChart').html('Нет данных');
+            <?php } ?>
 
             <?php if (isset($visualConfig['orderType']) && !empty($visualConfig['orderType'])) { ?>
             var orderTypeChartData = google.visualization.arrayToDataTable(<?php print $visualConfig['orderType']; ?>);
@@ -95,8 +101,9 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
             var orderTypeChart = new google.visualization.PieChart(document.getElementById('orderTypeChart'));
             orderTypeChart.draw(orderTypeChartData, orderTypeChartOptions);
             $('#orderTypeChartTab').removeClass('active');
-            <?php
-            }?>
+            <?php } else { ?>
+                $('#orderTypeChart').html('Нет данных');
+            <?php } ?>
 
             <?php if (isset($visualConfig['sumOfOrder']) && !empty($visualConfig['sumOfOrder'])) { ?>
             var sumOfOrdersData = google.visualization.arrayToDataTable(<?php print $visualConfig['sumOfOrder']; ?>);
@@ -109,8 +116,9 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
             var sumOfOrdersDataChart = new google.visualization.ColumnChart(document.getElementById('sumOfOrdersChart'));
             sumOfOrdersDataChart.draw(sumOfOrdersData, sumOfOrdersDataOptions);
             $('#sumOfOrdersChartTab').removeClass('active');
-            <?php
-            }?>
+            <?php } else { ?>
+                $('#sumOfOrdersChart').html('Нет данных');
+            <?php } ?>
         }
     </script>
 <?php } ?>
@@ -175,7 +183,7 @@ $visualConfig = $conversion->getOrdersInfo($fromTimestamp, $toTimestamp, $interv
         <div id="orderTypeChart"></div>
     </div>
     <div class="tab-pane" id="sumOfOrdersChartTab">
-        <div id="sumOfOrdersChart" style="width: 600px;"></div>
+        <div id="sumOfOrdersChart"></div>
     </div>
 </div>
 
