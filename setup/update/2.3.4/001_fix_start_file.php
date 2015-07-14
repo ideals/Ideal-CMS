@@ -1,5 +1,4 @@
 <?php
-
 $fileName = DOCUMENT_ROOT . '/_.php';
 
 $file = file_get_contents($fileName);
@@ -14,9 +13,10 @@ if (mb_strpos($file, '$isConsole')) {
     return;
 }
 
-$fragment = '$config->loadSettings();' . "\n";
+$fragment = '$config->loadSettings();';
 
 $addText = <<<PHP
+\n
 
 if (isset(\$isConsole)) {
     // Если инициализированная переменная \$isConsole, значит этот скрипт используется
