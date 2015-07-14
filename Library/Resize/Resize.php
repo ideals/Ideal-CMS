@@ -222,10 +222,10 @@ class Resize
         ob_start();
         switch ($imageInfo['mime']) {
             case "image/jpeg":
-                imagejpeg($dest2);
+                imagejpeg($dest2, null, 98);
                 break;
             case "image/png":
-                imagepng($dest2);
+                imagepng($dest2, null, 1);
                 break;
         }
         $image = ob_get_contents();
