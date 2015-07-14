@@ -1,4 +1,5 @@
 <?php
+
 $fileName = DOCUMENT_ROOT . '/_.php';
 
 $file = file_get_contents($fileName);
