@@ -79,11 +79,20 @@ class Forms
      */
     public function start()
     {
+        $fileSendForm = '';
+        // Проверяем на наличие поля типа "File" или "FileMulti"
+        foreach ($this->fields as $class) {
+            if (is_a($class, 'FormPhp\Field\File\Controller') || is_a($class, 'FormPhp\Field\FileMulti\Controller')) {
+                $fileSendForm = 'enctype="multipart/form-data" ';
+            }
+        }
+
         /** @var \FormPhp\Field\Token\Controller $token */
         $token = $this->fields['_token'];
         $start = '<form method="' . $this->method . '" id="' . $this->formName . '" '
             . 'data-click="' . $this->targets['click'] . '" '
-            . 'data-send="' . $this->targets['send'] . '">' . "\n"
+            . 'data-send="' . $this->targets['send'] . '" '
+            . $fileSendForm . '>' . "\n"
             . $token->getInputText() . "\n"
             . $this->getValidatorsInput();
 
