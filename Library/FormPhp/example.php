@@ -56,7 +56,7 @@ HTML;
 
         // Отправляем письмо менеджеру с добавлением источника перехода
         $topic = 'Заявка с сайта example.com';
-        $body .= '<br />Источник перехода: ' . $this->getValue('referer');
+        $body .= '<br />Источник перехода: ' . $form->getValue('referer');
         $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true);
 
         // Сохраняем информацию о заказе, только если используется второй вариант подключения фреймворка форм.

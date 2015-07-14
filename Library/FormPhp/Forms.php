@@ -41,7 +41,6 @@ class Forms
 
     /** @var bool Флаг для осуществления изначальной валидации по местонахождению формы */
     protected $locationValidation = false;
-
     protected $targets;
     protected $counters;
     protected $ajaxUrl;
@@ -80,12 +79,20 @@ class Forms
      */
     public function start()
     {
+        $fileSendForm = '';
+        // Проверяем на наличие поля типа "File" или "FileMulti"
+        foreach ($this->fields as $class) {
+            if (is_a($class, 'FormPhp\Field\File\Controller') || is_a($class, 'FormPhp\Field\FileMulti\Controller')) {
+                $fileSendForm = 'enctype="multipart/form-data" ';
+            }
+        }
+
         /** @var \FormPhp\Field\Token\Controller $token */
         $token = $this->fields['_token'];
-
         $start = '<form method="' . $this->method . '" id="' . $this->formName . '" '
             . 'data-click="' . $this->targets['click'] . '" '
-            . 'data-send="' . $this->targets['send'] . '">' . "\n"
+            . 'data-send="' . $this->targets['send'] . '" '
+            . $fileSendForm . '>' . "\n"
             . $token->getInputText() . "\n"
             . $this->getValidatorsInput();
 
@@ -426,7 +433,6 @@ class Forms
 
         $location = ($this->locationValidation) ? ', location: true' : '';
         $ajaxUrl = "$('#{$this->formName}').form({ajaxUrl : \"{$this->ajaxUrl}\"{$location}})";
-
         $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)
             . file_get_contents(__DIR__ .'/form.js')
@@ -455,7 +461,6 @@ class Forms
             $response = mail($to, $title, $body, 'From: ' . $from);
             return $response;
         }
-
         /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
         $sender = new \Mail\Sender();
 
@@ -496,6 +501,7 @@ class Forms
      */
     public function saveOrder($name, $email, $content = '', $price = 0)
     {
+        $newOrderId = 0;
         // Записываем в базу, только если доступны нужные классы
         if (class_exists('\Ideal\Core\Db') && class_exists('\Ideal\Core\Config')) {
 
@@ -519,7 +525,7 @@ class Forms
             $prevStructure .= $row[0]['ID'];
 
             // Записываем данные
-            $db->insert(
+            $newOrderId = $db->insert(
                 $orderTable,
                 array(
                     'prev_structure' => $prevStructure,
@@ -533,5 +539,6 @@ class Forms
                 )
             );
         }
+        return $newOrderId;
     }
 }
