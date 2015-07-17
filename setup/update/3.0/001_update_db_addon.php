@@ -54,8 +54,8 @@ function conversionTemplateField($db, $structureTablesWithoutAddon, $structureTa
 /**
  * Набор действий для преобразования таблиц *template* в *addon*
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $templateTables array имён таблиц template в базе данных, подлежащих преобразованию
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param array $templateTables Массив имён таблиц template в базе данных, подлежащих преобразованию
  */
 function conversionTemplateTables($db, $templateTables)
 {
@@ -68,8 +68,8 @@ function conversionTemplateTables($db, $templateTables)
 /**
  * Получаем список таблиц для преобразования
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $config \Ideal\Core\Config с конфигурационными данными сайта
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param \Ideal\Core\Config $config Объект содержащий конфигурационные данне сайта
  *
  * @return array Массив имён таблиц.
  */
@@ -152,8 +152,8 @@ function modifySettingsAddonColumn($db, $tableName, $defaultValue)
 /**
  * Обновляем столбец "addon" правильными данными из столбца "template"
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $tableName string Название таблицы в которой производится преобразование
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param string $tableName Название таблицы в которой производится преобразование
  */
 function updateAddonColumn($db, $tableName)
 {
@@ -170,8 +170,8 @@ function updateAddonColumn($db, $tableName)
 /**
  * Пересоздаём столбец "template" с правильными данными
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $tableName string Название таблицы в которой производится преобразование
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param string $tableName Название таблицы в которой производится преобразование
  */
 function updateTemplateColumn($db, $tableName)
 {
@@ -184,9 +184,9 @@ function updateTemplateColumn($db, $tableName)
 /**
  * Преобразуем таблицу "*_template_*" в "*_addon_*".
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $templateTableName string Название таблицы которую преобразуем
- * @param $addonTableName string Название таблицы в которую преобразуем
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param string $templateTableName Название таблицы которую преобразуем
+ * @param string $addonTableName Название таблицы в которую преобразуем
  */
 function conversionTemplateTable($db, $templateTableName, $addonTableName)
 {
@@ -199,7 +199,7 @@ function conversionTemplateTable($db, $templateTableName, $addonTableName)
 /**
  * Заменяем содержимое шаблона template на addons.0
  *
- * @param $config \Ideal\Core\Config
+ * @param \Ideal\Core\Config $config Объект содержащий конфигурационные данне сайта
  */
 function fixIncludedTemplates($config)
 {
@@ -214,7 +214,7 @@ function fixIncludedTemplates($config)
 /**
  * Рекурсивный сбор файлов twig
  *
- * @param $dir string Директория для поиска
+ * @param string $dir Директория для поиска
  * @return array Массив путей к файлам
  */
 function findTwigTemplates($dir)
