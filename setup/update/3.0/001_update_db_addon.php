@@ -18,7 +18,7 @@ $db::getInstance();
 $tablesForConversion = getTablesForConversion($db, $config);
 
 // Преобразование полей в структурах
-conversionTemplateField($db, $tablesForConversion['structure']);
+conversionTemplateField($db, $tablesForConversion['structure'], $tablesForConversion['structureModified']);
 
 // Преобразование таблиц в аддоны
 conversionTemplateTables($db, $tablesForConversion['template']);
@@ -29,24 +29,33 @@ fixIncludedTemplates($config);
 /**
  * Набор действий для преобразования таблиц структур
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $structureTables Array имён таблиц в базе данных, хранящих информацию о структурах, подлежащих преобразованию
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param array $structureTablesWithoutAddon Массив имён таблиц структур без поля 'addon'
+ * @param array $structureTablesWithAddon Массив имён таблиц структур с полем 'addon'
  */
-function conversionTemplateField($db, $structureTables)
+function conversionTemplateField($db, $structureTablesWithoutAddon, $structureTablesWithAddon)
 {
-    foreach ($structureTables as $structureTable) {
-        addAddonColumn($db, $structureTable);
+    // Получаем значение по умолчанию для столбца 'addon'
+    $defaultValue = $db->real_escape_string(json_encode(array(array('1', 'Ideal_Page', 'Текст'))));
+
+    // Преобразуем талбицы структур у которых не было столбца 'addon'
+    foreach ($structureTablesWithoutAddon as $structureTable) {
+        addAddonColumn($db, $structureTable, $defaultValue);
         updateAddonColumn($db, $structureTable);
         updateTemplateColumn($db, $structureTable);
+    }
 
+    // Преобразуем талбицы структур у которых был столбец 'addon'
+    foreach ($structureTablesWithAddon as $structureTable) {
+        modifySettingsAddonColumn($db, $structureTable, $defaultValue);
     }
 }
 
 /**
  * Набор действий для преобразования таблиц *template* в *addon*
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $templateTables array имён таблиц template в базе данных, подлежащих преобразованию
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param array $templateTables Массив имён таблиц template в базе данных, подлежащих преобразованию
  */
 function conversionTemplateTables($db, $templateTables)
 {
@@ -59,70 +68,92 @@ function conversionTemplateTables($db, $templateTables)
 /**
  * Получаем список таблиц для преобразования
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $config \Ideal\Core\Config с конфигурационными данными сайта
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param \Ideal\Core\Config $config Объект содержащий конфигурационные данне сайта
  *
  * @return array Массив имён таблиц.
  */
 function getTablesForConversion($db, $config)
 {
     $listTableName = array(
-        'template' => array(),
         'structure' => array(),
+        'structureModified' => array(),
+        'template' => array(),
     );
-    $sql = "SHOW TABLES";
-    $tablesName = $db->query($sql);
-    $listTableName = array();
-    while ($tableName = $tablesName->fetch_array()) {
-        $pattern = '/' . $config->db['prefix'] . '.*_structure.*?/i';
-        if (preg_match($pattern, $tableName[0])) {
-            $listTableName['structure'][] = $tableName[0];
-        }
 
-        $pattern = '/' . $config->db['prefix'] . '.*_template.*?/i';
-        if (preg_match($pattern, $tableName[0])) {
-            $listTableName['template'][] = $tableName[0];
-        }
-    }
+    // Получаем таблицы структур, у которых есть поле 'template' но нет поля 'addon'
+    $sql = "SELECT DISTINCT TABLE_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE COLUMN_NAME = 'template'
+            AND TABLE_NAME REGEXP '{$config->db['prefix']}.*structure.*'
+            AND TABLE_NAME NOT IN (SELECT DISTINCT TABLE_NAME
+                                   FROM INFORMATION_SCHEMA.COLUMNS
+                                   WHERE COLUMN_NAME = 'addon'
+                                   AND TABLE_NAME REGEXP '{$config->db['prefix']}.*structure.*'
+                                   AND TABLE_SCHEMA='{$config->db['name']}')
+            AND TABLE_SCHEMA='{$config->db['name']}'";
+    $tablesName = $db->select($sql);
+    array_walk($tablesName, function (&$v) {
+        $v = $v['TABLE_NAME'];
+    });
+    $listTableName['structure'] += $tablesName;
 
-    // Выбираем только те таблицы структур у которых есть поле "template"
-    foreach ($listTableName['structure'] as $key => $structureTableName) {
-        $tableFields = array();
-        $sql = "SHOW COLUMNS FROM $structureTableName";
-        $tableFieldsRes = $db->query($sql);
-        while ($tableFieldsRow = $tableFieldsRes->fetch_array(MYSQLI_ASSOC)) {
-            $tableFields[] = $tableFieldsRow['Field'];
-        }
-        if (array_search('template', $tableFields) === false || array_search('addon', $tableFields) === true) {
-            unset($listTableName['structure'][$key]);
-        }
-    }
+    // Получаем таблицы структур, у которых есть поле 'addon'
+    $sql = "SELECT DISTINCT TABLE_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE COLUMN_NAME = 'addon'
+            AND TABLE_NAME REGEXP '{$config->db['prefix']}.*structure.*'
+            AND TABLE_SCHEMA='{$config->db['name']}'";
+    $tablesName = $db->select($sql);
+    array_walk($tablesName, function (&$v) {
+        $v = $v['TABLE_NAME'];
+    });
+    $listTableName['structureModified'] += $tablesName;
+
+    // Получаем таблицы в именах которых присутствует 'template'
+    $sql = "SELECT DISTINCT TABLE_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME REGEXP '{$config->db['prefix']}.*template.*'
+            AND TABLE_SCHEMA='{$config->db['name']}'";
+    $tablesName = $db->select($sql);
+    array_walk($tablesName, function (&$v) {
+        $v = $v['TABLE_NAME'];
+    });
+    $listTableName['template'] += $tablesName;
     return $listTableName;
 }
 
 /**
  * Добавляем столбец 'Addon' в таблицу '*_structure_*'
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $tableName string Название таблицы в которой производится преобразование
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param string $tableName Название таблицы в которой производится преобразование
+ * @param string $defaultValue Значение по умолчанию для столбца 'addon'
  */
-function addAddonColumn($db, $tableName)
+function addAddonColumn($db, $tableName, $defaultValue)
 {
-    $sql = "SHOW COLUMNS FROM $tableName WHERE Field = 'addon'";
-    $res = $db->select($sql);
-    if (empty($res)) {
-        $sql = "ALTER TABLE $tableName ADD addon varchar(255) not null default '[[\"1\",\"Ideal_Page\",\"\"]]' AFTER template";
-    } else {
-        $sql = "ALTER TABLE $tableName ALTER COLUMN addon SET DEFAULT '[[\"1\",\"Ideal_Page\",\"\"]]'";
-    }
+    $sql = "ALTER TABLE $tableName ADD addon varchar(255) not null default '{$defaultValue}' AFTER template";
+    $db->query($sql);
+}
+
+/**
+ * Изменяем настройки столбца 'Addon' в таблице '*_structure_*'
+ *
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param string $tableName Название таблицы в которой производится преобразование
+ * @param string $defaultValue Значение по умолчанию для столбца 'addon'
+ */
+function modifySettingsAddonColumn($db, $tableName, $defaultValue)
+{
+    $sql = "ALTER TABLE $tableName ALTER COLUMN addon SET DEFAULT '{$defaultValue}'";
     $db->query($sql);
 }
 
 /**
  * Обновляем столбец "addon" правильными данными из столбца "template"
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $tableName string Название таблицы в которой производится преобразование
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param string $tableName Название таблицы в которой производится преобразование
  */
 function updateAddonColumn($db, $tableName)
 {
@@ -139,8 +170,8 @@ function updateAddonColumn($db, $tableName)
 /**
  * Пересоздаём столбец "template" с правильными данными
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $tableName string Название таблицы в которой производится преобразование
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param string $tableName Название таблицы в которой производится преобразование
  */
 function updateTemplateColumn($db, $tableName)
 {
@@ -153,9 +184,9 @@ function updateTemplateColumn($db, $tableName)
 /**
  * Преобразуем таблицу "*_template_*" в "*_addon_*".
  *
- * @param $db \Ideal\Core\Db для работы с базой даннных
- * @param $templateTableName string Название таблицы которую преобразуем
- * @param $addonTableName string Название таблицы в которую преобразуем
+ * @param \Ideal\Core\Db $db Объект для работы с базой даннных
+ * @param string $templateTableName Название таблицы которую преобразуем
+ * @param string $addonTableName Название таблицы в которую преобразуем
  */
 function conversionTemplateTable($db, $templateTableName, $addonTableName)
 {
@@ -168,7 +199,7 @@ function conversionTemplateTable($db, $templateTableName, $addonTableName)
 /**
  * Заменяем содержимое шаблона template на addons.0
  *
- * @param $config \Ideal\Core\Config
+ * @param \Ideal\Core\Config $config Объект содержащий конфигурационные данне сайта
  */
 function fixIncludedTemplates($config)
 {
@@ -183,7 +214,7 @@ function fixIncludedTemplates($config)
 /**
  * Рекурсивный сбор файлов twig
  *
- * @param $dir string Директория для поиска
+ * @param string $dir Директория для поиска
  * @return array Массив путей к файлам
  */
 function findTwigTemplates($dir)
