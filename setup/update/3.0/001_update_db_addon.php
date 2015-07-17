@@ -14,6 +14,7 @@ $config = \Ideal\Core\Config::getInstance();
 $dbConf = $config->db;
 $db = new \Ideal\Core\Db($dbConf['host'], $dbConf['login'], $dbConf['password'], $dbConf['name']);
 $db::getInstance();
+
 // Получение списка таблиц для дальнейшего преобразования
 $tablesForConversion = getTablesForConversion($db, $config);
 
@@ -145,6 +146,21 @@ function addAddonColumn($db, $tableName, $defaultValue)
  */
 function modifySettingsAddonColumn($db, $tableName, $defaultValue)
 {
+    $sql = "SELECT ID, prev_structure, addon FROM {$tableName}";
+    $row = $db->select($sql);
+    foreach ($row as $value) {
+        $addonInfo = json_decode($value['addon']);
+        foreach ($addonInfo as $key => $addonValue) {
+            $label = getAddonLabel($addonValue[1], $value['prev_structure']);
+            $addonValue[2] = $label;
+            $addonInfo[$key] = $addonValue;
+        }
+        $value['addon'] = json_encode($addonInfo);
+        $params = array('ID' => $value['ID']);
+        unset($value['prev_structure']);
+        unset($value['ID']);
+        $db->update($tableName)->set($value)->where('ID = :ID', $params)->exec();
+    }
     $sql = "ALTER TABLE $tableName ALTER COLUMN addon SET DEFAULT '{$defaultValue}'";
     $db->query($sql);
 }
@@ -157,14 +173,30 @@ function modifySettingsAddonColumn($db, $tableName, $defaultValue)
  */
 function updateAddonColumn($db, $tableName)
 {
-    $rows = $db->select("SELECT ID, template FROM $tableName");
+    $rows = $db->select("SELECT ID, template, prev_structure FROM $tableName");
     foreach ($rows as $value) {
-        $value['addon'] = json_encode(array(array('1', $value['template'])));
+        $label = getAddonLabel($value['template'], $value['prev_structure']);
+        $value['addon'] = json_encode(array(array('1', $value['template'], $label)));
         $params = array('ID' => $value['ID']);
         unset($value['template']);
         unset($value['ID']);
+        unset($value['prev_structure']);
         $db->update($tableName)->set($value)->where('ID = :ID', $params)->exec();
     }
+}
+
+/**
+ * Получаем название аддона
+ *
+ * @param string $shortClassName Краткое название класса
+ * @param string $prevStructure Значение поля 'prev_structure' для инициализации экземпляра класса аддона
+ * @return string Название аддона
+ */
+function getAddonLabel($shortClassName, $prevStructure)
+{
+    $className = \Ideal\Core\Util::getClassName($shortClassName, 'Addon') . '\Model';
+    $class = new $className($prevStructure);
+    return $class->params['name'];
 }
 
 /**
