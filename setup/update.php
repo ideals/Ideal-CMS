@@ -38,7 +38,7 @@ if (isset($_SERVER['REQUEST_URI'])) {
 
 // Определяем папку админки
 $cms = dirname(__DIR__);
-if (!file_exists($cms . '/site_data.php')) {
+if (!file_exists(dirname($cms) . '/site_data.php')) {
     echo "Can't detect file site_data.php in folder {$cms}. Use hard link?";
     exit;
 }
