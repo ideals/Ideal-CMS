@@ -108,12 +108,15 @@ function getTablesForConversion($db, $config)
  */
 function addAddonColumn($db, $tableName)
 {
+    // Получаем значение по умолчанию для столбца 'addon'
+    $defaultValue = $db->real_escape_string(json_encode(array(array('1', 'Ideal_Page', 'Текст'))));
+
     $sql = "SHOW COLUMNS FROM $tableName WHERE Field = 'addon'";
     $res = $db->select($sql);
     if (empty($res)) {
-        $sql = "ALTER TABLE $tableName ADD addon varchar(255) not null default '[[\"1\",\"Ideal_Page\",\"\"]]' AFTER template";
+        $sql = "ALTER TABLE $tableName ADD addon varchar(255) not null default '{$defaultValue}' AFTER template";
     } else {
-        $sql = "ALTER TABLE $tableName ALTER COLUMN addon SET DEFAULT '[[\"1\",\"Ideal_Page\",\"\"]]'";
+        $sql = "ALTER TABLE $tableName ALTER COLUMN addon SET DEFAULT '{$defaultValue}'";
     }
     $db->query($sql);
 }
