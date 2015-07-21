@@ -45,6 +45,9 @@ class Forms
     protected $counters;
     protected $ajaxUrl;
 
+    /** @var bool Флаг для вывода сообщения при правильно заполненной форме */
+    protected $successMessage = true;
+
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -145,6 +148,16 @@ class Forms
     public function setLocationValidation($locationValidation)
     {
         $this->locationValidation = $locationValidation;
+    }
+
+    /**
+     * Устанавливает флаг для вывода сообщения при правильно заполненной форме
+     *
+     * @param $successMessage
+     */
+    public function setSuccessMessage($successMessage)
+    {
+        $this->successMessage = $successMessage;
     }
 
     /**
@@ -432,7 +445,8 @@ class Forms
         $js[] = $this->getSenderJs();
 
         $location = ($this->locationValidation) ? ', location: true' : '';
-        $ajaxUrl = "$('#{$this->formName}').form({ajaxUrl : \"{$this->ajaxUrl}\"{$location}})";
+        $successMessage = (!$this->successMessage) ? ', successMessage: false' : '';
+        $ajaxUrl = "$('#{$this->formName}').form({ajaxUrl : \"{$this->ajaxUrl}\"{$location}{$successMessage}})";
         $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)
             . file_get_contents(__DIR__ .'/form.js')
