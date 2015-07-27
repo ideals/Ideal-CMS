@@ -48,6 +48,9 @@ class Forms
     /** @var bool Флаг для вывода сообщения при правильно заполненной форме */
     protected $successMessage = true;
 
+    /** @var bool Флаг для очищения формы после удачной отправки */
+    protected $clearForm = true;
+
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -158,6 +161,16 @@ class Forms
     public function setSuccessMessage($successMessage)
     {
         $this->successMessage = $successMessage;
+    }
+
+    /**
+     * Устанавливает флаг для очищения формы после удачной отправки
+     *
+     * @param $clearForm
+     */
+    public function setClearForm($clearForm)
+    {
+        $this->clearForm = $clearForm;
     }
 
     /**
@@ -446,7 +459,8 @@ class Forms
 
         $location = ($this->locationValidation) ? ', location: true' : '';
         $successMessage = (!$this->successMessage) ? ', successMessage: false' : '';
-        $ajaxUrl = "$('#{$this->formName}').form({ajaxUrl : \"{$this->ajaxUrl}\"{$location}{$successMessage}})";
+        $clearForm = (!$this->clearForm) ? ', clearForm: false' : '';
+        $ajaxUrl = "$('#{$this->formName}').form({ajaxUrl : \"{$this->ajaxUrl}\"{$location}{$successMessage}{$clearForm}})";
         $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)
             . file_get_contents(__DIR__ .'/form.js')
