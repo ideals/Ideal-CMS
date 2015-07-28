@@ -222,6 +222,7 @@ class Resize
         ob_start();
         switch ($imageInfo['mime']) {
             case "image/jpeg":
+                // 98 - соответствует по размеру файла тому, что генерирует Photoshop с качеством 80
                 imagejpeg($dest2, null, 98);
                 break;
             case "image/png":
