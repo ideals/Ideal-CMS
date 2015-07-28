@@ -203,17 +203,22 @@ class YandexXmlClient
     protected $proxy = array();
 
     /**
+     * Proxy script URL
+     * @var String
+     */
+    protected $proxyUrl = '';
+
+    /**
      * __construct
      *
      * @param  string $user
      * @param  string $key
-     * @throws YandexXmlException
      * @return YandexXmlClient
      */
     public function __construct($user, $key)
     {
         if (empty($user) or empty($key)) {
-            throw new YandexXmlException(YandexXmlException::solveMessage(0));
+            throw new \Exception('Не указан user и/или key');
         }
         $this->user = $user;
         $this->key = $key;
@@ -229,6 +234,18 @@ class YandexXmlClient
     public function query($query)
     {
         $this->query = $query;
+        return $this;
+    }
+
+    /**
+     * set proxyUrl
+     *
+     * @access  public
+     * @param  string $proxyUrl
+     */
+    public function setProxyUrl($proxyUrl)
+    {
+        $this->proxyUrl = $proxyUrl;
         return $this;
     }
 
@@ -707,7 +724,6 @@ class YandexXmlClient
 
     /**
      * send request
-     * @throws YandexXmlException
      * @return YandexXmlClient
      */
     public function request()
@@ -715,7 +731,7 @@ class YandexXmlClient
         if (empty($this->query)
             && empty($this->host)
         ) {
-            throw new YandexXmlException(YandexXmlException::solveMessage(2));
+            throw new \Exception('Задан пустой поисковый запрос — элемент query не содержит данных');
         }
 
         $xml = new \SimpleXMLElement("<?xml version='1.0' encoding='utf-8'?><request></request>");
@@ -810,6 +826,11 @@ class YandexXmlClient
             $url .= '&lr=' . $this->lr;
         }
 
+        // Если задан адрес прокси скрипта, то вносим изменения в $url
+        if (!empty($this->proxyUrl)) {
+            $url = str_replace(self::BASE_URL, $this->proxyUrl, $url);
+        }
+
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/xml"));
         curl_setopt($ch, CURLOPT_HTTPHEADER, array("Accept: application/xml"));
@@ -843,13 +864,11 @@ class YandexXmlClient
 
     /**
      * check response errors
-     * @throws YandexXmlException
      */
     protected function _checkErrors()
     {
         if (isset($this->response->error)) {
-            $code = (int) $this->response->error->attributes()->code[0];
-            throw new YandexXmlException(YandexXmlException::solveMessage($code, $this->response->error));
+            throw new \Exception((string) $this->response->error);
         }
     }
 

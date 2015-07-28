@@ -205,7 +205,9 @@ jQuery.fn.form = function (options, messages, methods) {
     options = $.extend({
         ajaxUrl: '/',
         ajaxDataType: 'text',
-        location: false
+        location: false,
+        successMessage:  true,
+        clearForm: true
     }, options);
     var messagesOrig = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
@@ -278,7 +280,7 @@ jQuery.fn.form = function (options, messages, methods) {
                 return;
             }
             this.ga = {};
-            if (typeof(GoogleAnalyticsObject) != 'undefined') {
+            if (typeof ga === "function") {
                 this.ga = function (metka) {
                     metka = '/' + metka.toLowerCase();
                     ga('send', 'pageview', metka);
@@ -307,6 +309,10 @@ jQuery.fn.form = function (options, messages, methods) {
         locationOnButtonClick: function () {
             $(this).prepend('<input type="hidden" name="_location" value="' + window.location.href + '">');
         },
+        // Удаление проверочного поля
+        locationOnButtonClickRemove: function () {
+            $("input[name='_location']").remove();
+        },
         // Отправка формы
         submit: function () {
             var $form = $(this);
@@ -328,13 +334,17 @@ jQuery.fn.form = function (options, messages, methods) {
         },
         // Обработка успешной отправки формы
         successSend: function (result) {
-            if (options.ajaxDataType == 'text') {
-                alert(result);
-            } else if (options.ajaxDataType == 'json' || options.ajaxDataType == 'jsonp') {
-                alert(result[0], result[1]);
+            if (options.successMessage == true) {
+                if (options.ajaxDataType == 'text') {
+                    alert(result);
+                } else if (options.ajaxDataType == 'json' || options.ajaxDataType == 'jsonp') {
+                    alert(result[0], result[1]);
+                }
             }
             if (options.ajaxDataType == 'text' || result[1] != 'error') {
-                $(this)[0].reset();
+                if (options.clearForm == true) {
+                    $(this)[0].reset();
+                }
                 $(this).trigger('form.successSend');
                 return;
             }
@@ -390,9 +400,11 @@ jQuery.fn.form = function (options, messages, methods) {
             })
             .on('form.successSend', function () {
                 methods.metrikaOnSuccessSend.apply(this);
+                methods.locationOnButtonClickRemove.apply(this);
             })
             .on('form.errorSend', function () {
                 this.disableSubmit = false;
+                methods.locationOnButtonClickRemove.apply(this);
             });
         this.disableSubmit = false;
         this.defaultSubmit = false;

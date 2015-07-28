@@ -45,14 +45,14 @@ class FrontController
             $this->emailError404();
         } else {
             $httpHeaders = $controller->getHttpHeaders();
-        }
 
-        $config = Config::getInstance();
-        $configCache = $config->cache;
+            $config = Config::getInstance();
+            $configCache = $config->cache;
 
-        // Если запрошена страница из пользовательской части и включён кэш, то сохранить её
-        if ($mode != 'admin' && isset($configCache['fileCache']) && $configCache['fileCache']) {
-            FileCache::saveCache($content, $_SERVER['REQUEST_URI']);
+            // Если запрошена страница из пользовательской части и включён кэш, то сохранить её
+            if ($mode != 'admin' && isset($configCache['fileCache']) && $configCache['fileCache']) {
+                FileCache::saveCache($content, $_SERVER['REQUEST_URI']);
+            }
         }
 
         $this->sendHttpHeaders($httpHeaders); // вывод http-заголовков
@@ -137,7 +137,7 @@ class FrontController
             } else {
                 $referer = 'null';
             }
-            setcookie("referer", $referer);
+            setcookie("referer", $referer, time() + 3153600000);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace FormPhp;
  */
 class Forms
 {
-    /** @var array Список полей ввода в форме */
+    /** @var \FormPhp\Field\AbstractField[] Список полей ввода в форме */
     public $fields = array();
 
     /** @var string Название формы  */
@@ -41,6 +41,15 @@ class Forms
 
     /** @var bool Флаг для осуществления изначальной валидации по местонахождению формы */
     protected $locationValidation = false;
+    protected $targets;
+    protected $counters;
+    protected $ajaxUrl;
+
+    /** @var bool Флаг для вывода сообщения при правильно заполненной форме */
+    protected $successMessage = true;
+
+    /** @var bool Флаг для очищения формы после удачной отправки */
+    protected $clearForm = true;
 
     /**
      * Инициализируем сессии, если это нужно
@@ -76,10 +85,52 @@ class Forms
      */
     public function start()
     {
-        $start = '';
-        $start .= $this->fields['_token']->getInputText();
-        $start .= $this->getValidatorsInput();
+        $fileSendForm = '';
+        // Проверяем на наличие поля типа "File" или "FileMulti"
+        foreach ($this->fields as $class) {
+            if (is_a($class, 'FormPhp\Field\File\Controller') || is_a($class, 'FormPhp\Field\FileMulti\Controller')) {
+                $fileSendForm = 'enctype="multipart/form-data" ';
+            }
+        }
+
+        /** @var \FormPhp\Field\Token\Controller $token */
+        $token = $this->fields['_token'];
+        $start = '<form method="' . $this->method . '" id="' . $this->formName . '" '
+            . 'data-click="' . $this->targets['click'] . '" '
+            . 'data-send="' . $this->targets['send'] . '" '
+            . $fileSendForm . '>' . "\n"
+            . $token->getInputText() . "\n"
+            . $this->getValidatorsInput();
+
+        if (isset($this->counters['yandex'])) {
+            $start .= "\n" . '<input type="hidden" value="' . $this->counters['yandex'] . '" name="_yaCounter">';
+        }
+
         return $start;
+    }
+
+    /**
+     * Установка целей, срабатывающих при клике на кнопку Отправить и на реальной отправке формы
+     *
+     * @param string $click Цель на нажатие на кнопку Отправить
+     * @param string $send Цель на отправку формы
+     */
+    public function setClickAndSend($click, $send)
+    {
+        $this->targets = array(
+            'click' => $click,
+            'send' => $send,
+        );
+    }
+
+    /**
+     * Установка идентификатора счётчика Яндекс.Метрики
+     *
+     * @param string $counterId Счётчик Яндекс.Метрики (например, yaCounter12345678)
+     */
+    public function setMetrika($counterId)
+    {
+        $this->counters['yandex'] = $counterId;
     }
 
     /**
@@ -100,6 +151,26 @@ class Forms
     public function setLocationValidation($locationValidation)
     {
         $this->locationValidation = $locationValidation;
+    }
+
+    /**
+     * Устанавливает флаг для вывода сообщения при правильно заполненной форме
+     *
+     * @param $successMessage
+     */
+    public function setSuccessMessage($successMessage)
+    {
+        $this->successMessage = $successMessage;
+    }
+
+    /**
+     * Устанавливает флаг для очищения формы после удачной отправки
+     *
+     * @param $clearForm
+     */
+    public function setClearForm($clearForm)
+    {
+        $this->clearForm = $clearForm;
     }
 
     /**
@@ -167,7 +238,9 @@ class Forms
      */
     public function getValue($name)
     {
-        return $this->fields[$name]->getValue();
+        /** @var \FormPhp\Field\AbstractField $field */
+        $field = $this->fields[$name];
+        return $field->getValue();
     }
 
     /**
@@ -246,6 +319,16 @@ class Forms
     public function getText()
     {
         return $this->text;
+    }
+
+    /**
+     * Установка url, по которому будет производиться ajax-запрос отправки формы
+     *
+     * @param string $url url скрипта для обработки формы
+     */
+    public function setAjaxUrl($url)
+    {
+        $this->ajaxUrl = $url;
     }
 
     /**
@@ -374,10 +457,15 @@ class Forms
 
         $js[] = $this->getSenderJs();
 
+        $location = ($this->locationValidation) ? ', location: true' : '';
+        $successMessage = (!$this->successMessage) ? ', successMessage: false' : '';
+        $clearForm = (!$this->clearForm) ? ', clearForm: false' : '';
+        $ajaxUrl = "$('#{$this->formName}').form({ajaxUrl : \"{$this->ajaxUrl}\"{$location}{$successMessage}{$clearForm}})";
         $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)
             . file_get_contents(__DIR__ .'/form.js')
             . $this->js
+            . "\n" . $ajaxUrl
             . "\n"  . '})';
 
         return $this->js;
@@ -401,7 +489,7 @@ class Forms
             $response = mail($to, $title, $body, 'From: ' . $from);
             return $response;
         }
-
+        /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
         $sender = new \Mail\Sender();
 
         // Устанавливаем заголовок письма
@@ -441,13 +529,16 @@ class Forms
      */
     public function saveOrder($name, $email, $content = '', $price = 0)
     {
+        $newOrderId = 0;
         // Записываем в базу, только если доступны нужные классы
         if (class_exists('\Ideal\Core\Db') && class_exists('\Ideal\Core\Config')) {
 
             // Получаем подключение к базе
+            /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
             $db = \Ideal\Core\Db::getInstance();
 
             // Получаем конфигурационные данные сайта
+            /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
             $config = \Ideal\Core\Config::getInstance();
 
             // Формируем название таблицы, в которую записывается информация о заказе
@@ -462,7 +553,7 @@ class Forms
             $prevStructure .= $row[0]['ID'];
 
             // Записываем данные
-            $db->insert(
+            $newOrderId = $db->insert(
                 $orderTable,
                 array(
                     'prev_structure' => $prevStructure,
@@ -476,5 +567,6 @@ class Forms
                 )
             );
         }
+        return $newOrderId;
     }
 }
