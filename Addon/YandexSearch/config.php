@@ -30,6 +30,11 @@ return array(
             'sql' => 'varchar(255)',
             'type' => 'Ideal_Text'
         ),
+        'proxyUrl' => array(
+            'label' => 'Адрес прокси скрипта',
+            'sql' => 'varchar(255)',
+            'type' => 'Ideal_Text'
+        ),
         'elements_site' => array(
             'label' => 'Количество элементов в выдаче',
             'sql' => 'int(8)',

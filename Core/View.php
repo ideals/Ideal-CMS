@@ -37,6 +37,24 @@ class View
         require_once 'Library/Twig/Autoloader.php';
         \Twig_Autoloader::register();
 
+        // Определяем корневую папку системы для подключение шаблонов из любой вложенной папки через их путь
+        $config = Config::getInstance();
+        $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
+
+        // Папки от которых строится путь до шаблона
+        $idealFolders = array('Ideal.c', 'Ideal', 'Mods.c', 'Mods');
+        foreach ($idealFolders as $k => $v) {
+            if (file_exists($cmsFolder . '/' . $v)) {
+                $idealFolders[$k] = $cmsFolder . '/' . $v;
+            } else {
+                unset($idealFolders[$k]);
+            }
+        }
+
+        $pathToTemplates = is_string($pathToTemplates) ? array($pathToTemplates) : $pathToTemplates;
+
+        $pathToTemplates = array_merge(array($cmsFolder), $pathToTemplates, $idealFolders);
+
         $loader = new \Twig_Loader_Filesystem($pathToTemplates);
 
         $config = Config::getInstance();

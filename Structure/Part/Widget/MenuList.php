@@ -42,7 +42,7 @@ class MenuList extends \Ideal\Core\Widget
         $path = $this->model->getPath();
         $object = array_pop($path);
         $digits = (isset($this->model->params['digits'])) ? $this->model->params['digits'] : 3;
-        $smallCidActive = '';
+        $smallCidActive = isset($object['cid']) ? $object['cid'] : '';
 
         $lvl = 1;
         $config = Config::getInstance();
@@ -85,12 +85,14 @@ class MenuList extends \Ideal\Core\Widget
             ) {
                 $menu[$k]['isActivePage'] = 1;
             }
-            if (isset($v['is_skip']) && $v['is_skip'] == 0) {
-                if (isset($v['url_full']) && $v['url_full'] != '') {
-                    $menu[$k]['link'] = $v['url_full'];
-                } else {
-                    $menu[$k]['link'] = $this->prefix . $url->getUrl($v) . $this->query;
-                }
+            if (isset($v['is_skip']) && $v['is_skip'] == 1 && $v['url'] == '---') {
+                // Для этого элемента ссылку делать не надо
+                $menu[$k]['link'] = '';
+            }
+            if (isset($v['url_full']) && $v['url_full'] != '') {
+                $menu[$k]['link'] = $v['url_full'];
+            } else {
+                $menu[$k]['link'] = $this->prefix . $url->getUrl($v) . $this->query;
             }
         }
         $pageList = $this->getSubPages($menu);

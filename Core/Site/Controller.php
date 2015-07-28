@@ -53,16 +53,10 @@ class Controller
     public function templateInit($tplName = '', $tplFolders = array())
     {
         // Если вьюха уже установлена, то ничего делать не надо
-        // todo для переустановки вьюхи надо придумать отдельный метод, когда это потребуется
+        // для переустановки вьюхи надо придумать отдельный метод, когда это потребуется
         if (isset($this->view)) {
             return;
         }
-        // Инициализация общего шаблона страницы
-        $gblName = 'site.twig';
-        if (!stream_resolve_include_path($gblName)) {
-            echo 'Нет файла основного шаблона ' . $gblName;
-        }
-        $gblRoot = dirname(stream_resolve_include_path($gblName));
 
         // Инициализация шаблона страницы
         if ($tplName == '') {
@@ -73,7 +67,7 @@ class Controller
             }
         }
 
-        // TODO требуется пересмотреть проверку наличия шаблона, иначе администратор ограничен правилами переопределения
+        // Проверяем, присутствует ли указанный файл шаблона на диске
         if (!stream_resolve_include_path($tplName)) {
             echo 'Нет файла шаблона ' . $tplName;
             exit;
@@ -88,12 +82,8 @@ class Controller
             }
         }
 
-        // Определяем корневую папку системы для подключение шаблонов из любой вложенной папки через их путь
         $config = Config::getInstance();
-        $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
-
-        $config = Config::getInstance();
-        $folders = array_merge(array($tplRoot, $gblRoot, $cmsFolder), $tplFolders);
+        $folders = array_merge(array($tplRoot), $tplFolders);
         $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
@@ -261,7 +251,7 @@ class Controller
      * @param string $tplName Тип класса (например, Structure или Field)
      * @return string
      */
-    private function getPathToTwigTemplate($tplName)
+    protected function getPathToTwigTemplate($tplName)
     {
         // Если был введён полный путь то он используется напрямую иначе только имя
         // Считаем что был введён полный путь если присутствует хотябы один слэш

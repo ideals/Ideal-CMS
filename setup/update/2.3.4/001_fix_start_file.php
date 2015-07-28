@@ -14,16 +14,18 @@ if (mb_strpos($file, '$isConsole')) {
     return;
 }
 
-$fragment = '$config->loadSettings();' . "\n";
+// Заменяем windows-переводы строки на unix-style
+$file = mb_ereg_replace("\r\n", "\n", $file);
+
+$fragment = '$config->loadSettings();';
 
 $addText = <<<PHP
-
+\n
 if (isset(\$isConsole)) {
     // Если инициализированная переменная \$isConsole, значит этот скрипт используется
     // только для инициализации окружения
     return;
 }
-
 PHP;
 
 $insertPos = mb_strpos($file, $fragment) + mb_strlen($fragment);

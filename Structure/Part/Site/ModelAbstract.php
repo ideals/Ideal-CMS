@@ -132,8 +132,21 @@ class ModelAbstract extends Site\Model
                     $structure = $this->getNestedStructure($end);
                     // Запускаем определение пути и активной модели по $par
                     $newPath = array_merge($path, $branch['branch']);
-                    $url = array_slice($url, count($newPath) - 2);
-                    $model = $structure->detectPageByUrl($newPath, $url);
+
+                    // Подсчитываем кол-во элементов пути без is_skip
+                    $count = 0;
+                    foreach ($newPath as $v) {
+                        if (!isset($v['is_skip']) || $v['is_skip'] == 0) {
+                            $count++;
+                        }
+                    }
+
+                    // Уменьшаем наш url на кол-во найденных элементов без is_skip, за исключением первого
+                    $nestedUrl = array_slice($url, $count - 2);
+
+                    // Ищем остаток url во вложенной структуре
+                    $model = $structure->detectPageByUrl($newPath, $nestedUrl);
+
                     if ($model->is404) {
                         // Если во вложенной структуре ничего не нашлось, перебираем ветки дальше
                         continue;
@@ -231,7 +244,7 @@ class ModelAbstract extends Site\Model
     protected function getNestedStructure($end)
     {
         $config = Config::getInstance();
-        $rootStructure = $config->getStructureByPrev($end['prev_structure']);
+        $rootStructure = $config->getStructureByClass(get_class($this));
         $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
 
         if (get_class($this) == trim($modelClassName, '\\')) {

@@ -799,21 +799,23 @@ XML;
                 // Разбиваем ссылку на части
                 $link = parse_url($url);
 
-                // Разбиваем параметры
-                parse_str($link['query'], $parts);
+                if (isset($link['query'])) {
+                    // Разбиваем параметры
+                    parse_str($link['query'], $parts);
 
-                foreach ($parts as $k => $v) {
-                    // Если параметр есть в исключениях - удаляем его из массива
-                    if ($v == $key) {
-                        unset($parts[$k]);
+                    foreach ($parts as $k => $v) {
+                        // Если параметр есть в исключениях - удаляем его из массива
+                        if ($k == $key) {
+                            unset($parts[$k]);
+                        }
                     }
-                }
-                // Собираем оставшиеся параметры в строку
-                $query = http_build_query($parts);
-                // Заменяем GET параметры оставшимися
-                $link['query'] = $query;
+                    // Собираем оставшиеся параметры в строку
+                    $query = http_build_query($parts);
+                    // Заменяем GET параметры оставшимися
+                    $link['query'] = $query;
 
-                $url = $this->unparseUrl($link);
+                    $url = $this->unparseUrl($link);
+                }
             }
         }
         // Если в сслыке есть '#' якорь, то обрезаем его
