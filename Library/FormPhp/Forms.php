@@ -560,7 +560,7 @@ class Forms
                     'date_create' => time(),
                     'name' => $name,
                     'email' => $email,
-                    'price' => $price,
+                    'price' => preg_replace(array('/,/', '/,/'), '.', strval($price)),
                     'referer' => $this->getValue('referer'),
                     'content' => $content,
                     'order_type' => $this->orderType

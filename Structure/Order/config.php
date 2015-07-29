@@ -38,7 +38,7 @@ return array(
         ),
         'price' => array(
             'label' => 'Сумма заказа',
-            'sql'   => 'int',
+            'sql'   => 'float',
             'type'  => 'Ideal_Price'
         ),
         'referer' => array(
