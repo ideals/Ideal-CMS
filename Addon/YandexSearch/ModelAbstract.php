@@ -19,13 +19,13 @@ class ModelAbstract extends \Ideal\Addon\AbstractModel
         $this->setPageDataByPrevStructure($this->prevStructure);
 
         $mode = explode('\\', get_class($this->parentModel));
-        if ($mode[3] == 'Site') {
 
+        if ($mode[3] == 'Site') {
             $config = Config::getInstance();
 
             $tplRoot = dirname(stream_resolve_include_path('Addon/YandexSearch/index.twig'));
-            $View = new View($tplRoot, $config->cache['templateSite']);
-            $View->loadTemplate('index.twig');
+            $view = new View($tplRoot, $config->cache['templateSite']);
+            $view->loadTemplate('index.twig');
 
             // Логин от сервиса Яндекс
             $yandexLogin = trim($this->pageData['yandexLogin']);
@@ -43,7 +43,8 @@ class ModelAbstract extends \Ideal\Addon\AbstractModel
             $request = new Request();
             $page = intval($request->{'num'});
             $page = ($page == 0) ? 1 : $page;
-
+            $page--;
+            
             // Поисковый запрос
             $request = new Request();
             $query = trim(strval($request->{'search'}));
@@ -65,7 +66,7 @@ class ModelAbstract extends \Ideal\Addon\AbstractModel
                         $yandex->query($query)// устанавливаем поисковый запрос
                         ->site($config->domain)// ограничиваемся поиском по сайту
                         ->setProxyUrl($proxyUrl)
-                        ->page($page)
+                            ->page($page)
                             ->limit($this->pageData['elements_site'])// результатов на странице
                             ->request()                            // отправляем запрос
                         ;
@@ -84,15 +85,15 @@ class ModelAbstract extends \Ideal\Addon\AbstractModel
                     $this->listCount = $yandex->total();
 
                     // Передаём данные в шаблон для рендера поиска
-                    $View->parts = $list;
-                    $View->query = $query;
-                    $View->pager = $this->getPager('num');
+                    $view->parts = $list;
+                    $view->query = $query;
+                    $view->pager = $this->getPager('num');
 
                 } else {
                     $this->pageData['content'] .= 'Поле логин или ключ от яндекса имеет пустое значене';
                 }
             }
-            $this->pageData['content'] .= $View->render();
+            $this->pageData['content'] .= $view->render();
         }
         return $this->pageData;
     }
