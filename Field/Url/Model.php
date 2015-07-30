@@ -37,7 +37,7 @@ class Model
     public static function translitUrl($nm)
     {
         $nm = Model::translit($nm);
-        $nm = strtolower($nm);
+        $nm = mb_strtolower($nm);
         $arr = array(
             '@' => '',
             '$' => '',
