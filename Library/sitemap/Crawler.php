@@ -757,7 +757,7 @@ XML;
     protected function isExternalLink($link, $current)
     {
         // Если ссылка на приложение - пропускаем её
-        if (preg_match(',^(ftp://|mailto:|news:|javascript:|telnet:|callto:|skype:),i', $link)) {
+        if (preg_match(',^(ftp://|mailto:|news:|javascript:|telnet:|callto:|tel:|skype:),i', $link)) {
             return true;
         }
 
