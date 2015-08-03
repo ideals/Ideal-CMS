@@ -75,7 +75,7 @@ class Controller extends Select\Controller
             $html .= '</select>';
 
             // js скрипт инициализирующий модификацию тега "select" для возможности вставки собственного значения
-            $html .= <<<SCRIPT
+            $html .= <<<HTML
             <script>
                 (function( $ ) {
                     $.widget( "custom.combobox", {
@@ -94,7 +94,8 @@ class Controller extends Select\Controller
                                 .val( value )
                                 .attr( "title", "" )
                                 .attr( "name", "{$nameId}" )
-                                .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left general_template_{$key} form-control")
+                                .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default "
+                                    + "ui-corner-left general_template_{$key} form-control")
                                 .css("display", "{$display}")
 
                                 .autocomplete({
@@ -174,7 +175,7 @@ class Controller extends Select\Controller
                     });
                 });
             </script>
-SCRIPT;
+HTML;
 
         }
         return $html;
@@ -201,7 +202,7 @@ SCRIPT;
         $fieldName = $this->groupName . '_' . $this->name . '_' . $lastPrefix;
 
         // Получаем название файла, так как полный путь используется только для удобства представления
-        $fileName = end(explode('/', $request->$fieldName));
+        $fileName = basename($request->$fieldName);
         $this->newValue = $fileName;
         return $this->newValue;
     }

@@ -30,6 +30,9 @@ abstract class Model
 
     protected $prevStructure;
 
+    /** @var Model Используется только в Addon для обозначения модели-владельца аддона */
+    protected $parentModel;
+
     public function __construct($prevStructure)
     {
         $this->prevStructure = $prevStructure;
@@ -260,6 +263,12 @@ abstract class Model
         return $where;
     }
 
+    /**
+     * Получение из БД данных открытой страницы (в том числе и подключённых аддонов)
+     *
+     * @return mixed
+     * @throws \Exception
+     */
     public function getPageData()
     {
         if (is_null($this->pageData)) {
@@ -493,7 +502,7 @@ abstract class Model
     }
 
     /**
-     * Метод используется только в моделях Template для установки модели владельца этого шаблона
+     * Метод используется только в моделях Addon для установки модели владельца этого аддона
      *
      * @param $model
      */

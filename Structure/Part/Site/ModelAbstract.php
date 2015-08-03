@@ -140,6 +140,7 @@ class ModelAbstract extends Site\Model
                             $count++;
                         }
                     }
+                    $count = ($count < 2) ? 2 : $count;
 
                     // Уменьшаем наш url на кол-во найденных элементов без is_skip, за исключением первого
                     $nestedUrl = array_slice($url, $count - 2);
