@@ -846,8 +846,8 @@ class YandexXmlClient
         $this->response = new \SimpleXMLElement($data);
         $this->response = $this->response->response;
 
-        $this->_checkErrors();
-        $this->_bindData();
+        $this->checkErrors();
+        $this->bindData();
 
         return $this;
     }
@@ -865,7 +865,7 @@ class YandexXmlClient
     /**
      * check response errors
      */
-    protected function _checkErrors()
+    protected function checkErrors()
     {
         if (isset($this->response->error)) {
             throw new \Exception((string) $this->response->error);
@@ -877,7 +877,7 @@ class YandexXmlClient
      *
      * @return void
      */
-    protected function _bindData()
+    protected function bindData()
     {
         $wordstat = preg_split('/,/', $this->response->wordstat);
         $this->wordstat = array();
@@ -909,7 +909,7 @@ class YandexXmlClient
     {
         if ($this->total === null) {
             $res = $this->response->xpath('found[attribute::priority="all"]');
-            $this->total = (int) $res[0];
+            $this->total = (isset($res[0])) ? (int) $res[0] : 0;
         }
         return $this->total;
     }
@@ -979,7 +979,7 @@ class YandexXmlClient
     public function getResults()
     {
         $this->results = array();
-        if ($this->response) {
+        if ($this->response && isset($this->response->results->grouping)) {
             foreach ($this->response->results->grouping->group as $group) {
                 $res = new \stdClass();
                 $res->url = (string) $group->doc->url;
@@ -987,7 +987,8 @@ class YandexXmlClient
                 $res->title = isset($group->doc->title) ? $this->highlight($group->doc->title) : $res->url;
                 $res->headline = isset($group->doc->headline) ? $this->highlight($group->doc->headline) : null;
                 $res->passages = isset($group->doc->passages->passage) ? $this->highlight($group->doc->passages) : null;
-                $res->sitelinks = isset($group->doc->snippets->sitelinks->link) ? $this->highlight($group->doc->snippets->sitelinks->link) : null;
+                $res->sitelinks = isset($group->doc->snippets->sitelinks->link)
+                    ? $this->highlight($group->doc->snippets->sitelinks->link) : null;
 
                 $this->results[] = $res;
             }
