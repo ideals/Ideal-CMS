@@ -39,6 +39,9 @@ class Forms
     /** @var string Тип заказа */
     protected $orderType = 'Заявка с сайта';
 
+    /** @var string Атрибуты формы */
+    protected $attributes = array();
+
     /** @var bool Флаг для осуществления изначальной валидации по местонахождению формы */
     protected $locationValidation = false;
     protected $targets;
@@ -93,11 +96,17 @@ class Forms
             }
         }
 
+        $attributes = '';
+        foreach ($this->attributes as $k => $v) {
+            $attributes .= $k . '="' . $v . '" ';
+        }
+
         /** @var \FormPhp\Field\Token\Controller $token */
         $token = $this->fields['_token'];
         $start = '<form method="' . $this->method . '" id="' . $this->formName . '" '
             . 'data-click="' . $this->targets['click'] . '" '
             . 'data-send="' . $this->targets['send'] . '" '
+            . $attributes
             . $fileSendForm . '>' . "\n"
             . $token->getInputText() . "\n"
             . $this->getValidatorsInput();
@@ -171,6 +180,16 @@ class Forms
     public function setClearForm($clearForm)
     {
         $this->clearForm = $clearForm;
+    }
+
+    /**
+     * Устанавливаем атрибуты формы
+     *
+     * @param $attributes
+     */
+    public function setAttributes($attributes)
+    {
+        $this->attributes = array_merge($this->attributes, $attributes);
     }
 
     /**
