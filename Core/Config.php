@@ -12,6 +12,8 @@ namespace Ideal\Core;
  * @property array db Массив с настройками подключения к БД
  * @property array cache Массив с настройками кэширования
  * @property string cmsFolder Название папки с CMS
+ * @property array yandex Массив с настройками подключения к сервисам Яндекса
+ * @property string domain Доменная часть адреса сайта на котором установлена CMS
  */
 class Config
 {
