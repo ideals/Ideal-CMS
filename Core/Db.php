@@ -349,6 +349,56 @@ class Db extends \mysqli
     }
 
     /**
+     * Вставка новых строк в таблицу
+     *
+     * Пример использования:
+     *     $params = array(
+     *       '0' => array(
+     *              'firstField' => 'firstValue',
+     *              'secondField'=> 'secondValue,
+     *          ),
+     *       '1' => array(
+     *              'firstField' => 'firstValue',
+     *              'secondField'=> 'secondValue,
+     *          ),
+     *      )
+     *     $id = $db->insert('table', $params);
+     * ВНИМАНИЕ: в результате выполнения этого метода сбрасывается кэш БД
+     *
+     * @param string $table  Таблица, в которую необходимо вставить строку
+     * @param array  $params Значения полей для вставки строки
+     * @return int ID вставленной строки
+     */
+    public function insertMultiple($table, $params)
+    {
+        $this->clearCache($table);
+        $values = $columns= array();
+
+        $cols = array_keys(reset($params));
+        foreach ($cols as $column) {
+            $columns[] = "`" . parent::real_escape_string($column) . "`";
+        }
+
+        foreach ($params as $column => $item) {
+            foreach ($item as $key => $value) {
+                $vals[] = "'" . parent::real_escape_string($value) . "'";
+            }
+            if (!empty($vals)) {
+                $values[] = '(' . implode(', ', $vals) . ')';
+                unset($vals);
+            }
+        }
+
+        $columns = implode(', ', $columns);
+        $values = implode(', ', $values);
+        $table = parent::real_escape_string($table);
+        $sql = 'INSERT INTO `' . $table . '` (' . $columns . ') VALUES ' . $values . ';';
+        $this->query($sql);
+
+        return $this->insert_id;
+    }
+
+    /**
      * Выборка строк из БД по заданному запросу $sql
      *
      * Пример использования:
