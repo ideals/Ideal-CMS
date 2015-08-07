@@ -36,7 +36,7 @@ abstract class Model extends Core\Model
 
         $id = $db->insert($this->_table, $groups[$groupName]);
 
-        if ($id !== false) {
+        if ($id != false) {
             $result['items'][$groupName . '_ID']['value'] = $id;
             $groups[$groupName]['ID'] = $id;
 
