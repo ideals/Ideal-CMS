@@ -367,7 +367,7 @@ class Db extends \mysqli
      *
      * @param string $table  Таблица, в которую необходимо вставить строку
      * @param array  $params Значения полей для вставки строки
-     * @return int ID вставленной строки
+     * @return int количество затронутых строк
      */
     public function insertMultiple($table, $params)
     {
@@ -395,7 +395,7 @@ class Db extends \mysqli
         $sql = 'INSERT INTO `' . $table . '` (' . $columns . ') VALUES ' . $values . ';';
         $this->query($sql);
 
-        return $this->insert_id;
+        return $this->affected_rows;
     }
 
     /**
