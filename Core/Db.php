@@ -238,13 +238,13 @@ class Db extends \mysqli
         $values = array();
 
         foreach ($this->updateValues as $column => $value) {
-            $column = "`" . parent::real_escape_string($column) . "`";
-            $value = "'" . parent::real_escape_string($value) . "'";
+            $column = "`" . parent::escape_string($column) . "`";
+            $value = "'" . parent::escape_string($value) . "'";
             $values[] = "{$column} = {$value}";
         }
 
         $values = implode(', ', $values);
-        $this->updateTableName = "`" . parent::real_escape_string($this->updateTableName) . "`";
+        $this->updateTableName = "`" . parent::escape_string($this->updateTableName) . "`";
         $where = '';
 
         if ($this->whereParams && $this->whereQuery) {
@@ -270,14 +270,14 @@ class Db extends \mysqli
     {
         if (is_array($params)) {
             foreach ($params as $key => $value) {
-                $value = parent::real_escape_string($value);
+                $value = parent::escape_string($value);
                 $sql = str_replace(":{$key}", "'$value'", $sql);
             }
         }
 
         if (is_array($fields)) {
             foreach ($fields as $key => $value) {
-                $field = parent::real_escape_string($value);
+                $field = parent::escape_string($value);
                 $sql = str_replace("&{$key}", "`$field`", $sql);
             }
         }
@@ -292,7 +292,7 @@ class Db extends \mysqli
      */
     protected function getDeleteQuery()
     {
-        $this->deleteTableName = "`" . parent::real_escape_string($this->deleteTableName) . "`";
+        $this->deleteTableName = "`" . parent::escape_string($this->deleteTableName) . "`";
         $where = '';
 
         if ($this->whereParams && $this->whereQuery) {
@@ -335,13 +335,13 @@ class Db extends \mysqli
         $columns = $values = array();
 
         foreach ($params as $column => $value) {
-            $columns[] = "`" . parent::real_escape_string($column) . "`";
-            $values[] = "'" . parent::real_escape_string($value) . "'";
+            $columns[] = "`" . parent::escape_string($column) . "`";
+            $values[] = "'" . parent::escape_string($value) . "'";
         }
 
         $columns = implode(', ', $columns);
         $values = implode(', ', $values);
-        $table = parent::real_escape_string($table);
+        $table = parent::escape_string($table);
         $sql = 'INSERT INTO `' . $table . '` (' . $columns . ') VALUES (' . $values . ');';
         $this->query($sql);
 
@@ -375,15 +375,18 @@ class Db extends \mysqli
         $values = $columns= array();
 
         $cols = array_keys(reset($params));
+        // Получаем название полей
         foreach ($cols as $column) {
-            $columns[] = "`" . parent::real_escape_string($column) . "`";
+            $columns[] = "`" . parent::escape_string($column) . "`";
         }
 
         foreach ($params as $column => $item) {
             foreach ($item as $key => $value) {
-                $vals[] = "'" . parent::real_escape_string($value) . "'";
+                // Добавляемые значения для 1 строки
+                $vals[] = "'" . parent::escape_string($value) . "'";
             }
             if (!empty($vals)) {
+                // Массив всех добавляемых строк
                 $values[] = '(' . implode(', ', $vals) . ')';
                 unset($vals);
             }
@@ -391,7 +394,7 @@ class Db extends \mysqli
 
         $columns = implode(', ', $columns);
         $values = implode(', ', $values);
-        $table = parent::real_escape_string($table);
+        $table = parent::escape_string($table);
         $sql = 'INSERT INTO `' . $table . '` (' . $columns . ') VALUES ' . $values . ';';
         $this->query($sql);
 
