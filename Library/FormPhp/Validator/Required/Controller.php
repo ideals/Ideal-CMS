@@ -32,7 +32,7 @@ class Controller extends AbstractValidator
         $msg = $this->getErrorMsg();
         return <<<JS
         function validateRequired(e, messages) {
-            if ((e) == '') {
+            if ((e) == '' || e == undefined) {
                 messages.notValid = 'Заполните все поля, отмеченные звездочкой!';
                 messages.errors[messages.errors.length] = "{$msg}";
                 messages.validate = false;
