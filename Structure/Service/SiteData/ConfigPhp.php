@@ -124,32 +124,35 @@ class ConfigPhp
             $text = $response['text'];
             $class = 'alert alert-danger';
         } else {
-            // Запускаем очистку кэша если он отключен
-            if (!$this->params['cache']['arr']['fileCache']['value']) {
-                FileCache::clearFileCache();
-            } else { // Проверяем возможность записи в файл при включении кэширования
-                $checkFileCacheResponse = FileCache::checkFileCache();
-                if ($checkFileCacheResponse != 'ok') {
+            if (isset($this->params['cache'])) {
+                // Запускаем очистку кэша если он отключен
+                if (!$this->params['cache']['arr']['fileCache']['value']) {
+                    FileCache::clearFileCache();
+                } else {
+                    // Проверяем возможность записи в файл при включении кэширования
+                    $checkFileCacheResponse = FileCache::checkFileCache();
+                    if ($checkFileCacheResponse != 'ok') {
+                        $res = false;
+                        $text = $checkFileCacheResponse;
+                        $class = 'alert alert-danger';
+                    }
+                }
+
+                //Перезаписываем данные в исключениях кэша
+                $response = self::cacheExcludeProcessing($this->params['cache']['arr']['excludeFileCache']['value']);
+                if ($response['res'] === false) {
                     $res = false;
-                    $text = $checkFileCacheResponse;
+                    $text = $response['text'];
                     $class = 'alert alert-danger';
                 }
-            }
 
-            //Перезаписываем данные в исключениях кэша
-            $response = self::cacheExcludeProcessing($this->params['cache']['arr']['excludeFileCache']['value']);
-            if ($response['res'] === false) {
-                $res = false;
-                $text = $response['text'];
-                $class = 'alert alert-danger';
-            }
-
-            // Пытаемся сохранить файл, только если до этого не произошло ошибок
-            if ($res) {
-                if ($this->saveFile($fileName) === false) {
-                    $res = false;
-                    $text = 'Не получилось сохранить настройки в файл ' . $fileName;
-                    $class = 'alert alert-danger';
+                // Пытаемся сохранить файл, только если до этого не произошло ошибок
+                if ($res) {
+                    if ($this->saveFile($fileName) === false) {
+                        $res = false;
+                        $text = 'Не получилось сохранить настройки в файл ' . $fileName;
+                        $class = 'alert alert-danger';
+                    }
                 }
             }
         }
