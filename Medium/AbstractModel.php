@@ -56,6 +56,7 @@ class AbstractModel
         $structureName = $parts[2];
 
         $includeFile = $module . 'Medium/' . $structureName . '/config.php';
+        /** @noinspection PhpIncludeInspection */
         $structure = include($includeFile);
         if (!is_array($structure)) {
             throw new \Exception('Не удалось подключить файл: ' . $includeFile);
@@ -114,15 +115,18 @@ class AbstractModel
         $fieldNames = array_keys($this->fields);
         $ownerField = $fieldNames[0];
         $elementsField = $fieldNames[1];
-
-        $db = Db::getInstance();
-        $owner = $this->obj->getPageData();
         $list = array();
 
+        // Определяем владельца медиума
+        $db = Db::getInstance();
+        $owner = $this->obj->getPageData();
+
+        // Если владельца нет (он только создаётся), то и связей нет
         if (count($owner) == 0) {
             return $list;
         }
 
+        // Находим все медиумные связи между владельцем и выбранными элементами в SelectMulti
         $_sql = "SELECT {$elementsField} FROM {$this->table} WHERE {$ownerField}='{$owner['ID']}'";
         $arr = $db->select($_sql);
 
