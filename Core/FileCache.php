@@ -32,14 +32,14 @@ class FileCache
         // Получаем чистый $uri без GET параметров
         list($uri) = explode('?', $uri, 2);
 
+        // Удаляем первый слэш, для использования пути в проверке на исключения
+        $stringToCheck = preg_replace('/\//', '', $uri, 1);
+
         $uriArray = self::getModifyUri($uri);
 
         $excludeCacheFileValue = explode("\n", $configCache['excludeFileCache']);
 
         $excludeCacheFileValue = array_filter($excludeCacheFileValue);
-
-        // Удаляем первый слэш, для использования пути в проверке на исключения
-        $stringToCheck = preg_replace('/\//', '', $uri, 1);
 
         $exclude = false;
         foreach ($excludeCacheFileValue as $pattern) {
@@ -182,6 +182,9 @@ class FileCache
 
         // Если это главная страница или каталог
         if (!$pageName || !preg_match('/.*\..*$/', $pageName)) {
+            if (!preg_match('/.*\/$/', $uri)) {
+                $uri .= '/';
+            }
             $uri .= $configCache['indexFile'];
             array_push($uriArray, $configCache['indexFile']);
         }
