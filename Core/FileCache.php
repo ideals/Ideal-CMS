@@ -24,7 +24,7 @@ class FileCache
      * @param string $content Контент подлежащий сохранению
      * @param string $uri Путь, используется в построении иерархии директорий и имени самого файла.
      */
-    public static function saveCache($content, $uri)
+    public static function saveCache($content, $uri, $modifyTime)
     {
         $config = Config::getInstance();
         $configCache = $config->cache;
@@ -71,7 +71,9 @@ class FileCache
             self::checkDir($dirPath);
 
             // Записываем файл кэша
-            file_put_contents($dirPath . '/' . $fileName, $content);
+            if (file_put_contents($dirPath . '/' . $fileName, $content) !== false) {
+                touch($dirPath . '/' . $fileName, $modifyTime);
+            }
 
             // Записываем информацию о кэше в файл
             $file = "<?php\n// @codingStandardsIgnoreFile\nreturn " . var_export($cacheFileValue, true) . ";\n";
