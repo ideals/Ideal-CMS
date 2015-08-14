@@ -61,7 +61,12 @@ class FileCache
             array_push($cacheFileValue, $uri);
 
             $fileName = array_pop($uriArray);
-            $dirPath = DOCUMENT_ROOT . '/' . implode('/', $uriArray);
+            if (!empty($uriArray)) {
+                $dirPath = $cacheDir . '/fileCache/' . implode('/', $uriArray);
+            } else {
+                $dirPath = $cacheDir . '/fileCache';
+            }
+
 
             self::checkDir($dirPath);
 
@@ -126,6 +131,7 @@ class FileCache
 
         // Удаляем закэшированные файлы
         foreach ($cacheFileValue as $path) {
+            $path = $config->cms['tmpFolder'] . '/cache/fileCache' . $path;
             self::delCacheFileDir($path);
         }
 
@@ -169,7 +175,7 @@ class FileCache
         }
     }
 
-    private static function getModifyUri(&$uri)
+    public static function getModifyUri(&$uri)
     {
 
         $config = Config::getInstance();
@@ -263,17 +269,33 @@ class FileCache
     /**
      * Удаляет файл кэша страницы и информацию о нём из общего файла
      *
-     * @param string $path адрес страницы подлежащей исключению из кэша
+     * @param string $path Адрес страницы подлежащей исключению из кэша
+     * @param bool $notDel Флаг отслеживающий надобность удаления самого файла
      */
-    private static function excludePathFromCache($path)
+    public static function excludePathFromCache($path, $notDel = false)
     {
         $config = Config::getInstance();
         $cacheFile = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/cache/site_cache.php';
         $cacheFileValue = self::getConfigArrayFile($cacheFile);
-        $key = array_search($path, $cacheFileValue);
-        if ($key !== false) {
-            self::delCacheFileDir($path);
-            unset($cacheFileValue[$key]);
+        $keys = array();
+        if (is_array($path)) {
+            foreach ($path as $value) {
+                $keys[] = array_search($value, $cacheFileValue);
+            }
+        } else {
+            $keys[] = array_search($path, $cacheFileValue);
+        }
+        $keys = array_filter($keys, function ($v, $k) {
+            return $v !== false;
+        });
+        if (!empty($keys)) {
+            foreach ($keys as $key) {
+                if (!$notDel) {
+                    $path = $config->cms['tmpFolder'] . '/cache/fileCache' . $cacheFileValue[$key];
+                    self::delCacheFileDir($path);
+                }
+                unset($cacheFileValue[$key]);
+            }
 
             // Cбрасываем ключи массива
             $cacheFileValue = array_values($cacheFileValue);
