@@ -115,7 +115,7 @@ if ($file->getError() > 1) {
 
         $.ajax({
             type: "POST",
-            data: "delete=1&from=" + oldFrom + "&to=" + oldTo,
+            data: "delete=1&from=" + encodeURIComponent(oldFrom) + "&to=" + encodeURIComponent(oldTo),
             success: function (data) {
                 if (data.error) {
 
@@ -196,10 +196,9 @@ if ($file->getError() > 1) {
         }
         if (oldFrom && oldTo) {
             type = 'edit';
-            data = type + '=1&from=' + fromVal + '&to=' + toVal + '&oldFrom=' + oldFrom + '&oldTo=' + oldTo
+            data = type + '=1&from=' + encodeURIComponent(fromVal) + '&to=' + encodeURIComponent(toVal) + '&oldFrom=' + encodeURIComponent(oldFrom) + '&oldTo=' + encodeURIComponent(oldTo)
         } else {
-            data = type + "=1&from=" + fromVal + "&to=" + toVal;
-
+            data = type + "=1&from=" + encodeURIComponent(fromVal) + "&to=" + encodeURIComponent(toVal);
         }
         if (fromVal == from.attr('data-from') && toVal == to.attr('data-to')) {
             line.removeClass('editLine');

@@ -240,6 +240,13 @@ jQuery.fn.form = function (options, messages, methods) {
                     var value = '';
                     if (input.filter('select').size()) {
                         value = input.find(':selected').val();
+                    } else if(input.filter("[type='radio']").size()) {
+                        value = '';
+                        input.each(function() {
+                            if ($(this).prop("checked")) {
+                                value = $(this).val();
+                            }
+                        });
                     } else {
                         value = (typeof input.val() == 'undefined') ? '' : input.val();
                     }

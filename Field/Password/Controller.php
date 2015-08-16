@@ -64,7 +64,9 @@ class Controller extends AbstractController
         if ($this->newValue == '') {
             $item['value'] = null;
         } else {
-            $item['value'] = crypt($this->newValue);
+            $item['value'] = function_exists('password_hash')
+                ? password_hash($this->newValue, PASSWORD_DEFAULT)
+                : crypt($this->newValue);
         }
 
         $item['message'] = '';
