@@ -40,7 +40,7 @@ $(document).ready(function() {
 
                 var now = new Date();
                 var time = now.getTime();
-                var expireTime = time + 3153600000;
+                var expireTime = time + 315360000;
                 now.setTime(expireTime);
                 document.cookie = 'referer=' + currentRefererValue + ';expires=' + now.toGMTString() + ';path=/';
             }
