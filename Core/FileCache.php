@@ -144,14 +144,28 @@ class FileCache
 
     /**
      * Добовляет значение исключения файлового кэша
+     *
+     * @param string $string Адрес для исключения из кэширования
+     *
+     * @return bool Флаг, отражающий успешность добавления адреса в исключения
      */
     public static function addExcludeFileCache($string)
     {
+        $config = Config::getInstance();
+
         // Проверяем на существование файл кэша, при надобности удаляем
         preg_match('/^\/(.*)\/[imsxADSUXJu]{0,11}$/', $string, $cacheFiles);
+
+        // Добавляем путь до общей папки хранения файлового кэширования
+        if (!empty($cacheFiles[1])) {
+            $cacheFiles[1] = $config->cms['tmpFolder'] . '/cache/fileCache/' . $cacheFiles[1];
+            $cacheFiles[1] = ltrim($cacheFiles[1], '/');
+        }
         $cacheFiles = glob(stripcslashes($cacheFiles[1]));
         if (!empty($cacheFiles)) {
             foreach ($cacheFiles as $cacheFile) {
+                // Убираем путь до общей папки хранения файлового кэширования
+                $cacheFile = str_replace(ltrim($config->cms['tmpFolder'] . '/cache/fileCache/', '/'), '', $cacheFile);
                 self::excludePathFromCache("/$cacheFile");
             }
         }
