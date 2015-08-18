@@ -371,8 +371,6 @@ jQuery.fn.form = function (options, messages, methods) {
     var make = function (form) {
         $(this)
             .submit(function () {
-                methods.initYaCounter.apply(this);
-                methods.initGoogleAnalytics.apply(this);
                 if (this.defaultSubmit === true) {
                     return true;
                 }
@@ -380,6 +378,10 @@ jQuery.fn.form = function (options, messages, methods) {
                     return false;
                 }
                 this.disableSubmit = true;
+
+                methods.initYaCounter.apply(this);
+                methods.initGoogleAnalytics.apply(this);
+
                 $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
                     if (messages.errors.length > 1) {
