@@ -371,8 +371,8 @@ jQuery.fn.form = function (options, messages, methods) {
     var make = function (form) {
         $(this)
             .submit(function () {
-                methods.initYaCounter.apply(this);
-                methods.initGoogleAnalytics.apply(this);
+                // Условие истина, когда обработчик события срабатывает при выозове события из скрипта отправки
+                // через iframe
                 if (this.defaultSubmit === true) {
                     return true;
                 }
@@ -380,6 +380,10 @@ jQuery.fn.form = function (options, messages, methods) {
                     return false;
                 }
                 this.disableSubmit = true;
+
+                methods.initYaCounter.apply(this);
+                methods.initGoogleAnalytics.apply(this);
+
                 $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
                     if (messages.errors.length > 1) {
@@ -389,6 +393,7 @@ jQuery.fn.form = function (options, messages, methods) {
                         alert(messages.errors[0]);
                     }
                     messages.errors.length = 0;
+                    this.disableSubmit = false;
                     return false;
                 }
 
@@ -403,11 +408,11 @@ jQuery.fn.form = function (options, messages, methods) {
                 if (options.location) {
                     methods.locationOnButtonClick.apply(this);
                 }
-                this.disableSubmit = false;
             })
             .on('form.successSend', function () {
                 methods.metrikaOnSuccessSend.apply(this);
                 methods.locationOnButtonClickRemove.apply(this);
+                this.disableSubmit = false;
             })
             .on('form.errorSend', function () {
                 this.disableSubmit = false;
