@@ -352,14 +352,14 @@ jQuery.fn.form = function (options, messages, methods) {
                 if (options.clearForm == true) {
                     $(this)[0].reset();
                 }
-                $(this).trigger('form.successSend');
+                $(this).trigger('form.successSend', [result]);
                 return;
             }
-            $(this).trigger('form.errorSend');
+            $(this).trigger('form.errorSend', [result]);
         },
         // Обработка неудачной отправки формы
         errorSend: function (result) {
-            $(this).trigger('form.errorSend');
+            $(this).trigger('form.errorSend', [result]);
             alert(messages.ajaxError);
         },
         // Вывод сообщений

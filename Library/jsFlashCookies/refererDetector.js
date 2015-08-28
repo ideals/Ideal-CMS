@@ -46,7 +46,7 @@ $(document).ready(function() {
             }
         },
         onerror: function () {
-            console.error('swfStore failed to load');
+            console.log('У вас отключен флэш.');
         }
     });
 
