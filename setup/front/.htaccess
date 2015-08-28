@@ -28,5 +28,23 @@ RewriteRule ^(.*)$ - [NC,L]
 # Если картинки с изменёнными размерами нет, то создаём
 RewriteRule ^images/resized/(.*) /[[CMS]]/Ideal/Library/Resize/image.php?img=$1 [L,QSA]
 
+# file cache redirects
+# Запрашивается главная страница
+RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/index.html -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/index.html -l
+RewriteRule ^$ tmp/cache/fileCache/index.html [NC,L]
+
+# Запрашивается внутреннея страница при установленном суффиксе "/" или при отсуствии суффикса
+RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/index.html -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/index.html -l
+RewriteRule ^(.*)$ tmp/cache/fileCache/$1/index.html [NC,L]
+
+# Запрашивается внутреняя страница при произворльном значении суффикса
+RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -d [OR]
+RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -l
+RewriteRule ^(.*)$ tmp/cache/fileCache/$1 [NC,L]
+# file cache redirects
+
 # Если файла на диске нет, вызывается скрипт
 RewriteRule ^.*$ [[SUBFOLDER_START_SLASH]]/_.php [NC,L]

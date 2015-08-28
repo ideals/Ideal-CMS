@@ -51,7 +51,14 @@ class FrontController
 
             // Если запрошена страница из пользовательской части и включён кэш, то сохранить её
             if ($mode != 'admin' && isset($configCache['fileCache']) && $configCache['fileCache']) {
-                FileCache::saveCache($content, $_SERVER['REQUEST_URI']);
+                $model = $router->getModel();
+                $pageData = $model->getPageData();
+                if (isset($pageData['date_mod'])) {
+                    $modifyTime = $pageData['date_mod'];
+                } else {
+                    $modifyTime = time();
+                }
+                FileCache::saveCache($content, $_SERVER['REQUEST_URI'], $modifyTime);
             }
         }
 
