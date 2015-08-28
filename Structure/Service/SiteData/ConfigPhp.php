@@ -10,7 +10,6 @@
 namespace Ideal\Structure\Service\SiteData;
 
 use Ideal\Core\Util;
-use Ideal\Core\FileCache;
 
 /**
  * Чтение, отображение и запись специального формата конфигурационных php-файлов
@@ -109,14 +108,13 @@ class ConfigPhp
      * Изменение настроек на введённые пользователем и сохранение их в файл
      *
      * @param string $fileName Название php-файла, в который сохраняются данные
+     * @param bool $res Флаг отражающий наличие ошибок на момент передачи работы методу
+     * @param string $class Набор классов для информирующего блока
+     * @param string $text Текст для информирующего блока
      * @return bool Флаг успешности сохранения данных в файл
      */
-    public function changeAndSave($fileName)
+    public function changeAndSave($fileName, $res = true, $class = 'alert alert-block alert-success', $text = 'Настройки сохранены!')
     {
-        $class = 'alert alert-block alert-success';
-        $res = true;
-        $text = 'Настройки сохранены!';
-
         // Заменяем настройки на введённые пользователем
         $response = $this->pickupValues();
         if ($response['res'] === false) {
@@ -124,35 +122,12 @@ class ConfigPhp
             $text = $response['text'];
             $class = 'alert alert-danger';
         } else {
-            if (isset($this->params['cache'])) {
-                // Запускаем очистку кэша если он отключен
-                if (!$this->params['cache']['arr']['fileCache']['value']) {
-                    FileCache::clearFileCache();
-                } else {
-                    // Проверяем возможность записи в файл при включении кэширования
-                    $checkFileCacheResponse = FileCache::checkFileCache();
-                    if ($checkFileCacheResponse != 'ok') {
-                        $res = false;
-                        $text = $checkFileCacheResponse;
-                        $class = 'alert alert-danger';
-                    }
-                }
-
-                //Перезаписываем данные в исключениях кэша
-                $response = self::cacheExcludeProcessing($this->params['cache']['arr']['excludeFileCache']['value']);
-                if ($response['res'] === false) {
+            // Пытаемся сохранить файл, только если до этого не произошло ошибок
+            if ($res) {
+                if ($this->saveFile($fileName) === false) {
                     $res = false;
-                    $text = $response['text'];
+                    $text = 'Не получилось сохранить настройки в файл ' . $fileName;
                     $class = 'alert alert-danger';
-                }
-
-                // Пытаемся сохранить файл, только если до этого не произошло ошибок
-                if ($res) {
-                    if ($this->saveFile($fileName) === false) {
-                        $res = false;
-                        $text = 'Не получилось сохранить настройки в файл ' . $fileName;
-                        $class = 'alert alert-danger';
-                    }
                 }
             }
         }
@@ -163,32 +138,6 @@ class ConfigPhp
         <span class="alert-heading">{$text}</span></div>
 DONE;
         return $res;
-    }
-
-    /**
-     * Обрабатывает список исключений из настроек кэша
-     */
-    public static function cacheExcludeProcessing($string)
-    {
-        $response = array('res' => true);
-
-        // Экранируем переводы строки для обработки каждой строки
-        $string = str_replace("\r", '', $string);
-        $lines = explode("\n", $string);
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) {
-                // Пропускаем пустые линии в списке исключений из кэша
-                continue;
-            }
-            if (!FileCache::addExcludeFileCache($line)) {
-                $response['res'] = false;
-                $response['text'] = 'Не получилось сохранить настройки исключений в файл';
-            }
-        }
-
-        return $response;
     }
 
     /**
