@@ -48,6 +48,9 @@ class Forms
     protected $counters;
     protected $ajaxUrl;
 
+    /** @var array Аргументы js функции формы */
+    protected $formJsArguments = array();
+
     /** @var bool Флаг для вывода сообщения при правильно заполненной форме */
     protected $successMessage = true;
 
@@ -351,6 +354,26 @@ class Forms
     }
 
     /**
+     * Установка url, по которому будет производиться ajax-запрос отправки формы
+     *
+     * @param string $url url скрипта для обработки формы
+     */
+    public function setFormJsArg($arguments)
+    {
+        $this->formJsArguments = $arguments;
+    }
+
+    /**
+     * Установка url, по которому будет производиться ajax-запрос отправки формы
+     *
+     * @param string $url url скрипта для обработки формы
+     */
+    public function getFormJsArg($arguments)
+    {
+        return $this->formJsArguments;
+    }
+
+    /**
      * Установка метода передачи данных формы
      *
      * @param string $method Метод передачи данных формы (POST||GET)
@@ -479,7 +502,18 @@ class Forms
         $location = ($this->locationValidation) ? ', location: true' : '';
         $successMessage = (!$this->successMessage) ? ', successMessage: false' : '';
         $clearForm = (!$this->clearForm) ? ', clearForm: false' : '';
-        $ajaxUrl = "$('#{$this->formName}').form({ajaxUrl : \"{$this->ajaxUrl}\"{$location}{$successMessage}{$clearForm}})";
+
+        $options = isset($this->formJsArguments['options']) ? $this->formJsArguments['options'] : '{}';
+        $messages = isset($this->formJsArguments['messages']) ? $this->formJsArguments['messages'] : '{}';
+        $methods = isset($this->formJsArguments['methods']) ? $this->formJsArguments['methods'] : '{}';
+
+        $ajaxUrl = <<<JS
+            $('#{$this->formName}').form(
+                $.extend({ajaxUrl : '{$this->ajaxUrl}'{$location}{$successMessage}{$clearForm}}, {$options}),
+                {$messages},
+                {$methods}
+            );
+JS;
         $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)
             . file_get_contents(__DIR__ .'/form.js')
