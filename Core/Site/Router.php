@@ -5,6 +5,8 @@ use Ideal\Core\Config;
 use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
+use Ideal\Core\Db;
+use Ideal\Structure\User;
 
 class Router
 {
@@ -141,6 +143,9 @@ class Router
                 // Если роутинг нашёл нужную страницу, но суффикс неправильный
                 $model->is404 = true;
             }
+            if ($model->is404) {
+                self::save404($originalUrl, $known404);
+            }
         } else {
             $model->is404 = true;
         }
@@ -243,5 +248,82 @@ class Router
     public function is404()
     {
         return $this->model->is404;
+    }
+
+    /**
+     * Сохраняет информацию 404 ошибке в справочник/файл
+     *
+     * @param string $url Запрошенный адрес
+     * @param bool| $known404
+     */
+    private function save404($url, $known404)
+    {
+        $config = Config::getInstance();
+        $error404Structure = $config->getStructureByName('Ideal_Error404');
+        $user = new User\Model();
+        $isAdmin = $user->checkLogin();
+
+        // Запускаем процесс обработки 404 страницы только если
+        // существует структура "Ideal_Error404",
+        // существует файл known404.php
+        // пользователь не залогинен в админку
+        if ($error404Structure !== false && $known404 !== false && !$isAdmin) {
+            $known404Params = $known404->getParams();
+
+            // Прверяем есть ли запрошенный url среди исключений
+            $rules404List = array_filter(explode("\n", $known404Params['rules']['arr']['rulesExclude404']['value']));
+            $notRec = array_reduce(
+                $rules404List,
+                function (&$res, $rule) {
+                    if (strpos($rule, '/') !== 0) {
+                        $rule = '/' . addcslashes($rule, '/') . '/';
+                    }
+                    if (!empty($rule) && ($res === true || preg_match($rule, $res))) {
+                        return true;
+                    }
+                    return $res;
+                },
+                $url
+            );
+
+            if ($notRec !== true) {
+                $db = DB::getInstance();
+                $error404Table = $config->db['prefix'] . 'ideal_structure_error404';
+                // Получаем данные о рассматриваемом url в справочнике "Ошибки 404"
+                $par = array('url' => $url);
+                $fields = array('table' => $error404Table);
+                $rows = $db->select('SELECT * FROM &table WHERE url = :url LIMIT 1', $par, $fields);
+                if (count($rows) == 0) {
+                    // Добавляем запись в справочник
+                    $dataList = $config->getStructureByName('Ideal_DataList');
+                    $prevStructure = $dataList['ID'] . '-';
+                    $par = array('structure' => 'Ideal_Error404');
+                    $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
+                    $row = $db->select('SELECT ID FROM &table WHERE structure = :structure', $par, $fields);
+                    $prevStructure .= $row[0]['ID'];
+                    $params = array(
+                        'prev_structure' => $prevStructure,
+                        'date_create' => time(),
+                        'url' => $url,
+                        'count' => 1,
+                    );
+                    $db->insert($error404Table, $params);
+                } elseif ($rows[0]['count'] < 10) {
+                    // Увеличиваем счётчик посещения страницы
+                    $values = array('count' => $rows[0]['count'] + 1);
+                    $par = array('url' => $url);
+                    $db->update($error404Table)->set($values)->where('url = :url', $par)->exec();
+                } else {
+                    // Переносим данные из справочника в файл с известными 404
+                    $known404List = array_filter(explode("\n", $known404Params['known']['arr']['known404']['value']));
+                    $known404List[] = $url;
+                    $known404Params['known']['arr']['known404']['value'] = implode("\n", $known404List);
+                    $known404->setParams($known404Params);
+                    $known404->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
+                    $par = array('url' => $url);
+                    $db->delete($error404Table)->where('url = :url', $par)->exec();
+                }
+            }
+        }
     }
 }
