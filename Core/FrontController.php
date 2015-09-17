@@ -3,6 +3,7 @@ namespace Ideal\Core;
 
 use Ideal\Core\Admin;
 use Ideal\Core\Site;
+use Ideal\Structure\User;
 
 /**
  * Front Controller объединяет всю обработку запросов, пропуская запросы через единственный объект-обработчик.
@@ -127,8 +128,14 @@ class FrontController
                 return;
             }
         }
+        $message = 'Страница не найдена (404). ';
         $from = empty($_SERVER['HTTP_REFERER']) ? 'Прямой переход.' : 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
-        Util::addError('Страница не найдена (404). ' . $from);
+        $message .= $from;
+        $user = new User\Model();
+        if ($user->checkLogin()) {
+            $message .= "\n Действие совершил администратор.";
+        }
+        Util::addError($message);
     }
 
     /**
