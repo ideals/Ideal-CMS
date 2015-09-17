@@ -51,7 +51,9 @@ class Router
         $this->model->initPageData();
 
         // Определяем корректную модель на основании поля structure
-        $this->model = $this->model->detectActualModel();
+        if (!$this->model->is404) {
+            $this->model = $this->model->detectActualModel();
+        }
     }
 
     /**
