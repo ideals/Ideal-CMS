@@ -81,41 +81,67 @@ class Router
             return $model;
         }
 
-        // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
         $is404 = false;
-        $lengthSuffix = strlen($config->urlSuffix);
-        if ($lengthSuffix > 0) {
-            $suffix = substr($url, -$lengthSuffix);
-            if ($suffix != $config->urlSuffix) {
-                $is404 = true;
-            }
-            $url = substr($url, 0, -$lengthSuffix); // убираем суффикс из url
+        $known404 = false;
+        if (file_exists(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php')) {
+            $known404 = new \Ideal\Structure\Service\SiteData\ConfigPhp();
+            $known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
+            $known404List = $known404->getParams();
+            $known404List = array_filter(explode("\n", $known404List['known']['arr']['known404']['value']));
+            $is404 = array_reduce(
+                $known404List,
+                function (&$res, $rule) {
+                    if (strpos($rule, '/') !== 0) {
+                        $rule = '/' . addcslashes($rule, '/') . '/';
+                    }
+                    if (!empty($rule) && ($res === true || preg_match($rule, $res))) {
+                        return true;
+                    }
+                    return $res;
+                },
+                $url
+            );
+            $is404 = $is404 === true ? true : false;
         }
-
-        // Проверка, не остался ли в конце URL слэш
-        if (substr($url, -1) == '/') {
-            // Убираем завершающие слэши, если они есть
-            $url = rtrim($url, '/');
-            // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
-            // то ставим 404-ошибку
-            $is404 = true;
-        }
-
-        // Разрезаем URL на части
-        $url = explode('/', $url);
 
         // Определяем оставшиеся элементы пути
         $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Site\\Model';
         /* @var $model Model */
         $model = new $modelClassName('0-' . $prevStructureId);
 
-        // Запускаем определение пути и активной модели по $par
-        $model = $model->detectPageByUrl($path, $url);
-        if ($model->is404 == false && $is404) {
-            // Если роутинг нашёл нужную страницу, но суффикс неправильный
+        if ($is404 !== true) {
+            // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
+            $originalUrl = $url;
+            $lengthSuffix = strlen($config->urlSuffix);
+            if ($lengthSuffix > 0) {
+                $suffix = substr($url, -$lengthSuffix);
+                if ($suffix != $config->urlSuffix) {
+                    $is404 = true;
+                }
+                $url = substr($url, 0, -$lengthSuffix); // убираем суффикс из url
+            }
+
+            // Проверка, не остался ли в конце URL слэш
+            if (substr($url, -1) == '/') {
+                // Убираем завершающие слэши, если они есть
+                $url = rtrim($url, '/');
+                // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
+                // то ставим 404-ошибку
+                $is404 = true;
+            }
+
+            // Разрезаем URL на части
+            $url = explode('/', $url);
+
+            // Запускаем определение пути и активной модели по $par
+            $model = $model->detectPageByUrl($path, $url);
+            if ($model->is404 == false && $is404) {
+                // Если роутинг нашёл нужную страницу, но суффикс неправильный
+                $model->is404 = true;
+            }
+        } else {
             $model->is404 = true;
         }
-
         return $model;
     }
 
