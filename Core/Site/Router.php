@@ -92,19 +92,7 @@ class Router
             $known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
             $known404List = $known404->getParams();
             $known404List = array_filter(explode("\n", $known404List['known']['arr']['known404']['value']));
-            $is404 = array_reduce(
-                $known404List,
-                function (&$res, $rule) {
-                    if (strpos($rule, '/') !== 0) {
-                        $rule = '/' . addcslashes($rule, '/') . '/';
-                    }
-                    if (!empty($rule) && ($res === true || preg_match($rule, $res))) {
-                        return true;
-                    }
-                    return $res;
-                },
-                $url
-            );
+            $is404 = self::matchesRules($known404List, $url);
             $is404 = $is404 === true ? true : false;
         }
 
@@ -272,19 +260,7 @@ class Router
 
             // Прверяем есть ли запрошенный url среди исключений
             $rules404List = array_filter(explode("\n", $known404Params['rules']['arr']['rulesExclude404']['value']));
-            $notRec = array_reduce(
-                $rules404List,
-                function (&$res, $rule) {
-                    if (strpos($rule, '/') !== 0) {
-                        $rule = '/' . addcslashes($rule, '/') . '/';
-                    }
-                    if (!empty($rule) && ($res === true || preg_match($rule, $res))) {
-                        return true;
-                    }
-                    return $res;
-                },
-                $url
-            );
+            $notRec = self::matchesRules($rules404List, $url);
 
             if ($notRec !== true) {
                 $db = DB::getInstance();
@@ -325,5 +301,22 @@ class Router
                 }
             }
         }
+    }
+
+    private function matchesRules($rules, $subject)
+    {
+        return array_reduce(
+            $rules,
+            function (&$res, $rule) {
+                if (strpos($rule, '/') !== 0) {
+                    $rule = '/' . addcslashes($rule, '/') . '/';
+                }
+                if (!empty($rule) && ($res === true || preg_match($rule, $res))) {
+                    return true;
+                }
+                return $res;
+            },
+            $subject
+        );
     }
 }
