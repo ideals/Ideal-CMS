@@ -87,6 +87,8 @@ class Router
 
         $is404 = false;
         $known404 = false;
+
+        // Определяем есть ли запрошенный адрес среди уже известных 404
         if (file_exists(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php')) {
             $known404 = new \Ideal\Structure\Service\SiteData\ConfigPhp();
             $known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
@@ -239,10 +241,10 @@ class Router
     }
 
     /**
-     * Сохраняет информацию 404 ошибке в справочник/файл
+     * Сохраняет информацию о 404 ошибке в справочник/файл
      *
      * @param string $url Запрошенный адрес
-     * @param bool| $known404
+     * @param bool|\Ideal\Structure\Service\SiteData\ConfigPhp $known404 false, если файл known404.php не сущечтвует. Объект класса ConfigPhp, в обратном случае
      */
     private function save404($url, $known404)
     {
@@ -265,6 +267,7 @@ class Router
             if ($notRec !== true) {
                 $db = DB::getInstance();
                 $error404Table = $config->db['prefix'] . 'ideal_structure_error404';
+
                 // Получаем данные о рассматриваемом url в справочнике "Ошибки 404"
                 $par = array('url' => $url);
                 $fields = array('table' => $error404Table);
@@ -303,6 +306,13 @@ class Router
         }
     }
 
+    /**
+     * Ищет совпадения $subject с хотябы одним из элементов $rules
+     *
+     * @param array $rules Список правил с которыми сравнивается $subject
+     * @param string $subject Строка для поиска совпадений с правилами
+     * @return mixed Изначальная строка $subject либо true в случае нахождения совпадения
+     */
     private function matchesRules($rules, $subject)
     {
         return array_reduce(
