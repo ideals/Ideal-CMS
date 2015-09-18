@@ -31,6 +31,7 @@ class Controller
         if ($result['isCorrect']) {
             $result = $this->model->createElement($result);
             $this->runClearFileCache();
+            View::clearTwigCache();
         }
 
         echo json_encode($result);
@@ -50,6 +51,7 @@ class Controller
 
         if ($result['isCorrect'] == 1) {
             $this->runClearFileCache();
+            View::clearTwigCache();
         }
 
         echo json_encode($result);
@@ -67,6 +69,7 @@ class Controller
         if ($result['isCorrect'] == 1) {
             $result = $this->model->saveElement($result);
             $this->runClearFileCache();
+            View::clearTwigCache();
         }
 
         echo json_encode($result);
