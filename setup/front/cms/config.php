@@ -69,5 +69,13 @@ return array(
             'isShow' => 0,
             'hasTable' => true
         ),
+        // Подключаем справочник 404-ых ошибок
+        array(
+            'ID' => 8,
+            'structure' => 'Ideal_Error404',
+            'name' => 'Ошибки 404',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
     )
 );
