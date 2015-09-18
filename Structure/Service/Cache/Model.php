@@ -10,9 +10,11 @@
 namespace Ideal\Structure\Service\Cache;
 
 use Ideal\Core\FileCache;
+use Ideal\Core\View;
 
 /**
  * Класс для обработки реакции на изменения настроек файлового кэширования
+ * и кэширования twig-шаблонов
  *
  */
 class Model
@@ -32,12 +34,14 @@ class Model
 
     /**
      * Отвечает за реакции системы на изменения настроек файлового кэширования
+     * и кэширования twig-шаблонов
      *
      * @return array Массив содержащий флаг успешности проверки настроек, а так же текст и набор классов в случае обнаружения ошибок
      */
     public function checkSettings()
     {
         $response = array('res' => true, 'text' => '', 'class' => '');
+        $oldParams = $this->configFileClass->getParams();
         $responseGV = $this->configFileClass->pickupValues();
         if ($responseGV['res'] === false) {
             $response['res'] = false;
@@ -64,6 +68,15 @@ class Model
                 $response['res'] = false;
                 $response['text'] = $responseCEP['text'];
                 $response['class'] = 'alert alert-danger';
+            }
+
+            // Запускаем очистку кэша twig-шаблонов
+            $siteTwigCache = $params['cache']['arr']['templateSite']['value'];
+            $siteTwigCacheOld = $oldParams['cache']['arr']['templateSite']['value'];
+            $adminTwigCache = $params['cache']['arr']['templateAdmin']['value'];
+            $adminTwigCacheOld = $oldParams['cache']['arr']['templateAdmin']['value'];
+            if ((($siteTwigCache != $siteTwigCacheOld) && !$siteTwigCache) || (($adminTwigCache != $adminTwigCacheOld) && !$adminTwigCache)) {
+                View::clearTwigCache();
             }
         }
 
