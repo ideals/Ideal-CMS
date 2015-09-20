@@ -274,30 +274,38 @@ DONE;
     {
         $tabs = '<ul class="nav nav-tabs">';
         $tabsContent = '<div class="tab-content">';
+        $first = true;
         foreach ($this->params as $tabId => $tab) {
-            $active = ($tabId == 'default') ? 'active' : '';
-            $tabs .= '<li class="' . $active . '">'
-                . '<a href="#' . $tabId . '" data-toggle="tab">' . $tab['name'] . '</a>'
-                . '</li>';
-            $tabsContent .= '<div class="tab-pane well ' . $active . '" id="' . $tabId . '">';
-            $pageData = array();
-            foreach ($tab['arr'] as $field => $param) {
-                $fieldName = $tabId . '_' . $field;
-                $model = new MockModel('');
-                $model->fields[$fieldName] = $param;
-                $pageData[$fieldName] = $param['value'];
-                $model->setPageData($pageData);
+            if (!empty($tab['arr'])) {
+                if ($first) {
+                    $active = 'active';
+                    $first = false;
+                } else {
+                    $active = '';
+                }
+                $tabs .= '<li class="' . $active . '">'
+                    . '<a href="#' . $tabId . '" data-toggle="tab">' . $tab['name'] . '</a>'
+                    . '</li>';
+                $tabsContent .= '<div class="tab-pane well ' . $active . '" id="' . $tabId . '">';
+                $pageData = array();
+                foreach ($tab['arr'] as $field => $param) {
+                    $fieldName = $tabId . '_' . $field;
+                    $model = new MockModel('');
+                    $model->fields[$fieldName] = $param;
+                    $pageData[$fieldName] = $param['value'];
+                    $model->setPageData($pageData);
 
-                $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
-                /** @noinspection PhpUndefinedMethodInspection */
-                /** @var $fieldModel \Ideal\Field\AbstractController */
-                $fieldModel = $fieldClass::getInstance();
-                $fieldModel->setModel($model, $fieldName, 'general');
-                $fieldModel->labelClass = '';
-                $fieldModel->inputClass = '';
-                $tabsContent .= $fieldModel->showEdit();
+                    $fieldClass = Util::getClassName($param['type'], 'Field') . '\\Controller';
+                    /** @noinspection PhpUndefinedMethodInspection */
+                    /** @var $fieldModel \Ideal\Field\AbstractController */
+                    $fieldModel = $fieldClass::getInstance();
+                    $fieldModel->setModel($model, $fieldName, 'general');
+                    $fieldModel->labelClass = '';
+                    $fieldModel->inputClass = '';
+                    $tabsContent .= $fieldModel->showEdit();
+                }
+                $tabsContent .= '</div>';
             }
-            $tabsContent .= '</div>';
         }
         $tabs .= '</ul>';
         $tabsContent .= '</div>';
