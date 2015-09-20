@@ -1,7 +1,7 @@
 php_flag magic_quotes_gpc off 
 php_value magic_quotes_gpc Off
 
-Options +Includes +FollowSymLinks -Indexes
+Options -Includes +FollowSymLinks -Indexes
 AddDefaultCharset utf-8
 
 ErrorDocument 404 /404.html
