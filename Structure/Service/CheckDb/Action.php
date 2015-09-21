@@ -29,8 +29,18 @@ $result = $db->select('SHOW TABLES');
 $dbTables = array();
 foreach ($result as $v) {
     $table = array_shift($v);
+
+    // Получаем информацию о полях таблицы
+    $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $table . ' FROM ' . $config->db['name']);
+    $fields = array();
+    array_walk($fieldsInfo, function ($v) use (&$fields) {
+        $key = $v['Field'];
+        unset($v['Field']);
+        list($type) = explode(' ', implode(' ', $v));
+        $fields[$key] = $type;
+    });
     if (strpos($table, $config->db['prefix']) === 0) {
-        $dbTables[] = $table;
+        $dbTables[$table] = $fields;
     }
 }
 
@@ -47,8 +57,9 @@ $checkTypeFile = function ($dir, $module, &$cfgTables, &$cfgTablesFull, &$config
                 continue;
             }
             $t = strtolower($config->db['prefix'] . $module . '_' . $type . '_' . $file);
-            if (array_search($t, $cfgTables) === false) {
-                $cfgTables[] = $t;
+            if (array_key_exists($t, $cfgTables) === false) {
+                $fields = getFieldListWithTypes($c);
+                $cfgTables[$t] = $fields;
                 $cfgTablesFull[$t] = ($module == 'Ideal') ? $type . '/' . $file : $module . '/' . $type . '/' . $file;
             }
         }
@@ -61,9 +72,10 @@ foreach ($config->structures as $v) {
     if (!$v['hasTable']) {
         continue;
     }
+    $fields = getFieldListWithTypes($v);
     list($module, $structure) = explode('_', $v['structure'], 2);
     $table = strtolower($config->db['prefix'] . $module . '_structure_' . $structure);
-    $cfgTables[] = $table;
+    $cfgTables[$table] = $fields;
 
     // Обработка папки с кастомными аддонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
@@ -94,9 +106,10 @@ if (isset($_POST['create'])) {
         $file = $cfgTablesFull[$table] . '/config.php';
         /** @noinspection PhpIncludeInspection */
         $data = include($file);
+        $fields = getFieldListWithTypes($data);
         $db->create($table, $data['fields']);
         echo ' Готово.</p>';
-        $dbTables[] = $table;
+        $dbTables[$table] = $fields;
     }
 }
 
@@ -111,22 +124,24 @@ if (isset($_POST['delete'])) {
     }
 }
 
+
 $isCool = true;
 
-foreach ($cfgTables as $table) {
-    if (!in_array($table, $dbTables)) {
-        echo '<p class="well"><input type="checkbox" name="create[' . $table . ']">&nbsp; ';
-        echo 'Таблица <strong>' . $table . '</strong> отсутствует в базе данных. Создать?</p>';
+foreach ($cfgTables as $tableName => $tableFields) {
+    if (!array_key_exists($tableName, $dbTables)) {
+        echo '<p class="well"><input type="checkbox" name="create[' . $tableName . ']">&nbsp; ';
+        echo 'Таблица <strong>' . $tableName . '</strong> отсутствует в базе данных. Создать?</p>';
         $isCool = false;
+    } else {
+        // Проверяем наличие полей там и там, а так же их типы
+        unset($dbTables[$tableName]);
     }
 }
 
-foreach ($dbTables as $table) {
-    if (!in_array($table, $cfgTables)) {
-        echo '<p class="well"><input type="checkbox" name="delete[' . $table . ']">&nbsp; ';
-        echo 'Таблица <strong>' . $table . '</strong> отсутствует в конфигурации. Удалить?</p>';
-        $isCool = false;
-    }
+foreach ($dbTables as $tableName => $tableFields) {
+    echo '<p class="well"><input type="checkbox" name="delete[' . $tableName . ']">&nbsp;';
+    echo 'Таблица <strong>' . $tableName . '</strong> отсутствует в конфигурации. Удалить?</p>';
+    $isCool = false;
 }
 
 // После нажатия на кнопку применить и совершения действий, нужно либо заново перечитывать БД, либо перегружать страницу
@@ -139,6 +154,17 @@ if ($isCool) {
     echo 'Конфигурация в файлах соответствует конфигурации базы данных.';
 } else {
     echo '<button class="btn btn-primary btn-large" type="submit">Применить</button>';
+}
+
+// Получаем информацию о полях из конфигурационных файлов
+function getFieldListWithTypes($data)
+{
+    $fields = array();
+    array_walk($data['fields'], function ($value, $key) use (&$fields) {
+        list($type) = explode(' ', $value['sql']);
+        $fields[$key] = $type;
+    });
+    return $fields;
 }
 ?>
 
