@@ -153,8 +153,18 @@ if (isset($_POST['delete'])) {
         echo '<p>Удаляем таблицу ' . $table . '…';
         $db->query("DROP TABLE `{$table}`");
         echo ' Готово.</p>';
-        $key = array_search($table, $dbTables);
-        unset($dbTables[$key]);
+        unset($dbTables[$table]);
+    }
+}
+
+// Если есть поля, которые нужно удалить
+if (isset($_POST['delete_field'])) {
+    foreach ($_POST['delete_field'] as $tableField => $v) {
+        list($table, $field) = explode('-', $tableField);
+        echo '<p>Удаляем поле ' . $field . ' в таблице ' . $table . '…';
+        $db->query("ALTER TABLE {$table} DROP COLUMN {$field};");
+        echo ' Готово.</p>';
+        unset($dbTables[$table][$field]);
     }
 }
 
@@ -167,6 +177,7 @@ foreach ($cfgTables as $tableName => $tableFields) {
         echo 'Таблица <strong>' . $tableName . '</strong> отсутствует в базе данных. Создать?</p>';
         $isCool = false;
     } else {
+        // Получаем массив полей, которые нужно предложить создать
         $onlyConfigExist = array_diff_key($tableFields, $dbTables[$tableName]);
 
         // Предлагать создавать нужно только те поля, у которых определён sql тип.
@@ -177,6 +188,19 @@ foreach ($cfgTables as $tableName => $tableFields) {
             foreach ($onlyConfigExist as $missingField => $missingFieldType) {
                 echo '<p class="well"><input type="checkbox" name="create_field[' . $tableName . '-' . $missingField . ']">&nbsp; ';
                 echo 'В таблице <strong>' . $tableName . '</strong> отсутствует поле <strong>' . $missingField . '</strong>. Создать?</p>';
+            }
+            $isCool = false;
+        }
+
+        // Получаем массив полей, которые нужно предложить удалить
+        $onlyBaseExist = array_diff_key($dbTables[$tableName], $tableFields);
+
+        // Если какое-либо поле присутствует только в базе данных, то предлагаем его удалить
+        if (count($onlyBaseExist) > 0) {
+            foreach ($onlyBaseExist as $excessField => $excessFieldType) {
+                echo '<p class="well"><input type="checkbox" name="delete_field[' . $tableName . '-' . $excessField . ']">&nbsp; ';
+                echo 'Поле <strong>' . $excessField . '</strong> отсутствует в конфигурации таблицы <strong>' . $tableName . '</strong>.
+Удалить?</p>';
             }
             $isCool = false;
         }
@@ -193,7 +217,7 @@ foreach ($dbTables as $tableName => $tableFields) {
 }
 
 // После нажатия на кнопку применить и совершения действий, нужно либо заново перечитывать БД, либо перегружать страницу
-if (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_field'])) {
+if (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_field']) || $_POST['delete_field']) {
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
 }
