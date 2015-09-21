@@ -113,6 +113,40 @@ if (isset($_POST['create'])) {
     }
 }
 
+// Если есть поля, которые надо создать
+if (isset($_POST['create_field'])) {
+    foreach ($_POST['create_field'] as $tableField => $v) {
+        list($table, $field) = explode('-', $tableField);
+        echo '<p>Добавляем поле ' . $field . ' в таблицу ' . $table . '…';
+        $file = $cfgTablesFull[$table] . '/config.php';
+        /** @noinspection PhpIncludeInspection */
+        $data = include($file);
+
+        //Поиск поля после которого нужно вставить новое
+        $afterThisField = '';
+        foreach ($data['fields'] as $key => $value) {
+            if ($key != $field) {
+                $afterThisField = $key;
+            } else {
+                break;
+            }
+        }
+
+        if (!empty($afterThisField)) {
+            $afterThisField = ' AFTER ' . $afterThisField;
+        } else {
+            $afterThisField = ' FIRST';
+        }
+
+        // Составляем sql запрос для вставки поля в таблицу
+        $sql = "ALTER TABLE {$table} ADD {$field} {$data['fields'][$field]['sql']} COMMENT '{$data['fields'][$field]['label']}' {$afterThisField};";
+        $db->query($sql);
+        echo ' Готово.</p>';
+        $fields = getFieldListWithTypes($data);
+        $dbTables[$table][$field] = $fields[$field];
+    }
+}
+
 // Если есть таблицы, которые надо удалить
 if (isset($_POST['delete'])) {
     foreach ($_POST['delete'] as $table => $v) {
@@ -133,7 +167,21 @@ foreach ($cfgTables as $tableName => $tableFields) {
         echo 'Таблица <strong>' . $tableName . '</strong> отсутствует в базе данных. Создать?</p>';
         $isCool = false;
     } else {
-        // Проверяем наличие полей там и там, а так же их типы
+        $onlyConfigExist = array_diff_key($tableFields, $dbTables[$tableName]);
+
+        // Предлагать создавать нужно только те поля, у которых определён sql тип.
+        $onlyConfigExist = array_filter($onlyConfigExist);
+
+        // Если какое-либо поле присутствует только в конфигурационном файле, то предлагаем его создать
+        if (count($onlyConfigExist) > 0) {
+            foreach ($onlyConfigExist as $missingField => $missingFieldType) {
+                echo '<p class="well"><input type="checkbox" name="create_field[' . $tableName . '-' . $missingField . ']">&nbsp; ';
+                echo 'В таблице <strong>' . $tableName . '</strong> отсутствует поле <strong>' . $missingField . '</strong>. Создать?</p>';
+            }
+            $isCool = false;
+        }
+
+        // Удаляем имеющиеся в конфигурации таблицы из списка таблиц в базе
         unset($dbTables[$tableName]);
     }
 }
@@ -145,7 +193,7 @@ foreach ($dbTables as $tableName => $tableFields) {
 }
 
 // После нажатия на кнопку применить и совершения действий, нужно либо заново перечитывать БД, либо перегружать страницу
-if (isset($_POST['create']) || isset($_POST['delete'])) {
+if (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_field'])) {
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
 }
