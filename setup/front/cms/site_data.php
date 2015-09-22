@@ -14,7 +14,6 @@ return array(
         'adminEmail' => "[[CMSLOGIN]]", // Почта, на которую будут отправляться сообщения об ошибках | Ideal_Text
         'dirMode' => "0755", // Режим доступа к папке "0755" | Ideal_Text
         'fileMode' => "0644", // Режим доступа к файлу "0644" | Ideal_Text
-        'known404' => "", // Известные битые ссылки (формат .htaccess или регулярные выражения) | Ideal_Area
     ),
     'cache' => array( // Кэширование
         'jsAndCss' => "0", // Объединение и минификация css и js файлов | Ideal_Checkbox
