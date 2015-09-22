@@ -168,6 +168,17 @@ if (isset($_POST['delete_field'])) {
     }
 }
 
+// Если есть поля, которые нужно преобразовать
+if (isset($_POST['change_type'])) {
+    foreach ($_POST['change_type'] as $tableField => $v) {
+        list($table, $field, $type) = explode('-', $tableField);
+        echo '<p>Изменяем поле ' . $field . ' в таблице ' . $table . ' на тип' . $type . '…';
+        $db->query("ALTER TABLE {$table} MODIFY {$field} {$type};");
+        echo ' Готово.</p>';
+        $dbTables[$table][$field] = $type;
+    }
+}
+
 
 $isCool = true;
 
@@ -205,6 +216,17 @@ foreach ($cfgTables as $tableName => $tableFields) {
             $isCool = false;
         }
 
+        $fieldTypeDiff = diffConfigBaseType($tableFields, $dbTables[$tableName]);
+        // Если есть расхождение в типах полей, то предлагаем вернуть всё к виду конфигурационных файлов
+        if (count($fieldTypeDiff) > 0) {
+            foreach ($fieldTypeDiff as $fieldName => $typeDiff) {
+                echo '<p class="well"><input type="checkbox" name="change_type[' . $tableName . '-' . $fieldName . '-' . $typeDiff['conf'] . ']">&nbsp; ';
+                echo 'Поле <strong>' . $fieldName . '</strong> в табллице <strong>' . $tableName . ' </strong> имеет тип <strong>
+' . $typeDiff['base'] . '</strong>, но в конфигурационном файле это поле определено типом <strong>' . $typeDiff['conf'] . '</strong>. Преобразовать поле в базе данных?</p>';
+            }
+            $isCool = false;
+        }
+
         // Удаляем имеющиеся в конфигурации таблицы из списка таблиц в базе
         unset($dbTables[$tableName]);
     }
@@ -217,7 +239,7 @@ foreach ($dbTables as $tableName => $tableFields) {
 }
 
 // После нажатия на кнопку применить и совершения действий, нужно либо заново перечитывать БД, либо перегружать страницу
-if (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_field']) || $_POST['delete_field']) {
+if (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_field']) || isset($_POST['delete_field']) || isset($_POST['change_type'])) {
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
 }
@@ -238,11 +260,27 @@ function getFieldListWithTypes($data)
     });
     return $fields;
 }
+
+function diffConfigBaseType($a, $b)
+{
+    $result = array();
+    foreach ($a as $k => $v) {
+        if (isset($b[$k])) {
+            if ($v === 'bool') {
+                $v = 'tinyint(1)';
+            }
+            if (!preg_match('/^' . quotemeta($v) . '(.*?)/', $b[$k])) {
+                $result[$k]['conf'] = $v;
+                $result[$k]['base'] = $b[$k];
+            }
+        }
+    }
+    return $result;
+}
 ?>
 
 </form>
 </div>
-
 <style>
     #iframe {
         margin-top: 15px;
