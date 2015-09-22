@@ -129,3 +129,17 @@ if (empty($res)) {
     // Создание таблицы для справочника
     $db->create($table, $cfg['fields']);
 }
+
+// 6. Если в настройках в разделе CMS отсутствует галка "Уведомление о 404ых ошибках", то добавляем её туда
+$configSD->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php');
+$configParams = $configSD->getParams();
+if (!isset($configParams['cms']['arr']['error404Notice'])) {
+    $configParams['cms']['arr']['error404Notice'] =
+        array(
+            'label' => 'Уведомление о 404ых ошибках',
+            'value' => '0',
+            'type' => 'Ideal_Checkbox'
+        );
+    $configSD->setParams($configParams);
+    $configSD->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php');
+}
