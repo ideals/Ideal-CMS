@@ -48,6 +48,7 @@ class Menu2 extends \Ideal\Core\Widget
         // Раскладываем считанное меню во вложенные массивы по cid и lvl
         $num = 0;
         $menu = array();
+        $parent = array();
         $url = new \Ideal\Field\Url\Model();
         foreach ($menuList as $v) {
             if ($v['lvl'] == 1) {
@@ -56,7 +57,7 @@ class Menu2 extends \Ideal\Core\Widget
                     unset($menu[$num]);
                 }
                 $num = substr($v['cid'], 0, $digits);
-                $parentUrl = $v['url'];
+                $parent = $v;
                 if (isset($v['url_full']) && strlen($v['url_full']) > 1) {
                     $v['link'] = 'href="' . $v['url_full'] . $config->urlSuffix . '"';
                 } else {
@@ -66,10 +67,11 @@ class Menu2 extends \Ideal\Core\Widget
                 $menu[$num] = $v;
             }
             if ($v['lvl'] == 2) {
-                $prefix = $this->prefix . '/' . $parentUrl;
                 if (isset($v['url_full']) && strlen($v['url_full']) > 1) {
                     $v['link'] = 'href="' . $v['url_full'] . $config->urlSuffix . '"';
                 } else {
+                    $parentUrl = $url->setParentUrl(array('0' => $parent));
+                    $prefix = $this->prefix . '/' . $parentUrl;
                     $v['link'] = 'href="' . $url->getUrlWithPrefix($v, $prefix) . '"';
                 }
                 $menu[$num]['subMenu'][] = $v;
