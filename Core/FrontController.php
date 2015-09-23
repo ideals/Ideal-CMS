@@ -136,12 +136,12 @@ class FrontController
             $message = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"
                 . "\n\nСтраница не найдена (404).\n\n"
-                . "\n\n{$from}\n\n"
-                . '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
+                . "\n\n{$from}\n\n";
             $user = new User\Model();
             if ($user->checkLogin()) {
-                $message .= "\n Действие совершил администратор.";
+                $message .= "\n\nДействие совершил администратор.\n\n";
             }
+            $message .= '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
             $subject = "Страница не найдена (404) на сайте " . $config->domain;
             $mail = new \Mail\Sender();
             $mail->setSubj($subject);
