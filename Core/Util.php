@@ -276,9 +276,6 @@ class Util
                 $text .= '$_COOKIE = ' . "\n" . print_r($_COOKIE, true) . "\n\n";
             }
             $subject = "Сообщение об ошибке на сайте " . $config->domain;
-            if ((mb_stripos($text, 'Страница не найдена (404)') !== false) && (count(self::$errorArray) == 1)) {
-                $subject = "Страница не найдена (404) на сайте " . $config->domain;
-            }
             $mail = new \Mail\Sender();
             $mail->setSubj($subject);
             $mail->setPlainBody($text);

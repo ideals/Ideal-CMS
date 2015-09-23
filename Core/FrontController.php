@@ -102,40 +102,52 @@ class FrontController
     protected function emailError404()
     {
         $config = Config::getInstance();
+        $sent404 = true;
+        if (isset($config->cms['error404Notice'])) {
+            $sent404 = $config->cms['error404Notice'];
+        }
+        if ($sent404) {
+            if (isset($config->cms['known404']) && !empty($config->cms['known404'])) {
+                $known404 = explode("\n", $config->cms['known404']);
 
-        if (isset($config->cms['known404']) && !empty($config->cms['known404'])) {
-            $known404 = explode("\n", $config->cms['known404']);
+                $url = ltrim($_SERVER['REQUEST_URI'], '/'); // убираем ведущий слэш, для соответствия .htaccess
 
-            $url = ltrim($_SERVER['REQUEST_URI'], '/'); // убираем ведущий слэш, для соответствия .htaccess
+                $result = array_reduce(
+                    $known404,
+                    function (&$res, $rule) {
+                        if (strpos($rule, '/') !== 0) {
+                            // Если правило не оформлено, как regexp, то оформляем его
+                            $rule = '/' . $rule . '/';
+                        }
+                        if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
+                            return 1;
+                        }
+                        return $res;
+                    },
+                    $url
+                );
 
-            $result = array_reduce(
-                $known404,
-                function (&$res, $rule) {
-                    if (strpos($rule, '/') !== 0) {
-                        // Если правило не оформлено, как regexp, то оформляем его
-                        $rule = '/' . $rule . '/';
-                    }
-                    if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
-                        return 1;
-                    }
-                    return $res;
-                },
-                $url
-            );
-
-            if ($result === 1) {
-                // Если в массиве известных битых ссылок наш url найден, то не регистрируем ошибку
-                return;
+                if ($result === 1) {
+                    // Если в массиве известных битых ссылок наш url найден, то не регистрируем ошибку
+                    return;
+                }
             }
+            $from = empty($_SERVER['HTTP_REFERER']) ? 'Прямой переход.' : 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
+            $message = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
+                . "произошли следующие ошибки.\n\n"
+                . "\n\nСтраница не найдена (404).\n\n"
+                . "\n\n{$from}\n\n"
+                . '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
+            $user = new User\Model();
+            if ($user->checkLogin()) {
+                $message .= "\n Действие совершил администратор.";
+            }
+            $subject = "Страница не найдена (404) на сайте " . $config->domain;
+            $mail = new \Mail\Sender();
+            $mail->setSubj($subject);
+            $mail->setPlainBody($message);
+            $mail->sent($config->robotEmail, $config->cms['adminEmail']);
         }
-        $message = 'Страница не найдена (404). ';
-        $from = empty($_SERVER['HTTP_REFERER']) ? 'Прямой переход.' : 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
-        $message .= $from;
-        $user = new User\Model();
-        if ($user->checkLogin()) {
-            $message .= "\n Действие совершил администратор.";
-        }
-        Util::addError($message);
     }
 
     /**

@@ -88,14 +88,22 @@ class Router
         $is404 = false;
         $known404 = false;
 
-        // Определяем есть ли запрошенный адрес среди уже известных 404
-        if (file_exists(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php')) {
-            $known404 = new \Ideal\Structure\Service\SiteData\ConfigPhp();
-            $known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
-            $known404List = $known404->getParams();
-            $known404List = array_filter(explode("\n", $known404List['known']['arr']['known404']['value']));
-            $is404 = self::matchesRules($known404List, $url);
-            $is404 = $is404 === true ? true : false;
+        $init404Process = true;
+        if (isset($config->cms['error404Notice'])) {
+            $init404Process = $config->cms['error404Notice'];
+        }
+
+        // Инициируем процесс обработки 404-ых ошибок только если включена галка "Уведомление о 404ых ошибках"
+        if ($init404Process) {
+            // Определяем есть ли запрошенный адрес среди уже известных 404
+            if (file_exists(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php')) {
+                $known404 = new \Ideal\Structure\Service\SiteData\ConfigPhp();
+                $known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
+                $known404List = $known404->getParams();
+                $known404List = array_filter(explode("\n", $known404List['known']['arr']['known404']['value']));
+                $is404 = self::matchesRules($known404List, $url);
+                $is404 = $is404 === true ? true : false;
+            }
         }
 
         // Определяем оставшиеся элементы пути
@@ -256,6 +264,7 @@ class Router
         // Запускаем процесс обработки 404 страницы только если
         // существует структура "Ideal_Error404",
         // существует файл known404.php
+        // в настройках включена галка "Уведомление о 404ых ошибках"
         // пользователь не залогинен в админку
         if ($error404Structure !== false && $known404 !== false && !$isAdmin) {
             $known404Params = $known404->getParams();
@@ -319,7 +328,7 @@ class Router
             $rules,
             function (&$res, $rule) {
                 if (strpos($rule, '/') !== 0) {
-                    $rule = '/' . addcslashes($rule, '/') . '/';
+                    $rule = '/' . addcslashes($rule, '/\\') . '/';
                 }
                 if (!empty($rule) && ($res === true || preg_match($rule, $res))) {
                     return true;
