@@ -42,7 +42,7 @@ class Menu2 extends \Ideal\Core\Widget
 
         $db = Db::getInstance();
         $_sql = "SELECT * FROM {$table}
-                    WHERE (lvl = 1 OR lvl = 2) AND is_active=1 AND prev_structure='{$this->prevStructure}' ORDER BY cid";
+                    WHERE (lvl = 1 OR lvl = 2) AND is_active=1 AND prev_structure='{$this->prevStructure}' AND is_not_menu=0 ORDER BY cid";
         $menuList = $db->select($_sql);
 
         // Раскладываем считанное меню во вложенные массивы по cid и lvl
