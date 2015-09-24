@@ -99,10 +99,22 @@ class Router
             if (file_exists(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php')) {
                 $known404 = new \Ideal\Structure\Service\SiteData\ConfigPhp();
                 $known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
-                $known404List = $known404->getParams();
-                $known404List = array_filter(explode("\n", $known404List['known']['arr']['known404']['value']));
-                $is404 = self::matchesRules($known404List, $url);
-                $is404 = $is404 === true ? true : false;
+                $known404Params = $known404->getParams();
+                $known404List = array_filter(explode("\n", $known404Params['known']['arr']['known404']['value']));
+                $matchesRules = self::matchesRules($known404List, $url);
+                if (!empty($matchesRules)) {
+                    $is404 = true;
+                    // Если пользователь залогинен, то удаляем данный адрес из известных 404-ых
+                    $user = new User\Model();
+                    if ($user->checkLogin() !== false) {
+                        foreach ($matchesRules as $key => $value) {
+                            unset($known404List[$key]);
+                        }
+                        $known404Params['known']['arr']['known404']['value'] = implode("\n", $known404List);
+                        $known404->setParams($known404Params);
+                        $known404->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
+                    }
+                }
             }
         }
 
@@ -256,8 +268,10 @@ class Router
      */
     private function save404($url, $known404)
     {
+        $db = DB::getInstance();
         $config = Config::getInstance();
         $error404Structure = $config->getStructureByName('Ideal_Error404');
+        $error404Table = $config->db['prefix'] . 'ideal_structure_error404';
         $user = new User\Model();
         $isAdmin = $user->checkLogin();
 
@@ -271,12 +285,9 @@ class Router
 
             // Прверяем есть ли запрошенный url среди исключений
             $rules404List = array_filter(explode("\n", $known404Params['rules']['arr']['rulesExclude404']['value']));
-            $notRec = self::matchesRules($rules404List, $url);
+            $matchesRules = self::matchesRules($rules404List, $url);
 
-            if ($notRec !== true) {
-                $db = DB::getInstance();
-                $error404Table = $config->db['prefix'] . 'ideal_structure_error404';
-
+            if (empty($matchesRules)) {
                 // Получаем данные о рассматриваемом url в справочнике "Ошибки 404"
                 $par = array('url' => $url);
                 $fields = array('table' => $error404Table);
@@ -312,30 +323,30 @@ class Router
                     $db->delete($error404Table)->where('url = :url', $par)->exec();
                 }
             }
+        } elseif ($isAdmin) {
+            // Если пользователь залогинен в админку, то удаляем запрошенный адрес из справочника "Ошибки 404"
+            $par = array('url' => $url);
+            $db->delete($error404Table)->where('url = :url', $par)->exec();
         }
     }
 
     /**
-     * Ищет совпадения $subject с хотябы одним из элементов $rules
+     * Фильтрует массив известных 404-ых $rules по совпадению с запрошенным адресом $url
      *
-     * @param array $rules Список правил с которыми сравнивается $subject
-     * @param string $subject Строка для поиска совпадений с правилами
-     * @return mixed Изначальная строка $subject либо true в случае нахождения совпадения
+     * @param array $rules Список правил с которыми сравнивается $url
+     * @param string $url Запрошенный адрес
+     * @return array Массив совпадений запрошенного адреса и извесных 404-ых
      */
-    private function matchesRules($rules, $subject)
+    private function matchesRules($rules, $url)
     {
-        return array_reduce(
-            $rules,
-            function (&$res, $rule) {
-                if (strpos($rule, '/') !== 0) {
-                    $rule = '/' . addcslashes($rule, '/\\') . '/';
-                }
-                if (!empty($rule) && ($res === true || preg_match($rule, $res))) {
-                    return true;
-                }
-                return $res;
-            },
-            $subject
-        );
+        return array_filter($rules, function ($rule) use ($url) {
+            if (strpos($rule, '/') !== 0) {
+                $rule = '/' . addcslashes($rule, '/\\') . '/';
+            }
+            if (!empty($rule) && (preg_match($rule, $url))) {
+                return true;
+            }
+            return false;
+        });
     }
 }
