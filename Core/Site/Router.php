@@ -307,7 +307,7 @@ class Router
                         'count' => 1,
                     );
                     $db->insert($error404Table, $params);
-                } elseif ($rows[0]['count'] < 10) {
+                } elseif ($rows[0]['count'] < 15) {
                     // Увеличиваем счётчик посещения страницы
                     $values = array('count' => $rows[0]['count'] + 1);
                     $par = array('url' => $url);
