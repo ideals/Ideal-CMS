@@ -1,6 +1,6 @@
 <?php
 
-// Новости
+// Справочник "Ошибки 404"
 return array(
     'params' => array(
         'in_structures' => array('Ideal_DataList'), // в каких структурах можно создавать эту структуру
@@ -28,7 +28,7 @@ return array(
         ),
         'url' => array(
             'label' => 'Адрес',
-            'sql' => 'varchar(255) not null unique',
+            'sql' => 'text not null',
             'type' => 'Ideal_Text'
         ),
         'count' => array(
