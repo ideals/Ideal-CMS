@@ -113,6 +113,8 @@ class ModelAbstract extends Addon\AbstractModel
             } else {
                 $view->message = 'Поле логин или ключ от яндекса имеет пустое значене';
             }
+        } else {
+            $view->message = 'Пустой поисковый запрос';
         }
         $this->pageData['content'] .= $view->render();
 
