@@ -26,7 +26,7 @@ array_walk(
 );
 
 // Объединяем, минимизируем и записываем результат в файл /css/all.min.css
-$min = new Minifier();
+$min = new Minifier(array('echo' => false));
 $file = $min->merge(DOCUMENT_ROOT . '/css/all.min.css', '', $request);
 
 // Выводим объединённый и минимизированный результат
