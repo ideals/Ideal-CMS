@@ -26,7 +26,7 @@ array_walk(
 );
 
 // Отклчаем Google Closure, используем встроенный JShrink
-$min = new Minifier(array( 'closure' => false));
+$min = new Minifier(array( 'closure' => false, 'echo' => false ));
 
 // Объединяем, минимизируем и записываем результат в файл /js/all.min.js
 $file = $min->merge(DOCUMENT_ROOT . '/js/all.min.js', '', $request);
