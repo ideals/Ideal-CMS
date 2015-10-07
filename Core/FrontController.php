@@ -41,7 +41,7 @@ class FrontController
         // Запускаем в работу контроллер структуры
         $content = $controller->run($router);
 
-        if ($router->is404()) {
+        if ($router->is404() && $router->send404()) {
             $httpHeaders = array('HTTP/1.0 404 Not Found');
             $this->emailError404();
         } else {
@@ -97,7 +97,7 @@ class FrontController
     }
 
     /**
-     * Отправка письма о 404-ой ошибке, если url не зарегистрирован в $config->cms['known404']
+     * Отправка письма о 404-ой ошибке
      */
     protected function emailError404()
     {
@@ -107,31 +107,6 @@ class FrontController
             $sent404 = $config->cms['error404Notice'];
         }
         if ($sent404) {
-            if (isset($config->cms['known404']) && !empty($config->cms['known404'])) {
-                $known404 = explode("\n", $config->cms['known404']);
-
-                $url = ltrim($_SERVER['REQUEST_URI'], '/'); // убираем ведущий слэш, для соответствия .htaccess
-
-                $result = array_reduce(
-                    $known404,
-                    function (&$res, $rule) {
-                        if (strpos($rule, '/') !== 0) {
-                            // Если правило не оформлено, как regexp, то оформляем его
-                            $rule = '/' . $rule . '/';
-                        }
-                        if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
-                            return 1;
-                        }
-                        return $res;
-                    },
-                    $url
-                );
-
-                if ($result === 1) {
-                    // Если в массиве известных битых ссылок наш url найден, то не регистрируем ошибку
-                    return;
-                }
-            }
             $from = empty($_SERVER['HTTP_REFERER']) ? 'Прямой переход.' : 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
             $message = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"

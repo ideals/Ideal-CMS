@@ -17,6 +17,9 @@ class Router
     /** @var Model Модель активной страницы */
     protected $model = null;
 
+    /** @var bool Флаг отпрваки сообщения о 404ой ошибке */
+    protected $send404 = true;
+
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
      *
@@ -85,10 +88,19 @@ class Router
             return $model;
         }
 
+        // Признак 404ой ошибки
         $is404 = false;
+
+        // Признак доступности файла со списком известных 404ых.
+        // Содержит инфоормацию из этого файла, в случае его доступности
         $known404 = false;
 
+        // Признак запуска процесса обработки 404ой ошибки. Зависит от параметра "Уведомление о 404ых ошибках"
         $init404Process = true;
+
+        // Признак надобности отправки сообщения о 404ой ошибке на почту.
+        $send404 = true;
+
         if (isset($config->cms['error404Notice'])) {
             $init404Process = $config->cms['error404Notice'];
         }
@@ -104,6 +116,7 @@ class Router
                 $matchesRules = self::matchesRules($known404List, $url);
                 if (!empty($matchesRules)) {
                     $is404 = true;
+                    $send404 = false;
                     // Если пользователь залогинен, то удаляем данный адрес из известных 404-ых
                     $user = new User\Model();
                     if ($user->checkLogin() !== false) {
@@ -113,6 +126,7 @@ class Router
                         $known404Params['known']['arr']['known404']['value'] = implode("\n", $known404List);
                         $known404->setParams($known404Params);
                         $known404->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
+                        $send404 = true;
                     }
                 }
             }
@@ -154,11 +168,12 @@ class Router
                 $model->is404 = true;
             }
             if ($model->is404) {
-                self::save404($originalUrl, $known404);
+                $send404 = self::save404($originalUrl, $known404);
             }
         } else {
             $model->is404 = true;
         }
+        $this->send404 = $send404;
         return $model;
     }
 
@@ -245,6 +260,14 @@ class Router
     }
 
     /**
+     * Возвращает значение флага отпрваки сообщения о 404ой ошибке
+     */
+    public function send404()
+    {
+        return $this->send404;
+    }
+
+    /**
      * @param $model Model Устанавливает модель, найденную роутером (обычно использется в плагинах)
      */
     public function setModel($model)
@@ -265,9 +288,12 @@ class Router
      *
      * @param string $url Запрошенный адрес
      * @param bool|\Ideal\Structure\Service\SiteData\ConfigPhp $known404 false, если файл known404.php не сущечтвует. Объект класса ConfigPhp, в обратном случае
+     *
+     * @return bool Признак надобности отправки почты о 404ой ошибке
      */
     private function save404($url, $known404)
     {
+        $send404 = true;
         $db = DB::getInstance();
         $config = Config::getInstance();
         $error404Structure = $config->getStructureByName('Ideal_Error404');
@@ -308,11 +334,15 @@ class Router
                     );
                     $db->insert($error404Table, $params);
                 } elseif ($rows[0]['count'] < 15) {
+                    $send404 = false;
+
                     // Увеличиваем счётчик посещения страницы
                     $values = array('count' => $rows[0]['count'] + 1);
                     $par = array('url' => $url);
                     $db->update($error404Table)->set($values)->where('url = :url', $par)->exec();
                 } else {
+                    $send404 = false;
+
                     // Переносим данные из справочника в файл с известными 404
                     $known404List = array_filter(explode("\n", $known404Params['known']['arr']['known404']['value']));
                     $known404List[] = $url;
@@ -327,7 +357,9 @@ class Router
             // Если пользователь залогинен в админку, то удаляем запрошенный адрес из справочника "Ошибки 404"
             $par = array('url' => $url);
             $db->delete($error404Table)->where('url = :url', $par)->exec();
+            $send404 = true;
         }
+        return $send404;
     }
 
     /**
