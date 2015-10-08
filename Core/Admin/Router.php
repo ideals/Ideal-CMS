@@ -15,6 +15,9 @@ class Router
     /** @var Model Модель активной страницы */
     protected $model = null;
 
+    /** @var bool Флаг отпрваки сообщения о 404ой ошибке */
+    protected $send404 = true;
+
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
      *
@@ -150,5 +153,13 @@ class Router
     public function is404()
     {
         return $this->model->is404;
+    }
+
+    /**
+     * Возвращает значение флага отпрваки сообщения о 404ой ошибке
+     */
+    public function send404()
+    {
+        return $this->send404;
     }
 }
