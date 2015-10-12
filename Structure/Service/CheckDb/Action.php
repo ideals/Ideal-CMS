@@ -125,7 +125,7 @@ if (isset($_POST['create_field'])) {
         //Поиск поля после которого нужно вставить новое
         $afterThisField = '';
         foreach ($data['fields'] as $key => $value) {
-            if ($key != $field) {
+            if ($key != $field && !empty(trim($value['sql']))) {
                 $afterThisField = $key;
             } else {
                 break;
