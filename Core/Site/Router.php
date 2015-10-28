@@ -287,7 +287,8 @@ class Router
      * Сохраняет информацию о 404 ошибке в справочник/файл
      *
      * @param string $url Запрошенный адрес
-     * @param bool|\Ideal\Structure\Service\SiteData\ConfigPhp $known404 false, если файл known404.php не сущечтвует. Объект класса ConfigPhp, в обратном случае
+     * @param bool|\Ideal\Structure\Service\SiteData\ConfigPhp $known404 false, если файл known404.php не существует.
+     *                                                                   Объект класса ConfigPhp, в обратном случае
      *
      * @return bool Признак надобности отправки почты о 404ой ошибке
      */
@@ -373,7 +374,7 @@ class Router
     {
         return array_filter($rules, function ($rule) use ($url) {
             if (strpos($rule, '/') !== 0) {
-                $rule = '/' . addcslashes($rule, '/\\') . '/';
+                $rule = '/^' . addcslashes($rule, '/\\.') . '$/';
             }
             if (!empty($rule) && (preg_match($rule, $url))) {
                 return true;
