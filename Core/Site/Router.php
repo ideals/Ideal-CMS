@@ -5,8 +5,7 @@ use Ideal\Core\Config;
 use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
-use Ideal\Core\Db;
-use Ideal\Structure\User;
+use Ideal\Structure\Error404;
 
 class Router
 {
@@ -17,8 +16,8 @@ class Router
     /** @var Model Модель активной страницы */
     protected $model = null;
 
-    /** @var bool Флаг отпрваки сообщения о 404ой ошибке */
-    protected $send404 = true;
+    /** @var Model Модель для обработки 404-ых ошибок */
+    protected $Error404 = null;
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -45,6 +44,8 @@ class Router
 
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
+
+        $this->Error404 = new Error404\Model();
 
         if (is_null($this->model)) {
             $this->model = $this->routeByUrl();
@@ -88,49 +89,10 @@ class Router
             return $model;
         }
 
-        // Признак 404ой ошибки
-        $is404 = false;
+        $this->Error404->setUrl($url);
 
-        // Признак доступности файла со списком известных 404ых.
-        // Содержит инфоормацию из этого файла, в случае его доступности
-        $known404 = false;
-
-        // Признак запуска процесса обработки 404ой ошибки. Зависит от параметра "Уведомление о 404ых ошибках"
-        $init404Process = true;
-
-        // Признак надобности отправки сообщения о 404ой ошибке на почту.
-        $send404 = true;
-
-        if (isset($config->cms['error404Notice'])) {
-            $init404Process = $config->cms['error404Notice'];
-        }
-
-        // Инициируем процесс обработки 404-ых ошибок только если включена галка "Уведомление о 404ых ошибках"
-        if ($init404Process) {
-            // Определяем есть ли запрошенный адрес среди уже известных 404
-            if (file_exists(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php')) {
-                $known404 = new \Ideal\Structure\Service\SiteData\ConfigPhp();
-                $known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
-                $known404Params = $known404->getParams();
-                $known404List = array_filter(explode("\n", $known404Params['known']['arr']['known404']['value']));
-                $matchesRules = self::matchesRules($known404List, $url);
-                if (!empty($matchesRules)) {
-                    $is404 = true;
-                    $send404 = false;
-                    // Если пользователь залогинен, то удаляем данный адрес из известных 404-ых
-                    $user = new User\Model();
-                    if ($user->checkLogin() !== false) {
-                        foreach ($matchesRules as $key => $value) {
-                            unset($known404List[$key]);
-                        }
-                        $known404Params['known']['arr']['known404']['value'] = implode("\n", $known404List);
-                        $known404->setParams($known404Params);
-                        $known404->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
-                        $send404 = true;
-                    }
-                }
-            }
-        }
+        // Проверяем наличие адреса среди уже известных 404-ых
+        $is404 = $this->Error404->checkAvailability404();
 
         // Определяем оставшиеся элементы пути
         $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Site\\Model';
@@ -139,7 +101,6 @@ class Router
 
         if ($is404 !== true) {
             // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
-            $originalUrl = $url;
             $lengthSuffix = strlen($config->urlSuffix);
             if ($lengthSuffix > 0) {
                 $suffix = substr($url, -$lengthSuffix);
@@ -168,12 +129,11 @@ class Router
                 $model->is404 = true;
             }
             if ($model->is404) {
-                $send404 = self::save404($originalUrl, $known404);
+                $this->Error404->save404();
             }
         } else {
             $model->is404 = true;
         }
-        $this->send404 = $send404;
         return $model;
     }
 
@@ -260,14 +220,6 @@ class Router
     }
 
     /**
-     * Возвращает значение флага отпрваки сообщения о 404ой ошибке
-     */
-    public function send404()
-    {
-        return $this->send404;
-    }
-
-    /**
      * @param $model Model Устанавливает модель, найденную роутером (обычно использется в плагинах)
      */
     public function setModel($model)
@@ -284,102 +236,10 @@ class Router
     }
 
     /**
-     * Сохраняет информацию о 404 ошибке в справочник/файл
-     *
-     * @param string $url Запрошенный адрес
-     * @param bool|\Ideal\Structure\Service\SiteData\ConfigPhp $known404 false, если файл known404.php не существует.
-     *                                                                   Объект класса ConfigPhp, в обратном случае
-     *
-     * @return bool Признак надобности отправки почты о 404ой ошибке
+     * Возвращает значение флага отпрваки сообщения о 404ой ошибке
      */
-    private function save404($url, $known404)
+    public function send404()
     {
-        $send404 = true;
-        $db = DB::getInstance();
-        $config = Config::getInstance();
-        $error404Structure = $config->getStructureByName('Ideal_Error404');
-        $error404Table = $config->db['prefix'] . 'ideal_structure_error404';
-        $user = new User\Model();
-        $isAdmin = $user->checkLogin();
-
-        // Запускаем процесс обработки 404 страницы только если
-        // существует структура "Ideal_Error404",
-        // существует файл known404.php
-        // в настройках включена галка "Уведомление о 404ых ошибках"
-        // пользователь не залогинен в админку
-        if ($error404Structure !== false && $known404 !== false && !$isAdmin) {
-            $known404Params = $known404->getParams();
-
-            // Прверяем есть ли запрошенный url среди исключений
-            $rules404List = array_filter(explode("\n", $known404Params['rules']['arr']['rulesExclude404']['value']));
-            $matchesRules = self::matchesRules($rules404List, $url);
-
-            if (empty($matchesRules)) {
-                // Получаем данные о рассматриваемом url в справочнике "Ошибки 404"
-                $par = array('url' => $url);
-                $fields = array('table' => $error404Table);
-                $rows = $db->select('SELECT * FROM &table WHERE url = :url LIMIT 1', $par, $fields);
-                if (count($rows) == 0) {
-                    // Добавляем запись в справочник
-                    $dataList = $config->getStructureByName('Ideal_DataList');
-                    $prevStructure = $dataList['ID'] . '-';
-                    $par = array('structure' => 'Ideal_Error404');
-                    $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
-                    $row = $db->select('SELECT ID FROM &table WHERE structure = :structure', $par, $fields);
-                    $prevStructure .= $row[0]['ID'];
-                    $params = array(
-                        'prev_structure' => $prevStructure,
-                        'date_create' => time(),
-                        'url' => $url,
-                        'count' => 1,
-                    );
-                    $db->insert($error404Table, $params);
-                } elseif ($rows[0]['count'] < 15) {
-                    $send404 = false;
-
-                    // Увеличиваем счётчик посещения страницы
-                    $values = array('count' => $rows[0]['count'] + 1);
-                    $par = array('url' => $url);
-                    $db->update($error404Table)->set($values)->where('url = :url', $par)->exec();
-                } else {
-                    $send404 = false;
-
-                    // Переносим данные из справочника в файл с известными 404
-                    $known404List = array_filter(explode("\n", $known404Params['known']['arr']['known404']['value']));
-                    $known404List[] = $url;
-                    $known404Params['known']['arr']['known404']['value'] = implode("\n", $known404List);
-                    $known404->setParams($known404Params);
-                    $known404->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
-                    $par = array('url' => $url);
-                    $db->delete($error404Table)->where('url = :url', $par)->exec();
-                }
-            }
-        } elseif ($isAdmin) {
-            // Если пользователь залогинен в админку, то удаляем запрошенный адрес из справочника "Ошибки 404"
-            $par = array('url' => $url);
-            $db->delete($error404Table)->where('url = :url', $par)->exec();
-            $send404 = true;
-        }
-        return $send404;
-    }
-
-    /**
-     * Фильтрует массив известных 404-ых $rules по совпадению с запрошенным адресом $url
-     *
-     * @param array $rules Список правил с которыми сравнивается $url
-     * @param string $url Запрошенный адрес
-     * @return array Массив совпадений запрошенного адреса и извесных 404-ых
-     */
-    private function matchesRules($rules, $url)
-    {
-        return array_filter($rules, function ($rule) use ($url) {
-            if (strpos($rule, '/') !== 0) {
-                $rule = '/^' . addcslashes($rule, '/\\.') . '$/';
-            }
-            if (!empty($rule) && (preg_match($rule, $url))) {
-                return true;
-            }
-            return false;
-        });
+        return $this->Error404->send404();
     }
 }
