@@ -54,41 +54,44 @@ class Model
     public function checkAvailability404()
     {
         $config = Config::getInstance();
-        $is404 = false;
 
         // Признак запуска процесса обработки 404ой ошибки. Зависит от параметра "Уведомление о 404ых ошибках"
-        $init404Process = true;
+        $init404Process = isset($config->cms['error404Notice']) ? $config->cms['error404Notice'] : true;
 
-        if (isset($config->cms['error404Notice'])) {
-            $init404Process = $config->cms['error404Notice'];
+        if (!$init404Process) {
+            // Если не включена галка "Уведомление о 404ых ошибках" — говорим, что в списке этой странице нет
+            return false;
         }
 
-        // Инициируем процесс обработки 404-ых ошибок только если включена галка "Уведомление о 404ых ошибках"
-        if ($init404Process) {
-            // Определяем есть ли запрошенный адрес среди уже известных 404
-            if (file_exists(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php')) {
-                $this->known404 = new \Ideal\Structure\Service\SiteData\ConfigPhp();
-                $this->known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
-                $known404Params = $this->known404->getParams();
-                $known404List = array_filter(explode("\n", $known404Params['known']['arr']['known404']['value']));
-                $matchesRules = self::matchesRules($known404List, $this->url);
-                if (!empty($matchesRules)) {
-                    $is404 = true;
-                    $this->send404 = false;
-                    // Если пользователь залогинен, то удаляем данный адрес из известных 404-ых
-                    $user = new User\Model();
-                    if ($user->checkLogin() !== false) {
-                        foreach ($matchesRules as $key => $value) {
-                            unset($known404List[$key]);
-                        }
-                        $known404Params['known']['arr']['known404']['value'] = implode("\n", $known404List);
-                        $this->known404->setParams($known404Params);
-                        $this->known404->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
-                        $this->send404 = true;
-                    }
-                }
+        // Определяем есть ли запрошенный адрес среди уже известных 404
+        if (!file_exists(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php')) {
+            return false;
+        }
+
+        // Инициируем процесс обработки 404-ых ошибок
+        $this->known404 = new \Ideal\Structure\Service\SiteData\ConfigPhp();
+        $this->known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
+        $known404Params = $this->known404->getParams();
+        $known404List = array_filter(explode("\n", $known404Params['known']['arr']['known404']['value']));
+        $matchesRules = self::matchesRules($known404List, $this->url);
+        if (empty($matchesRules)) {
+            return false;
+        }
+
+        $is404 = true;
+        $this->send404 = false;
+        // Если пользователь залогинен, то удаляем данный адрес из известных 404-ых
+        $user = new User\Model();
+        if ($user->checkLogin() !== false) {
+            foreach ($matchesRules as $key => $value) {
+                unset($known404List[$key]);
             }
+            $known404Params['known']['arr']['known404']['value'] = implode("\n", $known404List);
+            $this->known404->setParams($known404Params);
+            $this->known404->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
+            $this->send404 = true;
         }
+
         return $is404;
     }
 
