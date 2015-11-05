@@ -579,6 +579,8 @@ JS;
      * @param string $email E-mail заказчика
      * @param string $content Текст заказа
      * @param int $price Сумма заказа
+     *
+     * @return int $newOrderId Идентификатор нового заказа
      */
     public function saveOrder($name, $email, $content = '', $price = 0)
     {
@@ -604,6 +606,9 @@ JS;
             $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
             $row = $db->select('SELECT ID FROM &table WHERE structure = :structure', $par, $fields);
             $prevStructure .= $row[0]['ID'];
+
+            // Умножаем сумму заказа на 100 для хранения в базе
+            $price *= 100;
 
             // Записываем данные
             $newOrderId = $db->insert(
