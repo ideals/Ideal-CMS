@@ -41,9 +41,11 @@ class FrontController
         // Запускаем в работу контроллер структуры
         $content = $controller->run($router);
 
-        if ($router->is404() && $router->send404()) {
+        if ($router->is404()) {
             $httpHeaders = array('HTTP/1.0 404 Not Found');
-            $this->emailError404();
+            if ($router->send404()) {
+                $this->emailError404();
+            }
         } else {
             $httpHeaders = $controller->getHttpHeaders();
 
