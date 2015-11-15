@@ -18,6 +18,9 @@ class Forms
     /** @var \FormPhp\Field\AbstractField[] Список полей ввода в форме */
     public $fields = array();
 
+    /** @var bool Флаг необходимости минификации кода */
+    public $isMinifier = false;
+
     /** @var string Название формы  */
     protected $formName;
 
@@ -39,7 +42,7 @@ class Forms
     /** @var string Тип заказа */
     protected $orderType = 'Заявка с сайта';
 
-    /** @var string Атрибуты формы */
+    /** @var array Атрибуты формы */
     protected $attributes = array();
 
     /** @var bool Флаг для осуществления изначальной валидации по местонахождению формы */
@@ -188,7 +191,7 @@ class Forms
     /**
      * Устанавливаем атрибуты формы
      *
-     * @param $attributes
+     * @param array $attributes
      */
     public function setAttributes($attributes)
     {
@@ -354,23 +357,18 @@ class Forms
     }
 
     /**
-     * Установка url, по которому будет производиться ajax-запрос отправки формы
+     * Установка аргументов js-функции формы
      *
-     * @param string $url url скрипта для обработки формы
+     * В передаваемом массиве могут быть следующие параметры:
+     * options — json-массив настроек скрипта (ajaxUrl, ajaxDataType, location, successMessage, clearForm)
+     * messages — json-массив сообщений формы (ajaxError, notValid, errors, validate)
+     * methods — объект со списком методов для переопределения стандартных методов формы
+     *
+     * @param array $arguments Массив аргументов js-функции формы
      */
     public function setFormJsArg($arguments)
     {
         $this->formJsArguments = $arguments;
-    }
-
-    /**
-     * Установка url, по которому будет производиться ajax-запрос отправки формы
-     *
-     * @param string $url url скрипта для обработки формы
-     */
-    public function getFormJsArg($arguments)
-    {
-        return $this->formJsArguments;
     }
 
     /**
@@ -451,7 +449,9 @@ class Forms
      */
     protected function renderCss()
     {
-        return file_get_contents(__DIR__ .'/form.css');
+        $css = file_get_contents(__DIR__ .'/form.css');
+        $css = $this->minimizeCss($css);
+        return $css;
     }
 
     /**
@@ -520,6 +520,8 @@ JS;
             . $this->js
             . "\n" . $ajaxUrl
             . "\n"  . '})';
+
+        $this->js = $this->minimizeJs($this->js);
 
         return $this->js;
     }
@@ -626,5 +628,48 @@ JS;
             );
         }
         return $newOrderId;
+    }
+
+    /**
+     * Минификация js-кода
+     *
+     * @param string $content Исходный js-код
+     * @return string Минифицированный js-код
+     */
+    protected function minimizeJs($content)
+    {
+        if ($this->isMinifier) {
+            $path = stream_resolve_include_path('Minifier/jShrink.php');
+            if ($path) {
+                require_once $path;
+                $content = \JShrink\Minifier::minify($content, array('flaggedComments' => true));
+            }
+        }
+
+        return $content;
+    }
+
+    /**
+     * Минификация css-кода
+     *
+     * @param string $content Исходный css-код
+     * @return string Минифицированный css-код
+     */
+    protected function minimizeCss($content)
+    {
+        if ($this->isMinifier) {
+            // Удаляем комментарии
+            $content = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $content);
+
+            // Удаляем табуляцию, пробелы, переводы строки и т.д.
+            $content = preg_replace('/(\s\s+|\t|\n)/', ' ', $content);
+
+            // Удаляем лишние пробелы до и после скобок
+            $content = preg_replace(array('(( )+{)', '({( )+)'), '{', $content);
+            $content = preg_replace(array('(( )+})', '(}( )+)', '(;( )*})'), '}', $content);
+            $content = preg_replace(array('(;( )+)', '(( )+;)'), ';', $content);
+        }
+
+        return $content;
     }
 }
