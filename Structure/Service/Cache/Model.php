@@ -36,7 +36,8 @@ class Model
      * Отвечает за реакции системы на изменения настроек файлового кэширования
      * и кэширования twig-шаблонов
      *
-     * @return array Массив содержащий флаг успешности проверки настроек, а так же текст и набор классов в случае обнаружения ошибок
+     * @return array Массив содержащий флаг успешности проверки настроек,
+     *               а так же текст и набор классов в случае обнаружения ошибок
      */
     public function checkSettings()
     {
@@ -62,7 +63,7 @@ class Model
                 }
             }
 
-            //Перезаписываем данные в исключениях кэша
+            // Перезаписываем данные в исключениях кэша
             $responseCEP = self::cacheExcludeProcessing($params['cache']['arr']['excludeFileCache']['value']);
             if ($responseCEP['res'] === false) {
                 $response['res'] = false;
@@ -75,8 +76,19 @@ class Model
             $siteTwigCacheOld = $oldParams['cache']['arr']['templateSite']['value'];
             $adminTwigCache = $params['cache']['arr']['templateAdmin']['value'];
             $adminTwigCacheOld = $oldParams['cache']['arr']['templateAdmin']['value'];
-            if ((($siteTwigCache != $siteTwigCacheOld) && !$siteTwigCache) || (($adminTwigCache != $adminTwigCacheOld) && !$adminTwigCache)) {
+            if ((($siteTwigCache != $siteTwigCacheOld) && !$siteTwigCache)
+                || (($adminTwigCache != $adminTwigCacheOld) && !$adminTwigCache)) {
                 View::clearTwigCache();
+            }
+
+            // Сбрасываем минифицированные js и css-файлы
+            $jsFile = DOCUMENT_ROOT . '/js/all.min.js';
+            if (file_exists($jsFile)) {
+                unlink($jsFile);
+            }
+            $cssFile = DOCUMENT_ROOT . '/css/all.min.css';
+            if (file_exists($cssFile)) {
+                unlink($cssFile);
             }
         }
 
