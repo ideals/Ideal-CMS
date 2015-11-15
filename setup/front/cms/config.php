@@ -34,7 +34,7 @@ return array(
             'ID' => 3,
             'structure' => 'Ideal_DataList',
             'name' => 'Справочники',
-            'isShow' => 0,
+            'isShow' => 1,
             'hasTable' => true
         ),
         // Подключаем сервисный модуль
@@ -66,6 +66,14 @@ return array(
             'ID' => 7,
             'structure' => 'Ideal_Order',
             'name' => 'Заказы с сайта',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
+        // Подключаем справочник 404-ых ошибок
+        array(
+            'ID' => 8,
+            'structure' => 'Ideal_Error404',
+            'name' => 'Ошибки 404',
             'isShow' => 0,
             'hasTable' => true
         ),

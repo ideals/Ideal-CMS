@@ -13,23 +13,26 @@ if (!isset($_REQUEST['js']) || empty($_REQUEST['js'])) {
 require_once('../[[CMS]]/Ideal/Library/Minifier/class.magic-min.php');
 
 // Абсолютный адрес корня сервера, не должен оканчиваться на слэш
-define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT']);
+$docRoot = getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT'];
 
 $request = $_REQUEST['js'];
 
 // Убираем лишние пробелы из путей и добавляем путь к корню сайта на диске
 array_walk(
     $request,
-    function (&$v) {
-        $v = DOCUMENT_ROOT . '/' . trim($v);
+    function (&$v, $k, $docRoot) {
+        $v = trim($v);
+        if (strpos($v, 'http') !== 0) {
+            $v = $docRoot . '/' . ltrim($v, '/');
+        }
     }
 );
 
-// Отклчаем Google Closure, используем встроенный JShrink
-$min = new Minifier(array( 'closure' => false));
+// Отключаем Google Closure, используем встроенный JShrink
+$min = new Minifier(array('closure' => false, 'echo' => false));
 
 // Объединяем, минимизируем и записываем результат в файл /js/all.min.js
-$file = $min->merge(DOCUMENT_ROOT . '/js/all.min.js', '', $request);
+$file = $min->merge($docRoot . '/js/all.min.js', '', $request);
 
 // Выводим объединённый и минимизированный результат
 header('Content-type: application/javascript');

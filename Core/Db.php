@@ -566,7 +566,7 @@ class Db extends \mysqli
      * @param array  $params Параметры, используемые в строке where-условия
      * @return $this
      */
-    public function where($sql, $params)
+    public function where($sql, $params = '')
     {
         $this->whereQuery = $sql;
         $this->whereParams = $params;

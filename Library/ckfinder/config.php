@@ -334,3 +334,12 @@ include_once "plugins/zip/plugin.php";
 $config['plugin_imageresize']['smallThumb'] = '90x90';
 $config['plugin_imageresize']['mediumThumb'] = '120x120';
 $config['plugin_imageresize']['largeThumb'] = '180x180';
+
+
+// Проверяем, есть ли файл настроек CKFinder в корне системы
+$path = dirname(dirname(dirname(dirname(dirname(dirname(dirname($_SERVER['SCRIPT_FILENAME'])))))));
+$file = $path . '/ckfinder.php';
+if (file_exists($file)) {
+	// Файл настроек есть, подключаем его
+	include($file);
+}
