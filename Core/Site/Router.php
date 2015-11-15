@@ -5,6 +5,7 @@ use Ideal\Core\Config;
 use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
+use Ideal\Structure\Error404;
 
 class Router
 {
@@ -14,6 +15,9 @@ class Router
 
     /** @var Model Модель активной страницы */
     protected $model = null;
+
+    /** @var Model Модель для обработки 404-ых ошибок */
+    protected $Error404 = null;
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -41,6 +45,8 @@ class Router
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
 
+        $this->Error404 = new Error404\Model();
+
         if (is_null($this->model)) {
             $this->model = $this->routeByUrl();
         }
@@ -51,7 +57,9 @@ class Router
         $this->model->initPageData();
 
         // Определяем корректную модель на основании поля structure
-        $this->model = $this->model->detectActualModel();
+        if (!$this->model->is404) {
+            $this->model = $this->model->detectActualModel();
+        }
     }
 
     /**
@@ -81,41 +89,51 @@ class Router
             return $model;
         }
 
-        // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
-        $is404 = false;
-        $lengthSuffix = strlen($config->urlSuffix);
-        if ($lengthSuffix > 0) {
-            $suffix = substr($url, -$lengthSuffix);
-            if ($suffix != $config->urlSuffix) {
-                $is404 = true;
-            }
-            $url = substr($url, 0, -$lengthSuffix); // убираем суффикс из url
-        }
+        $this->Error404->setUrl($url);
 
-        // Проверка, не остался ли в конце URL слэш
-        if (substr($url, -1) == '/') {
-            // Убираем завершающие слэши, если они есть
-            $url = rtrim($url, '/');
-            // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
-            // то ставим 404-ошибку
-            $is404 = true;
-        }
-
-        // Разрезаем URL на части
-        $url = explode('/', $url);
+        // Проверяем наличие адреса среди уже известных 404-ых
+        $is404 = $this->Error404->checkAvailability404();
 
         // Определяем оставшиеся элементы пути
         $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Site\\Model';
         /* @var $model Model */
         $model = new $modelClassName('0-' . $prevStructureId);
 
-        // Запускаем определение пути и активной модели по $par
-        $model = $model->detectPageByUrl($path, $url);
-        if ($model->is404 == false && $is404) {
-            // Если роутинг нашёл нужную страницу, но суффикс неправильный
+        if ($is404 !== true) {
+            // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
+            $lengthSuffix = strlen($config->urlSuffix);
+            if ($lengthSuffix > 0) {
+                $suffix = substr($url, -$lengthSuffix);
+                if ($suffix != $config->urlSuffix) {
+                    $is404 = true;
+                }
+                $url = substr($url, 0, -$lengthSuffix); // убираем суффикс из url
+            }
+
+            // Проверка, не остался ли в конце URL слэш
+            if (substr($url, -1) == '/') {
+                // Убираем завершающие слэши, если они есть
+                $url = rtrim($url, '/');
+                // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
+                // то ставим 404-ошибку
+                $is404 = true;
+            }
+
+            // Разрезаем URL на части
+            $url = explode('/', $url);
+
+            // Запускаем определение пути и активной модели по $par
+            $model = $model->detectPageByUrl($path, $url);
+            if ($model->is404 == false && $is404) {
+                // Если роутинг нашёл нужную страницу, но суффикс неправильный
+                $model->is404 = true;
+            }
+            if ($model->is404) {
+                $this->Error404->save404();
+            }
+        } else {
             $model->is404 = true;
         }
-
         return $model;
     }
 
@@ -215,5 +233,13 @@ class Router
     public function is404()
     {
         return $this->model->is404;
+    }
+
+    /**
+     * Возвращает значение флага отпрваки сообщения о 404ой ошибке
+     */
+    public function send404()
+    {
+        return $this->Error404->send404();
     }
 }

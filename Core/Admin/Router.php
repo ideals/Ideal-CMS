@@ -5,6 +5,7 @@ use Ideal\Core\Config;
 use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
+use Ideal\Structure\Error404;
 
 class Router
 {
@@ -14,6 +15,9 @@ class Router
 
     /** @var Model Модель активной страницы */
     protected $model = null;
+
+    /** @var Model Модель для обработки 404-ых ошибок */
+    protected $Error404 = null;
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -33,6 +37,8 @@ class Router
 
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
+
+        $this->Error404 = new Error404\Model();
 
         if (is_null($this->model)) {
             $this->model = $this->routeByPar();
@@ -150,5 +156,13 @@ class Router
     public function is404()
     {
         return $this->model->is404;
+    }
+
+    /**
+     * Возвращает значение флага отпрваки сообщения о 404ой ошибке
+     */
+    public function send404()
+    {
+        return $this->Error404->send404();
     }
 }

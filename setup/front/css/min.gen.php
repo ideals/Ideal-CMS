@@ -13,21 +13,24 @@ if (!isset($_REQUEST['css']) || empty($_REQUEST['css'])) {
 require_once('../[[CMS]]/Ideal/Library/Minifier/class.magic-min.php');
 
 // Абсолютный адрес корня сервера, не должен оканчиваться на слэш.
-define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT']);
+$docRoot = getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT'];
 
 $request = $_REQUEST['css'];
 
 // Убираем лишние пробелы из путей и добавляем путь к корню сайта на диске
 array_walk(
     $request,
-    function (&$v) {
-        $v = DOCUMENT_ROOT . '/' . trim($v);
+    function (&$v, $k, $docRoot) {
+        $v = trim($v);
+        if (strpos($v, 'http') !== 0) {
+            $v = $docRoot . '/' . ltrim($v, '/');
+        }
     }
 );
 
 // Объединяем, минимизируем и записываем результат в файл /css/all.min.css
-$min = new Minifier();
-$file = $min->merge(DOCUMENT_ROOT . '/css/all.min.css', '', $request);
+$min = new Minifier(array('echo' => false));
+$file = $min->merge($docRoot . '/css/all.min.css', '', $request);
 
 // Выводим объединённый и минимизированный результат
 header('Content-type: text/css');

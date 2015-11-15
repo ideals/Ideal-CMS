@@ -27,6 +27,10 @@ use Exception;
  */
 class ModelAbstract extends Addon\AbstractModel
 {
+
+    /** @var int Общее количесвто результатов поиска */
+    protected $listCount = 0;
+
     /**
      * Получение данных аддона с выполнение всех действий (в данном случае — запроса к Яндексу)
      *
@@ -101,7 +105,7 @@ class ModelAbstract extends Addon\AbstractModel
                 $list = $this->view($list);
 
                 // Передаём данные в шаблон для рендера поиска
-                $view->total = $yandex->total();
+                $view->total = $this->listCount = $yandex->total();
                 $view->parts = $list;
                 $view->query = $query;
                 $view->pager = $this->getPager('num');
@@ -109,10 +113,22 @@ class ModelAbstract extends Addon\AbstractModel
             } else {
                 $view->message = 'Поле логин или ключ от яндекса имеет пустое значене';
             }
+        } else {
+            $view->message = 'Пустой поисковый запрос';
         }
         $this->pageData['content'] .= $view->render();
 
         return $this->pageData;
+    }
+
+    /**
+     * Используется в методе "getPager"
+     *
+     * @return int Общее количесвто результатов поиска
+     */
+    public function getListCount()
+    {
+        return $this->listCount;
     }
 
     /**
