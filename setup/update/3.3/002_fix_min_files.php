@@ -10,10 +10,14 @@ $jsMinFalse = DOCUMENT_ROOT . '/js/min.gen.php';
 $cssMinTrue = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/setup/front/css/min.gen.php';
 $jsMinTrue = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/setup/front/js/min.gen.php';
 
-if (!copy($cssMinTrue, $cssMinFalse)) {
+$file = file_get_contents($cssMinTrue);
+$file = substr_replace('[[CMS]]', $config->cmsFolder, $file);
+if (!file_put_contents($cssMinFalse, $file)) {
     echo "не удалось заменить файл $cssMinFalse\n";
 }
 
-if (!copy($jsMinTrue, $jsMinFalse)) {
+$file = file_get_contents($jsMinTrue);
+$file = substr_replace('[[CMS]]', $config->cmsFolder, $file);
+if (!file_put_contents($jsMinFalse, $file)) {
     echo "не удалось заменить файл $jsMinFalse\n";
 }
