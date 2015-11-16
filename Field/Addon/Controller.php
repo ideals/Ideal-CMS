@@ -123,7 +123,8 @@ HTML;
             $arr[$k][2] = $addonName == '' ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
         }
 
-        $value = json_encode($arr, JSON_UNESCAPED_UNICODE);
+        $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;
+        $value = json_encode($arr, $options);
 
         return $value;
     }

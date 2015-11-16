@@ -41,8 +41,10 @@ class AjaxController extends \Ideal\Core\AjaxController
         // Возвращаем информацию только о новом подключенном аддоне
         $json = array();
         $json[] = array($request->newId, $request->addonName, $result['name']);
-        $result['list'] = json_encode($json, JSON_UNESCAPED_UNICODE);
 
-        return json_encode($result, JSON_UNESCAPED_UNICODE);
+        $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;
+        $result['list'] = json_encode($json, $options);
+
+        return json_encode($result, $options);
     }
 }
