@@ -228,6 +228,14 @@ class Router
     }
 
     /**
+     * @param Model $Error404 Устанавливает модель обработки 404-ых ошибок (использется в AjaxController)
+     */
+    public function setError404($Error404)
+    {
+        $this->Error404 = $Error404;
+    }
+
+    /**
      * Возвращает статус 404-ошибки, есть он или нет
      */
     public function is404()

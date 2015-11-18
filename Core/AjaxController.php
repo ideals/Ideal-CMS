@@ -9,6 +9,8 @@
 
 namespace Ideal\Core;
 
+use Ideal\Structure\Error404;
+
 /**
  * Контроллер, вызываемый при работе с ajax-вызовами
  */
@@ -19,6 +21,9 @@ class AjaxController
 
     /* @var View Объект вида — twig-шаблонизатор */
     protected $view;
+
+    /** @var Model Модель для обработки 404-ых ошибок */
+    protected $Error404 = null;
 
     /**
      * Генерация контента страницы для отображения в браузере
@@ -43,8 +48,41 @@ class AjaxController
             $text = $this->$actionName();
         } else {
             // Вызываемый action отсутствует, запускаем 404 ошибку
+            $this->Error404 = new Error404\Model();
+
+            // Вырезаем стартовый URL
+            // Так как это аякс запрос, то нужен весь адрес со всеми параметрами
+            $url = ltrim($_SERVER['REQUEST_URI'], '/');
+            $this->Error404->setUrl($url);
+
+            // Проверяем наличие адреса среди уже известных 404-ых
+            $is404 = $this->Error404->checkAvailability404();
+            if ($is404 !== true) {
+
+                // Сохраняем/обновляем информацию о 404
+                $this->Error404->save404();
+            }
+
+            // Назначаем в роутере модель обработки 404-ых ошибок
+            $router->setError404($this->Error404);
+
+            $config = Config::getInstance();
+
+            // Находим начальную структуру
+            $path = array($config->getStartStructure());
+            $prevStructureId = $path[0]['ID'];
+
+            // Определяем оставшиеся элементы пути
+            $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Site\\Model';
+
+            // Объявляем модель начальной структуры для удобства работы с 404
+            $model = new $modelClassName('0-' . $prevStructureId);
+            $model->is404 = true;
+
+            // Назначаем роутеру объявленную модель
+            $router->setModel($model);
+
             $text = $this->error404Action();
-            $this->model->is404 = true;
         }
 
         return $text;
@@ -92,18 +130,7 @@ class AjaxController
      */
     public function error404Action()
     {
-        $name = $title = 'Страница не найдена';
         $this->templateInit('404.twig');
-
-        // Добавляем в path пустой элемент
-        $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
-        $this->model->setPath($path);
-
-        // Устанавливаем нужный нам title
-        $pageData = $this->model->getPageData();
-        $pageData['title'] = $title;
-        $this->model->setPageData($pageData);
 
         // Twig рендерит текст странички из шаблона
         return $this->view->render();
