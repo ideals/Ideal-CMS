@@ -53,14 +53,6 @@ class Model
             // Запускаем очистку кэша если он отключен
             if (!$params['cache']['arr']['fileCache']['value']) {
                 FileCache::clearFileCache();
-            } else {
-                // Проверяем возможность записи в файл при включении кэширования
-                $checkFileCacheResponse = FileCache::checkFileCache();
-                if ($checkFileCacheResponse != 'ok') {
-                    $response['res'] = false;
-                    $response['text'] = $checkFileCacheResponse;
-                    $response['class'] = 'alert alert-danger';
-                }
             }
 
             // Перезаписываем данные в исключениях кэша
