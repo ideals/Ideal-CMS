@@ -10,23 +10,53 @@
 namespace Ideal\Core;
 
 /**
- * Обёртка над Memcache, добавляющая теггирование
+ * Прокси класс для класса обёртки MemcacheWrapper
  *
  * Пример использования:
  *     $cache = Memcache::getInstance();
  *     $cache->set('key', 'value', $ttl = 0, 'tag);
  *     $cache->get('key');
  *     $cache->deleteByTag('tag');
+ *
+ * @mixin MemcacheWrapper
  */
-class Memcache extends \Memcache
+class Memcache
 {
-    const FALSE_VALUE = '-s95VSn.zMbP(ph1-S6M]Q.c$e<9wV-h';
+    /** @var MemcacheWrapper|null Экземпляр класса MemcacheWrapper или null если не доступен класс Memcache */
+    private $memcacheWrapper = null;
 
     /** @var array Массив для хранения подключений к разным серверам кэширования */
     private static $connectedServers;
 
     /**
-     * Получение singleton-объекта Memcache
+     * При создании экземпляра данного класса экземпляр класса MemcacheWrapper помещается в свойство $memcacheWrapper, если класс \Memcache доступен.
+     */
+    public function __construct()
+    {
+        if (class_exists('Memcache')) {
+            $this->memcacheWrapper = new MemcacheWrapper();
+        }
+    }
+
+    /**
+     * При обращении к методам не реализованным в данном классе происходит поиск этого метода в классе \Memcache.
+     * Если нужный метод найден, то он вызывается.
+     *
+     * @param string $name Имя вызываемого метода
+     * @param array $arguments Массив аргументов, передаваемый методу
+     * @return bool|mixed Результат выполнения метода из класса \Memcache или false в случае если такой метод не реализован или класс \Memcache не доступен.
+     */
+    public function __call($name, $arguments)
+    {
+        if ($this->memcacheWrapper !== null && method_exists($this->memcacheWrapper, $name)) {
+            return call_user_func_array(array($this->memcacheWrapper, $name), $arguments);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Получение singleton-объекта MemcacheWrapper
      *
      * Если переменная $params не задана, то данные для подключения берутся из конфига CMS
      * В массива $params должны быть следующие элементы: host, port
@@ -63,72 +93,50 @@ class Memcache extends \Memcache
     }
 
     /**
+     * @param string $host Хост сервера
+     * @param int $port Порт сервера
+     * @return bool Возвращает true при успешном выполнении и false в случае ошибки
+     */
+    public function connect($host, $port)
+    {
+        if ($this->memcacheWrapper !== null) {
+            return $this->memcacheWrapper->connect($host, $port);
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Добавляет значение $value по ключу $key в случае, если значение с $key не было установлено ранее
      *
-     * @param string       $key      Ключ для записи $value
-     * @param mixed        $value    Значение, помещаемое в кэш
-     * @param bool         $ttl      Время жизни значения в кэше
+     * @param string $key Ключ для записи $value
+     * @param mixed $value Значение, помещаемое в кэш
+     * @param bool $ttl Время жизни значения в кэше
      * @param string|array $tagsKeys Строка или массив с тегами для ключа $key
      * @return bool Возвращает true при успешном выполнении и false в случае ошибки
      */
     public function addWithTags($key, $value, $ttl = false, $tagsKeys = 'default')
     {
-        $value = $this->createTagsContainer($value, $tagsKeys);
-
-        if (false === $value) {
-            $value = self::FALSE_VALUE;
+        if ($this->memcacheWrapper !== null) {
+            return $this->memcacheWrapper->addWithTags($key, $value, $ttl, $tagsKeys);
+        } else {
+            return false;
         }
-
-        return parent::add($key, $value, false, (int)$ttl);
-    }
-
-    /**
-     * Подготовка контейнера с тегами для кеширования
-     *
-     * Структура контейнера:
-     *     $container = array(
-     *         'tags' => array(
-     *             'tag_1' => 'versionOfTag1',
-     *             'tag_2' => 'versionOfTag2',
-     *         ),
-     *         'value' => 'value',
-     *     );
-     *
-     * @param $value mixed Кэшируемое значение
-     * @param $tags  string|array Строка или массив тегов
-     * @return array Контейнер для помещения в кэш
-     */
-    private function createTagsContainer($value, $tags)
-    {
-        if (!is_array($tags)) {
-            $tags = array($tags);
-        }
-
-        $tagsValues = (array)parent::get($tags);
-
-        foreach ($tags as $tagKey) {
-            if (!isset($tagsValues[$tagKey]) || is_null($tagsValues[$tagKey])) {
-                $tagsValues[$tagKey] = 0;
-                parent::add($tagKey, 0);
-            }
-        }
-
-        return array(
-            'tags' => $tagsValues,
-            'value' => $value
-        );
     }
 
     /**
      * Удаление значений в кеше по тегу или группе тегов
      *
      * @param $tag string|array Строка или массив тегов
+     * @return bool Возвращает true при успешном выполнении и false в случае ошибки
      */
     public function deleteByTag($tag)
     {
-        // Обновляем в кэше версию для тега
-
-        $this->safeIncrement($tag);
+        if ($this->memcacheWrapper !== null) {
+            return $this->memcacheWrapper->deleteByTag($tag);
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -136,19 +144,18 @@ class Memcache extends \Memcache
      *
      * Если значения по ключу $key не было, то оно будет создано
      *
-     * @param      $key
-     * @param int  $value
+     * @param $key
+     * @param int $value
      * @param bool $ttl
+     * @return bool Возвращает true при успешном выполнении и false в случае ошибки
      */
     public function safeIncrement($key, $value = 1, $ttl = false)
     {
-        if ($result = parent::increment($key, $value)) {
-            return $result;
+        if ($this->memcacheWrapper !== null) {
+            return $this->memcacheWrapper->safeIncrement($key, $value, $ttl);
+        } else {
+            return false;
         }
-
-        parent::add($key, 0, $ttl);
-
-        return parent::increment($key, $value);
     }
 
     /**
@@ -159,68 +166,11 @@ class Memcache extends \Memcache
      */
     public function getWithTags($key)
     {
-        $value = parent::get($key);
-
-        if (false === $value) {
-            $value = null;
-        }
-
-        if (self::FALSE_VALUE === $value) {
-            $value = false;
-        }
-
-        if (!$value) {
-            return $value;
-        }
-
-        if (is_array($key)) {
-            foreach ($key as $singleKey) {
-                if (!isset($value[$singleKey])) {
-                    $value[$singleKey] = null;
-                }
-            }
-        }
-
-        return $this->getFromTagsContainer($key, $value);
-    }
-
-    /**
-     * Получение значения из контейнера с тегами
-     *
-     * @param $key       string Ключ кэше
-     * @param $container array Контейнер с тегами и значением из кэша
-     * @return mixed Значение по ключу $key или null
-     */
-    private function getFromTagsContainer($key, $container)
-    {
-        if ($this->isTagsValid($container['tags'])) {
-            return $container['value'];
+        if ($this->memcacheWrapper !== null) {
+            return $this->memcacheWrapper->getWithTags($key);
         } else {
-            $this->delete($key);
-
-            return null;
+            return false;
         }
-    }
-
-    /**
-     * Проверка валидности тегов контейнера
-     *
-     * @param $tags
-     * @return bool
-     */
-    private function isTagsValid($tags)
-    {
-        // Версии тегов из кэша сравниваются с версиями, полученными из контейнера
-
-        $tagsVersions = (array)parent::get(array_keys($tags));
-
-        foreach ($tagsVersions as $tagKey => $tagVersion) {
-            if (is_null($tagVersion) || $tags[$tagKey] != $tagVersion) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -229,37 +179,34 @@ class Memcache extends \Memcache
      * Если значения по ключу $key не было, то оно будет создано
      *
      * @param      $key
-     * @param int  $value
+     * @param int $value
      * @param bool $ttl
+     * @return bool Возвращает true при успешном выполнении и false в случае ошибки
      */
     public function safeDecrement($key, $value = 1, $ttl = false)
     {
-        if ($result = parent::decrement($key, $value)) {
-            return $result;
+        if ($this->memcacheWrapper !== null) {
+            return $this->memcacheWrapper->safeDecrement($key, $value, $ttl);
+        } else {
+            return false;
         }
-
-        parent::add($key, 0, $ttl);
-
-        return parent::decrement($key, $value);
     }
 
     /**
      * Устанавливает значение $value по ключу $key в кэше
      *
-     * @param string       $key      Ключ для записи $value
-     * @param mixed        $value    Значение, помещаемое в кэш
-     * @param bool         $ttl      Время жизни значения в кэше
+     * @param string $key Ключ для записи $value
+     * @param mixed $value Значение, помещаемое в кэш
+     * @param bool $ttl Время жизни значения в кэше
      * @param string|array $tagsKeys Строка или массив с тегами для ключа $key
      * @return bool Возвращает true при успешном выполнении и false в случае ошибки
      */
     public function setWithTags($key, $value, $ttl = false, $tagsKeys = 'default')
     {
-        $value = $this->createTagsContainer($value, $tagsKeys);
-
-        if (false === $value) {
-            $value = self::FALSE_VALUE;
+        if ($this->memcacheWrapper !== null) {
+            return $this->memcacheWrapper->setWithTags($key, $value, $ttl, $tagsKeys);
+        } else {
+            return false;
         }
-
-        return parent::set($key, $value, false, (int)$ttl);
     }
 }
