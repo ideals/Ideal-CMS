@@ -79,17 +79,19 @@ class FileCache
     {
         $config = Config::getInstance();
         $ds = DIRECTORY_SEPARATOR;
-        $dir = DOCUMENT_ROOT . $ds . $config->cms['tmpFolder'] . $ds . 'cache' . $ds . 'fileCache';
-        $it = new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS);
-        $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
-        foreach ($files as $file) {
-            if ($file->isDir()) {
-                rmdir($file->getRealPath());
-            } else {
-                unlink($file->getRealPath());
+        $dir = DOCUMENT_ROOT . $config->cms['tmpFolder'] . $ds . 'cache' . $ds . 'fileCache';
+        if (is_dir($dir)) {
+            $it = new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS);
+            $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
+            foreach ($files as $file) {
+                if ($file->isDir()) {
+                    rmdir($file->getRealPath());
+                } else {
+                    unlink($file->getRealPath());
+                }
             }
+            rmdir($dir);
         }
-        rmdir($dir);
     }
 
     /**
