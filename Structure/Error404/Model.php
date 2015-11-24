@@ -176,7 +176,7 @@ class Model
     {
         return array_filter($rules, function ($rule) use ($url) {
             if (strpos($rule, '/') !== 0) {
-                $rule = '/^' . addcslashes($rule, '/\\.') . '$/';
+                $rule = '/^' . addcslashes($rule, '/\\^$.[]|()?*+{}') . '$/';
             }
             if (!empty($rule) && (preg_match($rule, $url))) {
                 return true;

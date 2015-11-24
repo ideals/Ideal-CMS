@@ -34,9 +34,11 @@ class AjaxController extends \Ideal\Core\AjaxController
             FileCache::clearFileCache();
         }
 
-        // Очищаем Memcache
-        $memcache = Memcache::getInstance();
-        $memcache->flush();
+        // Очищаем Memcache, только если он включён в настройках
+        if ($config->cache['memcache']) {
+            $memcache = Memcache::getInstance();
+            $memcache->flush();
+        }
 
         // Очищаем twig кэш
         View::clearTwigCache();
