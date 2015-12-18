@@ -78,7 +78,9 @@ class Controller extends AbstractController
         $request = new Request();
         $fieldName = $this->groupName . '_' . $this->name;
         $this->newValue = $request->$fieldName;
-        $this->newValue = implode(',', $this->newValue);
+        if (is_array($this->newValue)) {
+            $this->newValue = implode(',', $this->newValue);
+        }
         return $this->newValue;
     }
 
