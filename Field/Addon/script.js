@@ -117,7 +117,7 @@ $('#add-addon-add').click(function () {
     $.get(
         "index.php",
         {
-            mode: 'ajax-model',
+            mode: 'ajax',
             controller: '\\Ideal\\Field\\Addon',
             action: 'add',
             par: window.idObject['par'],

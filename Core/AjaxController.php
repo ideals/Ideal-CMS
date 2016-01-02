@@ -21,6 +21,21 @@ class AjaxController
     protected $view;
 
     /**
+     * Проверка наличия в контроллере указанного экшена
+     *
+     * @param $action
+     * @return bool
+     */
+    public function actionExist($action)
+    {
+        if (empty($action)) {
+            return false;
+        }
+        $action .= 'Action';
+        return method_exists($this, $action);
+    }
+
+    /**
      * Генерация контента страницы для отображения в браузере
      *
      * @param \Ideal\Core\Site\Router | \Ideal\Core\Admin\Router $router
@@ -33,11 +48,18 @@ class AjaxController
         // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
         $actionName = $request->action;
+
+        if ($router->is404()) {
+            $actionName = 'error404';
+        }
+
         if ($actionName == '') {
             $actionName = 'index';
         }
+
         $actionName = $actionName . 'Action';
         $text = $this->$actionName();
+
         return $text;
     }
 
@@ -76,5 +98,27 @@ class AjaxController
         $folders = array_merge(array($tplRoot, $cmsFolder));
         $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
+    }
+
+    /**
+     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
+     */
+    public function error404Action()
+    {
+        $name = $title = 'Страница не найдена';
+        $this->templateInit('404.twig');
+
+        // Добавляем в path пустой элемент
+        $path = $this->model->getPath();
+        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
+        $this->model->setPath($path);
+
+        // Устанавливаем нужный нам title
+        $pageData = $this->model->getPageData();
+        $pageData['title'] = $title;
+        $this->model->setPageData($pageData);
+
+        $text = $this->view->render();
+        return $text;
     }
 }

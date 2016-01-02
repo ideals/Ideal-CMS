@@ -109,7 +109,7 @@ class Router
         }
 
         $request = new Request();
-        if ($request->mode == 'ajax-model' && $request->controller != '') {
+        if ($request->mode == 'ajax' && $request->controller != '') {
             // Если это ajax-вызов с явно указанным namespace класса ajax-контроллера
             return $request->controller . '\\AjaxController';
         }
@@ -117,7 +117,7 @@ class Router
         $path = $this->model->getPath();
         $end = end($path);
 
-        if ($request->mode == 'ajax-model' && $request->controller == '') {
+        if ($request->mode == 'ajax' && $request->controller == '') {
             // Если это ajax-вызов без указанного namespace класса ajax-контроллера,
             // то используем namespace модели
             return Util::getClassName($end['structure'], 'Structure') . '\\Admin\\AjaxController';
