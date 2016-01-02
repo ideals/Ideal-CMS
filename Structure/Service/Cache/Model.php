@@ -14,7 +14,7 @@ use Ideal\Core\View;
 
 /**
  * Класс для обработки реакции на изменения настроек файлового кэширования
- * и кэширования twig-шаблонов
+ * , кэширования twig-шаблонов и кэширования запросов к бд
  *
  */
 class Model
@@ -33,8 +33,8 @@ class Model
     }
 
     /**
-     * Отвечает за реакции системы на изменения настроек файлового кэширования
-     * и кэширования twig-шаблонов
+     * Отвечает за реакции системы на изменения настроек файлового кэширования,
+     * кэширования twig-шаблонов и кэширования запросов к бд
      *
      * @return array Массив содержащий флаг успешности проверки настроек,
      *               а так же текст и набор классов в случае обнаружения ошибок
@@ -53,14 +53,6 @@ class Model
             // Запускаем очистку кэша если он отключен
             if (!$params['cache']['arr']['fileCache']['value']) {
                 FileCache::clearFileCache();
-            } else {
-                // Проверяем возможность записи в файл при включении кэширования
-                $checkFileCacheResponse = FileCache::checkFileCache();
-                if ($checkFileCacheResponse != 'ok') {
-                    $response['res'] = false;
-                    $response['text'] = $checkFileCacheResponse;
-                    $response['class'] = 'alert alert-danger';
-                }
             }
 
             // Перезаписываем данные в исключениях кэша
@@ -89,6 +81,15 @@ class Model
             $cssFile = DOCUMENT_ROOT . '/css/all.min.css';
             if (file_exists($cssFile)) {
                 unlink($cssFile);
+            }
+
+            // Перед включением "кэширования запросов к БД" проверяем доступность класса "Memcache"
+            if ($params['cache']['arr']['memcache']['value']) {
+                if (!class_exists('Memcache')) {
+                    $response['res'] = false;
+                    $response['text'] = 'Класс "Memcache" не доступен. Кэширование запросов к БД не может быть включено!';
+                    $response['class'] = 'alert alert-danger';
+                }
             }
         }
 

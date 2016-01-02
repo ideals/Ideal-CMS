@@ -37,16 +37,7 @@ class AjaxController
             $actionName = 'index';
         }
         $actionName = $actionName . 'Action';
-
-        if (method_exists($this, $actionName)) {
-            // Вызываемый action существует, запускаем его
-            $text = $this->$actionName();
-        } else {
-            // Вызываемый action отсутствует, запускаем 404 ошибку
-            $text = $this->error404Action();
-            $this->model->is404 = true;
-        }
-
+        $text = $this->$actionName();
         return $text;
     }
 
@@ -85,27 +76,5 @@ class AjaxController
         $folders = array_merge(array($tplRoot, $cmsFolder));
         $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
-    }
-
-    /**
-     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
-     */
-    public function error404Action()
-    {
-        $name = $title = 'Страница не найдена';
-        $this->templateInit('404.twig');
-
-        // Добавляем в path пустой элемент
-        $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
-        $this->model->setPath($path);
-
-        // Устанавливаем нужный нам title
-        $pageData = $this->model->getPageData();
-        $pageData['title'] = $title;
-        $this->model->setPageData($pageData);
-
-        // Twig рендерит текст странички из шаблона
-        return $this->view->render();
     }
 }

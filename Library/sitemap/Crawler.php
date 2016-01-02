@@ -84,6 +84,9 @@ class Crawler
         // Проверка существования файла sitemap.xml и его даты
         $this->prepareSiteMapFile();
 
+        // Проверка доступности и времени последнего сохранения промежуточного файла ссылок
+        $this->checkTmpFile();
+
         // Загружаем данные, собранные на предыдущих шагах работы скрипта
         $this->loadParsedUrls();
 
@@ -202,6 +205,30 @@ class Crawler
     }
 
     /**
+     * Проверка доступности и времени последнего сохранения промежуточного файла ссылок
+     */
+    protected function checkTmpFile()
+    {
+        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+
+        if (file_exists($tmpFile)) {
+            if (!is_writable($tmpFile)) {
+                $this->stop("Временный файл {$tmpFile} недоступен для записи!");
+            }
+
+            // Если промежуточный файл ссылок последний раз обновлялся более 25 часов назад,
+            // то производим его принудительную очистку.
+            if (time() - filemtime($tmpFile) > 90000) {
+                file_put_contents($tmpFile, '');
+            }
+
+        } elseif ((file_put_contents($tmpFile, '') === false)) {
+            // Файла нет и создать его не удалось
+            $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
+        }
+    }
+
+    /**
      * Проверка наличия, доступности для записи и актуальности xml-файла карты сайта
      */
     protected function prepareSiteMapFile()
@@ -270,15 +297,6 @@ class Crawler
         $result = serialize($result);
 
         $tmp_file = $this->config['pageroot'] . $this->config['tmp_file'];
-
-        if (file_exists($tmp_file)) {
-            if (!is_writable($tmp_file)) {
-                $this->stop("Временный файл {$tmp_file} недоступен для записи!");
-            }
-        } elseif ((file_put_contents($tmp_file, '') === false)) {
-            // Файла нет и создать его не удалось
-            $this->stop("Не удалось создать временный файл {$tmp_file} для карты сайта!");
-        }
 
         $fp = fopen($tmp_file, 'w');
 

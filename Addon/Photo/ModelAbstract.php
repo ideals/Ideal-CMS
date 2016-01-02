@@ -20,7 +20,12 @@ class ModelAbstract extends \Ideal\Addon\AbstractModel
             $View->loadTemplate('index.twig');
             $View->images = json_decode($this->pageData['images']);
             $View->imagesRel = $this->fieldsGroup;
-            $this->pageData['content'] .= $View->render();
+            $photoContent = $View->render();
+            if (isset($this->pageData['content'])) {
+                $this->pageData['content'] .= $photoContent;
+            } else {
+                $this->pageData['content'] = $photoContent;
+            }
         }
         return $this->pageData;
     }
