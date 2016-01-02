@@ -17,7 +17,7 @@ class Router
     protected $model = null;
 
     /** @var Model Модель для обработки 404-ых ошибок */
-    protected $Error404 = null;
+    protected $error404 = null;
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -38,7 +38,7 @@ class Router
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
 
-        $this->Error404 = new Error404\Model();
+        $this->error404 = new Error404\Model();
 
         if (is_null($this->model)) {
             $this->model = $this->routeByPar();
@@ -163,6 +163,6 @@ class Router
      */
     public function send404()
     {
-        return $this->Error404->send404();
+        return $this->error404->send404();
     }
 }

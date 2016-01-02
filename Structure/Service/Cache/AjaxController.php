@@ -34,9 +34,11 @@ class AjaxController extends \Ideal\Core\AjaxController
             FileCache::clearFileCache();
         }
 
-        // Очищаем Memcache
-        $memcache = Memcache::getInstance();
-        $memcache->flush();
+        // Очищаем Memcache, только если он включён в настройках
+        if ($config->cache['memcache']) {
+            $memcache = Memcache::getInstance();
+            $memcache->flush();
+        }
 
         // Очищаем twig кэш
         View::clearTwigCache();
@@ -60,7 +62,6 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function dellCacheFilesAction()
     {
-        $excludePathArray = array();
         $config = Config::getInstance();
         $delPages = array();
         $pageList = new SiteMap\Model('0-1');
@@ -68,14 +69,8 @@ class AjaxController extends \Ideal\Core\AjaxController
         foreach ($pages as $page) {
             $path = $config->cms['tmpFolder'] . '/cache/fileCache' . $page['link'];
             if (FileCache::delCacheFileDir($path)) {
-                $excludePath = $page['link'];
-                FileCache::getModifyUri($excludePath);
-                $excludePathArray[] = $excludePath;
                 $delPages[] = $page['link'];
             }
-        }
-        if (!empty($excludePathArray)) {
-            FileCache::excludePathFromCache($excludePathArray, true);
         }
         $delPages = implode("<br />", $delPages);
         print json_encode(array('text' => $delPages));

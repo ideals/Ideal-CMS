@@ -38,24 +38,36 @@ $(document).ready(function () {
         $(imagesValues).val(JSON.stringify(currentDataArray));
     });
 
+    // При смене описания картинки пересохраняем информацию для фотогалереи
+    $(".tab-pane .gallery-item-description").change(function () {
+        var id = $('.images-values').attr("id");
+        var listSelector = '#' + id + '-list';
+        var infoSelector = '#' + id;
+        rescanPhotogalleryItems(listSelector, infoSelector)
+    });
 });
 
 // Запускаем возможность сортировки списка
 function startSortable(listSelector, infoSelector) {
     $(listSelector + " .sortable").sortable({
         stop: function (event, ui) {
-            var urls = [];
-            $(this).find('li').each(function (index) {
-                if ($(this).find('.gallery-item-url').val() != undefined) {
-                    var url = $(this).find('.gallery-item-url').val();
-                    var description = $(this).find('.gallery-item-description').val();
-                    urls.push([url, description]);
-                }
-            });
-            $(infoSelector).val(JSON.stringify(urls));
+            rescanPhotogalleryItems(listSelector, infoSelector)
         }
     });
     $(listSelector + " .sortable").disableSelection();
+}
+
+// Пересобираем информацию о фотогалерее
+function rescanPhotogalleryItems(listSelector, infoSelector) {
+    var urls = [];
+    $(listSelector + " .sortable").find('li').each(function (index) {
+        if ($(this).find('.gallery-item-url').val() != undefined) {
+            var url = $(this).find('.gallery-item-url').val();
+            var description = $(this).find('.gallery-item-description').val();
+            urls.push([url, description]);
+        }
+    });
+    $(infoSelector).val(JSON.stringify(urls));
 }
 
 
