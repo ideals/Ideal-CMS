@@ -7,7 +7,7 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Medium\TagsList;
+namespace Ideal\Medium\TagList;
 
 use Ideal\Core\Config;
 use Ideal\Core\Db;

@@ -103,7 +103,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $config = Config::getInstance();
         $db = Db::getInstance();
         $id = $this->pageData['ID'];
-        $tableTag = $config->db['prefix'] . 'ideal_medium_tagslist';
+        $tableTag = $config->db['prefix'] . 'ideal_medium_taglist';
 
         // Считываем все связи этого тега
         $sql = "SELECT * FROM {$tableTag} WHERE tag_id={$id}";
@@ -170,7 +170,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $config = Config::getInstance();
         $db = Db::getInstance();
         $id = $this->pageData['ID'];
-        $tableTag = $config->db['prefix'] . 'ideal_medium_tagslist';
+        $tableTag = $config->db['prefix'] . 'ideal_medium_taglist';
         $structure = $config->getStructureByName($structureName);
         $tableStructure = $config->getTableByName($structureName);
 
