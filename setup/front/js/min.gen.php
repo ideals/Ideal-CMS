@@ -29,11 +29,12 @@ array_walk(
 );
 
 // Отключаем Google Closure, используем встроенный JShrink
-$min = new Minifier(array('closure' => false, 'echo' => false));
+$min = new Minifier(array('closure' => false, 'echo' => false, 'remove_comments' => false));
+// Чтобы удалить все комментарии для js надо ставить 'remove_comments' => false
 
 // Объединяем, минимизируем и записываем результат в файл /js/all.min.js
 $file = $min->merge($docRoot . '/js/all.min.js', '', $request);
 
 // Выводим объединённый и минимизированный результат
 header('Content-type: application/javascript');
-die (file_get_contents($file));
+die(file_get_contents($file));
