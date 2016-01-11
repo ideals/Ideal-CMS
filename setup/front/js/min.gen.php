@@ -20,7 +20,7 @@ $request = $_REQUEST['js'];
 // Убираем лишние пробелы из путей и добавляем путь к корню сайта на диске
 array_walk(
     $request,
-    function (&$v, $k, $docRoot) {
+    function (&$v) use ($docRoot) {
         $v = trim($v);
         if (strpos($v, 'http') !== 0) {
             $v = $docRoot . '/' . ltrim($v, '/');
