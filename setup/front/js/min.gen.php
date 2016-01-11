@@ -25,7 +25,8 @@ array_walk(
         if (strpos($v, 'http') !== 0) {
             $v = $docRoot . '/' . ltrim($v, '/');
         }
-    }
+    },
+    $docRoot
 );
 
 // Отключаем Google Closure, используем встроенный JShrink

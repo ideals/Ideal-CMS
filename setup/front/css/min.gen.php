@@ -25,7 +25,8 @@ array_walk(
         if (strpos($v, 'http') !== 0) {
             $v = $docRoot . '/' . ltrim($v, '/');
         }
-    }
+    },
+    $docRoot
 );
 
 // Объединяем, минимизируем и записываем результат в файл /css/all.min.css
@@ -34,4 +35,4 @@ $file = $min->merge($docRoot . '/css/all.min.css', '', $request);
 
 // Выводим объединённый и минимизированный результат
 header('Content-type: text/css');
-die (file_get_contents($file));
+die(file_get_contents($file));
