@@ -11,13 +11,13 @@ $cssMinTrue = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/setup/front/css
 $jsMinTrue = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal/setup/front/js/min.gen.php';
 
 $file = file_get_contents($cssMinTrue);
-$file = substr_replace('[[CMS]]', $config->cmsFolder, $file);
+$file = str_replace('[[CMS]]', $config->cmsFolder, $file);
 if (!file_put_contents($cssMinFalse, $file)) {
     echo "не удалось заменить файл $cssMinFalse\n";
 }
 
 $file = file_get_contents($jsMinTrue);
-$file = substr_replace('[[CMS]]', $config->cmsFolder, $file);
+$file = str_replace('[[CMS]]', $config->cmsFolder, $file);
 if (!file_put_contents($jsMinFalse, $file)) {
     echo "не удалось заменить файл $jsMinFalse\n";
 }
