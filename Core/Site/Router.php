@@ -39,9 +39,7 @@ class Router
             if (class_exists($controllerName)) {
                 // Если контроллер в запросе указан И запрошенный класс существует
                 // то устанавливаем контроллер и завершаем роутинг
-                /** @var \Ideal\Core\AjaxController $c */
-                $c = new $controllerName();
-                if ($c->actionExist($request->action)) {
+                if (!empty($request->action) && method_exists($controllerName, $request->action . 'Action')) {
                     $this->controllerName = $controllerName;
                     $is404 = false;
                 }
