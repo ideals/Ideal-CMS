@@ -21,21 +21,6 @@ class AjaxController
     protected $view;
 
     /**
-     * Проверка наличия в контроллере указанного экшена
-     *
-     * @param $action
-     * @return bool
-     */
-    public function actionExist($action)
-    {
-        if (empty($action)) {
-            return false;
-        }
-        $action .= 'Action';
-        return method_exists($this, $action);
-    }
-
-    /**
      * Генерация контента страницы для отображения в браузере
      *
      * @param \Ideal\Core\Site\Router | \Ideal\Core\Admin\Router $router
