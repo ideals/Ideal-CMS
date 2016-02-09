@@ -411,7 +411,7 @@ class Forms
      */
     public function setJs($js)
     {
-        $this->js .= $js . "\n";
+        $this->js .= "\n" . $js . "\n";
     }
 
     /**
@@ -514,7 +514,7 @@ class Forms
                 {$methods}
             );
 JS;
-        $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
+        $this->js = "\njQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)
             . file_get_contents(__DIR__ .'/form.js')
             . $this->js
