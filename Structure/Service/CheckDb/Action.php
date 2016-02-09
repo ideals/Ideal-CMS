@@ -265,8 +265,10 @@ function getFieldListWithTypes($data)
 {
     $fields = array();
     array_walk($data['fields'], function ($value, $key) use (&$fields) {
-        list($type) = explode(' ', $value['sql']);
-        $fields[$key] = $type;
+        if (isset($value['sql'])) {
+            list($type) = explode(' ', $value['sql']);
+            $fields[$key] = $type;
+        }
     });
     return $fields;
 }
