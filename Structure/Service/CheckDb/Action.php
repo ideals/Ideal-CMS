@@ -31,7 +31,7 @@ foreach ($result as $v) {
     $table = array_shift($v);
 
     // Получаем информацию о полях таблицы
-    $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $table . ' FROM ' . $config->db['name']);
+    $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $table . ' FROM `' . $config->db['name'] . '`');
     $fields = array();
     array_walk($fieldsInfo, function ($v) use (&$fields) {
         $key = $v['Field'];
