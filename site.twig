@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns="http://www.w3.org/1999/html">
+<html lang="ru" xmlns="http://www.w3.org/1999/html" style="height: 100%;">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>{{ title }}</title>
@@ -31,9 +31,9 @@
     {% endif %}
 </head>
 
-<body>
+<body style="height: 100%;">
 
-<div class="container">
+<div class="container" style="min-height: 100%;">
 
     <div class="navbar navbar-default" role="navigation">
         <div class="navbar-header">
@@ -47,7 +47,7 @@
             <a class="navbar-brand" href="/">{{ domain }}</a>
         </div>
         <div class="navbar-collapse collapse" id="bs-main-navbar-collapse-1">
-            <ul class="nav navbar-nav">
+            <ul class="nav navbar-nav pull-left">
                 {% for item in mainMenu %}
                     <li {% if item.isActivePage %} class="active" {% endif %}>
                         <a {{ item.link | raw }}>{{ item.name }}</a>
@@ -75,14 +75,15 @@
     {% endblock %}
 
     <hr>
-
-    <div class="footer">
-        <div class="copy">
-            &copy; 2012&#8212;{{ year }} <a href="http://idealcms.ru/" target="_blank">Ideal CMS</a>
-        </div>
-    </div>
-
+    <div style="min-height: 100%; padding-bottom: 60px;"></div>
 </div>
+
+<div class="container" style="height: 60px; margin-top: -60px;">
+    <div class="copy">
+        &copy; 2012&#8212;{{ year }} <a href="http://idealcms.ru/" target="_blank">Ideal CMS</a>
+    </div>
+</div>
+
 
 {% if not isAdmin %}
     <!--
