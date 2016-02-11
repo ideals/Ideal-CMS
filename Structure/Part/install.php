@@ -25,7 +25,7 @@ $db->insert(
         'lvl' => 1,
         'structure' => 'Ideal_Part',
         'template' => 'index.twig',
-        'addon' => '[["1":"Ideal_Page", "Текст"]]',
+        'addon' => '[["1", "Ideal_Page", "Текст"]]',
         'name' => 'Главная',
         'url' => '/',
         'date_create' => time(),
