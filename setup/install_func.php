@@ -291,27 +291,9 @@ function createTables()
     // Загружаем список структур из конфигурационных файлов структур
     $config->loadSettings();
 
-    foreach ($config->structures as $v) {
-        list($module, $structure) = explode('_', $v['structure']);
-        $module = ($module == 'Ideal') ? '' : $module . '/';
-        if (stream_resolve_include_path($module . 'Structure/' . $structure . '/install.php') !== false) {
-            require_once $module . 'Structure/' . $structure . '/install.php';
-        }
-    }
-
-    global $formValue;
     $db = \Ideal\Core\Db::getInstance();
-    $db->insert(
-        $config->db['prefix'] . 'ideal_structure_user',
-        array(
-            'email' => $formValue['cmsLogin'],
-            'reg_date' => time(),
-            'password' => crypt($formValue['cmsPass']),
-            'is_active' => 1,
-            'prev_structure' => '0-2'
-        )
-    );
 
+    // Создаём таблицы аддонов
     if ($handle = opendir('../Addon')) {
         while (false !== ($file = readdir($handle))) {
             if ($file != '.' && $file != '..') {
@@ -323,6 +305,28 @@ function createTables()
             }
         }
     }
+
+    // Устанавливаем всё что нужно для работы структур
+    foreach ($config->structures as $v) {
+        list($module, $structure) = explode('_', $v['structure']);
+        $module = ($module == 'Ideal') ? '' : $module . '/';
+        if (stream_resolve_include_path($module . 'Structure/' . $structure . '/install.php') !== false) {
+            require_once $module . 'Structure/' . $structure . '/install.php';
+        }
+    }
+
+    // Создаём пользователя админки
+    global $formValue;
+    $db->insert(
+        $config->db['prefix'] . 'ideal_structure_user',
+        array(
+            'email' => $formValue['cmsLogin'],
+            'reg_date' => time(),
+            'password' => crypt($formValue['cmsPass']),
+            'is_active' => 1,
+            'prev_structure' => '0-2'
+        )
+    );
 }
 
 /**
