@@ -112,6 +112,13 @@ abstract class Model
 
         if ($count > 1) {
             $end = $this->path[($count - 1)];
+
+            // Некоторые конечные структуры могут не иметь выбора типа раздела.
+            // Значит и не будет поля "structure", тогда отдаём ранее найденную модель.
+            if (!isset($end['structure'])) {
+                return $model;
+            }
+            
             $prev = $this->path[($count - 2)];
 
             $endClass = ltrim(Util::getClassName($end['structure'], 'Structure'), '\\');
