@@ -14,6 +14,9 @@ namespace Ideal\Core;
  *
  * @property string page Зарезервировано для листалки, в переменной содержится номер запрашиваемой страницы
  * @property string action Зарезервировано для названия вызываемого экшена
+ * @property string mode В случае ajax-запроса содержит 'ajax'
+ * @property string controller Принудительное указание вызываемого контроллера
+ * @mixin \Ideal\Core\Config
  */
 class Request
 {

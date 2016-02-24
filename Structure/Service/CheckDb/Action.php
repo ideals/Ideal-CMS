@@ -31,7 +31,7 @@ foreach ($result as $v) {
     $table = array_shift($v);
 
     // Получаем информацию о полях таблицы
-    $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $table . ' FROM ' . $config->db['name']);
+    $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $table . ' FROM `' . $config->db['name'] . '`');
     $fields = array();
     array_walk($fieldsInfo, function ($v) use (&$fields) {
         $key = $v['Field'];
@@ -140,7 +140,8 @@ if (isset($_POST['create_field'])) {
         }
 
         // Составляем sql запрос для вставки поля в таблицу
-        $sql = "ALTER TABLE {$table} ADD {$field} {$data['fields'][$field]['sql']} COMMENT '{$data['fields'][$field]['label']}' {$afterThisField};";
+        $sql = "ALTER TABLE {$table} ADD {$field} {$data['fields'][$field]['sql']}"
+            . " COMMENT '{$data['fields'][$field]['label']}' {$afterThisField};";
         $db->query($sql);
         echo ' Готово.</p>';
         $fields = getFieldListWithTypes($data);
@@ -198,8 +199,10 @@ foreach ($cfgTables as $tableName => $tableFields) {
         // Если какое-либо поле присутствует только в конфигурационном файле, то предлагаем его создать
         if (count($onlyConfigExist) > 0) {
             foreach ($onlyConfigExist as $missingField => $missingFieldType) {
-                echo '<p class="well"><input type="checkbox" name="create_field[' . $tableName . '-' . $missingField . ']">&nbsp; ';
-                echo 'В таблице <strong>' . $tableName . '</strong> отсутствует поле <strong>' . $missingField . '</strong>. Создать?</p>';
+                echo '<p class="well">';
+                echo '<input type="checkbox" name="create_field[' . $tableName . '-' . $missingField . ']">&nbsp; ';
+                echo 'В таблице <strong>' . $tableName . '</strong> ';
+                echo 'отсутствует поле <strong>' . $missingField . '</strong>. Создать?</p>';
             }
             $isCool = false;
         }
@@ -210,9 +213,10 @@ foreach ($cfgTables as $tableName => $tableFields) {
         // Если какое-либо поле присутствует только в базе данных, то предлагаем его удалить
         if (count($onlyBaseExist) > 0) {
             foreach ($onlyBaseExist as $excessField => $excessFieldType) {
-                echo '<p class="well"><input type="checkbox" name="delete_field[' . $tableName . '-' . $excessField . ']">&nbsp; ';
-                echo 'Поле <strong>' . $excessField . '</strong> отсутствует в конфигурации таблицы <strong>' . $tableName . '</strong>.
-Удалить?</p>';
+                echo '<p class="well">';
+                echo '<input type="checkbox" name="delete_field[' . $tableName . '-' . $excessField . ']">&nbsp; ';
+                echo 'Поле <strong>' . $excessField . '</strong> ';
+                echo 'отсутствует в конфигурации таблицы <strong>' . $tableName . '</strong>. Удалить?</p>';
             }
             $isCool = false;
         }
@@ -221,9 +225,13 @@ foreach ($cfgTables as $tableName => $tableFields) {
         // Если есть расхождение в типах полей, то предлагаем вернуть всё к виду конфигурационных файлов
         if (count($fieldTypeDiff) > 0) {
             foreach ($fieldTypeDiff as $fieldName => $typeDiff) {
-                echo '<p class="well"><input type="checkbox" name="change_type[' . $tableName . '-' . $fieldName . '-' . $typeDiff['conf'] . ']">&nbsp; ';
-                echo 'Поле <strong>' . $fieldName . '</strong> в табллице <strong>' . $tableName . ' </strong> имеет тип <strong>
-' . $typeDiff['base'] . '</strong>, но в конфигурационном файле это поле определено типом <strong>' . $typeDiff['conf'] . '</strong>. Преобразовать поле в базе данных?</p>';
+                echo '<p class="well">';
+                echo '<input type="checkbox" ';
+                echo 'name="change_type[' . $tableName . '-' . $fieldName . '-' . $typeDiff['conf'] . ']">&nbsp; ';
+                echo 'Поле <strong>' . $fieldName . '</strong> в таблице <strong>' . $tableName . ' </strong> ';
+                echo 'имеет тип <strong>' . $typeDiff['base'] . '</strong>, ';
+                echo 'но в конфигурационном файле это поле определено типом ';
+                echo '<strong>' . $typeDiff['conf'] . '</strong>. Преобразовать поле в базе данных?</p>';
             }
             $isCool = false;
         }
@@ -240,7 +248,8 @@ foreach ($dbTables as $tableName => $tableFields) {
 }
 
 // После нажатия на кнопку применить и совершения действий, нужно либо заново перечитывать БД, либо перегружать страницу
-if (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_field']) || isset($_POST['delete_field']) || isset($_POST['change_type'])) {
+if (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_field'])
+    || isset($_POST['delete_field']) || isset($_POST['change_type'])) {
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
 }
@@ -256,8 +265,10 @@ function getFieldListWithTypes($data)
 {
     $fields = array();
     array_walk($data['fields'], function ($value, $key) use (&$fields) {
-        list($type) = explode(' ', $value['sql']);
-        $fields[$key] = $type;
+        if (isset($value['sql'])) {
+            list($type) = explode(' ', $value['sql']);
+            $fields[$key] = $type;
+        }
     });
     return $fields;
 }
@@ -282,7 +293,7 @@ function diffConfigBaseType($a, $b)
 
 </form>
 </div>
-<style>
+<style type="text/css">
     #iframe {
         margin-top: 15px;
     }

@@ -30,9 +30,15 @@ class Router
     {
         // Проверка на простой AJAX-запрос
         $request = new Request();
-        if ($request->mode == 'ajax') {
-            $this->controllerName = $request->controller . '\\AjaxController';
-            return;
+        if ($request->mode == 'ajax' && $request->controller != '') {
+            $controllerName = $request->controller . '\\AjaxController';
+            if (class_exists($controllerName)) {
+                // Если контроллер в запросе указан и запрошенный класс существует
+                // то устанавливаем контроллер и завершаем роутинг
+                if (!empty($request->action) && method_exists($controllerName, $request->action . 'Action')) {
+                    $this->controllerName = $controllerName;
+                }
+            }
         }
 
         $pluginBroker = PluginBroker::getInstance();
@@ -109,7 +115,7 @@ class Router
         }
 
         $request = new Request();
-        if ($request->mode == 'ajax-model' && $request->controller != '') {
+        if ($request->mode == 'ajax' && $request->controller != '') {
             // Если это ajax-вызов с явно указанным namespace класса ajax-контроллера
             return $request->controller . '\\AjaxController';
         }
@@ -117,7 +123,7 @@ class Router
         $path = $this->model->getPath();
         $end = end($path);
 
-        if ($request->mode == 'ajax-model' && $request->controller == '') {
+        if ($request->mode == 'ajax' && $request->controller == '') {
             // Если это ajax-вызов без указанного namespace класса ajax-контроллера,
             // то используем namespace модели
             return Util::getClassName($end['structure'], 'Structure') . '\\Admin\\AjaxController';

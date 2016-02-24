@@ -60,6 +60,9 @@ class Forms
     /** @var bool Флаг для очищения формы после удачной отправки */
     protected $clearForm = true;
 
+    /** @var bool Флаг отвечающий за отправку заголовков */
+    protected $sendHeader = true;
+
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -199,6 +202,16 @@ class Forms
     }
 
     /**
+     * Устанавливаем надобность отправки заголовка в ответе
+     *
+     * @param bool $sendHeader
+     */
+    public function setSendHeader($sendHeader)
+    {
+        $this->sendHeader = $sendHeader;
+    }
+
+    /**
      * Добавление элемента к форме
      *
      * Options:
@@ -326,11 +339,15 @@ class Forms
 
         switch ($_REQUEST['mode']) {
             case 'css':
-                header('Content-type: text/css; charset=utf-8');
+                if ($this->sendHeader) {
+                    header('Content-type: text/css; charset=utf-8');
+                }
                 echo $this->renderCss();
                 break;
             case 'js':
-                header('Content-Type: text/javascript; charset=utf-8');
+                if ($this->sendHeader) {
+                    header('Content-Type: text/javascript; charset=utf-8');
+                }
                 echo $this->renderJs();
                 break;
         }
@@ -411,7 +428,7 @@ class Forms
      */
     public function setJs($js)
     {
-        $this->js .= $js . "\n";
+        $this->js .= "\n" . $js . "\n";
     }
 
     /**
@@ -514,7 +531,7 @@ class Forms
                 {$methods}
             );
 JS;
-        $this->js = "jQuery(document).ready(function () {\n var $ = jQuery;\n"
+        $this->js = "\njQuery(document).ready(function () {\n var $ = jQuery;\n"
             . implode("\n", $js)
             . file_get_contents(__DIR__ .'/form.js')
             . $this->js
