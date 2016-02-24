@@ -25,7 +25,7 @@ return array(
             'label' => 'Теги',
             'sql' => '',
             'type' => 'Ideal_SelectMulti',
-            'medium' => '\\Ideal\\Medium\\TagsList\\Model'
+            'medium' => '\\Ideal\\Medium\\TagList\\Model'
         ),
         'name' => array(
             'label' => 'Заголовок',

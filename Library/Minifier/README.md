@@ -53,6 +53,10 @@ First, include and initiate the class.  The class has been updated to use an arr
     * 'remove_comments' => true/false (defaults to true)
 7. Generate hashed filenames based on file generation time.  Allows for better cachebusting without the use of query string version numbers
     * 'hashed_filenames' => false/true (defaults to false)
+8. Automatically output the results of operations taken by MagicMin to the javascript console.  Same as calling $minified->logs(), but without needing to add an explicit call to the "logs()" function
+    * 'output_log' => false/true (defaults to false)
+9. Brute force recompile merged and minified files for use during development
+    * 'force_rebuild' => false/true (default false, use sparingly!)
 
 ```php
 require( 'class.magic-min.php' );
@@ -75,12 +79,13 @@ $minified = new Minifier( array( 'encode' => true, 'gzip' => true ) );
 //Use google closure API, and gzip the resulting file
 $minified = new Minifier( array( 'gzip' => true, 'closure' => true ) );
 
-//Use google closure API, gzip the resulting file, and hash filenames
+//Use google closure API, gzip the resulting file, hash filenames, output to console
 $minified = new Minifier( 
     array(
         'gzip' => true, 
         'closure' => true, 
-        'hashed_filenames' => true
+        'hashed_filenames' => true, 
+        'output_log' => true
     )
 );
 ```
@@ -183,6 +188,8 @@ Minifier Log : Gzip enabled
 Minifier Log: timer : MagicMin processed and loaded in 0.00019097328186 seconds
 ```
 
+**This is the same as adding the 'output_log' => true param when initializing MagicMin**
+
 ###Specifying the order of included files when using "merge"
 
 Since it's simply not practical to assume glob() is going to determine dependencies, a fifth parameter exists for the merge() function.
@@ -246,3 +253,23 @@ Which would in turn output the correct URI to the stylesheet:
 ```html
 <link rel="stylesheet" href="http://yourwebsite.com/wp-content/themes/yourtheme/css/master.min.css" />
 ```
+
+
+###Changelog
+
+**3.0.4**
+* Added brute force option to recompile minified assets
+
+**3.0.3**
+* Added output_log to configuration options to output to console automatically
+* Altered google closure compiler request data to degrade gracefully when Closure Compiler returns errors, returning non-minified original file contents rather than writing a google error message to a JavaScript file
+
+**3.0.2**
+* Bugfix to force arrays in minified_filedata requests
+
+**3.0.1**
+* Added support for protocol agnostic URIs such as '//ajax.googleapis.com/ajax/libs/...'
+* Added plug and play function to simplify merge functionality
+* Bugfix for merge functionality when using file list
+  * Altered minified_filedata to stored full list of files contained in minified package
+  * Added support for automatic re-minification when the number of files passed to the "merge" function changes

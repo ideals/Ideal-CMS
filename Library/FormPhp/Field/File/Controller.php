@@ -45,7 +45,6 @@ class Controller extends AbstractField
                     $(form).attr('method', 'post');
                     form.defaultSubmit = true;
                     $(form).submit();
-                    return false;
                 },
                 /**
                  * Создание фрейма

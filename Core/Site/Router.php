@@ -6,6 +6,7 @@ use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
 use Ideal\Structure\Error404;
+use Ideal\Structure\Home;
 
 class Router
 {
@@ -28,18 +29,21 @@ class Router
      */
     public function __construct()
     {
+        $is404 = false;
+
         // Проверка на простой AJAX-запрос
         $request = new Request();
-        if ($request->mode == 'ajax') {
+        if ($request->mode == 'ajax' && $request->controller != '') {
             $controllerName = $request->controller . '\\AjaxController';
-            if ($request->controller != '' && class_exists($controllerName)) {
+            $is404 = true;
+            if (class_exists($controllerName)) {
                 // Если контроллер в запросе указан И запрошенный класс существует
                 // то устанавливаем контроллер и завершаем роутинг
-                $this->controllerName = $controllerName;
-                return;
+                if (!empty($request->action) && method_exists($controllerName, $request->action . 'Action')) {
+                    $this->controllerName = $controllerName;
+                    $is404 = false;
+                }
             }
-            // Если параметры ajax-вызова неправильные, то обрабатываем запрос как не-ajax
-            unset($_REQUEST['mode']);
         }
 
         $pluginBroker = PluginBroker::getInstance();
@@ -55,6 +59,11 @@ class Router
 
         // Инициализируем данные модели
         $this->model->initPageData();
+
+        if ($is404) {
+            // Если при инициализации ajax-контроллера произошла 404-ая ошибка, то фиксируем её в любом случае
+            $this->saveAjax404();
+        }
 
         // Определяем корректную модель на основании поля structure
         if (!$this->model->is404) {
@@ -75,16 +84,11 @@ class Router
         $path = array($config->getStartStructure());
         $prevStructureId = $path[0]['ID'];
 
-        // Вырезаем стартовый URL
-        $url = ltrim($_SERVER['REQUEST_URI'], '/');
-        // Удаляем параметры из URL (текст после символов "?" и "#")
-        $url = preg_replace('/[\?\#].*/', '', $url);
-        // Убираем начальные слэши и начальный сегмент, если cms не в корне сайта
-        $url = ltrim(substr($url, strlen($config->cms['startUrl'])), '/');
+        $url = $this->prepareUrl($_SERVER['REQUEST_URI']);
 
         // Если запрошена главная страница
         if ($url == '') {
-            $model = new \Ideal\Structure\Home\Site\Model('0-' . $prevStructureId);
+            $model = new Home\Site\Model('0-' . $prevStructureId);
             $model = $model->detectPageByUrl($path, '/');
             return $model;
         }
@@ -148,12 +152,6 @@ class Router
             return $this->controllerName;
         }
 
-        $request = new Request();
-        if ($request->mode == 'ajax-model' && $request->controller != '') {
-            // Если это ajax-вызов с явно указанным namespace класса ajax-контроллера
-            return $request->controller . '\\AjaxController';
-        }
-
         $path = $this->model->getPath();
 
         if (count($path) == 0 && $this->model->is404) {
@@ -186,10 +184,16 @@ class Router
             $structure = $end['structure'];
         }
 
-        if ($request->mode == 'ajax-model' && $request->controller == '') {
+        $request = new Request();
+        if ($request->mode == 'ajax' && $request->controller == '') {
             // Если это ajax-вызов без указанного namespace класса ajax-контроллера,
             // то используем namespace модели
-            return Util::getClassName($end['structure'], 'Structure') . '\\Site\\AjaxController';
+            $controllerName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\AjaxController';
+            if (!class_exists($controllerName)) {
+                $this->saveAjax404();
+            } else {
+                return $controllerName;
+            }
         }
 
         $controllerName = Util::getClassName($structure, 'Structure') . '\\Site\\Controller';
@@ -236,10 +240,47 @@ class Router
     }
 
     /**
-     * Возвращает значение флага отпрваки сообщения о 404ой ошибке
+     * Возвращает значение флага отправки сообщения о 404ой ошибке
+     * @return bool
      */
     public function send404()
     {
         return $this->error404->send404();
+    }
+
+    /**
+     * Зачистка url перед роутингом по нему
+     *
+     * @param string $url
+     * @param bool $stripQuery Нужно ли удалять символы после ?
+     * @return string
+     */
+    protected function prepareUrl($url, $stripQuery = true)
+    {
+        $config = Config::getInstance();
+
+        // Вырезаем стартовый URL
+        $url = ltrim($url, '/');
+
+        // Удаляем параметры из URL (текст после символа "#")
+        $url = preg_replace('/[\#].*/', '', $url);
+
+        if ($stripQuery) {
+            // Удаляем параметры из URL (текст после символа "?")
+            $url = preg_replace('/[\?\#].*/', '', $url);
+        }
+
+        // Убираем начальные слэши и начальный сегмент, если cms не в корне сайта
+        $url = ltrim(substr($url, strlen($config->cms['startUrl'])), '/');
+
+        return $url;
+    }
+
+    protected function saveAjax404()
+    {
+        $this->model->is404 = true;
+        $url = $this->prepareUrl($_SERVER['REQUEST_URI'], false);
+        $this->error404->setUrl($url);
+        $this->error404->save404();
     }
 }

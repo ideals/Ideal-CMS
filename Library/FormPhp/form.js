@@ -394,7 +394,10 @@ jQuery.fn.form = function (options, messages, methods) {
                     }
                     messages.errors.length = 0;
                     this.disableSubmit = false;
+                    $(this).trigger('form.invalid');
                     return false;
+                } else {
+                    $(this).trigger('form.valid');
                 }
 
                 if (typeof senderAjax == 'object') {

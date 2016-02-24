@@ -23,7 +23,7 @@ class Tags extends \Ideal\Core\Widget
         $db = Db::getInstance();
         $config = Config::getInstance();
         $table = $config->db['prefix'] . 'ideal_structure_tag';
-        $tableList = $config->db['prefix'] . 'ideal_medium_tagslist';
+        $tableList = $config->db['prefix'] . 'ideal_medium_taglist';
         $sql = "SELECT tags.* FROM {$table} AS tags
                   INNER JOIN {$tableList} AS tag ON (tag.tag_id = tags.ID)
                   WHERE tag.part_id={$id}";
