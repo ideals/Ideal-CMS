@@ -5,5 +5,5 @@ return array(
     'pos' => 90,
     'info' => '',
     'structure' => 'Ideal_Service',
-    'ID' => 'Ideal_ACL'
+    'ID' => 'Ideal_Acl'
 );

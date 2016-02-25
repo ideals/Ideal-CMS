@@ -1,5 +1,5 @@
 <?php
-namespace Ideal\Structure\Service\ACL;
+namespace Ideal\Structure\Service\Acl;
 
 // Получаем всех пользователей системы для управления их провами
 $users = Model::getAllUsers();
@@ -36,7 +36,7 @@ echo '</select>';
                 type: "POST",
                 data: {user_id: $(this).val()},
                 dataType: 'json',
-                url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\ACL&action=mainUserPermission',
+                url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\Acl&action=mainUserPermission',
                 success: function (data) {
                     var trs = '';
                     $('#permission:hidden').show();
@@ -76,7 +76,7 @@ echo '</select>';
                     user_id: $('#selectUser').val()
                 },
                 dataType: 'json',
-                url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\ACL&action=changePermission'
+                url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\Acl&action=changePermission'
             });
         });
 
@@ -99,7 +99,7 @@ echo '</select>';
                     user_id: $('#selectUser').val()
                 },
                 dataType: 'json',
-                url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\ACL&action=showChildren',
+                url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\Acl&action=showChildren',
                 success: function (data) {
                     var trs = '';
                     // Формируем дополнительныен пробелы

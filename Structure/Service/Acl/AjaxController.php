@@ -6,7 +6,7 @@
  * @copyright Copyright (c) 2012-2016 Ideal CMS (http://idealcms.ru/)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-namespace Ideal\Structure\Service\ACL;
+namespace Ideal\Structure\Service\Acl;
 
 use \Ideal\Core\Db;
 use \Ideal\Core\Config;
