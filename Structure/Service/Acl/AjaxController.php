@@ -39,6 +39,7 @@ class AjaxController extends \Ideal\Core\AjaxController
                     'edit_children' => 1,
                     'delete_children' => 1,
                     'enter_children' => 1,
+                    'prev_structure' => '0-' . $structure['ID'],
                 );
             }
         }
@@ -75,8 +76,12 @@ class AjaxController extends \Ideal\Core\AjaxController
         $structure = $config->getStructureById($structureID);
         $childrenStructures = array();
 
-        // Если элементы структуры не могут быть созданы внутри себя, то всё рвно заносим текущую структуры в список
-        if (array_search($structure['structure'], $structure['params']['structures']) === false) {
+        // Если элементы структуры не могут быть созданы внутри себя, то всё рвно заносим текущую структуры в список.
+        // При условии что рассматривается ервый уровень вложенности.
+        if (
+            array_search($structure['structure'], $structure['params']['structures']) === false
+            && $elementID == 0
+        ) {
             $structure['params']['structures'][] = $structure['structure'];
         }
 
@@ -95,16 +100,23 @@ class AjaxController extends \Ideal\Core\AjaxController
                 $par = array();
                 $whereString = '';
                 if (isset($childrenStructure['fields']['prev_structure'])) {
-                    if ($elementID == 0 || $childrenStructure['structure'] == $structure['structure']) {
-                        $par['prev_structure'] =  '0-' . $structureID;
+                    if ($childrenStructure['structure'] == $structure['structure']) {
+                        $par['prev_structure'] = $_POST['prev_structure'];
                     } else {
                         $par['prev_structure'] = $structureID . '-' . $elementID;
                     }
+                    $prev_structure = $par['prev_structure'];
                     $whereString .= ' prev_structure = :prev_structure';
                 }
 
                 // Если идентификатор элемента равен 0, то собираем только первый уровень.
-                if (isset($childrenStructure['fields']['lvl']) && $elementID == 0) {
+                if (
+                    isset($childrenStructure['fields']['lvl'])
+                    && (
+                        $elementID == 0
+                        || $childrenStructure['structure'] != $structure['structure']
+                    )
+                ) {
                     if (!empty($whereString)) {
                         $whereString .= ' AND';
                     }
@@ -113,22 +125,32 @@ class AjaxController extends \Ideal\Core\AjaxController
                 }
 
                 // Уровень ниже
-                // TODO учесть медиумы
-                if (isset($childrenStructure['fields']['cid']) && $elementID != 0) {
+                if (
+                    isset($childrenStructure['fields']['cid'])
+                    && $elementID != 0
+                    && $childrenStructure['structure'] == $structure['structure']
+                ) {
                     if (!empty($whereString)) {
                         $whereString .= ' AND';
                     }
+                    $digits = $childrenStructure['params']['digits'];
+                    $levels = $childrenStructure['params']['levels'];
                     $cid = $db->select(
                         "SELECT cid FROM {$childrenStructure['tableName']} WHERE ID = :ID",
                         array('ID' => $elementID)
                     );
-                    $cid = str_split($cid[0]['cid'], $childrenStructure['params']['digits']);
+                    $cid = str_split($cid[0]['cid'], $digits);
                     $cid = array_filter($cid, function ($v) {
                         return intval($v);
                     });
                     $cid = implode('', $cid);
                     $par['ID'] = $elementID;
-                    $whereString .= " cid LIKE '{$cid}%' AND ID != :ID";
+
+                    $cidRegexpString = '^' . $cid . '(.){' . $digits . '}';
+                    if (strlen($cidRegexpString) < $digits * $levels) {
+                        $cidRegexpString .= str_repeat('0', $digits);
+                    }
+                    $whereString .= " cid REGEXP '{$cidRegexpString }' AND ID != :ID";
                 }
 
                 // Запрашиваем элементы из базы
@@ -158,6 +180,7 @@ class AjaxController extends \Ideal\Core\AjaxController
                         'edit_children' => 1,
                         'delete_children' => 1,
                         'enter_children' => 1,
+                        'prev_structure' => $prev_structure,
                     );
                     $aclTable = $config->db['prefix'] . 'ideal_service_acl';
                     $userStructurePermissions = $db->select(

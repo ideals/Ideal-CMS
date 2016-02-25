@@ -49,7 +49,7 @@ echo '</select>';
                         var delete_children = value.delete_children == 0 ? 'checked="checked"' : '';
                         var enter_children = value.enter_children == 0 ? 'checked="checked"' : '';
                         trs += ' \
-                            <tr id="' + index + '">\
+                            <tr id="' + index + '" data-prev_structure="' + value.prev_structure + '">\
                             <td><a href="">' + value.name + '</a></td>\
                             <td><input type="checkbox" data-target="show" ' + show + '></td>\
                             <td><input type="checkbox" data-target="edit" ' + edit + '></td>\
@@ -96,7 +96,8 @@ echo '</select>';
                 type: "POST",
                 data: {
                     structure: $(closestTr).attr('id'),
-                    user_id: $('#selectUser').val()
+                    user_id: $('#selectUser').val(),
+                    prev_structure: $(closestTr).data('prev_structure')
                 },
                 dataType: 'json',
                 url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\Acl&action=showChildren',
@@ -113,7 +114,7 @@ echo '</select>';
                         var delete_children = value.delete_children == 0 ? 'checked="checked"' : '';
                         var enter_children = value.enter_children == 0 ? 'checked="checked"' : '';
                         trs += ' \
-                            <tr id="' + index + '">\
+                            <tr id="' + index + '" data-prev_structure="' + value.prev_structure + '">\
                             <td>' + spaces + '<span>|-</span><a href="">' + value.name + '</a></td>\
                             <td><input type="checkbox" data-target="show" ' + show + '></td>\
                             <td><input type="checkbox" data-target="edit" ' + edit + '></td>\
