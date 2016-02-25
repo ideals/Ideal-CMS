@@ -63,6 +63,96 @@ class AjaxController extends \Ideal\Core\AjaxController
         return json_encode($permission);
     }
 
+    /**
+     * Действие срабатывающее при клике на названии элемента структуры
+     */
+    public function showChildrenAction()
+    {
+        $permission = array();
+        $db = Db::getInstance();
+        $config = Config::getInstance();
+        list($structureID, $elementID) = explode('-', $_POST['structure']);
+        $structure = $config->getStructureById($structureID);
+        $childrenStructures = array();
+
+        // Собрать названия таблиц структур, коьторые могут быть созданы в этой структуре
+        foreach ($structure['params']['structures'] as $childrenStructure) {
+            $childrenStructures[$childrenStructure] = $config->getStructureByName($childrenStructure);
+            if (strpos($childrenStructure, '_') !== false) {
+                $childrenStructures[$childrenStructure]['tableName'] = $config->getTableByName($childrenStructure);
+            }
+        }
+
+        // собираем дочерние элементы
+        foreach ($childrenStructures as $childrenStructure) {
+            // TODO у сервисов нет таблиц, нужно учесть
+            if (isset($childrenStructure['tableName'])) {
+                $par = array();
+                $whereString = '';
+                if (isset($childrenStructure['fields']['prev_structure'])) {
+                    if ($elementID == 0 || $childrenStructure['structure'] == $structure['structure']) {
+                        $par['prev_structure'] = $elementID . '-' . $structureID;
+                    } else {
+                        $par['prev_structure'] = $structureID . '-' . $elementID;
+                    }
+                    $whereString .= ' prev_structure = :prev_structure';
+                }
+
+                // Если идентификатор элемента равен 0, то собираем только первый уровень.
+                if (isset($childrenStructure['fields']['lvl']) && $elementID == 0) {
+                    if (!empty($whereString)) {
+                        $whereString .= ' AND';
+                    }
+                    $par['lvl'] = 1;
+                    $whereString .= " lvl = :lvl";
+                }
+
+                // Запрашиваем элементы из базы
+                if (!empty($whereString)) {
+                    $whereString = ' WHERE' . $whereString;
+                }
+                $structurePermissions = $db->select(
+                    "SELECT * FROM {$childrenStructure['tableName']}{$whereString}",
+                    $par
+                );
+
+                // Заполняем полученные данные начальными параметрами доступа
+                foreach ($structurePermissions as $structurePermission) {
+                    // TODO Учесть что может быть выбран тип раздела отличный от структуры дочернего элемента
+                    $permission[$childrenStructure['ID'] . '-' . $structurePermission['ID']] = array(
+                        'name' => $structurePermission['name'],
+                        'show' => 1,
+                        'edit' => 1,
+                        'delete' => 1,
+                        'enter' => 1,
+                        'edit_children' => 1,
+                        'delete_children' => 1,
+                        'enter_children' => 1,
+                    );
+                    $aclTable = $config->db['prefix'] . 'ideal_service_acl';
+                    $userStructurePermissions = $db->select(
+                        "SELECT * FROM {$aclTable} WHERE user_id = :user_id AND structure = :structure",
+                        array(
+                            'user_id' => $_POST['user_id'],
+                            'structure' => $childrenStructure['ID'] . '-' . $structurePermission['ID']
+                        )
+                    );
+                    if (!empty($userStructurePermissions)) {
+                        foreach ($userStructurePermissions as $userStructurePermission) {
+                            if (array_key_exists($userStructurePermission['structure'], $permission)) {
+                                $permission[$userStructurePermission['structure']] = array_merge(
+                                    $permission[$userStructurePermission['structure']],
+                                    $userStructurePermission
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return json_encode($permission);
+    }
+
     public function changePermissionAction()
     {
         $permission = array(
