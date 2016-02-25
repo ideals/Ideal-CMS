@@ -96,7 +96,7 @@ class AjaxController extends \Ideal\Core\AjaxController
                 $whereString = '';
                 if (isset($childrenStructure['fields']['prev_structure'])) {
                     if ($elementID == 0 || $childrenStructure['structure'] == $structure['structure']) {
-                        $par['prev_structure'] = $elementID . '-' . $structureID;
+                        $par['prev_structure'] =  '0-' . $structureID;
                     } else {
                         $par['prev_structure'] = $structureID . '-' . $elementID;
                     }
@@ -110,6 +110,25 @@ class AjaxController extends \Ideal\Core\AjaxController
                     }
                     $par['lvl'] = 1;
                     $whereString .= " lvl = :lvl";
+                }
+
+                // Уровень ниже
+                // TODO учесть медиумы
+                if (isset($childrenStructure['fields']['cid']) && $elementID != 0) {
+                    if (!empty($whereString)) {
+                        $whereString .= ' AND';
+                    }
+                    $cid = $db->select(
+                        "SELECT cid FROM {$childrenStructure['tableName']} WHERE ID = :ID",
+                        array('ID' => $elementID)
+                    );
+                    $cid = str_split($cid[0]['cid'], $childrenStructure['params']['digits']);
+                    $cid = array_filter($cid, function ($v) {
+                        return intval($v);
+                    });
+                    $cid = implode('', $cid);
+                    $par['ID'] = $elementID;
+                    $whereString .= " cid LIKE '{$cid}%' AND ID != :ID";
                 }
 
                 // Запрашиваем элементы из базы
