@@ -119,8 +119,14 @@ class AjaxController extends \Ideal\Core\AjaxController
                 // Заполняем полученные данные начальными параметрами доступа
                 foreach ($structurePermissions as $structurePermission) {
                     // TODO Учесть что может быть выбран тип раздела отличный от структуры дочернего элемента
+                    $name = '';
+                    if (isset($structurePermission['name'])) {
+                        $name = $structurePermission['name'];
+                    } elseif (isset($structurePermission['email'])) {
+                        $name = $structurePermission['email'];
+                    }
                     $permission[$childrenStructure['ID'] . '-' . $structurePermission['ID']] = array(
-                        'name' => $structurePermission['name'],
+                        'name' => $name,
                         'show' => 1,
                         'edit' => 1,
                         'delete' => 1,
