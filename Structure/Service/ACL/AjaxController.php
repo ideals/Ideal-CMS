@@ -75,6 +75,11 @@ class AjaxController extends \Ideal\Core\AjaxController
         $structure = $config->getStructureById($structureID);
         $childrenStructures = array();
 
+        // Если элементы структуры не могут быть созданы внутри себя, то всё рвно заносим текущую структуры в список
+        if (array_search($structure['structure'], $structure['params']['structures']) === false) {
+            $structure['params']['structures'][] = $structure['structure'];
+        }
+
         // Собрать названия таблиц структур, коьторые могут быть созданы в этой структуре
         foreach ($structure['params']['structures'] as $childrenStructure) {
             $childrenStructures[$childrenStructure] = $config->getStructureByName($childrenStructure);
