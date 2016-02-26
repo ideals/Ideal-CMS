@@ -74,103 +74,105 @@ class AjaxController extends \Ideal\Core\AjaxController
         $config = Config::getInstance();
         list($structureID, $elementID) = explode('-', $_POST['structure']);
         $structure = $config->getStructureById($structureID);
-        $childrenStructures = array();
+        $childrenStructure = array();
 
-        // Если элементы структуры не могут быть созданы внутри себя, то всё рвно заносим текущую структуры в список.
-        // При условии что рассматривается ервый уровень вложенности.
-        if (
-            array_search($structure['structure'], $structure['params']['structures']) === false
-            && $elementID == 0
-        ) {
-            $structure['params']['structures'][] = $structure['structure'];
-        }
-
-        // Собрать названия таблиц структур, коьторые могут быть созданы в этой структуре
-        foreach ($structure['params']['structures'] as $childrenStructure) {
-            $childrenStructures[$childrenStructure] = $config->getStructureByName($childrenStructure);
-            if (strpos($childrenStructure, '_') !== false) {
-                $childrenStructures[$childrenStructure]['tableName'] = $config->getTableByName($childrenStructure);
+        // Если идентификатор элемента == 0, то берём из таблицы структуры, чей идентификатор был так же передан
+        // TODO у сервисов нет таблиц, нужно учесть
+        if ($elementID == 0) {
+            $childrenStructure = $config->getStructureById($structureID);
+            $childrenStructure['tableName'] = $config->getTableByName($childrenStructure['structure']);
+        } else { // Если идентификатор элемента отличен от нуля, то сперва нужно узнать тип раздела
+            $structureTable = $config->getTableByName($structure['structure']);
+            $partitionType = $db->select(
+                "SELECT * FROM {$structureTable} WHERE ID = :ID",
+                array(
+                    'ID' => $elementID
+                )
+            );
+            if (!empty($partitionType) && isset($partitionType[0]['structure'])) {
+                $childrenStructure = $config->getStructureByName($partitionType[0]['structure']);
+                $childrenStructure['tableName'] = $config->getTableByName($partitionType[0]['structure']);
             }
         }
 
-        // собираем дочерние элементы
-        foreach ($childrenStructures as $childrenStructure) {
-            // TODO у сервисов нет таблиц, нужно учесть
-            if (isset($childrenStructure['tableName'])) {
-                $par = array();
-                $whereString = '';
-                if (isset($childrenStructure['fields']['prev_structure'])) {
-                    if ($childrenStructure['structure'] == $structure['structure']) {
-                        $par['prev_structure'] = $_POST['prev_structure'];
-                    } else {
-                        $par['prev_structure'] = $structureID . '-' . $elementID;
-                    }
-                    $prev_structure = $par['prev_structure'];
-                    $whereString .= ' prev_structure = :prev_structure';
+        // Собираем дочерние элементы
+        if (!empty($childrenStructure)) {
+            $par = array();
+            $whereString = '';
+            if (isset($childrenStructure['fields']['prev_structure'])) {
+                if ($childrenStructure['structure'] == $structure['structure']) {
+                    $par['prev_structure'] = $_POST['prev_structure'];
+                } else {
+                    $par['prev_structure'] = $structureID . '-' . $elementID;
                 }
+                $prev_structure = $par['prev_structure'];
+                $whereString .= ' prev_structure = :prev_structure';
+            }
 
-                // Если идентификатор элемента равен 0, то собираем только первый уровень.
-                if (
-                    isset($childrenStructure['fields']['lvl'])
-                    && (
-                        $elementID == 0
-                        || $childrenStructure['structure'] != $structure['structure']
-                    )
-                ) {
-                    if (!empty($whereString)) {
-                        $whereString .= ' AND';
-                    }
-                    $par['lvl'] = 1;
-                    $whereString .= " lvl = :lvl";
-                }
-
-                // Уровень ниже
-                if (
-                    isset($childrenStructure['fields']['cid'])
-                    && $elementID != 0
-                    && $childrenStructure['structure'] == $structure['structure']
-                ) {
-                    if (!empty($whereString)) {
-                        $whereString .= ' AND';
-                    }
-                    $digits = $childrenStructure['params']['digits'];
-                    $levels = $childrenStructure['params']['levels'];
-                    $cid = $db->select(
-                        "SELECT cid FROM {$childrenStructure['tableName']} WHERE ID = :ID",
-                        array('ID' => $elementID)
-                    );
-                    $cid = str_split($cid[0]['cid'], $digits);
-                    $cid = array_filter($cid, function ($v) {
-                        return intval($v);
-                    });
-                    $cid = implode('', $cid);
-                    $par['ID'] = $elementID;
-
-                    $cidRegexpString = '^' . $cid . '(.){' . $digits . '}';
-                    if (strlen($cidRegexpString) < $digits * $levels) {
-                        $cidRegexpString .= str_repeat('0', $digits);
-                    }
-                    $whereString .= " cid REGEXP '{$cidRegexpString }' AND ID != :ID";
-                }
-
-                // Запрашиваем элементы из базы
+            // Если идентификатор элемента равен 0, то собираем только первый уровень.
+            if (
+                isset($childrenStructure['fields']['lvl'])
+                && (
+                    $elementID == 0
+                    || $childrenStructure['structure'] != $structure['structure']
+                )
+            ) {
                 if (!empty($whereString)) {
-                    $whereString = ' WHERE' . $whereString;
+                    $whereString .= ' AND';
                 }
-                $structurePermissions = $db->select(
-                    "SELECT * FROM {$childrenStructure['tableName']}{$whereString}",
-                    $par
-                );
+                $par['lvl'] = 1;
+                $whereString .= " lvl = :lvl";
+            }
 
-                // Заполняем полученные данные начальными параметрами доступа
-                foreach ($structurePermissions as $structurePermission) {
-                    // TODO Учесть что может быть выбран тип раздела отличный от структуры дочернего элемента
-                    $name = '';
-                    if (isset($structurePermission['name'])) {
-                        $name = $structurePermission['name'];
-                    } elseif (isset($structurePermission['email'])) {
-                        $name = $structurePermission['email'];
-                    }
+            // Уровень ниже
+            if (
+                isset($childrenStructure['fields']['cid'])
+                && $elementID != 0
+                && $childrenStructure['structure'] == $structure['structure']
+            ) {
+                if (!empty($whereString)) {
+                    $whereString .= ' AND';
+                }
+                $digits = $childrenStructure['params']['digits'];
+                $levels = $childrenStructure['params']['levels'];
+                $cid = $db->select(
+                    "SELECT cid FROM {$childrenStructure['tableName']} WHERE ID = :ID",
+                    array('ID' => $elementID)
+                );
+                $cid = str_split($cid[0]['cid'], $digits);
+                $cid = array_filter($cid, function ($v) {
+                    return intval($v);
+                });
+                $cid = implode('', $cid);
+                $par['ID'] = $elementID;
+
+                $cidRegexpString = '^' . $cid . '(.){' . $digits . '}';
+                if (strlen($cidRegexpString) < $digits * $levels) {
+                    $cidRegexpString .= str_repeat('0', $digits);
+                }
+                $whereString .= " cid REGEXP '{$cidRegexpString }' AND ID != :ID";
+            }
+
+            // Запрашиваем элементы из базы
+            if (!empty($whereString)) {
+                $whereString = ' WHERE' . $whereString;
+            }
+            $structurePermissions = $db->select(
+                "SELECT * FROM {$childrenStructure['tableName']}{$whereString}",
+                $par
+            );
+
+            // Заполняем полученные данные начальными параметрами доступа
+            foreach ($structurePermissions as $structurePermission) {
+                $name = '';
+                if (isset($structurePermission['name'])) {
+                    $name = $structurePermission['name'];
+                } elseif (isset($structurePermission['email'])) {
+                    $name = $structurePermission['email'];
+                }
+
+                // Отображаем элемент для управления правами на него только в том случае, когда он имеет название
+                if (!empty($name)) {
                     $permission[$childrenStructure['ID'] . '-' . $structurePermission['ID']] = array(
                         'name' => $name,
                         'show' => 1,
