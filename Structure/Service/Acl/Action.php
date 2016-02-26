@@ -102,18 +102,19 @@ echo '</select>';
                 dataType: 'json',
                 url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\Acl&action=showChildren',
                 success: function (data) {
-                    var trs = '';
-                    // Формируем дополнительныен пробелы
-                    var spaces = '<span class="space">&nbsp;&nbsp;</span>'.repeat(lvl);
-                    $.each(data, function (index, value) {
-                        var show = value.show == 0 ? 'checked="checked"' : '';
-                        var edit = value.edit == 0 ? 'checked="checked"' : '';
-                        var deletevar = value.delete == 0 ? 'checked="checked"' : '';
-                        var enter = value.enter == 0 ? 'checked="checked"' : '';
-                        var edit_children = value.edit_children == 0 ? 'checked="checked"' : '';
-                        var delete_children = value.delete_children == 0 ? 'checked="checked"' : '';
-                        var enter_children = value.enter_children == 0 ? 'checked="checked"' : '';
-                        trs += ' \
+                    if (!$.isEmptyObject(data)) {
+                        var trs = '';
+                        // Формируем дополнительныен пробелы
+                        var spaces = '<span class="space">&nbsp;&nbsp;</span>'.repeat(lvl);
+                        $.each(data, function (index, value) {
+                            var show = value.show == 0 ? 'checked="checked"' : '';
+                            var edit = value.edit == 0 ? 'checked="checked"' : '';
+                            var deletevar = value.delete == 0 ? 'checked="checked"' : '';
+                            var enter = value.enter == 0 ? 'checked="checked"' : '';
+                            var edit_children = value.edit_children == 0 ? 'checked="checked"' : '';
+                            var delete_children = value.delete_children == 0 ? 'checked="checked"' : '';
+                            var enter_children = value.enter_children == 0 ? 'checked="checked"' : '';
+                            trs += ' \
                             <tr id="' + index + '" data-prev_structure="' + value.prev_structure + '">\
                             <td>' + spaces + '<span>|-</span><a href="">' + value.name + '</a></td>\
                             <td><input type="checkbox" data-target="show" ' + show + '></td>\
@@ -124,8 +125,11 @@ echo '</select>';
                             <td><input type="checkbox" data-target="delete_children" ' + delete_children + '></td>\
                             <td><input type="checkbox" data-target="enter_children" ' + enter_children + '></td>\
                             </tr>';
-                    });
-                    $(closestTr).after(trs);
+                        });
+                        $(closestTr).after(trs);
+                    } else {
+                        alert('Данны пункт не имееет дочерних элементов');
+                    }
                 }
             });
             return false;
