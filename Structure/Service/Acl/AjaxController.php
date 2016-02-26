@@ -20,71 +20,58 @@ class AjaxController extends \Ideal\Core\AjaxController
 {
 
     /**
-     * Действие срабатывающее при выборе пользователя
+     * Формирование списка первого уровня для управления правами
      */
     public function mainUserPermissionAction()
     {
         $permission = array();
-        $db = Db::getInstance();
         $config = Config::getInstance();
 
         // Собираем начальную информацию об основных пунктах меню админки
         foreach ($config->structures as $structure) {
             if ($structure['isShow']) {
-                $permission[$structure['ID'] . '-0'] = array(
-                    'name' => $structure['name'],
-                    'show' => 1,
-                    'edit' => 1,
-                    'delete' => 1,
-                    'enter' => 1,
-                    'edit_children' => 1,
-                    'delete_children' => 1,
-                    'enter_children' => 1,
-                    'prev_structure' => '0-' . $structure['ID'],
-                );
+                $permission[$structure['ID'] . '-0'] = $this->getDefaultPermissionArray();
+                $permission[$structure['ID'] . '-0']['name'] = $structure['name'];
+                $permission[$structure['ID'] . '-0']['prev_structure'] = '0-' . $structure['ID'];
             }
         }
 
         // Получаем все права пользователя на основные пункты меню админки
         $par = array('user_id' => $_POST['user_id']);
-        $aclTable = $config->db['prefix'] . 'ideal_service_acl';
-        $userPermissions = $db->select(
-            "SELECT * FROM {$aclTable} WHERE user_id = :user_id AND structure LIKE '%-0'",
-            $par
-        );
-        if (!empty($userPermissions)) {
-            foreach ($userPermissions as $userPermission) {
-                if (array_key_exists($userPermission['structure'], $permission)) {
-                    $permission[$userPermission['structure']] = array_merge(
-                        $permission[$userPermission['structure']],
-                        $userPermission
-                    );
-                }
-            }
-        }
+        $whereString = ' WHERE user_id = :user_id AND structure LIKE \'%-0\'';
+        $userPermissions = $this->getExistingAccessRules($par, $whereString);
+
+        // Заменяем правила по умолчанию на уже известные правила для каждого пункта
+        $this->applyKnownRules($userPermissions, $permission);
+
         return json_encode($permission, JSON_FORCE_OBJECT);
     }
 
     /**
-     * Действие срабатывающее при клике на названии элемента структуры
+     * Формирование списка дочерних пунктов для управления правами
      */
     public function showChildrenAction()
     {
         $permission = array();
         $db = Db::getInstance();
         $config = Config::getInstance();
+
+        // Получаем идентификатор структуры и идентификатор элемента структуры родительского пункта
         list($structureID, $elementID) = explode('-', $_POST['structure']);
+
+        // Получаем информацию о структуре к которой относится родительский пункт
         $structure = $config->getStructureById($structureID);
         $childrenStructure = array();
-
 
         // Если запрашиваются дочерние элементы пункта отличного от "Сервис"
         if ($structure['structure'] != 'Ideal_Service') {
             // Если идентификатор элемента == 0, то берём из таблицы структуры, чей идентификатор был так же передан
             if ($elementID == 0) {
+                // Получаем информацию о структуре, к которой относятся дочерние элементы данного пункта
                 $childrenStructure = $config->getStructureById($structureID);
                 $childrenStructure['tableName'] = $config->getTableByName($childrenStructure['structure']);
-            } else { // Если идентификатор элемента отличен от нуля, то сперва нужно узнать тип раздела
+            } else {
+                // Если идентификатор элемента отличен от нуля, то сначала узнаём тип раздела
                 $structureTable = $config->getTableByName($structure['structure']);
                 $partitionType = $db->select(
                     "SELECT * FROM {$structureTable} WHERE ID = :ID",
@@ -93,6 +80,7 @@ class AjaxController extends \Ideal\Core\AjaxController
                     )
                 );
                 if (!empty($partitionType) && isset($partitionType[0]['structure'])) {
+                    // Получаем информацию о структуре, к которой относятся дочерние элементы данного пункта
                     $childrenStructure = $config->getStructureByName($partitionType[0]['structure']);
                     $childrenStructure['tableName'] = $config->getTableByName($partitionType[0]['structure']);
                 }
@@ -100,19 +88,27 @@ class AjaxController extends \Ideal\Core\AjaxController
 
             // Собираем дочерние элементы
             if (!empty($childrenStructure)) {
+                // Параметры для поиска дочерних элементов
                 $par = array();
+
+                // Строка, которая будет использоваться в WHERE-части запроса
                 $whereString = '';
+
+                // Если у дочерней структуры есть поле 'prev_structure', то добавляем соответствующие записи в WHERE-часть запроса
                 if (isset($childrenStructure['fields']['prev_structure'])) {
+                    // Если тип дочерней структуры равен типу родительской структуры, то используем явно переданное значение 'prev_structure'
                     if ($childrenStructure['structure'] == $structure['structure']) {
                         $par['prev_structure'] = $_POST['prev_structure'];
                     } else {
+                        // Если тип дочерней структуры отличен от типа родительской структуры, то генерируем новое значение 'prev_structure'
                         $par['prev_structure'] = $structureID . '-' . $elementID;
                     }
                     $prev_structure = $par['prev_structure'];
                     $whereString .= ' prev_structure = :prev_structure';
                 }
 
-                // Если идентификатор элемента равен 0, то собираем только первый уровень.
+                // Если у дочерней структуры есть поле 'lvl', то добавляем соответствующие записи в WHERE-часть запроса
+                // Если идентификатор элемента равен 0 или тип родительской структуры отличается от типа дочерней структуры, то собираем только первый уровень.
                 if (
                     isset($childrenStructure['fields']['lvl'])
                     && (
@@ -127,7 +123,10 @@ class AjaxController extends \Ideal\Core\AjaxController
                     $whereString .= " lvl = :lvl";
                 }
 
-                // Уровень ниже
+                // Если у дочерней структуры есть поле 'cid',
+                // родительская структура не относится к пунктам верхнего меню админки
+                // и тип родительской структуры равен типу дочерней структуры,
+                // то добавляем соовтетствующие записи в WHERE-часть запроса
                 if (
                     isset($childrenStructure['fields']['cid'])
                     && $elementID != 0
@@ -136,30 +135,38 @@ class AjaxController extends \Ideal\Core\AjaxController
                     if (!empty($whereString)) {
                         $whereString .= ' AND';
                     }
+
+                    // Получаем параметры вложенности дочерней структуры
                     $digits = $childrenStructure['params']['digits'];
                     $levels = $childrenStructure['params']['levels'];
+
+                    // Получаем cid родительского элемента
                     $cid = $db->select(
                         "SELECT cid FROM {$childrenStructure['tableName']} WHERE ID = :ID",
                         array('ID' => $elementID)
                     );
+
+                    // Формируем cid для WHERE-части запроса на выборку дочерних элементов
                     $cid = str_split($cid[0]['cid'], $digits);
                     $cid = array_filter($cid, function ($v) {
                         return intval($v);
                     });
                     $cid = implode('', $cid);
-                    $par['ID'] = $elementID;
-
                     $cidRegexpString = '^' . $cid . '(.){' . $digits . '}';
                     if (strlen($cidRegexpString) < $digits * $levels) {
                         $cidRegexpString .= str_repeat('0', $digits);
                     }
+
+                    $par['ID'] = $elementID;
                     $whereString .= " cid REGEXP '{$cidRegexpString }' AND ID != :ID";
                 }
 
-                // Запрашиваем элементы из базы
+                // Завершаем формирование WHERE-части запроса
                 if (!empty($whereString)) {
                     $whereString = ' WHERE' . $whereString;
                 }
+
+                // Получаем дочерние элементы текущего пункта
                 $structurePermissions = $db->select(
                     "SELECT * FROM {$childrenStructure['tableName']}{$whereString}",
                     $par
@@ -172,9 +179,11 @@ class AjaxController extends \Ideal\Core\AjaxController
             $structurePermissions = $service->getMenu();
             $childrenStructure['ID'] = $structureID;
         }
-        // Заполняем полученные данные начальными параметрами доступа
+
+        // Если дочерние элементы текущего пункта есть
         if (isset($structurePermissions) && count($structurePermissions) > 0) {
             foreach ($structurePermissions as $structurePermission) {
+                // Каждому дочернему элементу добавляем название для отображения в пользовательском интерфейсе
                 $name = '';
                 if (isset($structurePermission['name'])) {
                     $name = $structurePermission['name'];
@@ -184,69 +193,52 @@ class AjaxController extends \Ideal\Core\AjaxController
 
                 // Отображаем элемент для управления правами на него только в том случае, когда он имеет название
                 if (!empty($name)) {
-                    $permission[$childrenStructure['ID'] . '-' . $structurePermission['ID']] = array(
-                        'name' => $name,
-                        'show' => 1,
-                        'edit' => 1,
-                        'delete' => 1,
-                        'enter' => 1,
-                        'edit_children' => 1,
-                        'delete_children' => 1,
-                        'enter_children' => 1,
-                        'prev_structure' => isset($prev_structure) ? $prev_structure : '',
+
+                    // Формируем ключ массива, который будет использован в на фронтенде в качетсве значения для data-seid
+                    $key = $childrenStructure['ID'] . '-' . $structurePermission['ID'];
+
+                    $permission[$key] = $this->getDefaultPermissionArray();
+                    $permission[$key]['name'] = $name;
+                    $permission[$key]['prev_structure'] = isset($prev_structure) ? $prev_structure : '';
+                    $par = array(
+                        'user_id' => $_POST['user_id'],
+                        'structure' => $childrenStructure['ID'] . '-' . $structurePermission['ID']
                     );
-                    $aclTable = $config->db['prefix'] . 'ideal_service_acl';
-                    $userStructurePermissions = $db->select(
-                        "SELECT * FROM {$aclTable} WHERE user_id = :user_id AND structure = :structure",
-                        array(
-                            'user_id' => $_POST['user_id'],
-                            'structure' => $childrenStructure['ID'] . '-' . $structurePermission['ID']
-                        )
-                    );
-                    if (!empty($userStructurePermissions)) {
-                        foreach ($userStructurePermissions as $userStructurePermission) {
-                            if (array_key_exists($userStructurePermission['structure'], $permission)) {
-                                $permission[$userStructurePermission['structure']] = array_merge(
-                                    $permission[$userStructurePermission['structure']],
-                                    $userStructurePermission
-                                );
-                            }
-                        }
-                    }
+                    $whereString = ' WHERE user_id = :user_id AND structure = :structure';
+                    $userStructurePermissions = $this->getExistingAccessRules($par, $whereString);
+
+                    $this->applyKnownRules($userStructurePermissions, $permission);
                 }
             }
         }
         return json_encode($permission, JSON_FORCE_OBJECT);
     }
 
+    /**
+     * Занесение в базу изменённого правила для соответствующего пункта
+     */
     public function changePermissionAction()
     {
-        $permission = array(
-            'user_id' => $_POST['user_id'],
-            'structure' => $_POST['structure'],
-            'show' => 1,
-            'edit' => 1,
-            'delete' => 1,
-            'enter' => 1,
-            'edit_children' => 1,
-            'delete_children' => 1,
-            'enter_children' => 1,
-        );
+        $permission = $this->getDefaultPermissionArray();
+        $permission['user_id'] = $_POST['user_id'];
+        $permission['structure'] = $_POST['structure'];
+
+        // Добавляем именно то, правило, которое следует заменить у выбранного пункта
         $permission[$_POST['target']] = $_POST['is'];
+
         $db = Db::getInstance();
         $config = Config::getInstance();
-        $par = array('user_id' => $_POST['user_id'], 'structure' => $_POST['structure']);
         $aclTable = $config->db['prefix'] . 'ideal_service_acl';
-        $userPermission = $db->select(
-            "SELECT * FROM {$aclTable} WHERE user_id = :user_id AND structure = :structure",
-            $par
-        );
+
+        $par = array('user_id' => $_POST['user_id'], 'structure' => $_POST['structure']);
+        $whereString = ' WHERE user_id = :user_id AND structure = :structure';
+        $userPermission = $this->getExistingAccessRules($par, $whereString);
 
         // Если записи ещё нет, то заводим её
         if (empty($userPermission)) {
             $db->insert($aclTable, $permission);
         } else {
-            // Если запись нет, обновляем.
+            // Если запись есть, обновляем
             $values = array($_POST['target'] => $_POST['is']);
             $params = array('user_id' => $_POST['user_id'], 'structure' => $_POST['structure']);
             $db->update($aclTable)->set($values);
@@ -259,5 +251,62 @@ class AjaxController extends \Ideal\Core\AjaxController
         return array(
             'Content-type' => 'Content-type: application/json'
         );
+    }
+
+    /**
+     *
+     * Генерирует массив прав по умолчанию для элемента предполагаемого элемента
+     *
+     * @return array Массив прав
+     */
+    private function getDefaultPermissionArray()
+    {
+        return array(
+            'show' => 1,
+            'edit' => 1,
+            'delete' => 1,
+            'enter' => 1,
+            'edit_children' => 1,
+            'delete_children' => 1,
+            'enter_children' => 1,
+        );
+    }
+
+    /**
+     * Получает уже установленные правила для элемента
+     *
+     * @param string $par Набор параметров для выборки
+     * @param string $whereString Строка с WHERE-частью запроса
+     * @return array Массив выборки правил
+     */
+    private function getExistingAccessRules($par, $whereString)
+    {
+        $db = Db::getInstance();
+        $config = Config::getInstance();
+        $aclTable = $config->db['prefix'] . 'ideal_service_acl';
+        return $db->select(
+            "SELECT * FROM {$aclTable}{$whereString}",
+            $par
+        );
+    }
+
+    /**
+     * Замена правил по умолчанию на уже установленные правила для соответствующих пунктов
+     *
+     * @param array $existingRules Существующие правила для пунктов
+     * @param array $defaultRules Правила по умолчанию
+     */
+    private function applyKnownRules($existingRules, &$defaultRules)
+    {
+        if (!empty($existingRules)) {
+            foreach ($existingRules as $rule) {
+                if (array_key_exists($rule['structure'], $defaultRules)) {
+                    $defaultRules[$rule['structure']] = array_merge(
+                        $defaultRules[$rule['structure']],
+                        $rule
+                    );
+                }
+            }
+        }
     }
 }
