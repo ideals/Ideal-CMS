@@ -264,12 +264,14 @@ if ($isCool) {
 function getFieldListWithTypes($data)
 {
     $fields = array();
-    array_walk($data['fields'], function ($value, $key) use (&$fields) {
-        if (isset($value['sql'])) {
-            list($type) = explode(' ', $value['sql']);
-            $fields[$key] = $type;
-        }
-    });
+    if (isset($data['fields']) && is_array($data['fields'])) {
+        array_walk($data['fields'], function ($value, $key) use (&$fields) {
+            if (isset($value['sql'])) {
+                list($type) = explode(' ', $value['sql']);
+                $fields[$key] = $type;
+            }
+        });
+    }
     return $fields;
 }
 
