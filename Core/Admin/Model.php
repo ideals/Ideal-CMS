@@ -121,22 +121,13 @@ abstract class Model extends Core\Model
                 foreach ($preSaveAddonsInfo as $key => $preSaveAddonInfo) {
                     // Удаляем информацию об аддоне из старого списка, если его нет в новом.
                     if (!in_array($preSaveAddonInfo, $addonsInfo)) {
-                        $tempPreSaveAddonInfo = explode('_', $preSaveAddonInfo[1]);
-                        $preSaveAddonGroupName = strtolower(end($tempPreSaveAddonInfo)) . '-' . $preSaveAddonInfo[0];
                         $end = end($this->path);
                         $preSaveAddonPrevStructure = $config->getStructureByName($end['structure']);
 
                         // значение преструктуры основной структуры
                         // TODO переделать собирание преструктуры, чтобы значение брались из правильного места
                         $preSaveAddonDataPrevStructure = $preSaveAddonPrevStructure['ID'] . '-' . $groups[$groupName]['ID'];
-                        $addonModelName = Util::getClassName($preSaveAddonInfo[1], 'Addon') . '\\Model';
-
-                        /* @var $addonModelName \Ideal\Core\Admin\Model */
-                        $preSaveAddonModel = new $addonModelName($preSaveAddonDataPrevStructure);
-                        $preSaveAddonModel->setFieldsGroup($preSaveAddonGroupName);
-                        $preSaveAddonModel->setPageDataByPrevStructure($preSaveAddonDataPrevStructure);
-                        // Удаляем данные об аддоне
-                        $preSaveAddonModel->delete();
+                        $this->deleteAddon($preSaveAddonInfo, $preSaveAddonDataPrevStructure);
                     }
                 }
             }
@@ -378,13 +369,26 @@ abstract class Model extends Core\Model
             $addonDataPrevStructure = $prevStructure['ID'] . '-' . $pageData['ID'];
 
             foreach ($addonsInfo as $addonInfo) {
-                list(, $sliceAddonTableName) = explode('_', $addonInfo[1]);
-                $sliceAddonTableName = strtolower($sliceAddonTableName);
-                $tableName = $config->db['prefix'] . 'ideal_addon_' . $sliceAddonTableName;
-                $db = Db::getInstance();
-                $db->delete($tableName)->where('prev_structure=:ps', array('ps' => $addonDataPrevStructure));
-                $db->exec();
+                $this->deleteAddon($addonInfo, $addonDataPrevStructure);
             }
         }
+    }
+
+    /**
+     * @param $addonInfo
+     * @param $addonDataPrevStructure
+     */
+    protected function deleteAddon($addonInfo, $addonDataPrevStructure)
+    {
+        $tempDeletedAddonInfo = explode('_', $addonInfo[1]);
+        $deletedAddonGroupName = strtolower(end($tempDeletedAddonInfo)) . '-' . $addonInfo[0];
+
+        /* @var $addonModelName \Ideal\Core\Admin\Model */
+        $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
+        $deletedAddonModel = new $addonModelName($addonDataPrevStructure);
+        $deletedAddonModel->setFieldsGroup($deletedAddonGroupName);
+        $deletedAddonModel->setPageDataByPrevStructure($addonDataPrevStructure);
+        // Удаляем данные об аддоне
+        $deletedAddonModel->delete();
     }
 }
