@@ -56,11 +56,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
     public function loginAction()
     {
         // Проверяем что запрашивается json
-        $jsonResponse = false;
-        $pattern = "/.*json.*/i";
-        if (preg_match($pattern, $_SERVER['HTTP_ACCEPT'])) {
-            $jsonResponse = true;
-        }
+        $jsonResponse = isset($_SERVER['HTTP_ACCEPT']) && preg_match('/.*json.*/i', $_SERVER['HTTP_ACCEPT']);
 
         $user = User\Model::getInstance();
 
