@@ -103,7 +103,7 @@ HTML;
     public function getValue()
     {
         $value = parent::getValue();
-        if (empty($value)) {
+        if (empty($value) || $value == 'null') {
             return json_encode(array());
         }
 
