@@ -32,8 +32,11 @@ class Controller extends AbstractController
      */
     public function getInputText()
     {
-        $value = htmlspecialchars(nl2br($this->getValue()));
-        return '<div class="well">' . $value . '</div>';
+        $value = htmlspecialchars($this->getValue());
+        return
+            '<input type="text" class="form-control" name="' . $this->htmlName
+            . '" id="' . $this->htmlName
+            . '" value="' . $value . '">';
     }
 
     /**

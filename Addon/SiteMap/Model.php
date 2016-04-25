@@ -3,7 +3,7 @@
  * Ideal CMS (http://idealcms.ru/)
  *
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
- * @copyright Copyright (c) 2012-2015 Ideal CMS (http://idealcms.ru)
+ * @copyright Copyright (c) 2012-2016 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
@@ -83,35 +83,37 @@ class Model extends \Ideal\Addon\AbstractModel
         $end = end($path);
         $newElements = array();
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
-        foreach ($elements as $element) {
-            $newElements[] = $element;
-            if (!isset($element['structure']) || ($element['structure'] == $end['structure'])) {
-                continue;
-            }
-            // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
-            // считываем элементы вложенной структуры
-            $structure = $config->getStructureByName($end['structure']);
-            $className = Util::getClassName($element['structure'], 'Structure') . '\\Site\\Model';
-            $prevStructure = $structure['ID'] . '-' . $element['ID'];
-            $nextStructure = new $className($prevStructure);
-            $fullPath = array_merge($path, array($element));
-            $nextStructure->setPath($fullPath);
-            // Считываем элементы из вложенной структуры
-            $addElements = $nextStructure->getStructureElements();
-            // Рекурсивно читаем вложенные элементы из вложенной структуры
-            $addElements = $this->recursive($fullPath, $addElements);
-
-            // Увеличиваем уровень вложенности на считанных элементах
-            foreach ($addElements as $k => $v) {
-                if (isset($v['lvl'])) {
-                    $addElements[$k]['lvl'] += $element['lvl'];
-                } else {
-                    $addElements[$k]['lvl'] = $element['lvl'] + 1;
+        if (!empty($elements)) {
+            foreach ($elements as $element) {
+                $newElements[] = $element;
+                if (!isset($element['structure']) || ($element['structure'] == $end['structure'])) {
+                    continue;
                 }
-            }
+                // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
+                // считываем элементы вложенной структуры
+                $structure = $config->getStructureByName($end['structure']);
+                $className = Util::getClassName($element['structure'], 'Structure') . '\\Site\\Model';
+                $prevStructure = $structure['ID'] . '-' . $element['ID'];
+                $nextStructure = new $className($prevStructure);
+                $fullPath = array_merge($path, array($element));
+                $nextStructure->setPath($fullPath);
+                // Считываем элементы из вложенной структуры
+                $addElements = $nextStructure->getStructureElements();
+                // Рекурсивно читаем вложенные элементы из вложенной структуры
+                $addElements = $this->recursive($fullPath, $addElements);
 
-            // Получившийся список добавляем в наш массив новых элементов
-            $newElements = array_merge($newElements, $addElements);
+                // Увеличиваем уровень вложенности на считанных элементах
+                foreach ($addElements as $k => $v) {
+                    if (isset($v['lvl'])) {
+                        $addElements[$k]['lvl'] += $element['lvl'];
+                    } else {
+                        $addElements[$k]['lvl'] = $element['lvl'] + 1;
+                    }
+                }
+
+                // Получившийся список добавляем в наш массив новых элементов
+                $newElements = array_merge($newElements, $addElements);
+            }
         }
         return $newElements;
     }

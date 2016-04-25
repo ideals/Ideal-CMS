@@ -78,8 +78,8 @@ foreach ($config->structures as $v) {
     $cfgTables[$table] = $fields;
 
     // Обработка папки с кастомными аддонами
-    $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
-    $dir = stream_resolve_include_path($dir . $module . '/Addon');
+    $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c' : $config->cmsFolder . '/' . 'Mods.c/' . $module;
+    $dir = stream_resolve_include_path($dir . '/Addon');
     $checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Addon');
     // Обработка папки с аддонами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/' : $config->cmsFolder . '/' . 'Mods/';
@@ -264,12 +264,14 @@ if ($isCool) {
 function getFieldListWithTypes($data)
 {
     $fields = array();
-    array_walk($data['fields'], function ($value, $key) use (&$fields) {
-        if (isset($value['sql'])) {
-            list($type) = explode(' ', $value['sql']);
-            $fields[$key] = $type;
-        }
-    });
+    if (isset($data['fields']) && is_array($data['fields'])) {
+        array_walk($data['fields'], function ($value, $key) use (&$fields) {
+            if (isset($value['sql'])) {
+                list($type) = explode(' ', $value['sql']);
+                $fields[$key] = $type;
+            }
+        });
+    }
     return $fields;
 }
 
