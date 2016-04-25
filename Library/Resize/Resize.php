@@ -223,7 +223,8 @@ class Resize
         switch ($imageInfo['mime']) {
             case "image/jpeg":
                 // 98 - соответствует по размеру файла тому, что генерирует Photoshop с качеством 80
-                imagejpeg($dest2, null, 98);
+                // 83 - оптимальное качество согласно PageSpeed Insights
+                imagejpeg($dest2, null, 83);
                 break;
             case "image/png":
                 imagepng($dest2, null, 1);
