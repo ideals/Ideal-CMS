@@ -30,15 +30,15 @@ class AjaxController extends \Ideal\Core\AjaxController
         // Собираем начальную информацию об основных пунктах меню админки
         foreach ($config->structures as $structure) {
             if ($structure['isShow']) {
-                $permission[$structure['ID'] . '-0'] = $this->getDefaultPermissionArray();
-                $permission[$structure['ID'] . '-0']['name'] = $structure['name'];
-                $permission[$structure['ID'] . '-0']['prev_structure'] = '0-' . $structure['ID'];
+                $permission['0-' . $structure['ID']] = $this->getDefaultPermissionArray();
+                $permission['0-' . $structure['ID']]['name'] = $structure['name'];
+                $permission['0-' . $structure['ID']]['prev_structure'] = '0-' . $structure['ID'];
             }
         }
 
         // Получаем все права пользователя на основные пункты меню админки
         $par = array('user_id' => $_POST['user_id']);
-        $whereString = ' WHERE user_id = :user_id AND structure LIKE \'%-0\'';
+        $whereString = ' WHERE user_id = :user_id AND structure LIKE \'0-%\'';
         $userPermissions = $this->getExistingAccessRules($par, $whereString);
 
         // Заменяем правила по умолчанию на уже известные правила для каждого пункта
@@ -66,9 +66,9 @@ class AjaxController extends \Ideal\Core\AjaxController
         // Если запрашиваются дочерние элементы пункта отличного от "Сервис"
         if ($structure['structure'] != 'Ideal_Service') {
             // Если идентификатор элемента == 0, то берём из таблицы структуры, чей идентификатор был так же передан
-            if ($elementID == 0) {
+            if ($structureID == 0) {
                 // Получаем информацию о структуре, к которой относятся дочерние элементы данного пункта
-                $childrenStructure = $config->getStructureById($structureID);
+                $childrenStructure = $config->getStructureById($elementID);
                 $childrenStructure['tableName'] = $config->getTableByName($childrenStructure['structure']);
             } else {
                 // Если идентификатор элемента отличен от нуля, то сначала узнаём тип раздела
@@ -94,13 +94,16 @@ class AjaxController extends \Ideal\Core\AjaxController
                 // Строка, которая будет использоваться в WHERE-части запроса
                 $whereString = '';
 
-                // Если у дочерней структуры есть поле 'prev_structure', то добавляем соответствующие записи в WHERE-часть запроса
+                // Если у дочерней структуры есть поле 'prev_structure',
+                // то добавляем соответствующие записи в WHERE-часть запроса
                 if (isset($childrenStructure['fields']['prev_structure'])) {
-                    // Если тип дочерней структуры равен типу родительской структуры, то используем явно переданное значение 'prev_structure'
+                    // Если тип дочерней структуры равен типу родительской структуры,
+                    // то используем явно переданное значение 'prev_structure'
                     if ($childrenStructure['structure'] == $structure['structure']) {
                         $par['prev_structure'] = $_POST['prev_structure'];
                     } else {
-                        // Если тип дочерней структуры отличен от типа родительской структуры, то генерируем новое значение 'prev_structure'
+                        // Если тип дочерней структуры отличен от типа родительской структуры,
+                        // то генерируем новое значение 'prev_structure'
                         $par['prev_structure'] = $structureID . '-' . $elementID;
                     }
                     $prev_structure = $par['prev_structure'];
@@ -108,14 +111,12 @@ class AjaxController extends \Ideal\Core\AjaxController
                 }
 
                 // Если у дочерней структуры есть поле 'lvl', то добавляем соответствующие записи в WHERE-часть запроса
-                // Если идентификатор элемента равен 0 или тип родительской структуры отличается от типа дочерней структуры, то собираем только первый уровень.
-                if (
-                    isset($childrenStructure['fields']['lvl'])
-                    && (
-                        $elementID == 0
-                        || $childrenStructure['structure'] != $structure['structure']
-                    )
-                ) {
+                // Если идентификатор элемента равен 0 или тип родительской структуры отличается
+                // от типа дочерней структуры, то собираем только первый уровень.
+                if (isset($childrenStructure['fields']['lvl']) && (
+                        $elementID == 0 || $childrenStructure['structure'] != $structure['structure']
+                    )) {
+
                     if (!empty($whereString)) {
                         $whereString .= ' AND';
                     }
@@ -126,12 +127,10 @@ class AjaxController extends \Ideal\Core\AjaxController
                 // Если у дочерней структуры есть поле 'cid',
                 // родительская структура не относится к пунктам верхнего меню админки
                 // и тип родительской структуры равен типу дочерней структуры,
-                // то добавляем соовтетствующие записи в WHERE-часть запроса
-                if (
-                    isset($childrenStructure['fields']['cid'])
-                    && $elementID != 0
-                    && $childrenStructure['structure'] == $structure['structure']
-                ) {
+                // то добавляем соответствующие записи в WHERE-часть запроса
+                if (isset($childrenStructure['fields']['cid']) && $elementID != 0
+                    && $childrenStructure['structure'] == $structure['structure']) {
+
                     if (!empty($whereString)) {
                         $whereString .= ' AND';
                     }
@@ -194,7 +193,7 @@ class AjaxController extends \Ideal\Core\AjaxController
                 // Отображаем элемент для управления правами на него только в том случае, когда он имеет название
                 if (!empty($name)) {
 
-                    // Формируем ключ массива, который будет использован в на фронтенде в качетсве значения для data-seid
+                    // Формируем ключ массива, который будет использован на фронтенде в качестве значения для data-seid
                     $key = $childrenStructure['ID'] . '-' . $structurePermission['ID'];
 
                     $permission[$key] = $this->getDefaultPermissionArray();
@@ -202,7 +201,7 @@ class AjaxController extends \Ideal\Core\AjaxController
                     $permission[$key]['prev_structure'] = isset($prev_structure) ? $prev_structure : '';
                     $par = array(
                         'user_id' => $_POST['user_id'],
-                        'structure' => $childrenStructure['ID'] . '-' . $structurePermission['ID']
+                        'structure' =>  $childrenStructure['ID'] . '-' . $structurePermission['ID']
                     );
                     $whereString = ' WHERE user_id = :user_id AND structure = :structure';
                     $userStructurePermissions = $this->getExistingAccessRules($par, $whereString);
@@ -246,6 +245,9 @@ class AjaxController extends \Ideal\Core\AjaxController
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getHttpHeaders()
     {
         return array(
@@ -254,7 +256,6 @@ class AjaxController extends \Ideal\Core\AjaxController
     }
 
     /**
-     *
      * Генерирует массив прав по умолчанию для элемента предполагаемого элемента
      *
      * @return array Массив прав
