@@ -229,7 +229,9 @@ class Controller
         // Регистрируем объект пользователя
         /* @var $user Structure\User\Model */
         $user = Structure\User\Model::getInstance();
+        $userId = 0;
         if (isset($user->data['ID'])) {
+            $userId = $user->data['ID'];
             $prev = $user->data['prev_structure'];
             // todo обычно юзеры всегда на первом уровне, но нужно доделать чтобы работало не только для первого уровня
             $user->data['par'] = substr($prev, strrpos($prev, '-') + 1);
@@ -238,7 +240,8 @@ class Controller
 
 
         // Отображение верхнего меню структур
-        $this->view->structures = $config->structures;
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        $this->view->structures = $aclModel->filterShow(0, $config->structures, $userId);
         $path = $this->model->getPath();
         $this->view->activeStructureId = $path[0]['ID'];
 

@@ -1,8 +1,8 @@
 <?php
 namespace Ideal\Structure\Service\Acl;
 
-// Получаем всех пользователей системы для управления их провами
-$users = Model::getAllUsers();
+// Получаем всех пользователей системы для управления их правами
+$users = \Ideal\Structure\Acl\Admin\Model::getAllUsers();
 ?>
 <form class="form-horizontal">
     <div class="form-group">
@@ -130,7 +130,8 @@ $users = Model::getAllUsers();
                 var delete_children = value.delete_children == 0 ? 'checked="checked"' : '';
                 var enter_children = value.enter_children == 0 ? 'checked="checked"' : '';
                 trs += ' \
-                            <tr id = "' + startId + additionalId + '" data-prev_structure="' + value.prev_structure + '" data-seid="' + index + '">\
+                            <tr id = "' + startId + additionalId + '" ' +
+                    '               data-prev_structure="' + value.prev_structure + '" data-seid="' + index + '">\
                             <td>' + spaces + '<a href="">' + value.name + '</a></td>\
                             <td><input type="checkbox" data-target="show" ' + show + '></td>\
                             <td><input type="checkbox" data-target="edit" ' + edit + '></td>\
