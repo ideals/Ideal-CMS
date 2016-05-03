@@ -128,7 +128,8 @@ abstract class Model extends Core\Model
 
                         // значение преструктуры основной структуры
                         // TODO переделать собирание преструктуры, чтобы значение брались из правильного места
-                        $preSaveAddonDataPrevStructure = $preSaveAddonPrevStructure['ID'] . '-' . $groups[$groupName]['ID'];
+                        $preSaveAddonDataPrevStructure = $preSaveAddonPrevStructure['ID']
+                            . '-' . $groups[$groupName]['ID'];
                         $addonModelName = Util::getClassName($preSaveAddonInfo[1], 'Addon') . '\\Model';
 
                         /* @var $addonModelName \Ideal\Core\Admin\Model */
@@ -386,5 +387,23 @@ abstract class Model extends Core\Model
                 $db->exec();
             }
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getWhere($where)
+    {
+        // Добавляем проверку на скрытие части страниц с помощью прав доступа
+        $config = Config::getInstance();
+        $structure = $config->getStructureByClass(get_class($this));
+        $data = $this->getPageData();
+        $structure = $structure['ID'] . '-' . $data['ID'];
+        $user = \Ideal\Structure\User\Model::getInstance();
+        $aclTable = $config->db['prefix'] . 'ideal_service_acl';
+        $sqlAcl = "SELECT structure FROM {$aclTable} WHERE user_id='{$user->data['ID']}' AND `show`=0";
+        $where .= " AND CONCAT('{$structure['ID']}-', e.ID) NOT IN ({$sqlAcl})";
+
+        return parent::getWhere($where);
     }
 }

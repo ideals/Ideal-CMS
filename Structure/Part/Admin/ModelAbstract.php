@@ -164,9 +164,8 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $where .= "AND lvl={$lvl} AND cid LIKE '{$cid}%'";
         }
 
-        if ($where != '') {
-            $where = 'WHERE ' . $where;
-        }
+        $where = parent::getWhere($where);
+
         return $where;
     }
 }
