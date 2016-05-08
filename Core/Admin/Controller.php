@@ -43,10 +43,15 @@ class Controller
 
         $result = array();
         $result['ID'] = intval($request->id);
+        $result['isCorrect'] = false;
 
         $this->model->setPageDataById($result['ID']);
 
-        $result['isCorrect'] = $this->model->delete();
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        // Проверяем, есть ли право удаления элемента
+        if ($aclModel->checkAccess($this->model, 'delete')) {
+            $result['isCorrect'] = $this->model->delete();
+        }
 
         if ($result['isCorrect'] == 1) {
             $this->runClearFileCache();
@@ -63,6 +68,12 @@ class Controller
 
         // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
         $result = $this->model->parseInputParams();
+
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        // Проверяем, есть ли право редактирования элемента
+        if ($result['isCorrect'] == 1) {
+            $result['isCorrect'] = $aclModel->checkAccess($this->model, 'edit');
+        }
 
         if ($result['isCorrect'] == 1) {
             $result = $this->model->saveElement($result);

@@ -114,9 +114,10 @@ class Model
      * Проверка, имеет ли пользователь доступ к этой структуре
      *
      * @param \Ideal\Core\Admin\Model $model
+     * @param string $action
      * @return bool
      */
-    public function checkAccess($model)
+    public function checkAccess($model, $action = 'access')
     {
         $data = $model->getPageData();
         $config = Config::getInstance();
@@ -131,8 +132,12 @@ class Model
 
         $access = true;
         if (isset($acl[0])) {
-            // Если права для этого раздела прописаны, то должен быть разрешён и показ и вход в него
-            $access = $acl[0]['show'] && $acl[0]['enter'];
+            if ($action == 'access') {
+                // Если права для этого раздела прописаны, то должен быть разрешён и показ и вход в него
+                $access = $acl[0]['show'] && $acl[0]['enter'];
+            } else {
+                $access = $acl[0][$action];
+            }
         }
 
         return $access;
