@@ -406,4 +406,29 @@ abstract class Model extends Core\Model
 
         return parent::getWhere($where);
     }
+
+    /**
+     * Получение списка элементов с наложением списка прав доступа
+     *
+     * @param int $page Номер отображаемой страницы
+     * @return array Полученный список элементов
+     */
+    public function getListAcl($page)
+    {
+        $config = Config::getInstance();
+        $structure = $config->getStructureByClass(get_class($this));
+        $list = $this->getList($page);
+        $ids = array();
+        foreach ($list as $k => $v) {
+            $ids[$v['ID']] = $structure['ID'] . '-' . $v['ID'];
+        }
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        $acl = $aclModel->getAcl($ids);
+        foreach ($list as $k => $v) {
+            if (!empty($acl[$ids[$v['ID']]])) {
+                $list[$k]['acl'] = $acl[$ids[$v['ID']]];
+            }
+        }
+        return $list;
+    }
 }

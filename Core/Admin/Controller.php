@@ -183,7 +183,8 @@ class Controller
                 $fieldModel = $fieldClassName::getInstance();
                 $fieldModel->setModel($this->model, $key);
                 $value = $fieldModel->getValueForList($v, $key);
-                if (isset($this->model->params['field_name']) && $key == $this->model->params['field_name']) {
+                if (isset($this->model->params['field_name']) && $key == $this->model->params['field_name']
+                    && (!isset($v['acl']) || $v['acl']['enter']) ) {
                     // На активный элемент ставим ссылку
                     $par = $request->par . '-' . $v['ID'];
                     $value = '<a href="index.php?par=' . $par . '">' . $value . '</a>';
@@ -194,7 +195,10 @@ class Controller
                 'ID' => $v['ID'],
                 'row' => $fields,
                 'is_active' => (isset($v['is_active'])) ? $v['is_active'] : 1,
-                'is_not_menu' => (isset($v['is_not_menu'])) ? $v['is_not_menu'] : 0
+                'is_not_menu' => (isset($v['is_not_menu'])) ? $v['is_not_menu'] : 0,
+                'acl_edit' => (isset($v['acl'])) ? $v['acl']['edit'] : 1,
+                'acl_delete' => (isset($v['acl'])) ? $v['acl']['delete'] : 1,
+                'acl_enter' => (isset($v['acl'])) ? $v['acl']['enter'] : 1,
             );
         }
         $this->view->rows = $rows;
@@ -229,9 +233,7 @@ class Controller
         // Регистрируем объект пользователя
         /* @var $user Structure\User\Model */
         $user = Structure\User\Model::getInstance();
-        $userId = 0;
         if (isset($user->data['ID'])) {
-            $userId = $user->data['ID'];
             $prev = $user->data['prev_structure'];
             // todo обычно юзеры всегда на первом уровне, но нужно доделать чтобы работало не только для первого уровня
             $user->data['par'] = substr($prev, strrpos($prev, '-') + 1);
@@ -241,7 +243,7 @@ class Controller
 
         // Отображение верхнего меню структур
         $aclModel = new \Ideal\Structure\Acl\Admin\Model();
-        $this->view->structures = $aclModel->filterShow(0, $config->structures, $userId);
+        $this->view->structures = $aclModel->filterShow(0, $config->structures);
         $path = $this->model->getPath();
         $this->view->activeStructureId = $path[0]['ID'];
 

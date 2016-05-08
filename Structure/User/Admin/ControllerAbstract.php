@@ -42,7 +42,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $request = new Request();
         $page = intval($request->page);
 
-        $listing = $this->model->getList($page);
+        $listing = $this->model->getListAcl($page);
         $headers = $this->model->getHeaderNames();
 
         $this->parseList($headers, $listing);
