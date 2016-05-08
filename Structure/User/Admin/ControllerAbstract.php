@@ -98,4 +98,13 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $this->templateInit('Structure/User/Admin/login.twig');
         $this->view->message = $user->errorMessage;
     }
+
+    /**
+     * Экшен для вывода уведомления о запрещённом доступе к странице
+     */
+    public function accessDeniedAction()
+    {
+        $this->templateInit('Structure/User/Admin/access-denied.twig');
+        $this->view->header = 'Доступ запрещён';
+    }
 }

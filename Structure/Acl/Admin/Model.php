@@ -109,4 +109,32 @@ class Model
         }
         return $aclStructure;
     }
+
+    /**
+     * Проверка, имеет ли пользователь доступ к этой структуре
+     *
+     * @param \Ideal\Core\Admin\Model $model
+     * @return bool
+     */
+    public function checkAccess($model)
+    {
+        $data = $model->getPageData();
+        $config = Config::getInstance();
+        $structure = $config->getStructureByClass(get_class($model));
+        $structure = $structure['ID'] . '-' . $data['ID'];
+
+        // Получаем права на структуру из БД
+        $db = Db::getInstance();
+        $sql = "SELECT * FROM {$this->table}"
+            . " WHERE structure='{$structure}' AND user_id={$this->user->data['ID']}";
+        $acl = $db->select($sql);
+
+        $access = true;
+        if (isset($acl[0])) {
+            // Если права для этого раздела прописаны, то должен быть разрешён и показ и вход в него
+            $access = $acl[0]['show'] && $acl[0]['enter'];
+        }
+
+        return $access;
+    }
 }
