@@ -32,7 +32,7 @@ class Model
     public function __construct()
     {
         $config = Config::getInstance();
-        $this->table = $config->db['prefix'] . 'ideal_service_acl';
+        $this->table = $config->db['prefix'] . 'ideal_structure_acl';
         $this->user = User::getInstance();
     }
 

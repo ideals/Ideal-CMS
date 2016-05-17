@@ -77,5 +77,13 @@ return array(
             'isShow' => 0,
             'hasTable' => true
         ),
+        // Подключаем структуру управления пользователями
+        array(
+            'ID' => 9,
+            'structure' => 'Ideal_Acl',
+            'name' => 'Права пользователей',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
     )
 );
