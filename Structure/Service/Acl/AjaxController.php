@@ -267,9 +267,6 @@ class AjaxController extends \Ideal\Core\AjaxController
             'edit' => 1,
             'delete' => 1,
             'enter' => 1,
-            'edit_children' => 1,
-            'delete_children' => 1,
-            'enter_children' => 1,
         );
     }
 

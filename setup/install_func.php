@@ -355,18 +355,6 @@ function createTables()
             'label' => 'Входить',
             'sql' => "bool DEFAULT '1' NOT NULL",
         ),
-        'edit_children' => array(
-            'label' => 'Редактировать дочерние элементы',
-            'sql' => "bool DEFAULT '1' NOT NULL",
-        ),
-        'delete_children' => array(
-            'label' => 'Удалять дочерние элементы',
-            'sql' => "bool DEFAULT '1' NOT NULL",
-        ),
-        'enter_children' => array(
-            'label' => 'Входить в дочерние элементы',
-            'sql' => "bool DEFAULT '1' NOT NULL",
-        ),
     );
     $db->create($table, $fields);
 }
