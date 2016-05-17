@@ -29,9 +29,6 @@ $users = \Ideal\Structure\Acl\Admin\Model::getAllUsers();
             <th>Не менять</th>
             <th>Не удалять</th>
             <th>Не входить</th>
-            <th>Не менять детей</th>
-            <th>Не удалять детей</th>
-            <th>Не входить в детей</th>
         </tr>
         </thead>
         <tbody>
@@ -126,9 +123,6 @@ $users = \Ideal\Structure\Acl\Admin\Model::getAllUsers();
                 var edit = value.edit == 0 ? 'checked="checked"' : '';
                 var deletevar = value.delete == 0 ? 'checked="checked"' : '';
                 var enter = value.enter == 0 ? 'checked="checked"' : '';
-                var edit_children = value.edit_children == 0 ? 'checked="checked"' : '';
-                var delete_children = value.delete_children == 0 ? 'checked="checked"' : '';
-                var enter_children = value.enter_children == 0 ? 'checked="checked"' : '';
                 trs += ' \
                             <tr id = "' + startId + additionalId + '" ' +
                     '               data-prev_structure="' + value.prev_structure + '" data-seid="' + index + '">\
@@ -137,9 +131,6 @@ $users = \Ideal\Structure\Acl\Admin\Model::getAllUsers();
                             <td><input type="checkbox" data-target="edit" ' + edit + '></td>\
                             <td><input type="checkbox" data-target="delete" ' + deletevar + '></td>\
                             <td><input type="checkbox" data-target="enter" ' + enter + '></td>\
-                            <td><input type="checkbox" data-target="edit_children" ' + edit_children + '></td>\
-                            <td><input type="checkbox" data-target="delete_children" ' + delete_children + '></td>\
-                            <td><input type="checkbox" data-target="enter_children" ' + enter_children + '></td>\
                             </tr>';
             });
             return trs;
