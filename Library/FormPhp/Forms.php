@@ -571,26 +571,28 @@ JS;
         $sender->setSubj($title);
 
         // Если были переданы файлы и не возникло ошибок, то прикрепляем их к письму
-        if ($_FILES['file']['error'] == UPLOAD_ERR_OK) {
+        if (isset($_FILES) && !empty($_FILES)) {
             foreach ($_FILES as $file) {
-                if ($file['name'] == '') {
-                    continue;
+                if ($file['error'] == UPLOAD_ERR_OK) {
+                    if ($file['name'] == '') {
+                        continue;
+                    }
+                    $sender->fileAttach($file['tmp_name'], $file['type'], $file['name']);
+                } elseif ($file['error'] != UPLOAD_ERR_NO_FILE) {
+                    // Собираем данные о возникшей ошибке
+                    switch ($file['error']) {
+                        case UPLOAD_ERR_INI_SIZE:
+                        case UPLOAD_ERR_FORM_SIZE:
+                            $this->errors[] = 'Файл слишком большой.';
+                            break;
+                        case UPLOAD_ERR_EXTENSION:
+                            $this->errors[] = 'Файл с таким расширением не может быть загружен.';
+                            break;
+                        default:
+                            $this->errors[] = 'Не удалось загрузить файл.';
+                            break;
+                    }
                 }
-                $sender->fileAttach($file['tmp_name'], $file['type'], $file['name']);
-            }
-        } elseif ($_FILES['file']['error'] != UPLOAD_ERR_NO_FILE) {
-            // Собираем данные о возникшей ошибке
-            switch ($_FILES['file']['error']) {
-                case UPLOAD_ERR_INI_SIZE:
-                case UPLOAD_ERR_FORM_SIZE:
-                    $this->errors[] = 'Файл слишком большой.';
-                    break;
-                case UPLOAD_ERR_EXTENSION:
-                    $this->errors[] = 'Файл с таким расширением не может быть загружен.';
-                    break;
-                default:
-                    $this->errors[] = 'Не удалось загрузить файл.';
-                    break;
             }
         }
 
