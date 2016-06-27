@@ -139,6 +139,10 @@ class Crawler
             if (!file_exists($config)) {
                 // Конфигурационный файл нигде не нашли :(
                 $this->stop("Configuration file {$config} not found!");
+            } else {
+                // Если в корневой папке Ideal CMS есть конфигурационный файл карты сайта,
+                // то подгружаем и основной файл конфигурации.
+                $configIdealCMS = substr(__DIR__, 0, stripos(__DIR__, '/Ideal/Library/sitemap')) . '/config.php';
             }
         }
 
@@ -146,6 +150,17 @@ class Crawler
 
         /** @noinspection PhpIncludeInspection */
         $this->config = require($config);
+
+        if (isset($configIdealCMS)) {
+            $configIdealCMS = require($configIdealCMS);
+            if (!empty($configIdealCMS)) {
+                $this->config['db_host'] = $configIdealCMS['db']['host'];
+                $this->config['db_login'] = $configIdealCMS['db']['login'];
+                $this->config['db_password'] = $configIdealCMS['db']['password'];
+                $this->config['db_name'] = $configIdealCMS['db']['name'];
+                $this->config['db_prefix'] = $configIdealCMS['db']['prefix'];
+            }
+        }
 
         $tmp = parse_url($this->config['website']);
         $this->host = $tmp['host'];
