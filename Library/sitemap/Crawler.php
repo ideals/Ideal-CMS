@@ -728,6 +728,11 @@ XML;
             $this->stop("Страница {$k} недоступна. Статус: {$info['http_code']}. Переход с {$place}");
         }
 
+        // Если страница имеет слишком малый вес прекращаем выполнение скрипта
+        if ($info['download_content_length'] < 1) {
+            $this->stop("Страница {$k} пуста. Размер страницы: {$info['download_content_length']}. Переход с {$place}");
+        }
+
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
 
         curl_close($ch);
