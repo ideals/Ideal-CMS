@@ -77,5 +77,13 @@ return array(
             'isShow' => 0,
             'hasTable' => true
         ),
+        // Подключаем справочник логов
+        array(
+            'ID' => 9,
+            'structure' => 'Ideal_Log',
+            'name' => 'Логи',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
     )
 );

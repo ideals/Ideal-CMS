@@ -82,6 +82,10 @@ if (isset($_POST['edit'])) {
             <input type="checkbox" name="force" id="force"/>
             Принудительное составление xml-карты сайта
         </label>
+        <label class="checkbox">
+            <input type="checkbox" name="clear-temp" id="clear-temp"/>
+            Сброс ранее собранных страниц
+        </label>
 
         <button class="btn btn-info" value="Запустить сканирование" onclick="startSiteMap()">
             Запустить сканирование
@@ -110,7 +114,14 @@ if (isset($_POST['edit'])) {
     function startSiteMap() {
         var param = '';
         if ($('#force').prop('checked')) {
-            param = '?w=1';
+            param += '?w=1';
+        }
+        if ($('#clear-temp').prop('checked')) {
+            if (param == '') {
+                param += '?с=1';
+            } else {
+                param += '&с=1';
+            }
         }
         $('#loading').html('Идёт составление карты сайта. Ждите.');
         $('#iframe').html('');
