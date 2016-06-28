@@ -20,7 +20,7 @@ return array(
     'email_notify' => "top@neox.ru", // Электронная почта для уведомления о добавленных/удалённых ссылках | Ideal_Text
     'db_host' => 'localhost', // Хост для подключения к базе данных | Ideal_Text
     'db_login' => '', // Логин для подключения к базе данных | Ideal_Text
-    'db_password' => '', // Пароль для подключения к базе данных | Ideal_Password
+    'db_password' => '', // Пароль для подключения к базе данных | Ideal_Text
     'db_name' => '', // Название базы данных | Ideal_Text
     'db_prefix' => 'i_', // Префикс базы данных | Ideal_Text
 );
