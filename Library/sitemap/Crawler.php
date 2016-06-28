@@ -103,10 +103,14 @@ class Crawler
      * Вывод сообщения и завершение работы скрипта
      *
      * @param string $message - сообщение для вывода
+     * @param bool $sendNotification - флаг обозначающий надобность отправления сообщения перед остановкой скрипта
      * @throws \Exception
      */
-    protected function stop($message)
+    protected function stop($message, $sendNotification = true)
     {
+        if ($sendNotification) {
+            $this->sendEmail($message);
+        }
         throw new \Exception($message);
     }
 
@@ -306,7 +310,7 @@ class Crawler
         // Проверяем, обновлялась ли сегодня карта сайта
         if (date('d:m:Y', filemtime($xmlFile)) == date('d:m:Y')) {
             if ($this->status == 'cron') {
-                $this->stop("Sitemap {$xmlFile} already created today! Everything it's alright.");
+                $this->stop("Sitemap {$xmlFile} already created today! Everything it's alright.", false);
             } else {
                 // Если дата сегодняшняя, но запуск не из крона, то продолжаем работу над картой сайта
                 echo "Warning! File {$xmlFile} have current date and skip in cron";
@@ -446,7 +450,7 @@ class Crawler
                 . 'Всего непройденных ссылок: ' . count($this->links) . "\n"
                 . 'Затраченное время: ' . ($time - $this->start) . "\n\n"
                 . "Everything it's alright.\n\n";
-            $this->stop($message);
+            $this->stop($message, false);
         }
 
         if (count($this->checked) < 2) {
