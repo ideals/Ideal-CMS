@@ -141,8 +141,9 @@ class Crawler
                 $this->stop("Configuration file {$config} not found!");
             } else {
                 // Если в корневой папке Ideal CMS есть конфигурационный файл карты сайта,
-                // то подгружаем и основной файл конфигурации.
+                // то подгружаем и основные файлы конфигурации.
                 $configIdealCMS = substr(__DIR__, 0, stripos(__DIR__, '/Ideal/Library/sitemap')) . '/config.php';
+                $siteDataIdealCMS = substr(__DIR__, 0, stripos(__DIR__, '/Ideal/Library/sitemap')) . '/site_data.php';
             }
         }
 
@@ -159,6 +160,34 @@ class Crawler
                 $this->config['db_password'] = $configIdealCMS['db']['password'];
                 $this->config['db_name'] = $configIdealCMS['db']['name'];
                 $this->config['db_prefix'] = $configIdealCMS['db']['prefix'];
+
+                // Ищем prev_structure для записи в Логи
+                $leftPartPrevStructure = 0;
+                $rightPartPrevStructure = 0;
+                foreach ($configIdealCMS['structures'] as $structure) {
+                    if ($structure['structure'] == 'Ideal_DataList') {
+                        $leftPartPrevStructure = $structure['ID'];
+                    }
+                    if ($structure['structure'] == 'Ideal_Log') {
+                        $rightPartPrevStructure = $structure['ID'];
+                    }
+                }
+                if ($leftPartPrevStructure && $rightPartPrevStructure) {
+                    $this->config['prev_structure'] = $leftPartPrevStructure . '-' . $rightPartPrevStructure;
+                }
+            }
+            // Пытаемся определить идентификатор пользователя для записи в логи
+            if (isset($siteDataIdealCMS)) {
+                $siteDataIdealCMS = require($siteDataIdealCMS);
+                if (!empty($siteDataIdealCMS)) {
+                    if (session_id() == '') {
+                        session_start();
+                    }
+                    if (isset($_SESSION[$siteDataIdealCMS['domain']])) {
+                        $session = unserialize($_SESSION[$siteDataIdealCMS['domain']]);
+                        $this->config['user_id'] = $session['user_data']['ID'];
+                    }
+                }
             }
         }
 
@@ -442,6 +471,50 @@ class Crawler
     }
 
     /**
+     * Записывает результат работы карты сайта в логи (в базу данных)
+     *
+     * @param string $text Сообщение(отчет)
+     */
+    public function saveToLog($text)
+    {
+        // Проверяем наличие всех необходимых данных для подключения к базе
+        if (
+            !empty($this->config['db_host']) &&
+            !empty($this->config['db_login']) &&
+            !empty($this->config['db_password']) &&
+            !empty($this->config['db_name'])
+        ) {
+            // Подключаемся к базе данных
+            $mysqli = new \mysqli($this->config['db_host'], $this->config['db_login'], $this->config['db_password'], $this->config['db_name']);
+            if (!$mysqli->connect_error) {
+                $mysqli->query('set character set utf8');
+                $mysqli->query('set names utf8');
+                $tableName = $this->config['db_prefix'] . 'ideal_structure_log';
+                // Проверяем таблицу на существование
+                $result = $mysqli->query("SHOW TABLES LIKE '{$tableName}';");
+                if ($result->num_rows == 1) {
+                    $time = time();
+                    $userID = 0;
+                    if (isset($this->config['user_id'])) {
+                        $userID = $this->config['user_id'];
+                    }
+                    $prevStructure = '';
+                    if (isset($this->config['prev_structure'])) {
+                        $prevStructure = $this->config['prev_structure'];
+                    }
+                    // Вносим запись в таблицу
+                    $sql = "INSERT INTO {$tableName}";
+                    $sql .= ' (prev_structure,date_create,user_id,event_type,what_happened)';
+                    $sql .= " VALUES ('{$prevStructure}',{$time},{$userID},'карта сайта', '{$text}')";
+                    $mysqli->query($sql);
+                }
+                $mysqli->close();
+            }
+
+        }
+    }
+
+    /**
      * Преобразования специальных символов для xml файла карты сайта в HTML сущности
      *
      * @param string $str Ссылка для обработки
@@ -542,6 +615,7 @@ class Crawler
         }
 
         $this->sendEmail($text);
+        $this->saveToLog($text);
     }
 
     /**
