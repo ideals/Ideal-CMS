@@ -191,6 +191,10 @@ class Crawler
             }
         }
 
+        if (!isset($this->config['existence_time_file'])) {
+            $this->config['existence_time_file'] = 25;
+        }
+
         $tmp = parse_url($this->config['website']);
         $this->host = $tmp['host'];
         if (!isset($tmp['path'])) {
@@ -262,11 +266,7 @@ class Crawler
 
             // Если промежуточный файл ссылок последний раз обновлялся более того количества часов назад,
             // которое указано в настройках, то производим его принудительную очистку.
-            if (isset($this->config['existence_time_file'])) {
-                $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
-            } else {
-                $existenceTimeFile = 90000;
-            }
+            $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
             if (time() - filemtime($tmpFile) > $existenceTimeFile) {
                 file_put_contents($tmpFile, '');
             }
@@ -310,6 +310,14 @@ class Crawler
             } else {
                 // Если дата сегодняшняя, но запуск не из крона, то продолжаем работу над картой сайта
                 echo "Warning! File {$xmlFile} have current date and skip in cron";
+            }
+        } else {
+            // Если карта сайта в два раза старше указанного значения в поле "Максимальное время существования версии промежуточного файла",
+            // то отсылаем соответствующее уведомление
+            $countHourForNotify = $this->config['existence_time_file'] * 2;
+            $existenceTimeFile = $countHourForNotify * 60 * 60;
+            if (time() - filemtime($xmlFile) > $existenceTimeFile) {
+                $this->sendEmail('Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.');
             }
         }
     }
