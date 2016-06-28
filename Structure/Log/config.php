@@ -8,7 +8,7 @@ return array(
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_name' => '', // поле для входа в список потомков
         'field_sort' => 'date_create DESC', // поле, по которому проводится сортировка в CMS
-        'field_list' => array('date_create', 'user_id', 'event_type', 'what_happened')
+        'field_list' => array('date_create', 'user_id', 'event_type')
     ),
     'fields' => array(
         'ID' => array(
