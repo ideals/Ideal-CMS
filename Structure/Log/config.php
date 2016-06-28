@@ -39,7 +39,7 @@ return array(
         'what_happened' => array(
             'label' => 'Cуть события',
             'sql' => 'text not null',
-            'type' => 'Ideal_Text'
+            'type' => 'Ideal_Area'
         ),
     ),
 );
