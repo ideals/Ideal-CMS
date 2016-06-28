@@ -30,6 +30,9 @@ class Crawler
     /** @var float Время начала работы скрипта */
     private $start;
 
+    /** @var bool Флаг необходимости сброса ранее собранных страниц */
+    private $clearTemp = false;
+
     /** @var string Статус запуска скрипта. Варианты cron|test */
     public $status = 'cron';
 
@@ -62,11 +65,16 @@ class Crawler
         $this->ob = !file_exists(basename($_SERVER['PHP_SELF']));
 
         // Проверяем статус запуска - тестовый или по расписанию
-        if (isset($_GET['w']) || (isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] == 'w')) {
+        $argv = !empty($_SERVER['argv']) ? $_SERVER['argv'] : array();
+        if (isset($_GET['w']) || (array_search('w', $argv) !== false)) {
             // Если задан GET-параметр или ключ w в командной строке — это принудительный запуск,
             // письма о нём слать не надо
             $this->status = 'test';
             $this->ob = false;
+        }
+        // Проверяем надобность сброса ранее собранных страниц
+        if (isset($_GET['с']) || (array_search('с', $argv) !== false)) {
+            $this->clearTemp = true;
         }
     }
 
@@ -271,7 +279,7 @@ class Crawler
             // Если промежуточный файл ссылок последний раз обновлялся более того количества часов назад,
             // которое указано в настройках, то производим его принудительную очистку.
             $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
-            if (time() - filemtime($tmpFile) > $existenceTimeFile) {
+            if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
                 file_put_contents($tmpFile, '');
             }
 
