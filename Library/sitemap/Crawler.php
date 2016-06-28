@@ -260,9 +260,14 @@ class Crawler
                 $this->stop("Временный файл {$tmpFile} недоступен для записи!");
             }
 
-            // Если промежуточный файл ссылок последний раз обновлялся более 25 часов назад,
-            // то производим его принудительную очистку.
-            if (time() - filemtime($tmpFile) > 90000) {
+            // Если промежуточный файл ссылок последний раз обновлялся более того количества часов назад,
+            // которое указано в настройках, то производим его принудительную очистку.
+            if (isset($this->config['existence_time_file'])) {
+                $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
+            } else {
+                $existenceTimeFile = 90000;
+            }
+            if (time() - filemtime($tmpFile) > $existenceTimeFile) {
                 file_put_contents($tmpFile, '');
             }
 
