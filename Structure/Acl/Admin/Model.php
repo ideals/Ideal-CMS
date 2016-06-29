@@ -12,6 +12,7 @@ namespace Ideal\Structure\Acl\Admin;
 use \Ideal\Core\Db;
 use \Ideal\Core\Config;
 use \Ideal\Structure\User\Model as User;
+use Ideal\Structure\Service\Admin\Model as ServiceModel;
 
 /**
  * Класс для работы с правами доступа пользователей
@@ -22,7 +23,7 @@ class Model
     /** @var string Название таблицы со списком прав доступа */
     protected $table;
 
-    /** @var User Объект авторизованного пользователя*/
+    /** @var User Объект авторизованного пользователя */
     protected $user;
 
     /**
@@ -31,7 +32,7 @@ class Model
     public function __construct()
     {
         $config = Config::getInstance();
-        $this->table = $config->db['prefix'] . 'ideal_service_acl';
+        $this->table = $config->db['prefix'] . 'ideal_structure_acl';
         $this->user = User::getInstance();
     }
 
@@ -46,7 +47,7 @@ class Model
         $config = Config::getInstance();
         $user = new User();
         $excludedIds = array(1, $user->data['ID']);
-        
+
         // Формируем идентификаторы пользователей, правами которых управлять нельзя.
         // По умолчанию это пользователь с идентификатором 1 и текущий пользователь
         $par = array('IDS' => implode(',', $excludedIds));
@@ -187,16 +188,17 @@ class Model
         $structure = $config->getStructureById($structureID);
         $childrenStructure = array();
 
-        // Если запрашиваются дочерние элементы пункта отличного от "Сервис"
-        if ($structure['structure'] != 'Ideal_Service') {
-            // Если идентификатор элемента == 0, то берём из таблицы структуры, чей идентификатор был так же передан
-            if ($structureID == 0) {
-                // Получаем информацию о структуре, к которой относятся дочерние элементы данного пункта
-                $childrenStructure = $config->getStructureById($elementID);
-                $childrenStructure['tableName'] = $config->getTableByName($childrenStructure['structure']);
-            } else {
-                // Если идентификатор элемента отличен от нуля, то сначала узнаём тип раздела
-                $structureTable = $config->getTableByName($structure['structure']);
+        // Если идентификатор структуры == 0, то берём элементы из таблицы структуры, чей идентификатор был передан
+        if ($structureID == 0) {
+            // Получаем информацию о структуре, к которой относятся дочерние элементы данного пункта
+            $childrenStructure = $config->getStructureById($elementID);
+            $childrenStructure['tableName'] = $config->getTableByName($childrenStructure['structure']);
+        } else {
+            // Если идентификатор структуры отличен от нуля, то сначала узнаём тип раздела
+            $structureTable = $config->getTableByName($structure['structure']);
+
+            // Для дочерних элементов пункта "Сервис" не нужно пытаться получать информацию о структуре
+            if (strpos($structureTable, 'ideal_structure_service') === false) {
                 $partitionType = $db->select(
                     "SELECT * FROM {$structureTable} WHERE ID = :ID",
                     array(
@@ -209,9 +211,14 @@ class Model
                     $childrenStructure['tableName'] = $config->getTableByName($partitionType[0]['structure']);
                 }
             }
+        }
 
-            // Собираем дочерние элементы
-            if (!empty($childrenStructure)) {
+        // Собираем дочерние элементы
+        if (!empty($childrenStructure)) {
+
+            // Если запрашиваются дочерние элементы пункта отличного от "Сервис"
+            if (isset($childrenStructure['structure']) && $childrenStructure['structure'] != 'Ideal_Service') {
+
                 // Параметры для поиска дочерних элементов
                 $par = array();
 
@@ -223,7 +230,7 @@ class Model
                 if (isset($childrenStructure['fields']['prev_structure'])) {
                     // Если тип дочерней структуры равен типу родительской структуры,
                     // то используем явно переданное значение 'prev_structure'
-                    if ($childrenStructure['structure'] == $structure['structure']) {
+                    if (isset($structure['structure']) && $childrenStructure['structure'] == $structure['structure']) {
                         $par['prev_structure'] = $_POST['prev_structure'];
                     } else {
                         // Если тип дочерней структуры отличен от типа родительской структуры,
@@ -237,11 +244,14 @@ class Model
                 // Если у дочерней структуры есть поле 'lvl', то добавляем соответствующие записи в WHERE-часть запроса
                 // Если идентификатор элемента равен 0 или тип родительской структуры отличается
                 // от типа дочерней структуры, то собираем только первый уровень.
-                if (isset($childrenStructure['fields']['lvl']) && (
-                        $elementID == 0 || $childrenStructure['structure'] != $structure['structure']
+                if (
+                    isset($childrenStructure['fields']['lvl']) &&
+                    (
+                        $structureID == 0 ||
+                        !isset($structure['structure']) ||
+                        $childrenStructure['structure'] != $structure['structure']
                     )
                 ) {
-
                     if (!empty($whereString)) {
                         $whereString .= ' AND';
                     }
@@ -253,10 +263,12 @@ class Model
                 // родительская структура не относится к пунктам верхнего меню админки
                 // и тип родительской структуры равен типу дочерней структуры,
                 // то добавляем соответствующие записи в WHERE-часть запроса
-                if (isset($childrenStructure['fields']['cid']) && $elementID != 0
-                    && $childrenStructure['structure'] == $structure['structure']
+                if (
+                    isset($childrenStructure['fields']['cid']) &&
+                    $structureID != 0 &&
+                    isset($structure['structure']) &&
+                    $childrenStructure['structure'] == $structure['structure']
                 ) {
-
                     if (!empty($whereString)) {
                         $whereString .= ' AND';
                     }
@@ -281,7 +293,6 @@ class Model
                     if (strlen($cidRegexpString) < $digits * $levels) {
                         $cidRegexpString .= str_repeat('0', $digits);
                     }
-
                     $par['ID'] = $elementID;
                     $whereString .= " cid REGEXP '{$cidRegexpString }' AND ID != :ID";
                 }
@@ -296,13 +307,13 @@ class Model
                     "SELECT * FROM {$childrenStructure['tableName']}{$whereString}",
                     $par
                 );
+            } elseif (strpos($elementID, '_') === false) {
+                // Если запрашиваются дочерние элементы пункта "Сервис", то собираем их по особенному
+                // Второй уровень вложенности пункта "Сервис" (вкладки), не обслуживается
+                $service = new ServiceModel('');
+                $structurePermissions = $service->getMenu();
+                $childrenStructure['ID'] = $elementID;
             }
-        } elseif (strpos($elementID, '_') === false) {
-            // Если запрашиваются дочерние элементы пункта "Сервис", то собираем их по особенному
-            // Второй уровень вложенности пункта "Сервис" (вкладки), не обслуживается
-            $service = new ServiceModel('');
-            $structurePermissions = $service->getMenu();
-            $childrenStructure['ID'] = $structureID;
         }
 
         // Если дочерние элементы текущего пункта есть
