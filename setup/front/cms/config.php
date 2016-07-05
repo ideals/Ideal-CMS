@@ -85,5 +85,13 @@ return array(
             'isShow' => 0,
             'hasTable' => true
         ),
+        // Подключаем справочник групп пользователей
+        array(
+            'ID' => 10,
+            'structure' => 'Ideal_UserGroup',
+            'name' => 'Группы пользователей',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
     )
 );
