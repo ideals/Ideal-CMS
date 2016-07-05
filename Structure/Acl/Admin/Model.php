@@ -37,22 +37,36 @@ class Model
     }
 
     /**
-     * Список пользователей, которым можно менять права в админке
+     * Список групп пользователей, которым можно менять права в админке
      *
      * @return array Пользователи
      */
-    public static function getAllUsers()
+    public static function getAllUserGroups()
     {
         $db = Db::getInstance();
         $config = Config::getInstance();
         $user = new User();
         $excludedIds = array(1, $user->data['ID']);
 
-        // Формируем идентификаторы пользователей, правами которых управлять нельзя.
-        // По умолчанию это пользователь с идентификатором 1 и текущий пользователь
+        // Формируем идентификаторы групп пользователей, правами которых управлять нельзя.
+        // По умолчанию это группы пользователей
+        // к которым относятся пользователи с идентификатором 1 и текущий пользователь
         $par = array('IDS' => implode(',', $excludedIds));
         $userTable = $config->db['prefix'] . 'ideal_structure_user';
-        return $db->select("SELECT * FROM {$userTable} WHERE ID NOT IN (:IDS)", $par);
+        $userGroupTable = $config->db['prefix'] . 'ideal_structure_usergroup';
+        $sql = "
+          SELECT 
+            {$userGroupTable}.ID, 
+            {$userGroupTable}.name
+          FROM 
+            {$userGroupTable} 
+          LEFT JOIN {$userTable} 
+          ON {$userGroupTable}.ID = {$userTable}.user_group
+          WHERE 
+            {$userTable}.ID NOT IN (:IDS)
+            OR {$userTable}.ID IS NULL
+          GROUP BY {$userGroupTable}.ID";
+        return $db->select($sql, $par);
     }
 
     /**
@@ -73,7 +87,7 @@ class Model
             $prefix = $str['ID'] . '-';
         }
         // Считываем права пользователя
-        $sql = "SELECT * FROM {$this->table} WHERE user_id={$this->user->data['ID']}";
+        $sql = "SELECT * FROM {$this->table} WHERE user_group_id={$this->user->data['user_group']}";
         $result = $db->select($sql);
         $res = array();
         foreach ($result as $v) {
@@ -101,7 +115,7 @@ class Model
     {
         $db = Db::getInstance();
         $sql = "SELECT * FROM {$this->table}"
-            . " WHERE structure IN ('" . implode("','", $structures) . "') AND user_id={$this->user->data['ID']}";
+            . " WHERE structure IN ('" . implode("','", $structures) . "') AND user_group_id={$this->user->data['user_group']}";
         $acl = $db->select($sql);
         // Распределяем считанные права доступа по структурам
         $aclStructure = array();
@@ -128,7 +142,7 @@ class Model
         // Получаем права на структуру из БД
         $db = Db::getInstance();
         $sql = "SELECT * FROM {$this->table}"
-            . " WHERE structure='{$structure}' AND user_id={$this->user->data['ID']}";
+            . " WHERE structure='{$structure}' AND user_group_id={$this->user->data['user_group']}";
         $acl = $db->select($sql);
 
         $access = true;
@@ -147,7 +161,7 @@ class Model
     /**
      * Формирование списка первого уровня для управления правами
      */
-    public function getMainUserPermission()
+    public function getMainUserGroupPermission()
     {
         $permission = array();
         $config = Config::getInstance();
@@ -161,9 +175,9 @@ class Model
             }
         }
 
-        // Получаем все права пользователя на основные пункты меню админки
-        $par = array('user_id' => $_POST['user_id']);
-        $whereString = ' WHERE user_id = :user_id AND structure LIKE \'0-%\'';
+        // Получаем все права группы пользователя на основные пункты меню админки
+        $par = array('user_group_id' => $_POST['user_group_id']);
+        $whereString = ' WHERE user_group_id = :user_group_id AND structure LIKE \'0-%\'';
         $userPermissions = $this->getExistingAccessRules($par, $whereString);
 
         // Заменяем правила по умолчанию на уже известные правила для каждого пункта
@@ -337,13 +351,13 @@ class Model
                     $permission[$key]['name'] = $name;
                     $permission[$key]['prev_structure'] = isset($prev_structure) ? $prev_structure : '';
                     $par = array(
-                        'user_id' => $_POST['user_id'],
+                        'user_group_id' => $_POST['user_group_id'],
                         'structure' => $childrenStructure['ID'] . '-' . $structurePermission['ID']
                     );
-                    $whereString = ' WHERE user_id = :user_id AND structure = :structure';
-                    $userStructurePermissions = $this->getExistingAccessRules($par, $whereString);
+                    $whereString = ' WHERE user_group_id = :user_group_id AND structure = :structure';
+                    $userGroupStructurePermissions = $this->getExistingAccessRules($par, $whereString);
 
-                    $this->applyKnownRules($userStructurePermissions, $permission);
+                    $this->applyKnownRules($userGroupStructurePermissions, $permission);
                 }
             }
         }
@@ -356,28 +370,27 @@ class Model
     public function changePermission()
     {
         $permission = $this->getDefaultPermissionArray();
-        $permission['user_id'] = $_POST['user_id'];
+        $permission['user_group_id'] = $_POST['user_group_id'];
         $permission['structure'] = $_POST['structure'];
 
         // Добавляем именно то, правило, которое следует заменить у выбранного пункта
         $permission[$_POST['target']] = $_POST['is'];
 
         $db = Db::getInstance();
-        $config = Config::getInstance();
 
-        $par = array('user_id' => $_POST['user_id'], 'structure' => $_POST['structure']);
-        $whereString = ' WHERE user_id = :user_id AND structure = :structure';
-        $userPermission = $this->getExistingAccessRules($par, $whereString);
+        $par = array('user_group_id' => $_POST['user_group_id'], 'structure' => $_POST['structure']);
+        $whereString = ' WHERE user_group_id = :user_group_id AND structure = :structure';
+        $userGroupPermission = $this->getExistingAccessRules($par, $whereString);
 
         // Если записи ещё нет, то заводим её
-        if (empty($userPermission)) {
+        if (empty($userGroupPermission)) {
             $db->insert($this->table, $permission);
         } else {
             // Если запись есть, обновляем
             $values = array($_POST['target'] => $_POST['is']);
-            $params = array('user_id' => $_POST['user_id'], 'structure' => $_POST['structure']);
+            $params = array('user_group_id' => $_POST['user_group_id'], 'structure' => $_POST['structure']);
             $db->update($this->table)->set($values);
-            $db->where('user_id = :user_id AND structure = :structure', $params)->exec();
+            $db->where('user_group_id = :user_group_id AND structure = :structure', $params)->exec();
         }
     }
 
@@ -406,7 +419,6 @@ class Model
     private function getExistingAccessRules($par, $whereString)
     {
         $db = Db::getInstance();
-        $config = Config::getInstance();
         return $db->select(
             "SELECT * FROM {$this->table}{$whereString}",
             $par

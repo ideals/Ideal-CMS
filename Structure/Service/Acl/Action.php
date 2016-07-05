@@ -1,19 +1,19 @@
 <?php
 namespace Ideal\Structure\Service\Acl;
 
-// Получаем всех пользователей системы для управления их правами
-$users = \Ideal\Structure\Acl\Admin\Model::getAllUsers();
+// Получаем все группы пользователей системы для которых есть возможность менять права
+$userGroups = \Ideal\Structure\Acl\Admin\Model::getAllUserGroups();
 ?>
 <form class="form-horizontal">
     <div class="form-group">
-        <label for="selectUser" class="col-sm-2 control-label">Пользователь</label>
+        <label for="selectUser" class="col-sm-2 control-label">Группа пользователя</label>
         <div class="col-sm-10">
-            <select id="selectUser" class="form-control">
-                <option value="0" disabled selected>Выберите пользователя</option>
+            <select id="selectUserGroup" class="form-control">
+                <option value="0" disabled selected>Выберите группу пользователя</option>
                 <?php
                 // Формируем список пользователей для выбора
-                foreach ($users as $user) {
-                    echo '<option value="' . $user['ID'] . '">' . $user['email'] . '</option>';
+                foreach ($userGroups as $userGroup) {
+                    echo '<option value="' . $userGroup['ID'] . '">' . $userGroup['name'] . '</option>';
                 }
                 ?>
             </select>
@@ -37,13 +37,13 @@ $users = \Ideal\Structure\Acl\Admin\Model::getAllUsers();
 </div>
 <script type="text/javascript">
     $(function () {
-        // Отлавливаем событие смены пользователя
-        $('#selectUser').change(function () {
+        // Отлавливаем событие смены группы пользователя
+        $('#selectUserGroup').change(function () {
             $.ajax({
                 type: "POST",
-                data: {user_id: $(this).val()},
+                data: {user_group_id: $(this).val()},
                 dataType: 'json',
-                url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\Acl&action=mainUserPermission',
+                url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\Acl&action=mainUserGroupPermission',
                 success: function (data) {
                     $('#permission:hidden').show();
                     var trs = getTableRows(data);
@@ -60,7 +60,7 @@ $users = \Ideal\Structure\Acl\Admin\Model::getAllUsers();
                     target: $(this).data('target'),
                     structure: $(this).closest('tr').data('seid'),
                     is: $(this).is(':checked') ? 0 : 1,
-                    user_id: $('#selectUser').val()
+                    user_group_id: $('#selectUserGroup').val()
                 },
                 dataType: 'json',
                 url: '/?mode=ajax&controller=Ideal\\Structure\\Service\\Acl&action=changePermission'
@@ -87,7 +87,7 @@ $users = \Ideal\Structure\Acl\Admin\Model::getAllUsers();
                     type: "POST",
                     data: {
                         structure: $(closestTr).data('seid'),
-                        user_id: $('#selectUser').val(),
+                        user_group_id: $('#selectUserGroup').val(),
                         prev_structure: $(closestTr).data('prev_structure')
                     },
                     dataType: 'json',

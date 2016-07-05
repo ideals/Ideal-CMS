@@ -28,9 +28,9 @@ class AjaxController extends \Ideal\Core\AjaxController
     /**
      * Получение списка первого уровня для управления правами
      */
-    public function mainUserPermissionAction()
+    public function mainUserGroupPermissionAction()
     {
-        $permission = $this->structureAclModel->getMainUserPermission();
+        $permission = $this->structureAclModel->getMainUserGroupPermission();
         return json_encode($permission, JSON_FORCE_OBJECT);
     }
 
