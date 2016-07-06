@@ -11,8 +11,8 @@ return array(
         'field_list' => array('user_id')
     ),
     'fields' => array(
-        'user_id' => array(
-            'label' => 'Идентификатор пользователя',
+        'user_group_id' => array(
+            'label' => 'Идентификатор группы пользователя',
             'sql' => 'int(11) NOT NULL',
         ),
         'structure' => array(

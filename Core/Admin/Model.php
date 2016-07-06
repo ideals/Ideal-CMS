@@ -399,7 +399,7 @@ abstract class Model extends Core\Model
         $structure = $config->getStructureByClass(get_class($this));
         $user = \Ideal\Structure\User\Model::getInstance();
         $aclTable = $config->db['prefix'] . 'ideal_structure_acl';
-        $sqlAcl = "SELECT structure FROM {$aclTable} WHERE user_id='{$user->data['ID']}' AND `show`=0";
+        $sqlAcl = "SELECT structure FROM {$aclTable} WHERE user_group_id='{$user->data['user_group']}' AND `show`=0";
         $where .= " AND CONCAT('{$structure['ID']}-', e.ID) NOT IN ({$sqlAcl})";
 
         return parent::getWhere($where);
