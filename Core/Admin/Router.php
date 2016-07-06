@@ -55,6 +55,14 @@ class Router
         // Инициализируем данные модели
         $this->model->initPageData();
 
+        // Проверка прав доступа
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        if (!$aclModel->checkAccess($this->model)) {
+            // Если доступ запрещён, перебрасываем на соответствующий контроллер
+            $this->controllerName = '\\Ideal\\Structure\\User\\Admin\\Controller';
+            $request->action = 'accessDenied';
+        }
+
         // Определяем корректную модель на основании поля structure
         $this->model = $this->model->detectActualModel();
     }

@@ -1,5 +1,4 @@
 <?php
-
 // Таблица пользователей
 return array(
     'params' => array(
@@ -30,6 +29,12 @@ return array(
             'label' => 'Пароль',
             'sql' => 'varchar(255) NOT NULL',
             'type' => 'Ideal_Password'
+        ),
+        'user_group' => array(
+            'label' => 'Группа пользователя',
+            'sql' => 'int(8)',
+            'type' => 'Ideal_Select',
+            'medium'=> '\\Ideal\\Medium\\UserGroupList\\Model'
         ),
         'reg_date' => array(
             'label' => 'Дата регистрации',
