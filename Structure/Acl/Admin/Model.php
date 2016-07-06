@@ -87,12 +87,15 @@ class Model
             $prefix = $str['ID'] . '-';
         }
         // Считываем права пользователя
-        $sql = "SELECT * FROM {$this->table} WHERE user_group_id={$this->user->data['user_group']}";
-        $result = $db->select($sql);
         $res = array();
-        foreach ($result as $v) {
-            $res[$v['structure']] = $v;
+        if (isset($this->user->data) && isset($this->user->data['user_group']) && $this->user->data['user_group']) {
+            $sql = "SELECT * FROM {$this->table} WHERE user_group_id={$this->user->data['user_group']}";
+            $result = $db->select($sql);
+            foreach ($result as $v) {
+                $res[$v['structure']] = $v;
+            }
         }
+        
         // Проводим проверку прав пользователя на каждый элемент
         $result = array();
         foreach ($arr as $v) {
@@ -113,14 +116,17 @@ class Model
      */
     public function getAcl($structures)
     {
-        $db = Db::getInstance();
-        $sql = "SELECT * FROM {$this->table}"
-            . " WHERE structure IN ('" . implode("','", $structures) . "') AND user_group_id={$this->user->data['user_group']}";
-        $acl = $db->select($sql);
-        // Распределяем считанные права доступа по структурам
         $aclStructure = array();
-        foreach ($acl as $v) {
-            $aclStructure[$v['structure']] = $v;
+        if ($this->user->data['user_group']) {
+            $db = Db::getInstance();
+            $sql = "SELECT * FROM {$this->table}"
+                . " WHERE structure IN ('" . implode("','", $structures) . "') AND user_group_id={$this->user->data['user_group']}";
+            $acl = $db->select($sql);
+            // Распределяем считанные права доступа по структурам
+            $aclStructure = array();
+            foreach ($acl as $v) {
+                $aclStructure[$v['structure']] = $v;
+            }
         }
         return $aclStructure;
     }
@@ -134,24 +140,26 @@ class Model
      */
     public function checkAccess($model, $action = 'access')
     {
-        $data = $model->getPageData();
-        $config = Config::getInstance();
-        $structure = $config->getStructureByClass(get_class($model));
-        $structure = $structure['ID'] . '-' . $data['ID'];
-
-        // Получаем права на структуру из БД
-        $db = Db::getInstance();
-        $sql = "SELECT * FROM {$this->table}"
-            . " WHERE structure='{$structure}' AND user_group_id={$this->user->data['user_group']}";
-        $acl = $db->select($sql);
-
         $access = true;
-        if (isset($acl[0])) {
-            if ($action == 'access') {
-                // Если права для этого раздела прописаны, то должен быть разрешён и показ и вход в него
-                $access = $acl[0]['show'] && $acl[0]['enter'];
-            } else {
-                $access = $acl[0][$action];
+        if (isset($this->user->data) && isset($this->user->data['user_group']) && $this->user->data['user_group']) {
+            $data = $model->getPageData();
+            $config = Config::getInstance();
+            $structure = $config->getStructureByClass(get_class($model));
+            $structure = $structure['ID'] . '-' . $data['ID'];
+
+            // Получаем права на структуру из БД
+            $db = Db::getInstance();
+            $sql = "SELECT * FROM {$this->table}"
+                . " WHERE structure='{$structure}' AND user_group_id={$this->user->data['user_group']}";
+            $acl = $db->select($sql);
+
+            if (isset($acl[0])) {
+                if ($action == 'access') {
+                    // Если права для этого раздела прописаны, то должен быть разрешён и показ и вход в него
+                    $access = $acl[0]['show'] && $acl[0]['enter'];
+                } else {
+                    $access = $acl[0][$action];
+                }
             }
         }
 
