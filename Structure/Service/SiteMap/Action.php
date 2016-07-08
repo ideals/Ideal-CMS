@@ -134,6 +134,8 @@ if (isset($_POST['edit'])) {
             success: function (data) {
                 $('#iframe').append(data);
                 if (/Выход по таймауту/gim.test(data)) {
+                    param = param.replace('?с=1', '');
+                    param = param.replace('&с=1', '');
                     getSitemapAjaxify(param);
                 } else {
                     finishLoad();

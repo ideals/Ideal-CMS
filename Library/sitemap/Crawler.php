@@ -329,8 +329,7 @@ class Crawler
             $countHourForNotify = $this->config['existence_time_file'] * 2;
             $existenceTimeFile = $countHourForNotify * 60 * 60;
             if (time() - filemtime($xmlFile) > $existenceTimeFile) {
-                $this->sendEmail('Карта сайта последний раз обновлялась более '
-                    . $countHourForNotify . ' часов(а) назад.');
+                $this->sendEmail('Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.');
             }
         }
     }
@@ -739,8 +738,8 @@ XML;
         }
 
         // Если страница имеет слишком малый вес прекращаем выполнение скрипта
-        if ($info['download_content_length'] < 1) {
-            $this->stop("Страница {$k} пуста. Размер страницы: {$info['download_content_length']}. Переход с {$place}");
+        if ($info['size_download'] < 1024) {
+            $this->stop("Страница {$k} пуста. Размер страницы: {$info['size_download']} байт. Переход с {$place}");
         }
 
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
