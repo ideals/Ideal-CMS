@@ -385,9 +385,9 @@ class Model
         $ext = substr($script, strrpos($script, '.'));
 
         if (strpos(basename($script), 'new') === 0) {
-            $file = 'update' .  $script;
+            $file = 'setup/update' .  $script;
             if ($this->updateName !== 'Ideal-CMS') {
-                $file = $this->updateName . '/setup/update' . $script;
+                $file = $this->updateName . '/' . $file;
             }
         } else {
             $file = SETUP_DIR . '/setup/update' . $script;
