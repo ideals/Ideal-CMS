@@ -580,8 +580,10 @@ class Crawler
         file_put_contents($file, serialize(array($new, $external)));
 
         $text = '';
+        $saveToLog = false;
 
         if (empty($oldUrl)) {
+            $saveToLog = true;
             $text = "Добавлены ссылки (первичная генерация карты)\n";
             foreach ($new as $k => $v) {
                 $text .= $k;
@@ -591,6 +593,7 @@ class Crawler
             // Находим добавленные страницы
             $add = array_diff_key($new, $oldUrl);
             if (!empty($add)) {
+                $saveToLog = true;
                 $text .= "Добавлены ссылки\n";
                 foreach ($add as $k => $v) {
                     $text .= $k;
@@ -603,6 +606,7 @@ class Crawler
             // Находим удаленные страницы
             $del = array_diff_key($oldUrl, $new);
             if (!empty($del)) {
+                $saveToLog = true;
                 $text .= "Удалены ссылки \n";
                 foreach ($del as $k => $v) {
                     $text .= $k;
@@ -614,6 +618,7 @@ class Crawler
         }
 
         if (empty($oldExternal)) {
+            $saveToLog = true;
             $text .= "\nДобавлены внешние ссылки(первичная генерация карты):\n";
             foreach ($external as $k => $v) {
                 $text .= "{$k} на странице {$v}\n";
@@ -622,6 +627,7 @@ class Crawler
             // Определяем новые внешние ссылки
             $add = array_diff_key($external, $oldExternal);
             if (!empty($add)) {
+                $saveToLog = true;
                 $text .= "\nДобавлены внешние ссылки:\n";
                 foreach ($add as $k => $v) {
                     $text .= "{$k} на странице {$v}\n";
@@ -632,6 +638,7 @@ class Crawler
 
             $del = array_diff_key($oldExternal, $external);
             if (!empty($del)) {
+                $saveToLog = true;
                 $text .= "\nУдалены внешние ссылки:\n";
                 foreach ($del as $k => $v) {
                     $text .= "{$k} на странице {$v}\n";
@@ -642,7 +649,9 @@ class Crawler
         }
 
         $this->sendEmail($text);
-        $this->saveToLog($text);
+        if ($saveToLog) {
+            $this->saveToLog($text);
+        }
     }
 
     /**
