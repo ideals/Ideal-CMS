@@ -9,7 +9,7 @@ $configSD = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 
 // 1. Если в site_map.php отсутствуют новые поля, то добавляем их
 // Проверяем существование файла настройки карты сайта в корне
-$siteMapConfigFile = $path . DIRECTORY_SEPARATOR . $cmsFolder . DIRECTORY_SEPARATOR . 'site_map.php';
+$siteMapConfigFile = $path . DIRECTORY_SEPARATOR . $config->cmsFolder . DIRECTORY_SEPARATOR . 'site_map.php';
 if (file_exists($siteMapConfigFile)) {
     $configSD->loadFile($siteMapConfigFile);
     $params = $configSD->getParams();

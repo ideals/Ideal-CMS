@@ -228,7 +228,9 @@ class Config
             $fileName = $module . 'Structure/' . $structure . '/config.php';
             /** @noinspection PhpIncludeInspection */
             $arr = require_once($fileName);
-            $structures[$k] = array_merge($structureName, $arr);
+            if (is_array($arr)) {
+                $structures[$k] = array_merge($structureName, $arr);
+            }
         }
 
         // Строим массив соответствия порядковых номеров структур их названиям
