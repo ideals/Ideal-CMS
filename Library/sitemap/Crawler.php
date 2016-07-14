@@ -173,19 +173,16 @@ class Crawler
                 $this->config['db_name'] = $configIdealCMS['db']['name'];
                 $this->config['db_prefix'] = $configIdealCMS['db']['prefix'];
 
-                // Ищем prev_structure для записи в Логи
-                $leftPartPrevStructure = 0;
-                $rightPartPrevStructure = 0;
+                // Ищем идентификатор структуры "Справочники" чтобы использовать его для записи в "Логи"
+                $structureDataListID = 0;
                 foreach ($configIdealCMS['structures'] as $structure) {
                     if ($structure['structure'] == 'Ideal_DataList') {
-                        $leftPartPrevStructure = $structure['ID'];
-                    }
-                    if ($structure['structure'] == 'Ideal_Log') {
-                        $rightPartPrevStructure = $structure['ID'];
+                        $structureDataListID = $structure['ID'];
+                        break;
                     }
                 }
-                if ($leftPartPrevStructure && $rightPartPrevStructure) {
-                    $this->config['prev_structure'] = $leftPartPrevStructure . '-' . $rightPartPrevStructure;
+                if ($structureDataListID) {
+                    $this->config['structureDataListID'] = $structureDataListID;
                 }
             }
             // Пытаемся определить идентификатор пользователя для записи в логи
@@ -525,14 +522,18 @@ class Crawler
                     if (isset($this->config['user_id'])) {
                         $userID = $this->config['user_id'];
                     }
-                    $prevStructure = '';
-                    if (isset($this->config['prev_structure'])) {
-                        $prevStructure = $this->config['prev_structure'];
+                    $prevStructure = "''";
+                    $addFromWhere = '';
+                    if (isset($this->config['structureDataListID'])) {
+                        $dataListTableName = $this->config['db_prefix'] . 'ideal_structure_datalist';
+                        $prevStructure = "CONCAT('{$this->config['structureDataListID']}-',{$dataListTableName}.ID)";
+                        $addFromWhere = " FROM {$dataListTableName} WHERE structure = 'Ideal_Log'";
                     }
                     // Вносим запись в таблицу
                     $sql = "INSERT INTO {$tableName}";
                     $sql .= ' (prev_structure,date_create,user_id,event_type,what_happened)';
-                    $sql .= " VALUES ('{$prevStructure}',{$time},{$userID},'карта сайта', '{$text}')";
+                    $text = $mysqli->real_escape_string($text);
+                    $sql .= " SELECT {$prevStructure},{$time},{$userID},'карта сайта','{$text}'{$addFromWhere}";
                     $mysqli->query($sql);
                 }
                 $mysqli->close();
