@@ -30,6 +30,9 @@ class Crawler
     /** @var float Время начала работы скрипта */
     private $start;
 
+    /** @var bool Флаг необходимости сброса ранее собранных страниц */
+    private $clearTemp = false;
+
     /** @var string Статус запуска скрипта. Варианты cron|test */
     public $status = 'cron';
 
@@ -62,11 +65,16 @@ class Crawler
         $this->ob = !file_exists(basename($_SERVER['PHP_SELF']));
 
         // Проверяем статус запуска - тестовый или по расписанию
-        if (isset($_GET['w']) || (isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] == 'w')) {
+        $argv = !empty($_SERVER['argv']) ? $_SERVER['argv'] : array();
+        if (isset($_GET['w']) || (array_search('w', $argv) !== false)) {
             // Если задан GET-параметр или ключ w в командной строке — это принудительный запуск,
             // письма о нём слать не надо
             $this->status = 'test';
             $this->ob = false;
+        }
+        // Проверяем надобность сброса ранее собранных страниц
+        if (isset($_GET['с']) || (array_search('с', $argv) !== false)) {
+            $this->clearTemp = true;
         }
     }
 
@@ -103,10 +111,14 @@ class Crawler
      * Вывод сообщения и завершение работы скрипта
      *
      * @param string $message - сообщение для вывода
+     * @param bool $sendNotification - флаг обозначающий надобность отправления сообщения перед остановкой скрипта
      * @throws \Exception
      */
-    protected function stop($message)
+    protected function stop($message, $sendNotification = true)
     {
+        if ($sendNotification) {
+            $this->sendEmail($message);
+        }
         throw new \Exception($message);
     }
 
@@ -139,6 +151,11 @@ class Crawler
             if (!file_exists($config)) {
                 // Конфигурационный файл нигде не нашли :(
                 $this->stop("Configuration file {$config} not found!");
+            } else {
+                // Если в корневой папке Ideal CMS есть конфигурационный файл карты сайта,
+                // то подгружаем и основные файлы конфигурации.
+                $configIdealCMS = substr(__DIR__, 0, stripos(__DIR__, '/Ideal/Library/sitemap')) . '/config.php';
+                $siteDataIdealCMS = substr(__DIR__, 0, stripos(__DIR__, '/Ideal/Library/sitemap')) . '/site_data.php';
             }
         }
 
@@ -146,6 +163,49 @@ class Crawler
 
         /** @noinspection PhpIncludeInspection */
         $this->config = require($config);
+
+        if (isset($configIdealCMS)) {
+            $configIdealCMS = require($configIdealCMS);
+            if (!empty($configIdealCMS)) {
+                $this->config['db_host'] = $configIdealCMS['db']['host'];
+                $this->config['db_login'] = $configIdealCMS['db']['login'];
+                $this->config['db_password'] = $configIdealCMS['db']['password'];
+                $this->config['db_name'] = $configIdealCMS['db']['name'];
+                $this->config['db_prefix'] = $configIdealCMS['db']['prefix'];
+
+                // Ищем prev_structure для записи в Логи
+                $leftPartPrevStructure = 0;
+                $rightPartPrevStructure = 0;
+                foreach ($configIdealCMS['structures'] as $structure) {
+                    if ($structure['structure'] == 'Ideal_DataList') {
+                        $leftPartPrevStructure = $structure['ID'];
+                    }
+                    if ($structure['structure'] == 'Ideal_Log') {
+                        $rightPartPrevStructure = $structure['ID'];
+                    }
+                }
+                if ($leftPartPrevStructure && $rightPartPrevStructure) {
+                    $this->config['prev_structure'] = $leftPartPrevStructure . '-' . $rightPartPrevStructure;
+                }
+            }
+            // Пытаемся определить идентификатор пользователя для записи в логи
+            if (isset($siteDataIdealCMS)) {
+                $siteDataIdealCMS = require($siteDataIdealCMS);
+                if (!empty($siteDataIdealCMS)) {
+                    if (session_id() == '') {
+                        session_start();
+                    }
+                    if (isset($_SESSION[$siteDataIdealCMS['domain']])) {
+                        $session = unserialize($_SESSION[$siteDataIdealCMS['domain']]);
+                        $this->config['user_id'] = $session['user_data']['ID'];
+                    }
+                }
+            }
+        }
+
+        if (!isset($this->config['existence_time_file'])) {
+            $this->config['existence_time_file'] = 25;
+        }
 
         $tmp = parse_url($this->config['website']);
         $this->host = $tmp['host'];
@@ -216,9 +276,10 @@ class Crawler
                 $this->stop("Временный файл {$tmpFile} недоступен для записи!");
             }
 
-            // Если промежуточный файл ссылок последний раз обновлялся более 25 часов назад,
-            // то производим его принудительную очистку.
-            if (time() - filemtime($tmpFile) > 90000) {
+            // Если промежуточный файл ссылок последний раз обновлялся более того количества часов назад,
+            // которое указано в настройках, то производим его принудительную очистку.
+            $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
+            if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
                 file_put_contents($tmpFile, '');
             }
 
@@ -257,10 +318,18 @@ class Crawler
         // Проверяем, обновлялась ли сегодня карта сайта
         if (date('d:m:Y', filemtime($xmlFile)) == date('d:m:Y')) {
             if ($this->status == 'cron') {
-                $this->stop("Sitemap {$xmlFile} already created today! Everything it's alright.");
+                $this->stop("Sitemap {$xmlFile} already created today! Everything it's alright.", false);
             } else {
                 // Если дата сегодняшняя, но запуск не из крона, то продолжаем работу над картой сайта
                 echo "Warning! File {$xmlFile} have current date and skip in cron";
+            }
+        } else {
+            // Если карта сайта в два раза старше указанного значения в поле
+            // "Максимальное время существования версии промежуточного файла", то отсылаем соответствующее уведомление
+            $countHourForNotify = $this->config['existence_time_file'] * 2;
+            $existenceTimeFile = $countHourForNotify * 60 * 60;
+            if (time() - filemtime($xmlFile) > $existenceTimeFile) {
+                $this->sendEmail('Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.');
             }
         }
     }
@@ -389,7 +458,7 @@ class Crawler
                 . 'Всего непройденных ссылок: ' . count($this->links) . "\n"
                 . 'Затраченное время: ' . ($time - $this->start) . "\n\n"
                 . "Everything it's alright.\n\n";
-            $this->stop($message);
+            $this->stop($message, false);
         }
 
         if (count($this->checked) < 2) {
@@ -424,6 +493,51 @@ class Crawler
 
         // Отправляем письма об изменениях
         mail($to, $this->host . ' sitemap', $text, $header);
+    }
+
+    /**
+     * Записывает результат работы карты сайта в логи (в базу данных)
+     *
+     * @param string $text Сообщение(отчет)
+     */
+    public function saveToLog($text)
+    {
+        // Проверяем наличие всех необходимых данных для подключения к базе
+        if (!empty($this->config['db_host']) && !empty($this->config['db_login'])
+            && !empty($this->config['db_password']) && !empty($this->config['db_name'])) {
+
+            // Подключаемся к базе данных
+            $mysqli = new \mysqli(
+                $this->config['db_host'],
+                $this->config['db_login'],
+                $this->config['db_password'],
+                $this->config['db_name']
+            );
+            if (!$mysqli->connect_error) {
+                $mysqli->query('set character set utf8');
+                $mysqli->query('set names utf8');
+                $tableName = $this->config['db_prefix'] . 'ideal_structure_log';
+                // Проверяем таблицу на существование
+                $result = $mysqli->query("SHOW TABLES LIKE '{$tableName}';");
+                if ($result->num_rows == 1) {
+                    $time = time();
+                    $userID = 0;
+                    if (isset($this->config['user_id'])) {
+                        $userID = $this->config['user_id'];
+                    }
+                    $prevStructure = '';
+                    if (isset($this->config['prev_structure'])) {
+                        $prevStructure = $this->config['prev_structure'];
+                    }
+                    // Вносим запись в таблицу
+                    $sql = "INSERT INTO {$tableName}";
+                    $sql .= ' (prev_structure,date_create,user_id,event_type,what_happened)';
+                    $sql .= " VALUES ('{$prevStructure}',{$time},{$userID},'карта сайта', '{$text}')";
+                    $mysqli->query($sql);
+                }
+                $mysqli->close();
+            }
+        }
     }
 
     /**
@@ -527,6 +641,7 @@ class Crawler
         }
 
         $this->sendEmail($text);
+        $this->saveToLog($text);
     }
 
     /**
@@ -620,6 +735,11 @@ XML;
         // Если страница недоступна прекращаем выполнение скрипта
         if ($info['http_code'] != 200) {
             $this->stop("Страница {$k} недоступна. Статус: {$info['http_code']}. Переход с {$place}");
+        }
+
+        // Если страница имеет слишком малый вес прекращаем выполнение скрипта
+        if ($info['size_download'] < 1024) {
+            $this->stop("Страница {$k} пуста. Размер страницы: {$info['size_download']} байт. Переход с {$place}");
         }
 
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а

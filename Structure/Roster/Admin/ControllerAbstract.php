@@ -17,7 +17,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
 
         // Считываем список элементов
         $page = intval($request->page);
-        $listing = $this->model->getList($page);
+        $listing = $this->model->getListAcl($page);
         $headers = $this->model->getHeaderNames();
 
         $this->parseList($headers, $listing);

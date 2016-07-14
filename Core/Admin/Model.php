@@ -130,7 +130,8 @@ abstract class Model extends Core\Model
 
                         // значение преструктуры основной структуры
                         // TODO переделать собирание преструктуры, чтобы значение брались из правильного места
-                        $preSaveAddonDataPrevStructure = $preSaveAddonPrevStructure['ID'] . '-' . $groups[$groupName]['ID'];
+                        $preSaveAddonDataPrevStructure = $preSaveAddonPrevStructure['ID']
+                            . '-' . $groups[$groupName]['ID'];
                         $this->deleteAddon($preSaveAddonInfo, $preSaveAddonDataPrevStructure);
                     }
                 }
@@ -394,5 +395,46 @@ abstract class Model extends Core\Model
         $deletedAddonModel->setPageDataByPrevStructure($addonDataPrevStructure);
         // Удаляем данные об аддоне
         $deletedAddonModel->delete();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getWhere($where)
+    {
+        // Добавляем проверку на скрытие части страниц с помощью прав доступа
+        $config = Config::getInstance();
+        $structure = $config->getStructureByClass(get_class($this));
+        $user = \Ideal\Structure\User\Model::getInstance();
+        $aclTable = $config->db['prefix'] . 'ideal_structure_acl';
+        $sqlAcl = "SELECT structure FROM {$aclTable} WHERE user_group_id='{$user->data['user_group']}' AND `show`=0";
+        $where .= " AND CONCAT('{$structure['ID']}-', e.ID) NOT IN ({$sqlAcl})";
+
+        return parent::getWhere($where);
+    }
+
+    /**
+     * Получение списка элементов с наложением списка прав доступа
+     *
+     * @param int $page Номер отображаемой страницы
+     * @return array Полученный список элементов
+     */
+    public function getListAcl($page)
+    {
+        $config = Config::getInstance();
+        $structure = $config->getStructureByClass(get_class($this));
+        $list = $this->getList($page);
+        $ids = array();
+        foreach ($list as $k => $v) {
+            $ids[$v['ID']] = $structure['ID'] . '-' . $v['ID'];
+        }
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        $acl = $aclModel->getAcl($ids);
+        foreach ($list as $k => $v) {
+            if (!empty($acl[$ids[$v['ID']]])) {
+                $list[$k]['acl'] = $acl[$ids[$v['ID']]];
+            }
+        }
+        return $list;
     }
 }

@@ -43,10 +43,15 @@ class Controller
 
         $result = array();
         $result['ID'] = intval($request->id);
+        $result['isCorrect'] = false;
 
         $this->model->setPageDataById($result['ID']);
 
-        $result['isCorrect'] = $this->model->delete();
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        // Проверяем, есть ли право удаления элемента
+        if ($aclModel->checkAccess($this->model, 'delete')) {
+            $result['isCorrect'] = $this->model->delete();
+        }
 
         if ($result['isCorrect'] == 1) {
             $this->runClearFileCache();
@@ -63,6 +68,12 @@ class Controller
 
         // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
         $result = $this->model->parseInputParams();
+
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        // Проверяем, есть ли право редактирования элемента
+        if ($result['isCorrect'] == 1) {
+            $result['isCorrect'] = $aclModel->checkAccess($this->model, 'edit');
+        }
 
         if ($result['isCorrect'] == 1) {
             $result = $this->model->saveElement($result);
@@ -183,7 +194,8 @@ class Controller
                 $fieldModel = $fieldClassName::getInstance();
                 $fieldModel->setModel($this->model, $key);
                 $value = $fieldModel->getValueForList($v, $key);
-                if (isset($this->model->params['field_name']) && $key == $this->model->params['field_name']) {
+                if (isset($this->model->params['field_name']) && $key == $this->model->params['field_name']
+                    && (!isset($v['acl']) || $v['acl']['enter']) ) {
                     // На активный элемент ставим ссылку
                     $par = $request->par . '-' . $v['ID'];
                     $value = '<a href="index.php?par=' . $par . '">' . $value . '</a>';
@@ -194,7 +206,10 @@ class Controller
                 'ID' => $v['ID'],
                 'row' => $fields,
                 'is_active' => (isset($v['is_active'])) ? $v['is_active'] : 1,
-                'is_not_menu' => (isset($v['is_not_menu'])) ? $v['is_not_menu'] : 0
+                'is_not_menu' => (isset($v['is_not_menu'])) ? $v['is_not_menu'] : 0,
+                'acl_edit' => (isset($v['acl'])) ? $v['acl']['edit'] : 1,
+                'acl_delete' => (isset($v['acl'])) ? $v['acl']['delete'] : 1,
+                'acl_enter' => (isset($v['acl'])) ? $v['acl']['enter'] : 1,
             );
         }
         $this->view->rows = $rows;
@@ -238,7 +253,8 @@ class Controller
 
 
         // Отображение верхнего меню структур
-        $this->view->structures = $config->structures;
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        $this->view->structures = $aclModel->filterShow(0, $config->structures);
         $path = $this->model->getPath();
         $this->view->activeStructureId = $path[0]['ID'];
 

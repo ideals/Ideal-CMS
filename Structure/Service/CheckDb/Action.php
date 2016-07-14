@@ -51,16 +51,19 @@ $checkTypeFile = function ($dir, $module, &$cfgTables, &$cfgTablesFull, &$config
     }
     while (false !== ($file = readdir($handle))) {
         if (($file != '.') && ($file != '..') && (is_dir($dir . '/' . $file))) {
-            /** @noinspection PhpIncludeInspection */
-            $c = require($dir . '/' . $file . '/config.php');
-            if (isset($c['params']['has_table']) && ($c['params']['has_table'] == false)) {
-                continue;
-            }
-            $t = strtolower($config->db['prefix'] . $module . '_' . $type . '_' . $file);
-            if (array_key_exists($t, $cfgTables) === false) {
-                $fields = getFieldListWithTypes($c);
-                $cfgTables[$t] = $fields;
-                $cfgTablesFull[$t] = ($module == 'Ideal') ? $type . '/' . $file : $module . '/' . $type . '/' . $file;
+            $configfile = $dir . '/' . $file . '/config.php';
+            if (file_exists($configfile)) {
+                /** @noinspection PhpIncludeInspection */
+                $c = require($configfile);
+                if (isset($c['params']['has_table']) && ($c['params']['has_table'] == false)) {
+                    continue;
+                }
+                $t = strtolower($config->db['prefix'] . $module . '_' . $type . '_' . $file);
+                if (array_key_exists($t, $cfgTables) === false) {
+                    $fields = getFieldListWithTypes($c);
+                    $cfgTables[$t] = $fields;
+                    $cfgTablesFull[$t] = ($module == 'Ideal') ? $type . '/' . $file : $module . '/' . $type . '/' . $file;
+                }
             }
         }
     }

@@ -77,5 +77,27 @@ return array(
             'isShow' => 0,
             'hasTable' => true
         ),
+        // Подключаем структуру управления пользователями
+        array(
+            'ID' => 9,
+            'structure' => 'Ideal_Acl',
+            'name' => 'Права пользователей',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
+        // Подключаем справочник групп пользователей
+        array(
+            'ID' => 10,
+            'structure' => 'Ideal_UserGroup',
+            'name' => 'Группы пользователей',
+        ),
+        // Подключаем справочник логов
+        array(
+            'ID' => 10,
+            'structure' => 'Ideal_Log',
+            'name' => 'Логи',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
     )
 );
