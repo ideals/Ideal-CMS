@@ -102,6 +102,13 @@ class Request
     protected $lr;
 
     /**
+     * proxyUrl
+     *
+     * @var string
+     */
+    protected $proxyUrl;
+
+    /**
      * Localization
      *  - ru - russian
      *  - uk - ukrainian
@@ -514,6 +521,33 @@ class Request
     }
 
     /**
+     * proxyUrl
+     *
+     * @param  string proxyUrl
+     * @return integer|Request
+     */
+    public function proxyUrl($proxyUrl = null)
+    {
+        if (is_null($proxyUrl)) {
+            return $this->proxyUrl;
+        } else {
+            return $this->setProxyUrl($proxyUrl);
+        }
+    }
+
+    /**
+     * Set proxyUrl
+     *
+     * @param  string $proxyUrl
+     * @return Request
+     */
+    protected function setProxyUrl($proxyUrl)
+    {
+        $this->proxyUrl = $proxyUrl;
+        return $this;
+    }
+
+    /**
      * Set/Get Localization
      *
      * @param  string $l10n
@@ -853,6 +887,11 @@ class Request
         }
         if ($this->l10n) {
             $getData['l10n'] = $this->l10n;
+        }
+
+        // Если задан адрес прокси скрипта, то используем его как основной
+        if (!empty($this->proxyUrl)) {
+            $this->baseUrl = $this->proxyUrl;
         }
 
         $url = $this->baseUrl .'?'. http_build_query($getData);
