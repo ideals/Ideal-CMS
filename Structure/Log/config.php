@@ -8,7 +8,7 @@ return array(
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_name' => '', // поле для входа в список потомков
         'field_sort' => 'date_create DESC', // поле, по которому проводится сортировка в CMS
-        'field_list' => array('date_create', 'user_id', 'event_type')
+        'field_list' => array('date_create', 'user_id', 'type')
     ),
     'fields' => array(
         'ID' => array(
@@ -31,12 +31,12 @@ return array(
             'sql' => 'int not null',
             'type' => 'Ideal_Integer'
         ),
-        'event_type' => array(
+        'type' => array(
             'label' => 'Тип события',
             'sql' => 'text not null',
             'type' => 'Ideal_Text'
         ),
-        'what_happened' => array(
+        'message' => array(
             'label' => 'Cуть события',
             'sql' => 'text not null',
             'type' => 'Ideal_Area'
