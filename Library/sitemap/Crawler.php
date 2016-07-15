@@ -531,9 +531,8 @@ class Crawler
                     }
                     // Вносим запись в таблицу
                     $sql = "INSERT INTO {$tableName}";
-                    $sql .= ' (prev_structure,date_create,user_id,event_type,what_happened)';
-                    $text = $mysqli->real_escape_string($text);
-                    $sql .= " SELECT {$prevStructure},{$time},{$userID},'карта сайта','{$text}'{$addFromWhere}";
+                    $sql .= ' (prev_structure,date_create,user_id,type,message)';
+                    $sql .= " SELECT {$prevStructure},{$time},{$userID},'site map','{$text}'{$addFromWhere}";
                     $mysqli->query($sql);
                 }
                 $mysqli->close();
@@ -581,6 +580,10 @@ class Crawler
 
         $text = '';
         $saveToLog = false;
+        $add = array();
+        $del = array();
+        $addExternal = array();
+        $delExternal = array();
 
         if (empty($oldUrl)) {
             $saveToLog = true;
@@ -625,22 +628,22 @@ class Crawler
             }
         } else {
             // Определяем новые внешние ссылки
-            $add = array_diff_key($external, $oldExternal);
-            if (!empty($add)) {
+            $addExternal = array_diff_key($external, $oldExternal);
+            if (!empty($addExternal)) {
                 $saveToLog = true;
                 $text .= "\nДобавлены внешние ссылки:\n";
-                foreach ($add as $k => $v) {
+                foreach ($addExternal as $k => $v) {
                     $text .= "{$k} на странице {$v}\n";
                 }
             } else {
                 $text .= "\nНет новых внешних ссылок\n";
             }
 
-            $del = array_diff_key($oldExternal, $external);
-            if (!empty($del)) {
+            $delExternal = array_diff_key($oldExternal, $external);
+            if (!empty($delExternal)) {
                 $saveToLog = true;
                 $text .= "\nУдалены внешние ссылки:\n";
-                foreach ($del as $k => $v) {
+                foreach ($delExternal as $k => $v) {
                     $text .= "{$k} на странице {$v}\n";
                 }
             } else {
@@ -650,7 +653,15 @@ class Crawler
 
         $this->sendEmail($text);
         if ($saveToLog) {
-            $this->saveToLog($text);
+            // Формируем json формат данных для хранения в логах
+            $log = array(
+                'add' => $add,
+                'del' => $del,
+                'addExternal' => $addExternal,
+                'delExternal' => $delExternal,
+            );
+            $log = json_encode($log);
+            $this->saveToLog($log);
         }
     }
 
