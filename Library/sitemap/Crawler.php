@@ -532,7 +532,7 @@ class Crawler
                     // Вносим запись в таблицу
                     $sql = "INSERT INTO {$tableName}";
                     $sql .= ' (prev_structure,date_create,user_id,type,message)';
-                    $sql .= " SELECT {$prevStructure},{$time},{$userID},'site map','{$text}'{$addFromWhere}";
+                    $sql .= " SELECT {$prevStructure},{$time},{$userID},'sitemap','{$text}'{$addFromWhere}";
                     $mysqli->query($sql);
                 }
                 $mysqli->close();
@@ -655,10 +655,10 @@ class Crawler
         if ($saveToLog) {
             // Формируем json формат данных для хранения в логах
             $log = array(
-                'add' => $add,
-                'del' => $del,
-                'addExternal' => $addExternal,
-                'delExternal' => $delExternal,
+                'add' => array_keys($add),
+                'del' => array_keys($del),
+                'add_external' => $addExternal,
+                'del_external' => $delExternal,
             );
             $log = json_encode($log);
             $this->saveToLog($log);
