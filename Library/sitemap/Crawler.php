@@ -173,19 +173,16 @@ class Crawler
                 $this->config['db_name'] = $configIdealCMS['db']['name'];
                 $this->config['db_prefix'] = $configIdealCMS['db']['prefix'];
 
-                // Ищем prev_structure для записи в Логи
-                $leftPartPrevStructure = 0;
-                $rightPartPrevStructure = 0;
+                // Ищем идентификатор структуры "Справочники" чтобы использовать его для записи в "Логи"
+                $structureDataListID = 0;
                 foreach ($configIdealCMS['structures'] as $structure) {
                     if ($structure['structure'] == 'Ideal_DataList') {
-                        $leftPartPrevStructure = $structure['ID'];
-                    }
-                    if ($structure['structure'] == 'Ideal_Log') {
-                        $rightPartPrevStructure = $structure['ID'];
+                        $structureDataListID = $structure['ID'];
+                        break;
                     }
                 }
-                if ($leftPartPrevStructure && $rightPartPrevStructure) {
-                    $this->config['prev_structure'] = $leftPartPrevStructure . '-' . $rightPartPrevStructure;
+                if ($structureDataListID) {
+                    $this->config['structureDataListID'] = $structureDataListID;
                 }
             }
             // Пытаемся определить идентификатор пользователя для записи в логи
@@ -525,14 +522,17 @@ class Crawler
                     if (isset($this->config['user_id'])) {
                         $userID = $this->config['user_id'];
                     }
-                    $prevStructure = '';
-                    if (isset($this->config['prev_structure'])) {
-                        $prevStructure = $this->config['prev_structure'];
+                    $prevStructure = "''";
+                    $addFromWhere = '';
+                    if (isset($this->config['structureDataListID'])) {
+                        $dataListTableName = $this->config['db_prefix'] . 'ideal_structure_datalist';
+                        $prevStructure = "CONCAT('{$this->config['structureDataListID']}-',{$dataListTableName}.ID)";
+                        $addFromWhere = " FROM {$dataListTableName} WHERE structure = 'Ideal_Log'";
                     }
                     // Вносим запись в таблицу
                     $sql = "INSERT INTO {$tableName}";
-                    $sql .= ' (prev_structure,date_create,user_id,event_type,what_happened)';
-                    $sql .= " VALUES ('{$prevStructure}',{$time},{$userID},'карта сайта', '{$text}')";
+                    $sql .= ' (prev_structure,date_create,user_id,type,message)';
+                    $sql .= " SELECT {$prevStructure},{$time},{$userID},'sitemap','{$text}'{$addFromWhere}";
                     $mysqli->query($sql);
                 }
                 $mysqli->close();
@@ -579,8 +579,14 @@ class Crawler
         file_put_contents($file, serialize(array($new, $external)));
 
         $text = '';
+        $saveToLog = false;
+        $add = array();
+        $del = array();
+        $addExternal = array();
+        $delExternal = array();
 
         if (empty($oldUrl)) {
+            $saveToLog = true;
             $text = "Добавлены ссылки (первичная генерация карты)\n";
             foreach ($new as $k => $v) {
                 $text .= $k;
@@ -590,6 +596,7 @@ class Crawler
             // Находим добавленные страницы
             $add = array_diff_key($new, $oldUrl);
             if (!empty($add)) {
+                $saveToLog = true;
                 $text .= "Добавлены ссылки\n";
                 foreach ($add as $k => $v) {
                     $text .= $k;
@@ -602,6 +609,7 @@ class Crawler
             // Находим удаленные страницы
             $del = array_diff_key($oldUrl, $new);
             if (!empty($del)) {
+                $saveToLog = true;
                 $text .= "Удалены ссылки \n";
                 foreach ($del as $k => $v) {
                     $text .= $k;
@@ -613,26 +621,29 @@ class Crawler
         }
 
         if (empty($oldExternal)) {
+            $saveToLog = true;
             $text .= "\nДобавлены внешние ссылки(первичная генерация карты):\n";
             foreach ($external as $k => $v) {
                 $text .= "{$k} на странице {$v}\n";
             }
         } else {
             // Определяем новые внешние ссылки
-            $add = array_diff_key($external, $oldExternal);
-            if (!empty($add)) {
+            $addExternal = array_diff_key($external, $oldExternal);
+            if (!empty($addExternal)) {
+                $saveToLog = true;
                 $text .= "\nДобавлены внешние ссылки:\n";
-                foreach ($add as $k => $v) {
+                foreach ($addExternal as $k => $v) {
                     $text .= "{$k} на странице {$v}\n";
                 }
             } else {
                 $text .= "\nНет новых внешних ссылок\n";
             }
 
-            $del = array_diff_key($oldExternal, $external);
-            if (!empty($del)) {
+            $delExternal = array_diff_key($oldExternal, $external);
+            if (!empty($delExternal)) {
+                $saveToLog = true;
                 $text .= "\nУдалены внешние ссылки:\n";
-                foreach ($del as $k => $v) {
+                foreach ($delExternal as $k => $v) {
                     $text .= "{$k} на странице {$v}\n";
                 }
             } else {
@@ -641,7 +652,17 @@ class Crawler
         }
 
         $this->sendEmail($text);
-        $this->saveToLog($text);
+        if ($saveToLog) {
+            // Формируем json формат данных для хранения в логах
+            $log = array(
+                'add' => array_keys($add),
+                'del' => array_keys($del),
+                'add_external' => $addExternal,
+                'del_external' => $delExternal,
+            );
+            $log = json_encode($log);
+            $this->saveToLog($log);
+        }
     }
 
     /**
