@@ -101,7 +101,7 @@ class ConfigPhp
 
         $file .= ");\n";
 
-        return file_put_contents($fileName, $file);
+        return file_put_contents($fileName, $file, FILE_USE_INCLUDE_PATH);
     }
 
     /**
@@ -148,11 +148,11 @@ DONE;
      */
     public function loadFile($fileName)
     {
-        if (!file_exists($fileName)) {
+        if (!stream_resolve_include_path($fileName)) {
             return false;
         }
 
-        $cfg = file($fileName);
+        $cfg = file($fileName, FILE_USE_INCLUDE_PATH);
 
         // Убираем служебные символы (пробелы, табуляцию) из начала и из конца строк
         array_walk(
