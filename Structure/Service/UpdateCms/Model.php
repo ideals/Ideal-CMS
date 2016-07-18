@@ -356,7 +356,7 @@ class Model
                     $scripts = array('pre' => array(), 'after' => array());
                     continue;
                 }
-                if (preg_match("(\/new_\.*)", $fileScript)) {
+                if (preg_match("(\/new_\.*)", $fileScript) && version_compare($folder, $currentVersion) > 0) {
                     $scripts['after'][] = $fileScript;
                 } else {
                     $scripts['pre'][] = $fileScript;
