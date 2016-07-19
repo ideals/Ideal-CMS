@@ -19,12 +19,12 @@ if (!empty($res)) {
     $res = $db->select($sql);
     if (!empty($res)) {
         $sql = "ALTER TABLE `{$table}` CHANGE COLUMN `event_type` `type` text NOT NULL;";
-        $res = $db->select($sql);
+        $db->query($sql);
     }
     $sql = "SHOW COLUMNS FROM {$table} LIKE 'what_happened'";
     $res = $db->select($sql);
     if (!empty($res)) {
         $sql = "ALTER TABLE `{$table}` CHANGE COLUMN `what_happened` `message` text NOT NULL;";
-        $res = $db->select($sql);
+        $db->query($sql);
     }
 }
