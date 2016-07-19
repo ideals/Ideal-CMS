@@ -71,7 +71,7 @@ try {
             class="btn btn-primary pull-right">
         Создать резервную копию БД
     </button>
-    <span id='textDumpStatus'></span>
+    <div id='textDumpStatus'></div>
     <input id="uploadfile" style="visibility: collapse; width: 0;" type="file" name="file"
            onchange="upload(this.files[0])">
 </form>
@@ -99,7 +99,7 @@ try {
     </div>
 </div><!-- /.modal -->
 
-<div style="clear:right;"></div>
+<div class="clearfix"></div>
 
 <?php
 echo '<p>Папка с архивами: &nbsp;' . $backupPart . '</p>';
@@ -263,16 +263,18 @@ if (is_dir($backupPart)) {
             contentType: false
         }).done(function (data) {
             if (data.error === false) {
-                $('#textDumpStatus').removeClass().addClass('alert alert-success')
+                $('#textDumpStatus').removeClass().addClass('pull-left alert alert-success')
                     .html('Файл успешно загружен');
                 $('#dumpTable').prepend(data.html);
                 $('.tlp').tooltip('destroy').tooltip();
             } else {
-                $('#textDumpStatus').removeClass().addClass('alert alert-error')
-                    .html(data.error);
+                $textField = $('#textDumpStatus').removeClass().addClass('pull-left alert alert-danger').html('');
+                data.error.message.forEach(function(item, i, arr) {
+                    $textField.append(item[0] + '<br />');
+                });
             }
         }).fail(function () {
-            $('#textDumpStatus').removeClass().addClass('alert alert-error')
+            $('#textDumpStatus').removeClass().addClass('alert alert-danger')
                 .html('Ошибка при загрузке файла');
         });
     }

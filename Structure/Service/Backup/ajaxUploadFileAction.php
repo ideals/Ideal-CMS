@@ -4,7 +4,7 @@
  */
 
 // Функция для выхода из скрипта
-$exitScript = function($html, $error) {
+$exitScript = function ($html, $error) {
     echo json_encode(array('html' => $html, 'error' => $error));
     exit;
 };
@@ -22,6 +22,10 @@ $backupPart = stream_resolve_include_path($_GET['bf']);
 // Получаем версию админки
 $versions = new \Ideal\Structure\Service\UpdateCms\Versions();
 $nowVersions = $versions->getVersions();
+if ($nowVersions === false) {
+    $exitScript('', $versions->getAnswer());
+}
+
 $version = 'v' . $nowVersions['Ideal-CMS'];
 
 // Имя загружаемого файла
