@@ -98,12 +98,17 @@ class Versions
      * Получение версии из файла
      *
      * @param string $mods Папки с модулями и CMS
-     * @return array Версия CMS  и модулей
+     * @return array|bool Версия CMS  и модулей
      */
     protected function getVersionFromFile($mods)
     {
         // Получаем версии из файлов README
         $version = $this->getVersionFromReadme($mods);
+
+        if ($version === false) {
+            // Если произошла ошибка в определении версий модулей
+            return false;
+        }
 
         if (filesize($this->log) == 0) {
             // Если update.log нет, создаём его
@@ -137,6 +142,10 @@ class Versions
         $mdFile = 'README.md';
         $version = array();
         foreach ($mods as $k => $v) {
+            if (!file_exists($v . '/' . $mdFile)) {
+                $this->addAnswer('Отсутствует файл ' . $v . '/' . $mdFile, 'error');
+                return false;
+            }
             $lines = file($v . '/' . $mdFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             if (($lines == false) || (count($lines) == 0)) {
                 $this->addAnswer('Не удалось получить версию из ' . $v . '/' . $mdFile, 'error');
