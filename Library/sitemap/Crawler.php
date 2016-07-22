@@ -151,11 +151,6 @@ class Crawler
             if (!file_exists($config)) {
                 // Конфигурационный файл нигде не нашли :(
                 $this->stop("Configuration file {$config} not found!");
-            } else {
-                // Если в корневой папке Ideal CMS есть конфигурационный файл карты сайта,
-                // то подгружаем и основные файлы конфигурации.
-                $configIdealCMS = substr(__DIR__, 0, stripos(__DIR__, '/Ideal/Library/sitemap')) . '/config.php';
-                $siteDataIdealCMS = substr(__DIR__, 0, stripos(__DIR__, '/Ideal/Library/sitemap')) . '/site_data.php';
             }
         }
 
@@ -163,42 +158,6 @@ class Crawler
 
         /** @noinspection PhpIncludeInspection */
         $this->config = require($config);
-
-        if (isset($configIdealCMS)) {
-            $configIdealCMS = require($configIdealCMS);
-            if (!empty($configIdealCMS)) {
-                $this->config['db_host'] = $configIdealCMS['db']['host'];
-                $this->config['db_login'] = $configIdealCMS['db']['login'];
-                $this->config['db_password'] = $configIdealCMS['db']['password'];
-                $this->config['db_name'] = $configIdealCMS['db']['name'];
-                $this->config['db_prefix'] = $configIdealCMS['db']['prefix'];
-
-                // Ищем идентификатор структуры "Справочники" чтобы использовать его для записи в "Логи"
-                $structureDataListID = 0;
-                foreach ($configIdealCMS['structures'] as $structure) {
-                    if ($structure['structure'] == 'Ideal_DataList') {
-                        $structureDataListID = $structure['ID'];
-                        break;
-                    }
-                }
-                if ($structureDataListID) {
-                    $this->config['structureDataListID'] = $structureDataListID;
-                }
-            }
-            // Пытаемся определить идентификатор пользователя для записи в логи
-            if (isset($siteDataIdealCMS)) {
-                $siteDataIdealCMS = require($siteDataIdealCMS);
-                if (!empty($siteDataIdealCMS)) {
-                    if (session_id() == '') {
-                        session_start();
-                    }
-                    if (isset($_SESSION[$siteDataIdealCMS['domain']])) {
-                        $session = unserialize($_SESSION[$siteDataIdealCMS['domain']]);
-                        $this->config['user_id'] = $session['user_data']['ID'];
-                    }
-                }
-            }
-        }
 
         if (!isset($this->config['existence_time_file'])) {
             $this->config['existence_time_file'] = 25;
@@ -493,54 +452,6 @@ class Crawler
     }
 
     /**
-     * Записывает результат работы карты сайта в логи (в базу данных)
-     *
-     * @param string $text Сообщение(отчет)
-     */
-    public function saveToLog($text)
-    {
-        // Проверяем наличие всех необходимых данных для подключения к базе
-        if (!empty($this->config['db_host']) && !empty($this->config['db_login'])
-            && !empty($this->config['db_password']) && !empty($this->config['db_name'])) {
-
-            // Подключаемся к базе данных
-            $mysqli = new \mysqli(
-                $this->config['db_host'],
-                $this->config['db_login'],
-                $this->config['db_password'],
-                $this->config['db_name']
-            );
-            if (!$mysqli->connect_error) {
-                $mysqli->query('set character set utf8');
-                $mysqli->query('set names utf8');
-                $tableName = $this->config['db_prefix'] . 'ideal_structure_log';
-                // Проверяем таблицу на существование
-                $result = $mysqli->query("SHOW TABLES LIKE '{$tableName}';");
-                if ($result->num_rows == 1) {
-                    $time = time();
-                    $userID = 0;
-                    if (isset($this->config['user_id'])) {
-                        $userID = $this->config['user_id'];
-                    }
-                    $prevStructure = "''";
-                    $addFromWhere = '';
-                    if (isset($this->config['structureDataListID'])) {
-                        $dataListTableName = $this->config['db_prefix'] . 'ideal_structure_datalist';
-                        $prevStructure = "CONCAT('{$this->config['structureDataListID']}-',{$dataListTableName}.ID)";
-                        $addFromWhere = " FROM {$dataListTableName} WHERE structure = 'Ideal_Log'";
-                    }
-                    // Вносим запись в таблицу
-                    $sql = "INSERT INTO {$tableName}";
-                    $sql .= ' (prev_structure,date_create,user_id,type,message)';
-                    $sql .= " SELECT {$prevStructure},{$time},{$userID},'sitemap','{$text}'{$addFromWhere}";
-                    $mysqli->query($sql);
-                }
-                $mysqli->close();
-            }
-        }
-    }
-
-    /**
      * Преобразования специальных символов для xml файла карты сайта в HTML сущности
      *
      * @param string $str Ссылка для обработки
@@ -579,14 +490,14 @@ class Crawler
         file_put_contents($file, serialize(array($new, $external)));
 
         $text = '';
-        $saveToLog = false;
+        $modifications = false;
         $add = array();
         $del = array();
         $addExternal = array();
         $delExternal = array();
 
         if (empty($oldUrl)) {
-            $saveToLog = true;
+            $modifications = true;
             $text = "Добавлены ссылки (первичная генерация карты)\n";
             foreach ($new as $k => $v) {
                 $text .= $k;
@@ -596,7 +507,7 @@ class Crawler
             // Находим добавленные страницы
             $add = array_diff_key($new, $oldUrl);
             if (!empty($add)) {
-                $saveToLog = true;
+                $modifications = true;
                 $text .= "Добавлены ссылки\n";
                 foreach ($add as $k => $v) {
                     $text .= $k;
@@ -609,7 +520,7 @@ class Crawler
             // Находим удаленные страницы
             $del = array_diff_key($oldUrl, $new);
             if (!empty($del)) {
-                $saveToLog = true;
+                $modifications = true;
                 $text .= "Удалены ссылки \n";
                 foreach ($del as $k => $v) {
                     $text .= $k;
@@ -621,7 +532,7 @@ class Crawler
         }
 
         if (empty($oldExternal)) {
-            $saveToLog = true;
+            $modifications = true;
             $text .= "\nДобавлены внешние ссылки(первичная генерация карты):\n";
             foreach ($external as $k => $v) {
                 $text .= "{$k} на странице {$v}\n";
@@ -630,7 +541,7 @@ class Crawler
             // Определяем новые внешние ссылки
             $addExternal = array_diff_key($external, $oldExternal);
             if (!empty($addExternal)) {
-                $saveToLog = true;
+                $modifications = true;
                 $text .= "\nДобавлены внешние ссылки:\n";
                 foreach ($addExternal as $k => $v) {
                     $text .= "{$k} на странице {$v}\n";
@@ -641,7 +552,7 @@ class Crawler
 
             $delExternal = array_diff_key($oldExternal, $external);
             if (!empty($delExternal)) {
-                $saveToLog = true;
+                $modifications = true;
                 $text .= "\nУдалены внешние ссылки:\n";
                 foreach ($delExternal as $k => $v) {
                     $text .= "{$k} на странице {$v}\n";
@@ -652,8 +563,8 @@ class Crawler
         }
 
         $this->sendEmail($text);
-        if ($saveToLog) {
-            // Формируем json формат данных для хранения в логах
+        if ($modifications && !empty($this->config['collect_result_mail'])) {
+            // Формируем json формат данных для отправки на почту, хранящую информацию о работе карт сайта
             $log = array(
                 'add' => array_keys($add),
                 'del' => array_keys($del),
@@ -661,7 +572,7 @@ class Crawler
                 'del_external' => $delExternal,
             );
             $log = json_encode($log);
-            $this->saveToLog($log);
+            $this->sendEmail($log, $this->config['collect_result_mail']);
         }
     }
 
