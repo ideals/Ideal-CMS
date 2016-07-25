@@ -691,6 +691,12 @@ XML;
      */
     protected function parseLinks($content)
     {
+        // Получение значения тега "base", если он есть
+        preg_match('/<.*base[ ]{1,}href=["\'](.*)["\'].*>/', $content, $base);
+        if (isset($base[1])) {
+            $this->base = $base[1];
+        }
+
         // Получение всех ссылок со страницы
         preg_match_all(self::LINK, $content, $urls);
 
@@ -812,6 +818,14 @@ XML;
 
         // Если задано base - добавляем его
         if (strlen($this->base)) {
+            // Если base начинается со слэша, то формирем полный адрес до корня сайта
+            if ($this->base{0} == '/') {
+                $this->base = $url['scheme'] . '://' . $url['host'] . $this->base;
+            }
+            // Если base не оканчивается на слэш, то добавляем слэш справа
+            if (substr($this->base, -1) !== '/') {
+                $this->base .= '/';
+            }
             return $this->base . $link;
         }
 
