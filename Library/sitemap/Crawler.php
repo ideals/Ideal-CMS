@@ -438,17 +438,19 @@ class Crawler
      *
      * @param string $text Сообщение(отчет)
      * @param string $to Email того, кому отправить письмо
+     * @param string $subject Тема письма
      */
-    public function sendEmail($text, $to = '')
+    public function sendEmail($text, $to = '', $subject = '')
     {
         $header = "MIME-Version: 1.0\r\n"
             . "Content-type: text/plain; charset=utf-8\r\n"
             . 'From: sitemap@' . $this->host;
 
         $to = (empty($to)) ? $this->config['email_notify'] : $to;
+        $subject = (empty($subject)) ? $this->host . ' sitemap' : $subject;
 
         // Отправляем письма об изменениях
-        mail($to, $this->host . ' sitemap', $text, $header);
+        mail($to, $subject, $text, $header);
     }
 
     /**
@@ -572,7 +574,7 @@ class Crawler
                 'del_external' => $delExternal,
             );
             $log = json_encode($log);
-            $this->sendEmail($log, $this->config['collect_result_mail']);
+            $this->sendEmail($log, $this->config['collect_result_mail'], $this->host . ' sitemap result');
         }
     }
 
