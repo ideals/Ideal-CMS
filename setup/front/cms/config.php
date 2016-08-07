@@ -90,12 +90,6 @@ return array(
             'ID' => 10,
             'structure' => 'Ideal_UserGroup',
             'name' => 'Группы пользователей',
-        ),
-        // Подключаем справочник логов
-        array(
-            'ID' => 10,
-            'structure' => 'Ideal_Log',
-            'name' => 'Логи',
             'isShow' => 0,
             'hasTable' => true
         ),
