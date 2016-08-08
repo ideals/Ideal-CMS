@@ -335,12 +335,11 @@ class Forms
      */
     public function render()
     {
-        if (!isset($_REQUEST['mode']) || ($_REQUEST['mode'] == 'form')) {
-            echo $this->text;
-            return;
-        }
-
-        switch ($_REQUEST['mode']) {
+        $requestMode = isset($_REQUEST['mode']) ? $_REQUEST['mode'] : '';
+        switch ($requestMode) {
+            case 'form':
+                echo $this->text;
+                break;
             case 'css':
                 if ($this->sendHeader) {
                     header('Content-type: text/css; charset=utf-8');
@@ -353,7 +352,10 @@ class Forms
                 }
                 echo $this->renderJs();
                 break;
+            default:
+                return $this->text;
         }
+        return true;
     }
 
     /**
