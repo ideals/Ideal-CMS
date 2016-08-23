@@ -238,7 +238,6 @@ class Crawler
             if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
                 file_put_contents($tmpFile, '');
             }
-
         } elseif ((file_put_contents($tmpFile, '') === false)) {
             // Файла нет и создать его не удалось
             $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
@@ -285,8 +284,7 @@ class Crawler
             $countHourForNotify = $this->config['existence_time_file'] * 2;
             $existenceTimeFile = $countHourForNotify * 60 * 60;
             if (time() - filemtime($xmlFile) > $existenceTimeFile) {
-                $this->sendEmail('Карта сайта последний раз обновлялась более '
-                    . $countHourForNotify . ' часов(а) назад.');
+                $this->sendEmail('Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.');
             }
         }
     }
@@ -566,7 +564,7 @@ class Crawler
         }
 
         $this->sendEmail($text);
-        if ($modifications && !empty($this->config['collect_result_mail'])) {
+        if ($modifications && !empty($this->config['email_json'])) {
             // Формируем json формат данных для отправки на почту, хранящую информацию о работе карт сайта
             $log = array(
                 'add' => array_keys($add),
@@ -575,7 +573,7 @@ class Crawler
                 'del_external' => $delExternal,
             );
             $log = json_encode($log);
-            $this->sendEmail($log, $this->config['collect_result_mail'], $this->host . ' sitemap result');
+            $this->sendEmail($log, $this->config['email_json'], $this->host . ' sitemap result');
         }
     }
 
@@ -838,7 +836,6 @@ XML;
         // Возвращаем абсолютную ссылку
         $result = $url['scheme'] . '://' . $url['host'] . $dir . '/' . $link;
         return $result;
-
     }
 
     /**
