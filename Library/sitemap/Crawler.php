@@ -284,7 +284,8 @@ class Crawler
             $countHourForNotify = $this->config['existence_time_file'] * 2;
             $existenceTimeFile = $countHourForNotify * 60 * 60;
             if (time() - filemtime($xmlFile) > $existenceTimeFile) {
-                $this->sendEmail('Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.');
+                $this->sendEmail('Карта сайта последний раз обновлялась более '
+                    . $countHourForNotify . ' часов(а) назад.');
             }
         }
     }
@@ -763,7 +764,7 @@ XML;
         $link = urldecode($link);
 
         $len = mb_strlen($link);
-        if ($len > 1 && $link{$len - 1} == ' ') {
+        if (($len > 1) && (mb_substr($link, -1) == ' ')) {
             // Если последний символ — пробел, то сообщаем об ошибке
             $this->stop("На странице {$current} неправильная ссылка, оканчивающаяся на пробел: '{$link}'");
         }
@@ -782,7 +783,7 @@ XML;
         $url = parse_url($current);
 
         // Если последний символ в "path" текущей это слэш "/"
-        if ($url['path']{mb_strlen($url['path']) - 1} == '/') {
+        if (mb_substr($url['path'], -1) == '/') {
             // Промежуточная директория равна "path" текущей ссылки без слэша
             $dir = substr($url['path'], 0, mb_strlen($url['path']) - 1);
         } else {
@@ -816,7 +817,7 @@ XML;
                 // Обрезаем "../"
                 $link = substr($link, 3);
                 // Устанавливаем родительскую директорию равную текущей, но обрезая её с последнего "/"
-                $dir = substr($dir, 0, strrpos($dir, '/'));
+                $dir = mb_substr($dir, 0, mb_strrpos($dir, '/'));
             }
         }
 
