@@ -285,7 +285,8 @@ class Crawler
             $countHourForNotify = $this->config['existence_time_file'] * 2;
             $existenceTimeFile = $countHourForNotify * 60 * 60;
             if (time() - filemtime($xmlFile) > $existenceTimeFile) {
-                $this->sendEmail('Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.');
+                $this->sendEmail('Карта сайта последний раз обновлялась более '
+                    . $countHourForNotify . ' часов(а) назад.');
             }
         }
     }
@@ -694,10 +695,13 @@ XML;
     protected function parseLinks($content)
     {
         // Получение значения тега "base", если он есть
-        preg_match('/<.*base[ ]{1,}href=["\'](.*)["\'].*>/', $content, $base);
+        preg_match('/<.*base[ ]{1,}href=["\'](.*)["\'].*>/i', $content, $base);
         if (isset($base[1])) {
             $this->base = $base[1];
         }
+
+        // Удаление js-кода
+        $content = preg_replace("/<script(.*)<\/script>/iusU", '', $content);
 
         // Получение всех ссылок со страницы
         preg_match_all(self::LINK, $content, $urls);
@@ -714,8 +718,8 @@ XML;
     private function addLinks($urls, $current)
     {
         foreach ($urls as $url) {
-            // Убираем анкоры без ссылок
-            if (strpos($url, '#') === 0) {
+            // Убираем анкоры без ссылок и js-код в ссылках
+            if (strpos($url, '#') === 0 || stripos($url, 'javascript:') === 0) {
                 continue;
             }
 
