@@ -566,7 +566,7 @@ class Crawler
         }
 
         $this->sendEmail($text);
-        if ($modifications && !empty($this->config['collect_result_mail'])) {
+        if ($modifications && !empty($this->config['email_json'])) {
             // Формируем json формат данных для отправки на почту, хранящую информацию о работе карт сайта
             $log = array(
                 'add' => array_keys($add),
@@ -575,7 +575,7 @@ class Crawler
                 'del_external' => $delExternal,
             );
             $log = json_encode($log);
-            $this->sendEmail($log, $this->config['collect_result_mail'], $this->host . ' sitemap result');
+            $this->sendEmail($log, $this->config['email_json'], $this->host . ' sitemap result');
         }
     }
 
