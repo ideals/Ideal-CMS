@@ -81,7 +81,7 @@ class FrontController
     {
         $isContentType = false;
         foreach ($httpHeaders as $k => $v) {
-            if ($k == intval($k)) {
+            if (is_numeric($k)) {
                 // Ключ не указан, значит выводим только значение
                 header($v . "\r\n");
             } else {
