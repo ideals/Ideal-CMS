@@ -280,10 +280,13 @@ class Crawler
             }
         } else {
             // Если карта сайта в два раза старше указанного значения в поле
-            // "Максимальное время существования версии промежуточного файла", то отсылаем соответствующее уведомление
+            // "Максимальное время существования версии промежуточного файла"
+            // и временный файл сбора ссылок обновлялся последний раз более 12 часов назад, то
+            // отсылаем соответствующее уведомление
             $countHourForNotify = $this->config['existence_time_file'] * 2;
             $existenceTimeFile = $countHourForNotify * 60 * 60;
-            if (time() - filemtime($xmlFile) > $existenceTimeFile) {
+            $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+            if (time() - filemtime($xmlFile) > $existenceTimeFile && time() - filemtime($tmpFile) > 43200) {
                 $this->sendEmail('Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.');
             }
         }
