@@ -90,14 +90,14 @@ div.checkbox {
 }
 .sortable {
     list-style-type: none;
-    margin: 0;
+    margin: 5px 0 0 0;
     padding: 0;
 }
 .sortable li {
     margin: 0 5px 5px 5px;
     padding: 5px;
     font-size: 1.2em;
-    height: 34px;
+    height: 47px;
 }
 .ui-state-highlight {
     height: 34px;
