@@ -498,7 +498,8 @@ abstract class Model
         $this->pageNum = 0;
         if ($pageNum !== null) {
             $pageNum = intval(substr($pageNum, 0, 10)); // отсекаем всякую ерунду и слишком большие числа в листалке
-            $this->pageNum = ($pageNum == 0) ? 1 : $pageNum;
+            // Если параметром страницы было передано отрицательное число, то так же устанавливаем первую страницу
+            $this->pageNum = ($pageNum <= 0) ? 1 : $pageNum;
         }
 
         if (!is_null($pageNumTitle)) {
