@@ -90,8 +90,8 @@ foreach ($config->structures as $v) {
     $checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Addon');
 
     // Обработка папки с кастомными связующими таблицами
-    $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/';
-    $dir = stream_resolve_include_path($dir . $module . '/Medium');
+    $dir = ($module == 'Ideal') ? $config->cmsFolder . '/Ideal.c/' : $config->cmsFolder . '/' . 'Mods.c/' . $module;
+    $dir = stream_resolve_include_path($dir . '/Medium');
     $checkTypeFile($dir, $module, $cfgTables, $cfgTablesFull, $config, 'Medium');
     // Обработка папки с связующими таблицами
     $dir = ($module == 'Ideal') ? $config->cmsFolder . '/' : $config->cmsFolder . '/' . 'Mods/';

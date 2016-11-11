@@ -238,7 +238,6 @@ class Crawler
             if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
                 file_put_contents($tmpFile, '');
             }
-
         } elseif ((file_put_contents($tmpFile, '') === false)) {
             // Файла нет и создать его не удалось
             $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
@@ -281,10 +280,13 @@ class Crawler
             }
         } else {
             // Если карта сайта в два раза старше указанного значения в поле
-            // "Максимальное время существования версии промежуточного файла", то отсылаем соответствующее уведомление
+            // "Максимальное время существования версии промежуточного файла"
+            // и временный файл сбора ссылок обновлялся последний раз более 12 часов назад, то
+            // отсылаем соответствующее уведомление
             $countHourForNotify = $this->config['existence_time_file'] * 2;
             $existenceTimeFile = $countHourForNotify * 60 * 60;
-            if (time() - filemtime($xmlFile) > $existenceTimeFile) {
+            $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+            if (time() - filemtime($xmlFile) > $existenceTimeFile && time() - filemtime($tmpFile) > 43200) {
                 $this->sendEmail('Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.');
             }
         }
@@ -565,7 +567,7 @@ class Crawler
         }
 
         $this->sendEmail($text);
-        if ($modifications && !empty($this->config['collect_result_mail'])) {
+        if ($modifications && !empty($this->config['email_json'])) {
             // Формируем json формат данных для отправки на почту, хранящую информацию о работе карт сайта
             $log = array(
                 'add' => array_keys($add),
@@ -574,7 +576,7 @@ class Crawler
                 'del_external' => $delExternal,
             );
             $log = json_encode($log);
-            $this->sendEmail($log, $this->config['collect_result_mail'], $this->host . ' sitemap result');
+            $this->sendEmail($log, $this->config['email_json'], $this->host . ' sitemap result');
         }
     }
 
@@ -694,10 +696,13 @@ XML;
     protected function parseLinks($content)
     {
         // Получение значения тега "base", если он есть
-        preg_match('/<.*base[ ]{1,}href=["\'](.*)["\'].*>/', $content, $base);
+        preg_match('/<.*base[ ]{1,}href=["\'](.*)["\'].*>/i', $content, $base);
         if (isset($base[1])) {
             $this->base = $base[1];
         }
+
+        // Удаление js-кода
+        $content = preg_replace("/<script(.*)<\/script>/iusU", '', $content);
 
         // Получение всех ссылок со страницы
         preg_match_all(self::LINK, $content, $urls);
@@ -714,8 +719,8 @@ XML;
     private function addLinks($urls, $current)
     {
         foreach ($urls as $url) {
-            // Убираем анкоры без ссылок
-            if (strpos($url, '#') === 0) {
+            // Убираем анкоры без ссылок и js-код в ссылках
+            if (strpos($url, '#') === 0 || stripos($url, 'javascript:') === 0) {
                 continue;
             }
 
@@ -834,7 +839,6 @@ XML;
         // Возвращаем абсолютную ссылку
         $result = $url['scheme'] . '://' . $url['host'] . $dir . '/' . $link;
         return $result;
-
     }
 
     /**
