@@ -238,7 +238,6 @@ class Crawler
             if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
                 file_put_contents($tmpFile, '');
             }
-
         } elseif ((file_put_contents($tmpFile, '') === false)) {
             // Файла нет и создать его не удалось
             $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
@@ -281,11 +280,15 @@ class Crawler
             }
         } else {
             // Если карта сайта в два раза старше указанного значения в поле
-            // "Максимальное время существования версии промежуточного файла", то отсылаем соответствующее уведомление
+            // "Максимальное время существования версии промежуточного файла"
+            // и временный файл сбора ссылок обновлялся последний раз более 12 часов назад, то
+            // отсылаем соответствующее уведомление
             $countHourForNotify = $this->config['existence_time_file'] * 2;
             $existenceTimeFile = $countHourForNotify * 60 * 60;
-            if (time() - filemtime($xmlFile) > $existenceTimeFile) {
-                $this->sendEmail('Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.');
+            $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+            if (time() - filemtime($xmlFile) > $existenceTimeFile && time() - filemtime($tmpFile) > 43200) {
+                $this->sendEmail('Карта сайта последний раз обновлялась более '
+                    . $countHourForNotify . ' часов(а) назад.');
             }
         }
     }
@@ -565,7 +568,7 @@ class Crawler
         }
 
         $this->sendEmail($text);
-        if ($modifications && !empty($this->config['collect_result_mail'])) {
+        if ($modifications && !empty($this->config['email_json'])) {
             // Формируем json формат данных для отправки на почту, хранящую информацию о работе карт сайта
             $log = array(
                 'add' => array_keys($add),
@@ -574,7 +577,7 @@ class Crawler
                 'del_external' => $delExternal,
             );
             $log = json_encode($log);
-            $this->sendEmail($log, $this->config['collect_result_mail'], $this->host . ' sitemap result');
+            $this->sendEmail($log, $this->config['email_json'], $this->host . ' sitemap result');
         }
     }
 
@@ -694,10 +697,13 @@ XML;
     protected function parseLinks($content)
     {
         // Получение значения тега "base", если он есть
-        preg_match('/<.*base[ ]{1,}href=["\'](.*)["\'].*>/', $content, $base);
+        preg_match('/<.*base[ ]{1,}href=["\'](.*)["\'].*>/i', $content, $base);
         if (isset($base[1])) {
             $this->base = $base[1];
         }
+
+        // Удаление js-кода
+        $content = preg_replace("/<script(.*)<\/script>/iusU", '', $content);
 
         // Получение всех ссылок со страницы
         preg_match_all(self::LINK, $content, $urls);
@@ -714,8 +720,8 @@ XML;
     private function addLinks($urls, $current)
     {
         foreach ($urls as $url) {
-            // Убираем анкоры без ссылок
-            if (strpos($url, '#') === 0) {
+            // Убираем анкоры без ссылок и js-код в ссылках
+            if (strpos($url, '#') === 0 || stripos($url, 'javascript:') === 0) {
                 continue;
             }
 
@@ -761,7 +767,7 @@ XML;
         $link = urldecode($link);
 
         $len = mb_strlen($link);
-        if ($len > 1 && $link{$len - 1} == ' ') {
+        if (($len > 1) && (mb_substr($link, -1) == ' ')) {
             // Если последний символ — пробел, то сообщаем об ошибке
             $this->stop("На странице {$current} неправильная ссылка, оканчивающаяся на пробел: '{$link}'");
         }
@@ -780,7 +786,7 @@ XML;
         $url = parse_url($current);
 
         // Если последний символ в "path" текущей это слэш "/"
-        if ($url['path']{mb_strlen($url['path']) - 1} == '/') {
+        if (mb_substr($url['path'], -1) == '/') {
             // Промежуточная директория равна "path" текущей ссылки без слэша
             $dir = substr($url['path'], 0, mb_strlen($url['path']) - 1);
         } else {
@@ -814,7 +820,7 @@ XML;
                 // Обрезаем "../"
                 $link = substr($link, 3);
                 // Устанавливаем родительскую директорию равную текущей, но обрезая её с последнего "/"
-                $dir = substr($dir, 0, strrpos($dir, '/'));
+                $dir = mb_substr($dir, 0, mb_strrpos($dir, '/'));
             }
         }
 
@@ -834,7 +840,6 @@ XML;
         // Возвращаем абсолютную ссылку
         $result = $url['scheme'] . '://' . $url['host'] . $dir . '/' . $link;
         return $result;
-
     }
 
     /**
