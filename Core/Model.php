@@ -20,7 +20,7 @@ abstract class Model
 
     protected $pageData;
 
-    protected $pageNum = 1;
+    protected $pageNum;
 
     protected $pageNumTitle = ' | Страница [N]';
 
@@ -415,7 +415,7 @@ abstract class Model
      */
     public function getPageNum()
     {
-        return $this->pageNum;
+        return isset($this->pageNum) ? $this->pageNum : 1;
     }
 
     public function getParentUrl()
@@ -494,6 +494,9 @@ abstract class Model
      */
     public function setPageNum($pageNum, $pageNumTitle = null)
     {
+        if (isset($this->pageNum)) {
+            return $this->pageNum;
+        }
         $this->pageNum = 0;
         if ($pageNum !== null) {
             $page = intval(substr($pageNum, 0, 10)); // отсекаем всякую ерунду и слишком большие числа в листалке
