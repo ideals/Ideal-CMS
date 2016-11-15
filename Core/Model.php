@@ -502,7 +502,7 @@ abstract class Model
             $page = intval(substr($pageNum, 0, 10)); // отсекаем всякую ерунду и слишком большие числа в листалке
             // Если номер страницы отрицательный или ноль, то устанавливаем первую страницу
             $this->pageNum = ($page <= 0) ? 1 : $page;
-            if ($pageNum !== 0 && $this->pageNum != $pageNum) {
+            if ($pageNum != 0 && $this->pageNum != $pageNum) {
                 // Если корректный номер страницы не совпадает с переданным - 404 ошибка
                 $this->is404 = true;
             }
