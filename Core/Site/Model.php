@@ -108,13 +108,13 @@ abstract class Model extends Core\Model
         $xhtml = ($xhtml) ? '/' : '';
         $end = end($this->path);
 
-        if (isset($end['description']) && $end['description'] != '' && $this->pageNum === 1) {
+        if (isset($end['description']) && $end['description'] != '' && (!isset($this->pageNum) || $this->pageNum === 1)) {
             $meta .= '<meta name="description" content="'
                 . str_replace('"', '&quot;', $end['description'])
                 . '" ' . $xhtml . '>';
         }
 
-        if (isset($end['keywords']) && $end['keywords'] != '' && $this->pageNum === 1) {
+        if (isset($end['keywords']) && $end['keywords'] != '' && (!isset($this->pageNum) || $this->pageNum === 1)) {
             $meta .= '<meta name="keywords" content="'
                 . str_replace('"', '&quot;', $end['keywords'])
                 . '" ' . $xhtml . '>';
