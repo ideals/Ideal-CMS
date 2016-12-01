@@ -117,7 +117,7 @@ class Crawler
     protected function stop($message, $sendNotification = true)
     {
         if ($sendNotification) {
-            $this->sendEmail($message);
+            $this->sendEmail($message, '', $this->host . ' sitemap error');
         }
         throw new \Exception($message);
     }
