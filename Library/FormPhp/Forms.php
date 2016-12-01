@@ -332,28 +332,35 @@ class Forms
 
     /**
      * Отображение формы, css- или js-скриптов
+     * @param bool $echo
+     * @return string
      */
-    public function render()
+    public function render($echo = true)
     {
+        $header = '';
+        $content = '';
         if (!isset($_REQUEST['mode']) || ($_REQUEST['mode'] == 'form')) {
-            echo $this->text;
-            return;
+            $header = 'Content-Type: text/html; charset=utf-8';
+            $content = $this->text;
+        } else {
+            switch ($_REQUEST['mode']) {
+                case 'css':
+                    $header = 'Content-type: text/css; charset=utf-8';
+                    $content = $this->renderCss();
+                    break;
+                case 'js':
+                    $header = 'Content-Type: text/javascript; charset=utf-8';
+                    $content = $this->renderJs();
+                    break;
+            }
         }
-
-        switch ($_REQUEST['mode']) {
-            case 'css':
-                if ($this->sendHeader) {
-                    header('Content-type: text/css; charset=utf-8');
-                }
-                echo $this->renderCss();
-                break;
-            case 'js':
-                if ($this->sendHeader) {
-                    header('Content-Type: text/javascript; charset=utf-8');
-                }
-                echo $this->renderJs();
-                break;
+        if ($echo) {
+            if ($this->sendHeader) {
+                header($header);
+            }
+            echo $content;
         }
+        return $content;
     }
 
     /**
