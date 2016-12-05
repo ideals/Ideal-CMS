@@ -148,4 +148,23 @@ abstract class Model extends Core\Model
             return $end['name'] . $concat;
         }
     }
+
+    /**
+     * Получение канонической ссылки для запрошенной страницы
+     *
+     * @return string Каноническая ссылка для запрошенной страницы
+     */
+    public function getCanonical()
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        list($path) = explode('?', $_SERVER['REQUEST_URI']);
+        $canonical = "{$protocol}{$_SERVER['HTTP_HOST']}{$path}";
+        $config = Core\Config::getInstance();
+        $indexedOptions = explode(',', $config->cms['indexedOptions']);
+        $params = array_intersect_key($_GET, array_flip($indexedOptions));
+        if ($params) {
+            $canonical .= '?' . http_build_query($params);
+        }
+        return $canonical;
+    }
 }
