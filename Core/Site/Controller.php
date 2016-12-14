@@ -211,6 +211,7 @@ class Controller
 
         $this->view->title = $this->model->getTitle();
         $this->view->metaTags = $this->model->getMetaTags($helper->xhtml);
+        $this->view->canonical = $this->model->getCanonical();
 
         // Проводим финальные модификации контента в контроллере отображаемой структуры
         $this->finishMod($actionName);
