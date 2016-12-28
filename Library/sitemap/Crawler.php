@@ -703,7 +703,15 @@ XML;
         }
 
         // Удаление js-кода
-        $content = preg_replace("/<script(.*)<\/script>/iusU", '', $content);
+        $tmpContent = preg_replace("/<script(.*)<\/script>/iusU", '', $content);
+
+        // Если контент был не в utf-8, то пытаемся конвертировать в нужную кодировку и повторяем замену
+        if (!$tmpContent && preg_last_error() == PREG_BAD_UTF8_ERROR) {
+            $content = iconv("cp1251", "UTF-8", $content);
+            $content = preg_replace("/<script(.*)<\/script>/iusU", '', $content);
+        } else {
+            $content = $tmpContent;
+        }
 
         // Получение всех ссылок со страницы
         preg_match_all(self::LINK, $content, $urls);
