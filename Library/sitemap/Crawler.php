@@ -287,8 +287,8 @@ class Crawler
             $existenceTimeFile = $countHourForNotify * 60 * 60;
             $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
             if (time() - filemtime($xmlFile) > $existenceTimeFile && time() - filemtime($tmpFile) > 43200) {
-                $this->sendEmail('Карта сайта последний раз обновлялась более '
-                    . $countHourForNotify . ' часов(а) назад.');
+                $msg = 'Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.';
+                $this->sendEmail($msg);
             }
         }
     }
