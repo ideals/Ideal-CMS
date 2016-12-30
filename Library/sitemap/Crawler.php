@@ -686,7 +686,7 @@ class Crawler
             if (isset($this->config['priority'])) {
                 $priorityStr = sprintf('<priority>%s</priority>', '%01.1f');
                 if (isset($this->config['seo_urls'][$k])) {
-                    $priority = $v;
+                    $priority = $this->config['seo_urls'][$k];
                 } else {
                     $priority = $this->config['priority'];
                 }
