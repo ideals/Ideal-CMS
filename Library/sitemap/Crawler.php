@@ -24,6 +24,9 @@ class Crawler
     /** @var array Массив внешних ссылок */
     private $external = array();
 
+    /** @var array Массив ссылок из области отслеживаемой радаром с подсчётом количества */
+    private $radarLinks = array();
+
     /** @var bool Флаг необходимости кэширования echo/print */
     public $ob = false;
 
@@ -188,6 +191,7 @@ class Crawler
             'delay' => 1,
             'old_sitemap' => '/images/map-old.part',
             'tmp_file' => '/images/map.part',
+            'tmp_radar_file' => '/tmp/radar.part',
             'pageroot' => '',
             'sitemap_file' => '/sitemap.xml',
             'crawler_url' => '/',
@@ -221,7 +225,7 @@ class Crawler
     }
 
     /**
-     * Проверка доступности и времени последнего сохранения промежуточного файла ссылок
+     * Проверка доступности временных файлов и времени последнего сохранения промежуточного файла ссылок
      */
     protected function checkTmpFile()
     {
@@ -241,6 +245,17 @@ class Crawler
         } elseif ((file_put_contents($tmpFile, '') === false)) {
             // Файла нет и создать его не удалось
             $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
+        }
+
+        $tmpFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+
+        if (file_exists($tmpFile)) {
+            if (!is_writable($tmpFile)) {
+                $this->stop("Временный файл {$tmpFile} недоступен для записи!");
+            }
+        } elseif ((file_put_contents($tmpFile, '') === false)) {
+            // Файла нет и создать его не удалось
+            $this->stop("Не удалось создать временный файл {$tmpFile}!");
         }
     }
 
@@ -287,14 +302,14 @@ class Crawler
             $existenceTimeFile = $countHourForNotify * 60 * 60;
             $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
             if (time() - filemtime($xmlFile) > $existenceTimeFile && time() - filemtime($tmpFile) > 43200) {
-                $this->sendEmail('Карта сайта последний раз обновлялась более '
-                    . $countHourForNotify . ' часов(а) назад.');
+                $msg = 'Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.';
+                $this->sendEmail($msg);
             }
         }
     }
 
     /**
-     * Метод для загрузки распарсенных данных из временного файла
+     * Метод для загрузки распарсенных данных из временных файлов
      */
     protected function loadParsedUrls()
     {
@@ -308,6 +323,13 @@ class Crawler
             $this->links = $arr[0];
             $this->checked = $arr[1];
             $this->external = $arr[2];
+        }
+
+        // Если существует файл хранения временных данных отчёта о перелинковке
+        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+        if (file_exists($tmpRadarFile)) {
+            $arr = file_get_contents($tmpRadarFile);
+            $this->radarLinks = unserialize($arr);
         }
     }
 
@@ -330,6 +352,18 @@ class Crawler
 
         fwrite($fp, $result);
 
+        fclose($fp);
+    }
+
+    /**
+     * Метод сохраняющий данные для отчёта о перелинковке во временный файл
+     */
+    protected function saveParsedRadarLinks()
+    {
+        $result = serialize($this->radarLinks);
+        $tmp_radar_file = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+        $fp = fopen($tmp_radar_file, 'w');
+        fwrite($fp, $result);
         fclose($fp);
     }
 
@@ -398,8 +432,14 @@ class Crawler
                 $this->links[$k] = $broken[$k] = $value;
             }
 
+            // Получаем список ссылок из области отмеченной радаром
+            $radarLinks = $this->parseRadarLinks($content);
+
             // Добавляем ссылки в массив $this->links
             $this->addLinks($urls, $k);
+
+            // Добавляем ссылки из радарной области в массив $this->radarLinks
+            $this->addRadarLinks($radarLinks, $k);
 
             // Добавляем текущую ссылку в массив пройденных ссылок
             $this->checked[$k] = 1;
@@ -408,6 +448,10 @@ class Crawler
             unset($this->links[$k]);
 
             $time = microtime(1);
+        }
+
+        if (count($this->radarLinks) > 0) {
+            $this->saveParsedRadarLinks();
         }
 
         if (count($this->links) > 0) {
@@ -579,6 +623,28 @@ class Crawler
             $log = json_encode($log);
             $this->sendEmail($log, $this->config['email_json'], $this->host . ' sitemap result');
         }
+
+        // Отправляем отчёт о перелинковке
+        $file = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+        $tmpRadarFile = file_exists($file) ? unserialize(file_get_contents($file)) : '';
+        if ($tmpRadarFile) {
+            arsort($tmpRadarFile);
+            $radarLinksReport = '';
+            $radarLinksSeoReport = '';
+            foreach ($tmpRadarFile as $key => $value) {
+                if (isset($this->config['seo_urls'][$key])) {
+                    $radarLinksSeoReport .= "{$key} - {$value} (приоритет - {$this->config['seo_urls'][$key]})\n";
+                }
+                $radarLinksReport .= "{$key} - {$value}\n";
+            }
+            if ($radarLinksSeoReport) {
+                $radarLinksReport = "Ссылки с заданным приоритетом:\n{$radarLinksSeoReport}\n\nВсе ссылки:\n{$radarLinksReport}";
+            }
+            $this->sendEmail($radarLinksReport, '', $this->host . ' - перелинковка');
+        } else {
+            $this->sendEmail('Отчёт о перелинковке не может быть составлен, возможно не установлен радар.', '', $this->host . ' - перелинковка');
+        }
+        unlink($file);
     }
 
     /**
@@ -620,7 +686,7 @@ class Crawler
             if (isset($this->config['priority'])) {
                 $priorityStr = sprintf('<priority>%s</priority>', '%01.1f');
                 if (isset($this->config['seo_urls'][$k])) {
-                    $priority = $v;
+                    $priority = $this->config['seo_urls'][$k];
                 } else {
                     $priority = $this->config['priority'];
                 }
@@ -694,7 +760,7 @@ XML;
      * @param string $content Обрабатываемая страницы
      * @return array Список полученных ссылок
      */
-    protected function parseLinks($content)
+    protected function parseLinks(&$content)
     {
         // Получение значения тега "base", если он есть
         preg_match('/<.*base[ ]{1,}href=["\'](.*)["\'].*>/i', $content, $base);
@@ -703,12 +769,45 @@ XML;
         }
 
         // Удаление js-кода
-        $content = preg_replace("/<script(.*)<\/script>/iusU", '', $content);
+        $tmpContent = preg_replace("/<script(.*)<\/script>/iusU", '', $content);
+
+        // Если контент был не в utf-8, то пытаемся конвертировать в нужную кодировку и повторяем замену
+        if (!$tmpContent && preg_last_error() == PREG_BAD_UTF8_ERROR) {
+            $content = iconv("cp1251", "UTF-8", $content);
+            $content = preg_replace("/<script(.*)<\/script>/iusU", '', $content);
+        } else {
+            $content = $tmpContent;
+        }
 
         // Получение всех ссылок со страницы
         preg_match_all(self::LINK, $content, $urls);
 
         return $urls[1];
+    }
+
+    /**
+     * Парсинг ссылок из области радара
+     *
+     * @param string $content Обрабатываемая страницы
+     * @return array Список полученных ссылок с количеством упоминания их в области радара
+     */
+    protected function parseRadarLinks($content)
+    {
+        $radarLinks = array();
+        // Удаляем области контента не попадающие в радар
+        $content = preg_replace("/<!--start_content_off-->(.*)<!--end_content_off-->/iusU", '', $content);
+
+        // Получаем области контента попадающие в радар
+        preg_match_all("/<!--start_content-->(.*)<!--end_content-->/iusU", $content, $radarContent);
+        if ($radarContent && isset($radarContent[1]) && is_array($radarContent[1]) && !empty($radarContent[1])) {
+            foreach ($radarContent[1] as $radarContentPart) {
+                $radarLinksPart = array();
+                preg_match_all(self::LINK, $radarContentPart, $radarLinksPart);
+                $radarLinks = array_merge($radarLinks, $radarLinksPart[1]);
+            }
+        }
+        $radarLinks = array_count_values($radarLinks);
+        return $radarLinks;
     }
 
     /**
@@ -748,6 +847,44 @@ XML;
             }
 
             $this->links[$link] = $current;
+        }
+    }
+
+    /**
+     * Обработка полученных ссылок, добавление в массив отчёта о перелинковке
+     *
+     * @param array $radarLinks Массив ссылок на обработку
+     * @param string $current Текущая страница
+     */
+    private function addRadarLinks($radarLinks, $current)
+    {
+        foreach ($radarLinks as $radarLink => $count) {
+            // Убираем анкоры без ссылок и js-код в ссылках
+            if (strpos($radarLink, '#') === 0 || stripos($radarLink, 'javascript:') === 0) {
+                continue;
+            }
+
+            if ($this->isExternalLink($radarLink, $current)) {
+                // Пропускаем ссылки на другие сайты
+                continue;
+            }
+
+            // Абсолютизируем ссылку
+            $link = $this->getAbsoluteUrl($radarLink, $current);
+
+            // Убираем лишние GET параметры из ссылки
+            $link = $this->cutExcessGet($link);
+
+            if ($this->skipUrl($link)) {
+                // Если ссылку не нужно добавлять, переходим к следующей
+                continue;
+            }
+
+            if (!isset($this->radarLinks[$link])) {
+                $this->radarLinks[$link] = $count;
+            } else {
+                $this->radarLinks[$link] += $count;
+            }
         }
     }
 
