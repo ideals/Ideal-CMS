@@ -381,6 +381,7 @@ abstract class Model
         $pager['prev'] = $pagination->getPrev(); // ссылка на предыдущю страницу
         $pager['next'] = $pagination->getNext(); // cсылка на следующую страницу
         $pager['total'] = $countList; // общее количество элементов в списке
+        $pager['num'] = $onPage; // количество элементов на странице
 
         return $pager;
     }

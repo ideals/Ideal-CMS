@@ -254,24 +254,34 @@
         </div>
 
         {% if pager.pages|length > 1 %}
-        <div style="text-align:center;">
-            <ul class="pagination pagination-lg">
-                {% if pager.pagePrev != '' %}
-                    <li><a href="{{ pagePrev }}">← назад</a></li>
-                {% endif %}
-
-                {% for page in pager.pages %}
-                    {% if page.current == 1 %}
-                        <li class="active"><a>{{ page.num }}</a></li>
-                    {% else %}
-                        <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+        <div class="row">
+            <div class="col-md-11 text-center">
+                <ul class="pagination pagination-lg">
+                    {% if pager.pagePrev != '' %}
+                        <li><a href="{{ pagePrev }}">← назад</a></li>
                     {% endif %}
-                {% endfor %}
 
-                {% if pager.pageNext != '' %}
-                    <li><a href="{{ pageNext }}">вперёд →</a></li>
-                {% endif %}
-            </ul>
+                    {% for page in pager.pages %}
+                        {% if page.current == 1 %}
+                            <li class="active"><a>{{ page.num }}</a></li>
+                        {% else %}
+                            <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pager.pageNext != '' %}
+                        <li><a href="{{ pageNext }}">вперёд →</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <form action="" method="get">
+                <input type="hidden" name="par" value="{{ par }}">
+                <div class="input-group col-md-1" style="margin-top: 25px;">
+                    <input class="form-control" aria-label="Количество элементов на странице" name="num" value="{{ pager.num }}">
+                    <div class="input-group-btn"><button type="submit" class="btn btn-default" aria-label="Изменить"><span class="glyphicon glyphicon-ok"></span></button></div>
+                </div>
+            </form>
         </div>
         {% endif %}
 
