@@ -7,10 +7,10 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Addon\PhpFile;
+namespace Ideal\Addon\Photo;
 
-use Ideal\Addon\AbstractModel;
+use Ideal\Addon\AbstractAdminModel;
 
-class Model extends AbstractModel
+class AdminModel extends AbstractAdminModel
 {
 }

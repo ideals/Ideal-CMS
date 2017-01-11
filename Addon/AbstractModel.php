@@ -1,35 +1,85 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2017 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Addon;
 
-use Ideal\Core\Db;
-
 /**
- * Абстрактный класс, реализующий основные методы для семейства классов Addon
+ * Абстрактный класс, реализующий паттерн Decorator для определения нужного вида класса модели аддона
  *
- * Аддоны обеспечивают прикрепление к структуре дополнительного содержимого различных типов.
- *
+ * Определяет, в админской или внешней части запрашивается модель аддона и эмулирует работу с соответствующим классом
+ * Для определения, после создания объкта модели нужно вызвать либо:
+ * $addon->setParentModel($model)
+ * либо
+ * $addon->setModel('Admin') или $addon->setModel('Site')
  */
-class AbstractModel extends \Ideal\Core\Admin\Model
+class AbstractModel
 {
+    /** @var  \Ideal\Core\Admin\Model */
+    protected $model;
+    protected $prevStructure;
 
-    public function setPageDataByPrevStructure($prevStructure)
+    public function __construct($prevStructure)
     {
-        $db = Db::getInstance();
-
-        // Получаем идентификатор таба из группы
-        list(, $tabID) = explode('-', $this->fieldsGroup, 2);
-        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps AND tab_ID=:tid";
-        $pageData = $db->select($_sql, array('ps' => $prevStructure, 'tid' => $tabID));
-        if (isset($pageData[0]['ID'])) {
-            // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
-            $this->setPageData($pageData[0]);
-        }
+        $this->prevStructure = $prevStructure;
     }
 
-    public function delete()
+    /**
+     * Устанавливает модель данных, в которой находится аддон и инициализирует декорируемую модель
+     *
+     * Вызывается чтобы создать декорируемую модель данных аддона
+     * В данном случае тип модели аддона (Site или Admin) определяется на основании модели $model, в которой этот
+     * аддон содержится.
+     *
+     * @param \Ideal\Core\Model $model Либо админская, либо сайтовая модель данных, в которой находится аддон
+     */
+    public function setParentModel($model)
     {
-        $db = Db::getInstance();
-        $db->delete($this->_table)->where('ID=:id', array('id' => $this->pageData['ID']));
-        $db->exec();
+        $mode = explode('\\', get_class($model));
+        $this->setModel($mode[3]);
+        $this->model->setParentModel($model);
+    }
+
+    /**
+     * Иницилизирует декорируемую модель в соответствии с типом $type
+     *
+     * @param string $type Тип декорируемой модели — либо 'Site', либо 'Admin'
+     */
+    public function setModel($type)
+    {
+        $class = str_replace('Model', $type . 'Model', get_class($this));
+        $this->model = new $class($this->prevStructure);
+    }
+
+    public function __set($name, $value)
+    {
+        if (empty($this->model)) {
+            throw new \Exception('Empty Model');
+        }
+        $this->model->$name = $value;
+    }
+
+    public function __get($name)
+    {
+        if (empty($this->model)) {
+            throw new \Exception('Empty Model');
+        }
+        if (!isset($this->model->$name)) {
+            throw new \Exception('Not Set Field ' . $name);
+        }
+        return $this->model->$name;
+    }
+
+    public function __call($name, $arguments)
+    {
+        if (empty($this->model)) {
+            throw new \Exception('Empty Model');
+        }
+        return call_user_func_array(array($this->model, $name), $arguments);
     }
 }

@@ -32,6 +32,7 @@ abstract class Model
 
     /** @var Model Используется только в Addon для обозначения модели-владельца аддона */
     protected $parentModel;
+    protected $fieldsGroup = 'general';
 
     public function __construct($prevStructure)
     {
@@ -331,15 +332,16 @@ abstract class Model
             if (is_array($addonsInfo)) {
                 foreach ($addonsInfo as $addonInfo) {
                     // Инициализируем модель аддона
+                    // todo вызывать SiteModel, а не через декоратор
                     $className = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
                     $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
                     $addon = new $className($prevStructure);
                     $addon->setParentModel($this);
                     list(, $fildsGroup) = explode('_', $addonInfo[1]);
                     $addon->setFieldsGroup(strtolower($fildsGroup) . '-' . $addonInfo[0]);
-                    $addon->pageData = $addon->getPageData();
-                    if (!empty($addon->pageData)) {
-                        $this->pageData['addons'][] = $addon->pageData;
+                    $pageData = $addon->getPageData();
+                    if (!empty($pageData)) {
+                        $this->pageData['addons'][] = $pageData;
                     }
                 }
             }
@@ -524,5 +526,10 @@ abstract class Model
     public function setParentModel($model)
     {
         $this->parentModel = $model;
+    }
+
+    public function setFieldsGroup($name)
+    {
+        $this->fieldsGroup = $name;
     }
 }

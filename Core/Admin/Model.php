@@ -118,6 +118,7 @@ abstract class Model extends Core\Model
                     unset($addonData['ID']);
                 }
 
+                // todo вызывать AdminModel, а не через декоратор
                 $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
 
                 /* @var $addonModelName \Ideal\Core\Admin\Model */
@@ -363,11 +364,6 @@ abstract class Model extends Core\Model
         }
 
         return $result;
-    }
-
-    public function setFieldsGroup($name)
-    {
-        $this->fieldsGroup = $name;
     }
 
     /**

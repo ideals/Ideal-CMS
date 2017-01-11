@@ -9,8 +9,16 @@
 
 namespace Ideal\Addon\Page;
 
-use Ideal\Addon\AbstractModel;
+use Ideal\Addon\AbstractSiteModel;
 
-class Model extends AbstractModel
+class SiteModel extends AbstractSiteModel
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function getPageData()
+    {
+        $this->setPageDataByPrevStructure($this->prevStructure);
+        return $this->pageData;
+    }
 }

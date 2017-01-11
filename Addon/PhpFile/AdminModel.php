@@ -9,8 +9,8 @@
 
 namespace Ideal\Addon\PhpFile;
 
-use Ideal\Addon\AbstractModel;
+use Ideal\Addon\AbstractAdminModel;
 
-class Model extends AbstractModel
+class AdminModel extends AbstractAdminModel
 {
 }
