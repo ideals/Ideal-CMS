@@ -222,6 +222,11 @@ class Crawler
             $seo[$url] = $priority;
         }
         $this->config['seo_urls'] = $seo;
+        // Если среди ссылок с заданным приоритетом нет главной страницы, добавляем её туда,
+        // но приоритет оставляем стандартным
+        if (!isset($this->config['seo_urls'][$this->config['website']])) {
+            $this->config['seo_urls'][$this->config['website']] = $this->config['priority'];
+        }
     }
 
     /**
