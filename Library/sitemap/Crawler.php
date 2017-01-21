@@ -234,6 +234,18 @@ class Crawler
      */
     protected function checkTmpFile()
     {
+
+        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+
+        if (file_exists($tmpRadarFile)) {
+            if (!is_writable($tmpRadarFile)) {
+                $this->stop("Временный файл {$tmpRadarFile} недоступен для записи!");
+            }
+        } elseif ((file_put_contents($tmpRadarFile, '') === false)) {
+            // Файла нет и создать его не удалось
+            $this->stop("Не удалось создать временный файл {$tmpRadarFile}!");
+        }
+
         $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
 
         if (file_exists($tmpFile)) {
@@ -246,21 +258,11 @@ class Crawler
             $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
             if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
                 file_put_contents($tmpFile, '');
+                file_put_contents($tmpRadarFile, '');
             }
         } elseif ((file_put_contents($tmpFile, '') === false)) {
             // Файла нет и создать его не удалось
             $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
-        }
-
-        $tmpFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
-
-        if (file_exists($tmpFile)) {
-            if (!is_writable($tmpFile)) {
-                $this->stop("Временный файл {$tmpFile} недоступен для записи!");
-            }
-        } elseif ((file_put_contents($tmpFile, '') === false)) {
-            // Файла нет и создать его не удалось
-            $this->stop("Не удалось создать временный файл {$tmpFile}!");
         }
     }
 
