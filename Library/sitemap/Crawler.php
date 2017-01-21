@@ -192,6 +192,7 @@ class Crawler
             'old_sitemap' => '/images/map-old.part',
             'tmp_file' => '/images/map.part',
             'tmp_radar_file' => '/tmp/radar.part',
+            'old_radar_file' => '/tmp/radar-old.part',
             'pageroot' => '',
             'sitemap_file' => '/sitemap.xml',
             'crawler_url' => '/',
@@ -529,10 +530,11 @@ class Crawler
     }
 
     /**
-     * Поиск изменений в новой карте сайта, относительно предыдущей
+     * Поиск изменений в новой карте сайта и отчёте о перелинковке, относительно предыдущего результата
      */
     protected function compare()
     {
+        // Карта сайта
         $file = $this->config['pageroot'] . $this->config['old_sitemap'];
         $old = file_exists($file) ? unserialize(file_get_contents($file)) : '';
 
@@ -632,26 +634,79 @@ class Crawler
         }
 
         // Отправляем отчёт о перелинковке
-        $file = $this->config['pageroot'] . $this->config['tmp_radar_file'];
-        $tmpRadarFile = file_exists($file) ? unserialize(file_get_contents($file)) : '';
-        if ($tmpRadarFile) {
-            arsort($tmpRadarFile);
-            $radarLinksReport = '';
-            $radarLinksSeoReport = '';
-            foreach ($tmpRadarFile as $key => $value) {
-                if (isset($this->config['seo_urls'][$key])) {
-                    $radarLinksSeoReport .= "{$key} - {$value} (приоритет - {$this->config['seo_urls'][$key]})\n";
+        $radarFile = $this->config['pageroot'] . $this->config['old_radar_file'];
+        $oldRadar = file_exists($radarFile) ? unserialize(file_get_contents($radarFile)) : '';
+
+        // Сохраним новый массив ссылок для отчёта о перелинковке, что бы в следующий раз взять его как старый
+        file_put_contents($radarFile, serialize($this->radarLinks));
+
+        if ($this->radarLinks) {
+            $modifications = false;
+            $diffText = '';
+            arsort($this->radarLinks);
+            // Если отчёт о перелинковке уже составлялся, то ищем разницу с текущим состоянием
+            if (empty($oldRadar)) {
+                $modifications = true;
+            } else {
+                arsort($oldRadar);
+                $newRadar = $this->radarLinks;
+                // Проверяем, были ли добавлены новые ссылки в радарную область
+                $add = array_diff_key($newRadar, $oldRadar);
+                if (!empty($add)) {
+                    $modifications = true;
+                    $diffText .= "Новые ссылки в области радара\n";
+                    foreach ($add as $k => $v) {
+                        unset($newRadar[$k]);
+                        $diffText .= "{$k} - {$v}\n";
+                    }
                 }
-                $radarLinksReport .= "{$key} - {$value}\n";
+                // Проверяем, были ли удалены ссылки из радарной области
+                $del = array_diff_key($oldRadar, $newRadar);
+                if (!empty($del)) {
+                    $modifications = true;
+                    if (!empty($diffText)) {
+                        $diffText .= "\n";
+                    }
+                    $diffText .= "Удалённые ссылки из области радара\n";
+                    foreach ($del as $k => $v) {
+                        unset($oldRadar[$k]);
+                        $diffText .= "{$k}\n";
+                    }
+                }
+                // Проверяем, было ли изменено количество входящих ссылок из радарной области
+                $diff = array_diff_assoc($newRadar, $oldRadar);
+                if (!empty($diff)) {
+                    $modifications = true;
+                    if (!empty($diffText)) {
+                        $diffText .= "\n";
+                    }
+                    $diffText .= "Изменено количество входящих ссылок на следующие страницы\n";
+                    foreach ($diff as $k => $v) {
+                        $diffText .= "{$k} - было ({$oldRadar[$k]}) стало ($newRadar[$k])\n";
+                    }
+                }
             }
-            if ($radarLinksSeoReport) {
-                $radarLinksReport = "Ссылки с заданным приоритетом:\n{$radarLinksSeoReport}\n\nВсе ссылки:\n{$radarLinksReport}";
+            if ($modifications) {
+                $radarLinksReport = '';
+                $radarLinksSeoReport = '';
+                foreach ($this->radarLinks as $key => $value) {
+                    if (isset($this->config['seo_urls'][$key])) {
+                        $radarLinksSeoReport .= "{$key} - {$value} (приоритет - {$this->config['seo_urls'][$key]})\n";
+                    }
+                    $radarLinksReport .= "{$key} - {$value}\n";
+                }
+                if ($radarLinksSeoReport) {
+                    $radarLinksReport = "Ссылки с заданным приоритетом:\n{$radarLinksSeoReport}\nВсе ссылки:\n{$radarLinksReport}";
+                }
+                if ($diffText) {
+                    $radarLinksReport = "{$diffText}\n{$radarLinksReport}";
+                }
+                $this->sendEmail($radarLinksReport, '', $this->host . ' - перелинковка');
             }
-            $this->sendEmail($radarLinksReport, '', $this->host . ' - перелинковка');
         } else {
             $this->sendEmail('Отчёт о перелинковке не может быть составлен, возможно не установлен радар.', '', $this->host . ' - перелинковка');
         }
-        unlink($file);
+        unlink($this->config['pageroot'] . $this->config['tmp_radar_file']);
     }
 
     /**
