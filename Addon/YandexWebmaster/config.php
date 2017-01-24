@@ -3,6 +3,7 @@
 return array(
     'params' => array(
         'name' => 'ЯндексВебмастер',
+        'content_fields' => array('annot', 'addon_Ideal_Page_content')
     ),
     'fields' => array(
         'ID' => array(
@@ -20,15 +21,10 @@ return array(
             'sql' => 'int not null default 0',
             'type' => 'Ideal_Hidden'
         ),
-        'elements_site' => array(
-            'label' => 'Количество элементов в выдаче',
-            'sql' => 'int(8)',
-            'type' => 'Ideal_Integer'
-        ),
-        'content' => array(
-            'label' => 'Текст',
+        'yandexwebmastertext' => array(
+            'label' => 'Текст для отправки в Яндекс.Вебмастер',
             'sql' => 'mediumtext',
-            'type' => 'Ideal_RichEdit'
+            'type' => 'Ideal_YandexWebmasterText'
         ),
     )
 );
