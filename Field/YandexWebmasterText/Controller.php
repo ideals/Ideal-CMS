@@ -40,7 +40,7 @@ class Controller extends AbstractController
             <textarea name="{$this->htmlName}" id="yw{$this->htmlName}" class="form-control">{$value}</textarea>
             <div class="text-center" style="margin-top: 10px;">
                     <span class="input-group-btn">
-                        <button class="btn" onclick="sendYWT('yw{$this->htmlName}'); return false;">
+                        <button class="btn" onclick="sendYWT('#yw{$this->htmlName}'); return false;">
                             Отправить текст в Яндекс.Вебмастер
                         </button>
                     </span>
