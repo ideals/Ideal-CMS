@@ -653,6 +653,45 @@
             }
         }
     </script>
+    <script>
+        // Отправка оригинального текста в сервис "Яндекс.Вебмастер"
+        function sendYWT(field)
+        {
+            $.ajax({
+                type: "POST",
+                data: {text: $(field).val()},
+                dataType: 'json',
+                url: '/?mode=ajax&controller=Ideal\\Addon\\YandexWebmaster&action=addOriginalText',
+                cache: false,
+                success: function (data) {
+                    if ('create_app' in data) {
+                        if (confirm('В настройках отсутствует идентификатор приложения для связи с сервисом "Яндекс.Вебмастер". Перейти на страницу создания нового приложения?')) {
+                            var win = window.open(data.create_app, '_blank');
+                            if (win) {
+                                win.focus();
+                            } else {
+                                alert('Пожалуйста разрешите всплывающие окна для этого сайта и повторите попытку');
+                            }
+                        }
+                    }
+                    if ('update_token' in data) {
+                        if (confirm('Отсутствует токен для связи с сервисом "Яндекс.Вебмастер". Перейти на страницу получения токена?')) {
+                            var win = window.open(data.update_token, '_blank');
+                            if (win) {
+                                win.focus();
+                            } else {
+                                alert('Пожалуйста разрешите всплывающие окна для этого сайта и повторите попытку');
+                            }
+                        }
+                    }
+                    if ('message' in data) {
+                        alert(data.message);
+                    }
+                }
+            });
+            return false;
+        }
+    </script>
 
 </div>
 
