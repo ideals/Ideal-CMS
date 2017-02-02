@@ -138,6 +138,7 @@ class Model
         $pageData = $model->getPageData();
         $pageData['tab_ID'] = $id;
         $model->setPageData($pageData);
+        $model->setParentModel($this->model);
 
         $addonVar .= '_' . $id;
         $addonName = ($addonName == '') ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
