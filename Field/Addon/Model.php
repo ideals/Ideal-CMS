@@ -113,9 +113,11 @@ class Model
      */
     public function getTab($id, $addonVar, $addonName = '')
     {
+        // todo вызывать AdminModel, а не через декоратор
         $class = Util::getClassName($addonVar, 'Addon') . '\\Model';
         /** @var \Ideal\Core\Admin\Model $model */
         $model = new $class('');
+        $model->setModel('Admin');
 
         // Получаем тип аддона для формирования правильного groupName
         $groupName = explode('_', $addonVar);

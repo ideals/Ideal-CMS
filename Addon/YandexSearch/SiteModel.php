@@ -24,7 +24,7 @@ use YandexXML\Exceptions\YandexXmlException;
  * поэтому аддон можно подключать как обычный аддон Page, для которого никакой дополнительной кастомизации
  * в общем шаблоне не требуется.
  */
-class ModelAbstract extends Addon\AbstractModel
+class SiteModel extends Addon\AbstractSiteModel
 {
 
     /** @var int Общее количесвто результатов поиска */
