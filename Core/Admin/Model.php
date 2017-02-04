@@ -4,12 +4,30 @@ namespace Ideal\Core\Admin;
 use Ideal\Core;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
+use Ideal\Core\Request;
 use Ideal\Core\Util;
 
 abstract class Model extends Core\Model
 {
 
-    protected $fieldsGroup = 'general';
+    public function __construct($prevStructure)
+    {
+        parent::__construct($prevStructure);
+
+        $class = strtolower(get_class($this));
+        $class = explode('\\', trim($class, '\\'));
+        $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
+
+        $request = new Request();
+
+        if (empty($this->params[$nameParam])) {
+            // Если не инициализировано поле с количеством элементов — значит мы редактируем элемент
+            // и установка количества элементов на странице не требуется
+            return;
+        }
+
+        $this->params[$nameParam] = empty($request->num) ? $this->params[$nameParam] : $request->num;
+    }
 
     // Создание нового элемента структуры
     public function createElement($result, $groupName = 'general')
@@ -100,6 +118,7 @@ abstract class Model extends Core\Model
                     unset($addonData['ID']);
                 }
 
+                // todo вызывать AdminModel, а не через декоратор
                 $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
 
                 /* @var $addonModelName \Ideal\Core\Admin\Model */
@@ -345,11 +364,6 @@ abstract class Model extends Core\Model
         }
 
         return $result;
-    }
-
-    public function setFieldsGroup($name)
-    {
-        $this->fieldsGroup = $name;
     }
 
     /**
