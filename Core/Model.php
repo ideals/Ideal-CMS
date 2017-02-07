@@ -332,8 +332,7 @@ abstract class Model
             if (is_array($addonsInfo)) {
                 foreach ($addonsInfo as $addonInfo) {
                     // Инициализируем модель аддона
-                    // todo вызывать SiteModel, а не через декоратор
-                    $className = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
+                    $className = Util::getClassName($addonInfo[1], 'Addon') . '\\SiteModel';
                     $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
                     $addon = new $className($prevStructure);
                     $addon->setParentModel($this);
