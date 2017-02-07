@@ -116,7 +116,7 @@ HTML;
             $addonVar = $v[1];
             $addonName = isset($v[2]) ? $v[2] : '';
 
-            $class = Util::getClassName($addonVar, 'Addon') . '\\Model';
+            $class = Util::getClassName($addonVar, 'Addon') . '\\AdminModel';
 
             /** @var \Ideal\Core\Admin\Model $model */
             $model = new $class('');
@@ -140,7 +140,7 @@ HTML;
         $addonsData = json_decode($item['value']);
         foreach ($addonsData as $addonData) {
             list($tabID, $addonType) = $addonData;
-            $addonName = Util::getClassName($addonType, 'Addon') . '\\Model';
+            $addonName = Util::getClassName($addonType, 'Addon') . '\\AdminModel';
             $addon = new $addonName('не имеет значения, т.к. только парсим ввод пользователя');
             $explodeAddonType = explode('_', $addonType);
             $groupName = strtolower(end($explodeAddonType)) . '-' . $tabID;

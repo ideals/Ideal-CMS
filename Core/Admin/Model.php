@@ -119,7 +119,7 @@ abstract class Model extends Core\Model
                 }
 
                 // todo вызывать AdminModel, а не через декоратор
-                $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
+                $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\AdminModel';
 
                 /* @var $addonModelName \Ideal\Core\Admin\Model */
                 $addonModel = new $addonModelName($addonData['prev_structure']);
@@ -403,7 +403,7 @@ abstract class Model extends Core\Model
         $deletedAddonGroupName = strtolower(end($tempDeletedAddonInfo)) . '-' . $addonInfo[0];
 
         /* @var $addonModelName \Ideal\Core\Admin\Model */
-        $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\Model';
+        $addonModelName = Util::getClassName($addonInfo[1], 'Addon') . '\\AdminModel';
         $deletedAddonModel = new $addonModelName($addonDataPrevStructure);
         $deletedAddonModel->setFieldsGroup($deletedAddonGroupName);
         $deletedAddonModel->setPageDataByPrevStructure($addonDataPrevStructure);
