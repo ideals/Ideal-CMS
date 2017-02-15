@@ -39,40 +39,40 @@ class AjaxController extends \Ideal\Core\AjaxController
                 if ($loginHint) {
                     $loginHintAdd = '&login_hint=' . $loginHint;
                 }
-                $response = array('update_token' => 'https://oauth.yandex.ru/authorize?response_type=token&client_id=' . $clientId . $loginHintAdd);
+                $response = array('update_token' => 'https://oauth.yandex.ru/authorize?response_type=token&display=popup&client_id=' . $clientId . $loginHintAdd);
             } else {
                 // Если нет идентификатора приложения предлагаем пользователю создать приложение
                 $response = array('create_app' => 'https://oauth.yandex.ru/client/new');
             }
-        }
-
-        // Если достаточно данных, то пытваемся отправить оригинальный текст
-        $wmApi = WebmasterApi::initApi($token);
-        if (isset($wmApi->error_message)) {
-            $response = array('message' => $wmApi->error_message);
         } else {
-            // Проверяем добавлен ли текущий хост к аккаунту, под управлением которого создано приложение
-            $hostId = '';
-            $currentHost = $config->domain;
-            $res = $wmApi->getHosts();
-            foreach ($res->hosts as $host) {
-                $parsedUrl = parse_url($host->unicode_host_url);
-                if (strpos($parsedUrl['host'], $currentHost) !== false) {
-                    $hostId = $host->host_id;
-                    break;
-                }
-            }
-
-            // Если удалось получить дентификатор хоста, то пытаемсяотправить оригинальный текст
-            if ($hostId) {
-                $postOriginalTextRes = $wmApi->addOriginalText($hostId, $_POST['text']);
-                if (!isset($postOriginalTextRes->error_code) && isset($postOriginalTextRes->text_id)) {
-                    $response = array('message' => 'Оригинальный текст успешно добавлен');
-                } else {
-                    $response = array('message' => $postOriginalTextRes->error_message);
-                }
+            // Если достаточно данных, то пытаемся отправить оригинальный текст
+            $wmApi = WebmasterApi::initApi($token);
+            if (isset($wmApi->error_message)) {
+                $response = array('message' => $wmApi->error_message);
             } else {
-                $response = array('message' => 'Владелец приложения не имеет прав на управление данным сайтом');
+                // Проверяем добавлен ли текущий хост к аккаунту, под управлением которого создано приложение
+                $hostId = '';
+                $currentHost = $config->domain;
+                $res = $wmApi->getHosts();
+                foreach ($res->hosts as $host) {
+                    $parsedUrl = parse_url($host->unicode_host_url);
+                    if (strpos($parsedUrl['host'], $currentHost) !== false) {
+                        $hostId = $host->host_id;
+                        break;
+                    }
+                }
+
+                // Если удалось получить идентификатор хоста, то пытаемся отправить оригинальный текст
+                if ($hostId) {
+                    $postOriginalTextRes = $wmApi->addOriginalText($hostId, $_POST['text']);
+                    if (!isset($postOriginalTextRes->error_code) && isset($postOriginalTextRes->text_id)) {
+                        $response = array('message' => 'Оригинальный текст успешно добавлен');
+                    } else {
+                        $response = array('message' => $postOriginalTextRes->error_message);
+                    }
+                } else {
+                    $response = array('message' => 'Владелец приложения не имеет прав на управление данным сайтом');
+                }
             }
         }
 
