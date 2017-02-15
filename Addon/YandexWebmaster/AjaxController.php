@@ -8,8 +8,10 @@
  */
 namespace Ideal\Addon\YandexWebmaster;
 
+use Ideal\Structure\Service\SiteData\ConfigPhp;
 use YandexWebmasterAPI\WebmasterApi;
 use Ideal\Core\Config;
+use Ideal\Core\Util;
 
 /**
  * Реакция на действия из вкладки аддона "ЯндексВебмастер"
@@ -33,13 +35,33 @@ class AjaxController extends \Ideal\Core\AjaxController
             // и предлагаем пользователю обновить токен
             $clientId = $config->yandex['clientId'];
             if ($clientId) {
-                // Получаем имя пользователя или электронный адрес владельца приложения из настроек
-                $loginHintAdd = '';
+                // Адрес для запроса обновления токена
+                $updateTokenUrl = 'https://oauth.yandex.ru/authorize?response_type=token&client_id=' . $clientId;
+
+                // Запрашиваем облегчённую версию страницы подтверждения прав
+                $updateTokenUrl .= '&display=popup';
+
+                // Получаем электронный адрес или имя пользователя,
+                // которому нужно будет предоставить доступа для приложения
                 $loginHint = $config->yandex['loginHint'];
                 if ($loginHint) {
-                    $loginHintAdd = '&login_hint=' . $loginHint;
+                    $updateTokenUrl .= '&login_hint=' . $loginHint;
                 }
-                $response = array('update_token' => 'https://oauth.yandex.ru/authorize?response_type=token&display=popup&client_id=' . $clientId . $loginHintAdd);
+                // Генерируем произвольный токен для дальнейшей связи
+                $randToken = 'start-' . Util::randomChar(39);
+
+                // Сохраняем токен
+                $configSD = new ConfigPhp();
+                $configSD->loadFile($config->cmsFolder . '/site_data.php');
+                $params = $configSD->getParams();
+                $params['yandex']['arr']['token']['value'] = $randToken;
+                $configSD->setParams($params);
+                $configSD->saveFile($config->cmsFolder . '/site_data.php');
+
+                // Дополняем запрос адресом сайта и старым токеном
+                $updateTokenUrl .= '&state=' . json_encode(array('domain' => $config->domain, 'token' => $randToken));
+
+                $response = array('update_token' => $updateTokenUrl);
             } else {
                 // Если нет идентификатора приложения предлагаем пользователю создать приложение
                 $response = array('create_app' => 'https://oauth.yandex.ru/client/new');
