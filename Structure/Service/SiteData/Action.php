@@ -22,5 +22,31 @@
         if (hash) {
             $("a[href='" + hash + "']").click();
         }
+        // Обновление данных для связи с сервисом "Яндекс.Вебмастер"
+        function setDataYW()
+        {
+            $.ajax({
+                type: "POST",
+                dataType: 'json',
+                url: '/?mode=ajax&controller=Ideal\\Addon\\YandexWebmaster&action=updateSettings',
+                cache: false,
+                success: function (data) {
+                    if ('create_app' in data) {
+                        if (confirm('В настройках отсутствует идентификатор приложения для связи с сервисом "Яндекс.Вебмастер". Перейти на страницу создания нового приложения?')) {
+                            window.location.href = data.create_app;
+                        }
+                    }
+                    if ('update_token' in data) {
+                        if (confirm('Отсутствует токен для связи с сервисом "Яндекс.Вебмастер". Обновить токен?')) {
+                            window.location.href = data.update_token;
+                        }
+                    }
+                    if ('message' in data) {
+                        alert(data.message);
+                    }
+                }
+            });
+            return false;
+        }
     </script>
 </form>

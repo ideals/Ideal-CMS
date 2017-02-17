@@ -100,4 +100,50 @@ class AjaxController extends \Ideal\Core\AjaxController
 
         return json_encode($response, JSON_FORCE_OBJECT);
     }
+
+    public function updateSettingsAction()
+    {
+        $response = array('message' => 'Произошёл сбой требующий детального рассмотрения. Обратитесь к разработчикам');
+        $config = Config::getInstance();
+
+        // Получаем токен из настроек
+        $token = $config->yandex['token'];
+        // Если токена нет, то получаем из настроек идентификатор приложения
+        // и предлагаем пользователю обновить токен
+        $clientId = $config->yandex['clientId'];
+
+        if ($clientId) {
+            // Адрес для запроса обновления токена
+            $updateTokenUrl = 'https://oauth.yandex.ru/authorize?response_type=token&client_id=' . $clientId;
+
+            // Получаем электронный адрес или имя пользователя,
+            // которому нужно будет предоставить доступа для приложения
+            $loginHint = $config->yandex['loginHint'];
+            if ($loginHint) {
+                $updateTokenUrl .= '&login_hint=' . $loginHint;
+            }
+
+            if (!$token) {
+                // Генерируем произвольный токен для дальнейшей связи
+                $token = 'start-' . Util::randomChar(39);
+
+                // Сохраняем токен
+                $configSD = new ConfigPhp();
+                $configSD->loadFile($config->cmsFolder . '/site_data.php');
+                $params = $configSD->getParams();
+                $params['yandex']['arr']['token']['value'] = $token;
+                $configSD->setParams($params);
+                $configSD->saveFile($config->cmsFolder . '/site_data.php');
+            }
+
+            // Дополняем запрос адресом сайта и старым токеном
+            $updateTokenUrl .= '&state=' . json_encode(array('domain' => $config->domain, 'token' => $token));
+
+            $response = array('update_token' => $updateTokenUrl);
+        } else {
+            // Если нет идентификатора приложения предлагаем пользователю создать приложение
+            $response = array('create_app' => 'https://oauth.yandex.ru/client/new');
+        }
+        return json_encode($response, JSON_FORCE_OBJECT);
+    }
 }

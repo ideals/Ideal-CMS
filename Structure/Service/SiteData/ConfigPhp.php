@@ -304,6 +304,17 @@ DONE;
                     $fieldModel->inputClass = '';
                     $tabsContent .= $fieldModel->showEdit();
                 }
+                if ($tabId == 'yandex') {
+                    $tabsContent .= <<<BUTTON
+                        <div class="text-center" style="margin-top: 10px;">
+                            <span class="input-group-btn">
+                                <button class="btn" onclick="setDataYW(); return false;">
+                                    Настроить данные для связи с сервисом "Яндекс.Вебмастер"
+                                </button>
+                            </span>
+                        </div>
+BUTTON;
+                }
                 $tabsContent .= '</div>';
             }
         }
