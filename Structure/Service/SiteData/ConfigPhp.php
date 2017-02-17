@@ -308,8 +308,8 @@ DONE;
                     $tabsContent .= <<<BUTTON
                         <div class="text-center" style="margin-top: 10px;">
                             <span class="input-group-btn">
-                                <button class="btn" onclick="setDataYW(); return false;">
-                                    Настроить данные для связи с сервисом "Яндекс.Вебмастер"
+                                <button class="btn" onclick="updateTokenYW(); return false;">
+                                    Обновить токен для связи с сервисом "Яндекс.Вебмастер"
                                 </button>
                             </span>
                         </div>

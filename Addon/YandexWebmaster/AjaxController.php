@@ -101,7 +101,7 @@ class AjaxController extends \Ideal\Core\AjaxController
         return json_encode($response, JSON_FORCE_OBJECT);
     }
 
-    public function updateSettingsAction()
+    public function updateTokenAction()
     {
         $response = array('message' => 'Произошёл сбой требующий детального рассмотрения. Обратитесь к разработчикам');
         $config = Config::getInstance();
@@ -123,8 +123,8 @@ class AjaxController extends \Ideal\Core\AjaxController
                 $updateTokenUrl .= '&login_hint=' . $loginHint;
             }
 
+            // Если нет токена, то генерируем произвольный для дальнейшей связи
             if (!$token) {
-                // Генерируем произвольный токен для дальнейшей связи
                 $token = 'start-' . Util::randomChar(39);
 
                 // Сохраняем токен

@@ -18,17 +18,19 @@
 
     <input type="submit" class="btn btn-info" name="edit" value="Сохранить настройки"/>
     <script type="text/javascript">
+        // Сохраняем значение идентификаотра клиента для дальнейшего отслеживания
+        var clientId = $('#general_yandex_clientId').val();
         var hash = window.location.hash;
         if (hash) {
             $("a[href='" + hash + "']").click();
         }
         // Обновление данных для связи с сервисом "Яндекс.Вебмастер"
-        function setDataYW()
+        function updateTokenYW()
         {
             $.ajax({
                 type: "POST",
                 dataType: 'json',
-                url: '/?mode=ajax&controller=Ideal\\Addon\\YandexWebmaster&action=updateSettings',
+                url: '/?mode=ajax&controller=Ideal\\Addon\\YandexWebmaster&action=updateToken',
                 cache: false,
                 success: function (data) {
                     if ('create_app' in data) {
@@ -37,7 +39,11 @@
                         }
                     }
                     if ('update_token' in data) {
-                        if (confirm('Отсутствует токен для связи с сервисом "Яндекс.Вебмастер". Обновить токен?')) {
+                        if (clientId != $('#general_yandex_clientId').val()) {
+                            if (confirm('Идентификатор приложения был изменён, но не сохранён. Продолжить получение токена со старым идентификатором приложения?')) {
+                                window.location.href = data.update_token;
+                            }
+                        } else {
                             window.location.href = data.update_token;
                         }
                     }
