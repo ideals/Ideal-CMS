@@ -10,6 +10,8 @@
 namespace Ideal\Field\YandexWebmasterText;
 
 use Ideal\Field\AbstractController;
+use Ideal\Core\Config;
+use YandexWebmasterAPI\WebmasterApi;
 
 /**
  * Поле отправки текста в сервис "Яндекс.Вебмастер"
@@ -35,15 +37,61 @@ class Controller extends AbstractController
     public function showEdit()
     {
         $value = htmlspecialchars($this->getValue());
+
+        $button = '';
+        $config = Config::getinstance();
+        // Получаем токен из настроек
+        $token = $config->yandex['token'];
+
+        // Получаем из настроек идентификатор приложения
+        $clientId = $config->yandex['clientId'];
+
+        // Формируем путь до страницы настроек связи с сервисом "Яндекс.Вебмастер"
+        $ywmConfigPath =  '/' . $config->cmsFolder . '/index.php?par=4-Ideal_SiteData#yandex';
+
+        // Если отсутствует токен или илентификатор приложения, то уведомляепм об этом пользователя
+        // и предлагаем перейти на страницу настроек
+        if (!$token || !$clientId) {
+            $button .= <<<BUTTON
+                <div class="has-error">
+                    <span class="help-block">Не настроена связь с сервисом "Яндекс.Вебмастер".</span>
+                </div>
+                <span class="input-group-btn">
+                    <button class="btn" onclick="ywmservice('{$ywmConfigPath}'); return false;">
+                        Перейти на страницу настроек?
+                    </button>
+                </span>
+BUTTON;
+        } else {
+            $wmApi = WebmasterApi::initApi($token);
+            if (isset($wmApi->error_message)) {
+                $button .= <<<BUTTON
+                <div class="has-error">
+                    <span class="help-block">Токен для связи с сервисом "Яндекс.Вебмастер" не актуален.</span>                
+                </div>
+                <span class="input-group-btn">
+                    <button class="btn" onclick="ywmservice('{$ywmConfigPath}'); return false;">
+                        Перейти на страницу настроек?
+                    </button>
+                </span>
+BUTTON;
+                $button .= '';
+            } else {
+                $button .= <<<BUTTON
+                <span class="input-group-btn">
+                    <button class="btn" onclick="sendYWT('#yw{$this->htmlName}'); return false;">
+                        Отправить текст в Яндекс.Вебмастер
+                    </button>
+                </span>
+BUTTON;
+            }
+        }
+
         $html = <<<HTML
             <div id="{$this->htmlName}-control-group">{$this->getLabelText()}<br />
             <textarea name="{$this->htmlName}" id="yw{$this->htmlName}" class="form-control">{$value}</textarea>
             <div class="text-center" style="margin-top: 10px;">
-                    <span class="input-group-btn">
-                        <button class="btn" onclick="sendYWT('#yw{$this->htmlName}'); return false;">
-                            Отправить текст в Яндекс.Вебмастер
-                        </button>
-                    </span>
+                    {$button}
                 </div>
             </div>            
 HTML;

@@ -11,11 +11,16 @@
         $response = $fileCache->checkSettings();
         $file->changeAndSave(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php', $response['res'], $response['class'], $response['text']);
     }
-
     echo $file->showEdit();
     ?>
 
     <br/>
 
     <input type="submit" class="btn btn-info" name="edit" value="Сохранить настройки"/>
+    <script type="text/javascript">
+        var hash = window.location.hash;
+        if (hash) {
+            $("a[href='" + hash + "']").click();
+        }
+    </script>
 </form>
