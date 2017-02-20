@@ -3,6 +3,7 @@ namespace Ideal\Core;
 
 use Ideal\Core\Admin;
 use Ideal\Core\Site;
+use Ideal\Core\Api;
 use Ideal\Structure\User;
 
 /**
@@ -24,7 +25,9 @@ class FrontController
     public function run($mode)
     {
         // Запускаем роутер, для получения навигационной цепочки
-        if ($mode == 'admin') {
+        if ($mode == 'api') {
+            $router = new Api\Router();
+        } elseif ($mode == 'admin') {
             $router = new Admin\Router();
         } else {
             $router = new Site\Router();
