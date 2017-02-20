@@ -31,41 +31,8 @@ class AjaxController extends \Ideal\Core\AjaxController
         // Получаем токен из настроек
         $token = $config->yandex['token'];
         if (!$token) {
-            // Если токена нет, то получаем из настроек идентификатор приложения
-            // и предлагаем пользователю обновить токен
-            $clientId = $config->yandex['clientId'];
-            if ($clientId) {
-                // Адрес для запроса обновления токена
-                $updateTokenUrl = 'https://oauth.yandex.ru/authorize?response_type=token&client_id=' . $clientId;
-
-                // Запрашиваем облегчённую версию страницы подтверждения прав
-                $updateTokenUrl .= '&display=popup';
-
-                // Получаем электронный адрес или имя пользователя,
-                // которому нужно будет предоставить доступа для приложения
-                $loginHint = $config->yandex['loginHint'];
-                if ($loginHint) {
-                    $updateTokenUrl .= '&login_hint=' . $loginHint;
-                }
-                // Генерируем произвольный токен для дальнейшей связи
-                $randToken = 'start-' . Util::randomChar(39);
-
-                // Сохраняем токен
-                $configSD = new ConfigPhp();
-                $configSD->loadFile($config->cmsFolder . '/site_data.php');
-                $params = $configSD->getParams();
-                $params['yandex']['arr']['token']['value'] = $randToken;
-                $configSD->setParams($params);
-                $configSD->saveFile($config->cmsFolder . '/site_data.php');
-
-                // Дополняем запрос адресом сайта и старым токеном
-                $updateTokenUrl .= '&state=' . json_encode(array('domain' => $config->domain, 'token' => $randToken));
-
-                $response = array('update_token' => $updateTokenUrl);
-            } else {
-                // Если нет идентификатора приложения предлагаем пользователю создать приложение
-                $response = array('create_app' => 'https://oauth.yandex.ru/client/new');
-            }
+            $ywmConfigPath =  '/' . $config->cmsFolder . '/index.php?par=4-Ideal_SiteData#yandex';
+            $response = array('to_config' => $ywmConfigPath);
         } else {
             // Если достаточно данных, то пытаемся отправить оригинальный текст
             $wmApi = WebmasterApi::initApi($token);

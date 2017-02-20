@@ -664,30 +664,9 @@
                 url: '/?mode=ajax&controller=Ideal\\Addon\\YandexWebmaster&action=addOriginalText',
                 cache: false,
                 success: function (data) {
-                    if ('create_app' in data) {
-                        if (confirm('В настройках отсутствует идентификатор приложения для связи с сервисом "Яндекс.Вебмастер". Перейти на страницу создания нового приложения?')) {
-                            var win = window.open(data.create_app, '_blank');
-                            if (win) {
-                                win.focus();
-                            } else {
-                                alert('Пожалуйста разрешите всплывающие окна для этого сайта и повторите попытку');
-                            }
-                        }
-                    }
-                    if ('update_token' in data) {
-                        if (confirm('Отсутствует токен для связи с сервисом "Яндекс.Вебмастер". Обновить токен?')) {
-                            var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
-                            var dualScreenTop = window.screenTop != undefined ? window.screenTop : screen.top;
-                            var width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
-                            var height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
-                            var left = ((width / 2) - (600 / 2)) + dualScreenLeft;
-                            var top = ((height / 2) - (500 / 2)) + dualScreenTop;
-                            var newWin = window.open(data.update_token, "Яндекс", 'menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes,width=600,height=500,top=' + top + ',left=' + left);
-                            if (newWin) {
-                                newWin.focus();
-                            } else {
-                                alert('Пожалуйста разрешите всплывающие окна для этого сайта и повторите попытку');
-                            }
+                    if ('to_config' in data) {
+                        if (confirm('Сбой в настройках связи с сервисом "Яндекс.Вебмастер". Перейти на страницу настроек?')) {
+                            window.location.href = data.to_config;
                         }
                     }
                     if ('message' in data) {
