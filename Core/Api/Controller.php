@@ -56,7 +56,7 @@ class Controller
      * Реакиця контроллера на запрос
      *
      * @param Router $router
-     * @return string Содержимое отображаемой страницы
+     * @return string Ответ системы на запрос
      */
     public function run(Router $router)
     {
@@ -72,12 +72,22 @@ class Controller
 
         if (method_exists($this, $actionName)) {
             // Вызываемый action существует, запускаем его
-            $content = $this->$actionName();
+            $content = $this->$actionName($router);
         } else {
             // Вызываемый action отсутствует, запускаем 404 ошибку
             $content = $this->error404Action();
             $router->is404 = true;
         }
         return $content;
+    }
+
+    /**
+     * Получение дополнительных HTTP-заголовков
+     *
+     * @return array Массив где ключи - названия заголовков, а значения - содержание заголовков
+     */
+    public function getHttpHeaders()
+    {
+        return array();
     }
 }

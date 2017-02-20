@@ -52,7 +52,7 @@ class Router
         if (count($path) == 3) {
             $this->detectController($path[1]);
             if (!$this->is404) {
-                $request->action = $path[2];
+                list($request->action, ) = explode('?', $path[2]);
                 list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
                 if ($namespace != 'Ideal' || !$request->action) {
                     // Не правильный формат обращений к API
@@ -62,7 +62,7 @@ class Router
         } elseif (count($path) == 4) {
             $this->detectController($path[2]);
             if (!$this->is404) {
-                $request->action = $path[3];
+                list($request->action, ) = explode('?', $path[3]);
                 list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
                 if ($namespace == 'Ideal' || !$request->action) {
                     // Не правильный формат обращений к API
