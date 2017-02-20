@@ -137,7 +137,15 @@ class AjaxController extends \Ideal\Core\AjaxController
             }
 
             // Дополняем запрос адресом сайта и старым токеном
-            $updateTokenUrl .= '&state=' . json_encode(array('domain' => $config->domain, 'token' => $token));
+            $stateString = json_encode(
+                array(
+                    'domain' => $config->domain,
+                    'token' => $token,
+                    'return' => $config->domain . '/' . $config->cmsFolder . '/index.php?par=4-Ideal_SiteData',
+                    'returnHash' => 'yandex'
+                )
+            );
+            $updateTokenUrl .= '&state=' . $stateString;
 
             $response = array('update_token' => $updateTokenUrl);
         } else {
