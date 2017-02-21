@@ -30,8 +30,12 @@ class FrontController
         } elseif ($mode == 'admin') {
             $router = new Admin\Router();
         } else {
-            $router = new Site\Router();
-            $this->referer();
+            if (strpos($_SERVER['REQUEST_URI'], 'api/') === 1) {
+                $router = new Api\Router();
+            } else {
+                $router = new Site\Router();
+                $this->referer();
+            }
         }
 
         // Определяем имя контроллера для отображения запрошенной страницы

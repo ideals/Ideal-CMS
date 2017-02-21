@@ -4,7 +4,6 @@ namespace Ideal\Core\Api;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Structure\Error404;
-use Ideal\Core\PluginBroker;
 
 /**
  *  Производит роутинг запросов к API системы
@@ -22,14 +21,10 @@ class Router
     public $is404 = false;
 
     /**
-     * Конструктор генерирует события onPreDispatch и onPostDispatch,
-     * а так же определяет модель обрабочика 404 ошибки.
+     * Конструктор определяет модель обрабочика 404 ошибки.
      */
     public function __construct()
     {
-        $pluginBroker = PluginBroker::getInstance();
-        $pluginBroker->makeEvent('onPreDispatch', $this);
-        $pluginBroker->makeEvent('onPostDispatch', $this);
         $this->error404 = new Error404\Model();
     }
 
