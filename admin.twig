@@ -664,24 +664,9 @@
                 url: '/?mode=ajax&controller=Ideal\\Addon\\YandexWebmaster&action=addOriginalText',
                 cache: false,
                 success: function (data) {
-                    if ('create_app' in data) {
-                        if (confirm('В настройках отсутствует идентификатор приложения для связи с сервисом "Яндекс.Вебмастер". Перейти на страницу создания нового приложения?')) {
-                            var win = window.open(data.create_app, '_blank');
-                            if (win) {
-                                win.focus();
-                            } else {
-                                alert('Пожалуйста разрешите всплывающие окна для этого сайта и повторите попытку');
-                            }
-                        }
-                    }
-                    if ('update_token' in data) {
-                        if (confirm('Отсутствует токен для связи с сервисом "Яндекс.Вебмастер". Перейти на страницу получения токена?')) {
-                            var win = window.open(data.update_token, '_blank');
-                            if (win) {
-                                win.focus();
-                            } else {
-                                alert('Пожалуйста разрешите всплывающие окна для этого сайта и повторите попытку');
-                            }
+                    if ('to_config' in data) {
+                        if (confirm('Сбой в настройках связи с сервисом "Яндекс.Вебмастер". Перейти на страницу настроек?')) {
+                            window.location.href = data.to_config;
                         }
                     }
                     if ('message' in data) {
@@ -690,6 +675,14 @@
                 }
             });
             return false;
+        }
+
+        // Перенаправление пользователя на страницу настроек Яндекса
+        function ywmservice(path)
+        {
+            if (confirm('Все не сохранённые данные редактируемого элемента будут потеряны. Продолжить?')) {
+                window.location.href = path;
+            }
         }
     </script>
 
