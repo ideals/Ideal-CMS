@@ -40,32 +40,42 @@ class Router
             return $this->controllerName;
         }
 
-        $request = new Request();
-        $path = explode('/', ltrim($_SERVER['REQUEST_URI'], '/'));
+        $url = $this->prepareUrl($_SERVER['REQUEST_URI']);
+        $this->error404->setUrl($url);
 
-        // Определяем название контроллера и экшена
-        if (count($path) == 3) {
-            $this->detectController($path[1]);
-            if (!$this->is404) {
-                list($request->action, ) = explode('?', $path[2]);
-                list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
-                if ($namespace != 'Ideal' || !$request->action) {
-                    // Не правильный формат обращений к API
-                    $this->is404 = true;
+        // Проверяем наличие адреса среди уже известных 404-ых
+        $this->is404 = $this->error404->checkAvailability404();
+
+        $request = new Request();
+        $path = explode('/', $url);
+
+        if (!$this->is404) {
+            // Определяем название контроллера и экшена
+            if (count($path) == 3) {
+                $this->detectController($path[1]);
+                if (!$this->is404) {
+                    $request->action = $path[2];
+                    list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
+                    if ($namespace != 'Ideal' || !$request->action) {
+                        // Не правильный формат обращений к API
+                        $this->is404 = true;
+                        $this->error404->save404();
+                    }
                 }
-            }
-        } elseif (count($path) == 4) {
-            $this->detectController($path[2]);
-            if (!$this->is404) {
-                list($request->action, ) = explode('?', $path[3]);
-                list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
-                if ($namespace == 'Ideal' || !$request->action) {
-                    // Не правильный формат обращений к API
-                    $this->is404 = true;
+            } elseif (count($path) == 4) {
+                $this->detectController($path[2]);
+                if (!$this->is404) {
+                    $request->action = $path[3];
+                    list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
+                    if ($namespace == 'Ideal' || !$request->action) {
+                        // Не правильный формат обращений к API
+                        $this->is404 = true;
+                        $this->error404->save404();
+                    }
                 }
+            } else {
+                $this->is404 = true;
             }
-        } else {
-            $this->is404 = true;
         }
 
         return $this->controllerName ? $this->controllerName : '\\Ideal\\Core\\Api\\Controller';
@@ -100,6 +110,14 @@ class Router
     }
 
     /**
+     * Обёртка над методом сохранения 404 ошибки соответствующей модели
+     */
+    public function save404()
+    {
+        return $this->error404->save404();
+    }
+
+    /**
      * Ищет контроллер ответственный за обработку запроса
      * @param $controllerName
      */
@@ -114,8 +132,37 @@ class Router
         // Если контроллер не найден устанавливаем признак 404 ошибки
         if (!$controllerPath) {
             $this->is404 = true;
+            $this->error404->save404();
         } else {
             $this->controllerName = $controllerPath;
         }
+    }
+
+    /**
+     * Зачистка url перед роутингом по нему
+     *
+     * @param string $url
+     * @param bool $stripQuery Нужно ли удалять символы после ?
+     * @return string
+     */
+    protected function prepareUrl($url, $stripQuery = true)
+    {
+        $config = Config::getInstance();
+
+        // Вырезаем стартовый URL
+        $url = ltrim($url, '/');
+
+        // Удаляем параметры из URL (текст после символа "#")
+        $url = preg_replace('/[\#].*/', '', $url);
+
+        if ($stripQuery) {
+            // Удаляем параметры из URL (текст после символа "?")
+            $url = preg_replace('/[\?\#].*/', '', $url);
+        }
+
+        // Убираем начальные слэши и начальный сегмент, если cms не в корне сайта
+        $url = ltrim(substr($url, strlen($config->cms['startUrl'])), '/');
+
+        return $url;
     }
 }

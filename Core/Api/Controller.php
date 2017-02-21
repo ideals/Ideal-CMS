@@ -77,6 +77,7 @@ class Controller
             // Вызываемый action отсутствует, запускаем 404 ошибку
             $content = $this->error404Action();
             $router->is404 = true;
+            $router->save404();
         }
         return $content;
     }
