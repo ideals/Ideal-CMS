@@ -55,20 +55,19 @@ class Router
                 $this->detectController($path[1]);
                 if (!$this->is404) {
                     $request->action = $path[2];
-                    list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
-                    if ($namespace != 'Ideal' || !$request->action) {
-                        // Не правильный формат обращений к API
+                    if (!$request->action) {
+                        // Не определён action
                         $this->is404 = true;
                         $this->error404->save404();
                     }
                 }
             } elseif (count($path) == 4) {
-                $this->detectController($path[2]);
+                $this->detectController($path[2], 'Mods');
+                list(, ,$this->controllerName) = explode('\\', $this->controllerName, 3);
                 if (!$this->is404) {
                     $request->action = $path[3];
-                    list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
-                    if ($namespace == 'Ideal' || !$request->action) {
-                        // Не правильный формат обращений к API
+                    if (!$request->action) {
+                        // Не определён action
                         $this->is404 = true;
                         $this->error404->save404();
                     }
@@ -119,21 +118,39 @@ class Router
 
     /**
      * Ищет контроллер ответственный за обработку запроса
-     * @param $controllerName
+     * @param $controllerName string Часть имени контроллера ответственного за обработку запроса
+     * @param $namespace string Место поиска контроллера
      */
-    private function detectController($controllerName)
+    private function detectController($controllerName, $namespace = 'Ideal')
     {
         $config = Config::getInstance();
-        $controllerPath = stream_resolve_include_path($controllerName . 'Controller.php');
-        $controllerPath = str_replace(stream_resolve_include_path($config->cmsFolder), '', $controllerPath);
-        $controllerPath = str_replace('/', '\\', $controllerPath);
-        $controllerPath = str_replace('.php', '', $controllerPath);
+
+        // Возможные пути до начальных директорий в зависимости от запроса
+        $searchPath = array(
+            DOCUMENT_ROOT . DIRECTORY_SEPARATOR . $config->cmsFolder . DIRECTORY_SEPARATOR . $namespace . '.c',
+            DOCUMENT_ROOT . DIRECTORY_SEPARATOR . $config->cmsFolder . DIRECTORY_SEPARATOR . $namespace
+        );
+        $controllerPath = '';
+        foreach ($searchPath as $value) {
+            if (is_dir($value)) {
+                $directory = new \RecursiveDirectoryIterator($value);
+                foreach (new \RecursiveIteratorIterator($directory) as $file) {
+                    if ($file->getFilename() == $controllerName . 'Controller.php') {
+                        $controllerPath = $file->getPathname();
+                        break 2;
+                    }
+                }
+            }
+        }
 
         // Если контроллер не найден устанавливаем признак 404 ошибки
         if (!$controllerPath) {
             $this->is404 = true;
             $this->error404->save404();
         } else {
+            $controllerPath = str_replace(stream_resolve_include_path($config->cmsFolder), '', $controllerPath);
+            $controllerPath = str_replace('/', '\\', $controllerPath);
+            $controllerPath = str_replace('.php', '', $controllerPath);
             $this->controllerName = $controllerPath;
         }
     }
