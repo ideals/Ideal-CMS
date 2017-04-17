@@ -22,7 +22,7 @@ class Controller extends \Ideal\Field\AbstractController
      */
     public function getInputText()
     {
-        $value = htmlspecialchars($this->getValue());
+        $value = str_replace(',', '.', htmlspecialchars($this->getValue()));
         return '<input type="number" step="0.01" class="form-control '
             . '" name="' . $this->htmlName
             . '" id="' . $this->htmlName
