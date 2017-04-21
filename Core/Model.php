@@ -450,14 +450,16 @@ abstract class Model
     public function setPath($path)
     {
         $this->path = $path;
-        $count = count($path);
-        if ($count > 1) {
-            // В случае, если не 404ая страница, то устанавливаем $this->prevStructure
-            $config = Config::getInstance();
-            $prev = $path[$count - 2];
-            $end = end($path);
-            $structure = $config->getStructureByName($prev['structure']);
-            $this->prevStructure = $structure['ID'] . '-' . $end['ID'];
+        $end = end($path);
+        if (empty($end['prev_structure'])) {
+            if (empty($end['ID'])) {
+                // это 404-ая страница, prev_structure устанавливать не надо
+            } else {
+                // непонятно, когда такой случай может быть, скорее всего это ошибка
+                throw new \Exception('prev_structure don`t set');
+            }
+        } else {
+            $this->prevStructure = $end['prev_structure'];
         }
     }
 
