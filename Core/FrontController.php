@@ -58,7 +58,8 @@ class FrontController
             // Если запрошена страница из пользовательской части, включён кэш и действие совершил не администратор,
             // то сохранить её
             $user = new User\Model();
-            if (!$user->checkLogin() && $mode != 'admin' && isset($configCache['fileCache']) && $configCache['fileCache']) {
+            if (!$user->checkLogin() && in_array($mode, array('api', 'admin'))
+                && isset($configCache['fileCache']) && $configCache['fileCache']) {
                 $model = $router->getModel();
                 $pageData = $model->getPageData();
                 if (isset($pageData['date_mod'])) {
@@ -114,7 +115,11 @@ class FrontController
             $sent404 = $config->cms['error404Notice'];
         }
         if ($sent404) {
-            $from = empty($_SERVER['HTTP_REFERER']) ? 'Прямой переход.' : 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
+            if (empty($_SERVER['HTTP_REFERER'])) {
+                $from = 'Прямой переход.';
+            } else {
+                $from = 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
+            }
             $message = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"
                 . "\n\nСтраница не найдена (404).\n\n"

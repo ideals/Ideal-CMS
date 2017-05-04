@@ -15,9 +15,6 @@ class Router
     /** @var string Название контроллера обрабатывающего запрос */
     protected $controllerName = '';
 
-    /** @var Model Модель для обработки 404-ых ошибок */
-    protected $error404 = null;
-
     /** @var bool Флаг 404-ошибки */
     public $is404 = false;
 
@@ -29,8 +26,10 @@ class Router
     {
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
+
+        $this->controllerName = $this->detectController($_SERVER['REQUEST_URI']);
+
         $pluginBroker->makeEvent('onPostDispatch', $this);
-        $this->error404 = new Error404\Model();
     }
 
     /**
@@ -40,50 +39,7 @@ class Router
      */
     public function getControllerName()
     {
-
-        if ($this->controllerName != '') {
-            return $this->controllerName;
-        }
-
-        $url = $this->prepareUrl($_SERVER['REQUEST_URI']);
-        $this->error404->setUrl($url);
-
-        // Проверяем наличие адреса среди уже известных 404-ых
-        $this->is404 = $this->error404->checkAvailability404();
-
-        $request = new Request();
-        $path = explode('/', $url);
-
-        if (!$this->is404) {
-            // Определяем название контроллера и экшена
-            if (count($path) == 3) {
-                $this->detectController($path[1]);
-                if (!$this->is404) {
-                    $request->action = $path[2];
-                    list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
-                    if ($namespace != 'Ideal' || !$request->action) {
-                        // Не правильный формат обращений к API
-                        $this->is404 = true;
-                        $this->error404->save404();
-                    }
-                }
-            } elseif (count($path) == 4) {
-                $this->detectController($path[2]);
-                if (!$this->is404) {
-                    $request->action = $path[3];
-                    list($namespace) = explode('\\', ltrim($this->controllerName, '\\'));
-                    if ($namespace == 'Ideal' || !$request->action) {
-                        // Не правильный формат обращений к API
-                        $this->is404 = true;
-                        $this->error404->save404();
-                    }
-                }
-            } else {
-                $this->is404 = true;
-            }
-        }
-
-        return $this->controllerName ? $this->controllerName : '\\Ideal\\Core\\Api\\Controller';
+        return $this->controllerName;
     }
 
     /**
@@ -107,40 +63,43 @@ class Router
     }
 
     /**
-     * Возвращает значение флага отпрваки сообщения о 404ой ошибке
-     */
-    public function send404()
-    {
-        return $this->error404->send404();
-    }
-
-    /**
-     * Обёртка над методом сохранения 404 ошибки соответствующей модели
-     */
-    public function save404()
-    {
-        return $this->error404->save404();
-    }
-
-    /**
      * Ищет контроллер ответственный за обработку запроса
-     * @param $controllerName
+     * @param string $realUrl
+     * @return string
      */
-    private function detectController($controllerName)
+    private function detectController($realUrl)
     {
-        $config = Config::getInstance();
-        $controllerPath = stream_resolve_include_path($controllerName . 'Controller.php');
-        $controllerPath = str_replace(stream_resolve_include_path($config->cmsFolder), '', $controllerPath);
-        $controllerPath = str_replace('/', '\\', $controllerPath);
-        $controllerPath = str_replace('.php', '', $controllerPath);
+        $url = $this->prepareUrl($realUrl);
+        $realPath = explode('/', $url);
 
-        // Если контроллер не найден устанавливаем признак 404 ошибки
-        if (!$controllerPath) {
-            $this->is404 = true;
-            $this->error404->save404();
-        } else {
-            $this->controllerName = $controllerPath;
+        if (count($realPath) < 2) {
+            // Неправильный url, выдаём 404
+            return $this->create404();
         }
+
+        // Убираем слово api из начала пути
+        array_shift($realPath);
+
+        // Проверяем, не является ли это вызовом апи системы
+        $path = array_merge(array('Ideal', 'Api'), $realPath);
+
+        $controllerName = '\\' . implode('\\', $path) . 'Controller';
+
+        if (!class_exists($controllerName)) {
+            if (count($realPath) < 2) {
+                // Названия мода в запрашиваемом контроллере нет, а в Ideal он не нашёлся — бросаем 404
+                return $this->create404();
+            }
+            $modName = array_shift($realPath);
+            $realPath = array_merge(array($modName, 'Api'), $realPath);
+            $controllerName = '\\' . implode('\\', $realPath) . 'Controller';
+            if (!class_exists($controllerName)) {
+                // Подходящего контроллера не нашлось, значит выдаём 404
+                return $this->create404();
+            }
+        }
+
+        return  $controllerName;
     }
 
     /**
@@ -169,5 +128,19 @@ class Router
         $url = ltrim(substr($url, strlen($config->cms['startUrl'])), '/');
 
         return $url;
+    }
+
+    private function create404()
+    {
+        $this->is404 = true;
+        return '\Ideal\Core\Api\Controller';
+    }
+
+    /**
+     * Возвращает значение флага отправки сообщения о 404ой ошибке
+     */
+    public function send404()
+    {
+        return false;
     }
 }

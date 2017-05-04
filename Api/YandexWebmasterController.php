@@ -7,8 +7,10 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Core\Api;
+namespace Ideal\Api;
 
+use Ideal\Core\Api\Controller;
+use Ideal\Core\Api\Router;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Structure\Service\SiteData\ConfigPhp;
