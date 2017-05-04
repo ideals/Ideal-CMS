@@ -15,15 +15,18 @@ use Ideal\Core\View;
 
 class Controller
 {
-
     /** @var View Объект вида — twig-шаблонизатор. В рамках API используется только для показа 404 ошибок */
     protected $view;
+
+    /** @var bool Признак необходимости переопределения типа отдаваемого контента */
+    protected $jsonResponse = true;
 
     /**
      * Действие при некорректных запросах к API системы (обработка ошибки 404)
      */
     public function error404Action()
     {
+        $this->jsonResponse = false;
         $this->templateInit('404.twig');
         $this->view->title = 'Страница не найдена';
         $text = $this->view->render();
@@ -66,18 +69,29 @@ class Controller
             // Определяем и вызываем требуемый action у контроллера
             $request = new Request();
             $actionName = $request->action;
+            $actionName = empty($actionName) ? 'index' : $actionName;
         }
 
         $actionName = $actionName . 'Action';
 
-        if (method_exists($this, $actionName)) {
-            // Вызываемый action существует, запускаем его
-            $content = $this->$actionName($router);
-        } else {
+        if (!method_exists($this, $actionName)) {
             // Вызываемый action отсутствует, запускаем 404 ошибку
             $content = $this->error404Action();
             $router->is404 = true;
+            return $content;
         }
+
+        // Проверяем, авторизован ли доступ к API
+        if (!$this->authorize($router)) {
+            // Старый токен не совпадает с переданным значением, отдаём 404
+            $content = $this->error404Action();
+            $router->is404 = true;
+            return $content;
+        }
+
+        // Вызываемый action существует и доступ авторизован, запускаем его
+        $content = $this->$actionName($router);
+
         return $content;
     }
 
@@ -88,6 +102,22 @@ class Controller
      */
     public function getHttpHeaders()
     {
-        return array();
+        if ($this->jsonResponse) {
+            return array('content-type' => 'application/json');
+        } else {
+            return array();
+        }
+    }
+
+    /**
+     * Обязательный метод проверки авторизации API-запроса
+     * Неавторизированные запросы всегда отдают 404-ую страницу
+     *
+     * @param Router $router
+     * @return bool
+     */
+    public function authorize(Router $router)
+    {
+        return false;
     }
 }
