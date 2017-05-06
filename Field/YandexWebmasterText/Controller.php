@@ -27,9 +27,11 @@ use YandexWebmasterAPI\WebmasterApi;
  */
 class Controller extends AbstractController
 {
-
     /** {@inheritdoc} */
     protected static $instance;
+
+    /** @var  \Ideal\Addon\YandexWebmaster\Model Модель данных, в которой находится редактируемое поле */
+    protected $model;
 
     /**
      * {@inheritdoc}
@@ -111,13 +113,7 @@ HTML;
         $value = parent::getValue();
         if (!$value) {
             // Получаем данные из полей определённых в параметре "content_fields"
-            foreach ($this->model->params['content_fields'] as $field) {
-                if (strpos($field, 'addon') === 0) {
-                    $value .= $this->model->getNeighborAddonsData($field);
-                } else {
-                    $value .= $this->model->getFieldData($field);
-                }
-            }
+            $value = $this->model->getContentFromFields();
         }
         // Ставим перед открывающимися тегами переноса
         $value = str_replace('<p', ' <p', $value);

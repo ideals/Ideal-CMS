@@ -2,8 +2,7 @@
 // ЯндексВебмастер
 return array(
     'params' => array(
-        'name' => 'ЯндексВебмастер',
-        'content_fields' => array('annot', 'addon_Ideal_Page_content')
+        'name' => 'Я.Вебмастер',
     ),
     'fields' => array(
         'ID' => array(
