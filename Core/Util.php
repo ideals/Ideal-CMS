@@ -321,7 +321,7 @@ class Util
      *
      * @return string Латинская буква - большая или маленькая
      */
-    public function randomChar($len = 1)
+    public static function randomChar($len = 1)
     {
         $str = '';
         for ($i = 0; $i < $len; $i++) {
