@@ -214,7 +214,7 @@ class Model
         $arr = $pluginBroker->makeEvent('onGetUrl', $arr);
         $lastUrlPart = $arr['last']['url'];
 
-        if (strpos($lastUrlPart, 'http:') === 0 || strpos($lastUrlPart, '/') === 0 || empty($lastUrlPart)) {
+        if (strpos($lastUrlPart, 'http') === 0 || strpos($lastUrlPart, '/') === 0 || empty($lastUrlPart)) {
             // Если это уже сформированная или пустая ссылка, её и возвращаем
             return $lastUrlPart;
         }
