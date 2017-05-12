@@ -807,6 +807,11 @@ XML;
             $this->stop("Страница {$k} пуста. Размер страницы: {$info['size_download']} байт. Переход с {$place}");
         }
 
+        // Если размер страницы больше 3 МБ, то не анализируем контент
+        if ($info['size_download'] > 3145728) {
+            return '';
+        }
+
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
 
         curl_close($ch);
