@@ -122,7 +122,7 @@ class Model
                 // Получаем данные о рассматриваемом url в справочнике "Ошибки 404"
                 $par = array('url' => $this->url);
                 $fields = array('table' => $error404Table);
-                $rows = $db->select('SELECT * FROM &table WHERE url = :url LIMIT 1', $par, $fields);
+                $rows = $db->select('SELECT * FROM &table WHERE BINARY url = :url LIMIT 1', $par, $fields);
                 if (count($rows) == 0) {
                     // Добавляем запись в справочник
                     $dataList = $config->getStructureByName('Ideal_DataList');

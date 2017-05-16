@@ -38,7 +38,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $user = new User\Model();
         $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE url=:url {$checkActive}";
+        $_sql = "SELECT * FROM {$this->_table} WHERE BINARY url=:url {$checkActive}";
         $par = array();
         $par['url'] = !empty($url) ? $url[0] : null;
         $par['time'] = time();
