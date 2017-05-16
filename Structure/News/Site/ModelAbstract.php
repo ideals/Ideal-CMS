@@ -20,7 +20,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $user = new User\Model();
         $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE url=:url {$checkActive} AND date_create < :time";
+        $_sql = "SELECT * FROM {$this->_table} WHERE BINARY url=:url {$checkActive} AND date_create < :time";
         $par = array('url' => $url[0], 'time' => time());
 
         $news = $db->select($_sql, $par); // запрос на получение всех страниц, соответствующих частям url

@@ -28,7 +28,7 @@ class ModelAbstract extends Part\Site\Model
     {
         $db = Db::getInstance();
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE url=:url LIMIT 1";
+        $_sql = "SELECT * FROM {$this->_table} WHERE BINARY url=:url LIMIT 1";
 
         $list = $db->select($_sql, array('url' => $url)); // получение всех страниц, соответствующих частям url
 

@@ -22,7 +22,7 @@ class ModelAbstract extends Site\Model
             if ($v == '') {
                 continue;
             }
-            $_sql .= ' OR url="' . $db->real_escape_string($v) . '"';
+            $_sql .= ' OR BINARY url="' . $db->real_escape_string($v) . '"';
         }
 
         // Для авторизированных в админку пользователей отображать скрытые страницы
