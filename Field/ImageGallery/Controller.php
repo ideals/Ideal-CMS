@@ -49,7 +49,7 @@ class Controller extends AbstractController
                         </button>
                     </span>
                 </div>
-                <div id="{$this->htmlName}-list" class="input-group"></div>
+                <div id="{$this->htmlName}-list" class="input-group col-lg-12"></div>
             </div>
 HTML;
         return $html;
