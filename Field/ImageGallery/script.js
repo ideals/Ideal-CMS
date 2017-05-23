@@ -39,7 +39,7 @@ $(document).ready(function () {
     });
 
     // При смене описания картинки пересохраняем информацию для фотогалереи
-    $(".tab-pane .gallery-item-description").change(function () {
+    $(".tab-pane").on('change', '.gallery-item-description', function () {
         var id = $('.images-values').attr("id");
         var listSelector = '#' + id + '-list';
         var infoSelector = '#' + id;
