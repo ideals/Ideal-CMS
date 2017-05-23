@@ -54,7 +54,6 @@ function startSortable(listSelector, infoSelector) {
             rescanPhotogalleryItems(listSelector, infoSelector)
         }
     });
-    $(listSelector + " .sortable").disableSelection();
 }
 
 // Пересобираем информацию о фотогалерее
