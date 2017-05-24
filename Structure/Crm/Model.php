@@ -89,7 +89,12 @@ class Model
         } else { // Если заказчика не нашли, то создаём его с заданными данными
             $par['name'] = $this->name;
             $par['date_create'] = time();
-            $par['prev_structure'] = '3-9';
+
+            // Получаем идентификатор справочника "Заказчики" для правильного построения поля "prev_structure"
+            $prevStructureId = $db->select(
+                "SELECT ID FROM {$config->db['prefix']}ideal_structure_datalist WHERE structure = 'Ideal_Crm'"
+            );
+            $par['prev_structure'] = '3-' . $prevStructureId['0']['ID'];
             $customerId = $db->insert($config->db['prefix'] . 'ideal_structure_crm', $par);
         }
         return $customerId;
