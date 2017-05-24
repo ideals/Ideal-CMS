@@ -57,5 +57,10 @@ return array(
             'sql' => 'varchar(255) not null',
             'type' => 'Ideal_Text'
         ),
+        'customer' => array(
+            'label' => 'Заказчик',
+            'sql' => 'int(8)',
+            'type' => 'Ideal_Select',
+        ),
     ),
 );

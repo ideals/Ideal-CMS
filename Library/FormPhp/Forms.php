@@ -463,7 +463,6 @@ class Forms
             $field = $this->fields[$name];
             $field->setValidator($this->validators[$validator]);
         }
-
     }
 
     /**
@@ -618,21 +617,21 @@ JS;
 
     /**
      *
-     * Сохраняем в базу информацию о заказе
+     * Сохраняем в базу информацию о заказе и заказчике
      *
      * @param string $name Имя заказчика
      * @param string $email E-mail заказчика
      * @param string $content Текст заказа
      * @param int $price Сумма заказа
+     * @param int $phone Телефон заказчика
      *
      * @return int $newOrderId Идентификатор нового заказа
      */
-    public function saveOrder($name, $email, $content = '', $price = 0)
+    public function saveOrder($name, $email, $content = '', $price = 0, $phone = '')
     {
         $newOrderId = 0;
         // Записываем в базу, только если доступны нужные классы
         if (class_exists('\Ideal\Core\Db') && class_exists('\Ideal\Core\Config')) {
-
             // Получаем подключение к базе
             /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
             $db = \Ideal\Core\Db::getInstance();
@@ -640,6 +639,26 @@ JS;
             // Получаем конфигурационные данные сайта
             /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
             $config = \Ideal\Core\Config::getInstance();
+
+            $customerId = null;
+
+            // Получаем идентификатор заказчика, если структура "Зазкачиков" подключена и доступен соответствующий класс
+            if ($config->getStructureByName('Ideal_Crm') && class_exists('\Ideal\Structure\Crm\Model')) {
+                // Чистим телефон, чтобы остались только цифры
+                $phone = preg_replace('/\D/', '', $phone);
+
+                // Если телефон заказнчивается на 10 нолей, то считаем что это тестовый заказ
+                if (preg_match('/0{10}$/', $phone)) {
+                    $phone = str_pad('', '11', '0');
+                }
+
+                $customer = new \Ideal\Structure\Crm\Model();
+                $customerId = $customer
+                    ->setPhone($phone)
+                    ->setEmail($email)
+                    ->setName($name)
+                    ->getCustomerId();
+            }
 
             // Формируем название таблицы, в которую записывается информация о заказе
             $orderTable = $config->db['prefix'] . 'ideal_structure_order';
@@ -666,7 +685,8 @@ JS;
                     'price' => $price,
                     'referer' => $this->getValue('referer'),
                     'content' => $content,
-                    'order_type' => $this->orderType
+                    'order_type' => $this->orderType,
+                    'customer' => $customerId
                 )
             );
         }
