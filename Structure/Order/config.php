@@ -61,6 +61,7 @@ return array(
             'label' => 'Заказчик',
             'sql' => 'int(8)',
             'type' => 'Ideal_Select',
+            'medium' => '\\Ideal\\Medium\\CustomerList\\Model'
         ),
     ),
 );
