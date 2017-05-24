@@ -1,6 +1,6 @@
 <?php
 
-// Новости
+// Заказчики
 return array(
     'params' => array(
         'in_structures' => array('Ideal_DataList'), // в каких структурах можно создавать эту структуру
@@ -8,7 +8,7 @@ return array(
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_name' => '', // поле для входа в список потомков
         'field_sort' => 'date_create DESC', // поле, по которому проводится сортировка в CMS
-        'field_list' => array('date_create', 'name', 'email', 'price', 'referer', 'order_type')
+        'field_list' => array('ID', 'date_create', 'name', 'email', 'client_id', 'phone')
     ),
     'fields' => array(
         'ID' => array(
@@ -28,40 +28,23 @@ return array(
         ),
         'name' => array(
             'label' => 'Имя',
-            'sql' => 'varchar(255) not null',
+            'sql' => 'varchar(255)',
             'type' => 'Ideal_Text'
         ),
         'email' => array(
             'label' => 'Email',
-            'sql' => 'varchar(255) not null',
+            'sql' => 'varchar(255)',
             'type' => 'Ideal_Text'
         ),
-        'price' => array(
-            'label' => 'Сумма заказа',
+        'client_id' => array(
+            'label' => 'Client ID',
             'sql'   => 'int',
-            'type'  => 'Ideal_Price'
+            'type'  => 'Ideal_Text'
         ),
-        'referer' => array(
-            'label' => 'Источник перехода',
-            'sql' => 'varchar(255) not null',
-            'type' => 'Ideal_Referer'
-        ),
-        'content' => array(
-            'tab'   => 'Заказ',
-            'label' => 'Заказ',
-            'sql'   => 'mediumtext',
-            'type'  => 'Ideal_RichEdit'
-        ),
-        'order_type' => array(
-            'label' => 'Тип заказа',
-            'sql' => 'varchar(255) not null',
+        'phone' => array(
+            'label' => 'Телефон',
+            'sql' => 'varchar(255)',
             'type' => 'Ideal_Text'
-        ),
-        'customer' => array(
-            'label' => 'Заказчик',
-            'sql' => 'int(8)',
-            'type' => 'Ideal_Select',
-            'medium' => '\\Ideal\\Medium\\CustomerList\\Model'
         ),
     ),
 );
