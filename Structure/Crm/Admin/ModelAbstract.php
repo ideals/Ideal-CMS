@@ -33,6 +33,10 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
                 SET customer = ' . $recipientId . ' 
                 WHERE customer = {{ objectId }}';
             }
+
+            // Удаляем заказчика-донора при объединении
+            $result['sqlAdd'][$groupName] .= ';
+            DELETE FROM {{ table }} WHERE ID = {{ objectId }}';
         }
 
         // Значение поля сохранять в базу не требуется
