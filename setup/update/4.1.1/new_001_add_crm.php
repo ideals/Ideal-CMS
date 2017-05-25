@@ -77,6 +77,12 @@ if (empty($res)) {
     // Добавляем тестового заказчика
     $db->insert(
         $config->db['prefix'] . 'ideal_structure_crm',
-        array('phone' => '00000000000', 'date_create' => time(), 'prev_structure' => '3-' . $prevStructureId, 'name' => 'test')
+        array(
+            'phones' => json_encode(array('00000000000')),
+            'emails' => '',
+            'client_ids' => '',
+            'date_create' => time(),
+            'prev_structure' => '3-' . $prevStructureId,
+            'name' => 'test')
     );
 }

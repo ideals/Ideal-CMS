@@ -70,14 +70,15 @@ class Model
         $config = Config::getInstance();
         $db = Db::getInstance();
         $par = array(
-            'phone' => $db->escape_string($this->phone),
-            'client_id' => $db->escape_string($this->clientId),
-            'email' => $db->escape_string($this->email)
+            'phones' => $db->escape_string($this->phone),
+            'client_ids' => $db->escape_string($this->clientId),
+            'emails' => $db->escape_string($this->email)
         );
-        $par = array_filter($par);
         $where = '';
         foreach ($par as $key => $value) {
-            $where .= " OR {$key} LIKE '%{$value}%'";
+            if ($value) {
+                $where .= " OR {$key} LIKE '%{$value}%'";
+            }
         }
         $where = ltrim($where, ' OR');
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_crm');
@@ -87,6 +88,11 @@ class Model
         if ($customer) {
             $customerId = $customer[0]['ID'];
         } else { // Если заказчика не нашли, то создаём его с заданными данными
+            foreach ($par as $key => $value) {
+                if ($value) {
+                    $par[$key] = json_encode(array($value));
+                }
+            }
             $par['name'] = $this->name;
             $par['date_create'] = time();
 

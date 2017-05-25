@@ -8,7 +8,7 @@ return array(
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_name' => '', // поле для входа в список потомков
         'field_sort' => 'date_create DESC', // поле, по которому проводится сортировка в CMS
-        'field_list' => array('ID', 'date_create', 'name', 'email', 'client_id', 'phone')
+        'field_list' => array('ID', 'date_create', 'name')
     ),
     'fields' => array(
         'ID' => array(
@@ -31,20 +31,26 @@ return array(
             'sql' => 'varchar(255)',
             'type' => 'Ideal_Text'
         ),
-        'email' => array(
-            'label' => 'Email',
-            'sql' => 'varchar(255)',
-            'type' => 'Ideal_Text'
+        'emails' => array(
+            'label' => 'Электронные адреса',
+            'sql' => 'text ',
+            'type' => 'Ideal_JsonArea'
         ),
-        'client_id' => array(
+        'client_ids' => array(
             'label' => 'Client ID',
-            'sql'   => 'int',
-            'type'  => 'Ideal_Text'
+            'sql'   => 'text',
+            'type'  => 'Ideal_JsonArea'
         ),
-        'phone' => array(
-            'label' => 'Телефон',
-            'sql' => 'varchar(255)',
-            'type' => 'Ideal_Text'
+        'phones' => array(
+            'label' => 'Телефоны',
+            'sql' => 'text',
+            'type' => 'Ideal_JsonArea'
+        ),
+        'join_with_customer' => array(
+            'label' => 'Объеденить с заказчиком',
+            'sql' => '',
+            'type' => 'Ideal_Select',
+            'medium' => '\\Ideal\\Medium\\CustomerList\\Model'
         ),
     ),
 );
