@@ -31,4 +31,11 @@ return array(
         'yandexKey' => "", // Яндекс ключ | Ideal_Text
         'proxyUrl' => "", // Адрес прокси скрипта | Ideal_Text
     ),
+    'smtp' => array( // SMTP
+        'server' => "", // Адрес SMTP-сервера | Ideal_Text
+        'domain' => "", // Домен, с которого идёт отправка письма | Ideal_Text
+        'port' => "", // Порт SMTP-сервера | Ideal_Text
+        'user' => "", // Имя пользователя для авторизации на SMTP-сервере | Ideal_Text
+        'password' => "", // Пароль для авторизации на SMTP-сервере | Ideal_Text
+    ),
 );

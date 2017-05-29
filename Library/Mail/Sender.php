@@ -37,6 +37,12 @@ class Sender
     /** @var string Тема письма */
     protected $subj;
 
+    /** @var bool Флаг, использовать/не использовать smtp при отправке сообщения */
+    protected $isSmtp = false;
+
+    /** @var array Массив настроек подключения к SMTP */
+    protected $smtp = array();
+
     /**
      * Прикрепляем файл к письму, если файл существует
      *
@@ -97,7 +103,13 @@ class Sender
             }
             $this->body = implode("\n", $body);
         }
-        return mail($to, $this->subj, $this->body, 'From: ' . $from . "\n" . $this->header);
+        // Если есть все данные для отправки по SMTP, то используем его
+        if ($this->isSmtp) {
+            $result = $this->mailSmtp($from, $to);
+        } else {
+            $result = mail($to, $this->subj, $this->body, 'From: ' . $from . "\n" . $this->header);
+        }
+        return $result;
     }
 
     /**
@@ -240,5 +252,151 @@ class Sender
     {
         $subject = stripslashes($subject);
         $this->subj = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    }
+
+    /**
+     * Отправляет сообщение посредством SMTP
+     *
+     * @param string $from Адрес отправителя
+     * @param string $receiver Адреса получателей
+     * @return bool Признак успеха/провала отправки сообщения
+     */
+    protected function mailSmtp($from, $receiver)
+    {
+        // Формируем массив получателей
+        $receiver = explode(',', $receiver);
+        foreach ($receiver as $key => $value) {
+            $receiver[$key] = trim($value);
+        }
+
+        $server = $this->smtp['server'];
+        $port = $this->smtp['port'];
+        $user = $this->smtp['user'];
+        $password = $this->smtp['password'];
+        $domain = $this->smtp['domain'];
+
+        $formatDomain = function ($str) {
+            return str_replace("+", "_", str_replace("%", "=", urlencode($str)));
+        };
+
+        // Формируем заголовки
+        $header = "From: =?UTF-8?Q?" . $formatDomain($domain) . "?= <{$from}>\n";
+        $header .= "Reply-To: =?UTF-8?Q?" . $formatDomain($domain) . "?= <{$from}>\n";
+        $header .= "Message-ID: <" . time() . "." . date("YmjHis") . "@{$domain}>\n";
+        $header .= "To: =?UTF-8?Q?" . $formatDomain($receiver[0]) . "?= <{$receiver[0]}>\n";
+        $header .= "Subject: {$this->subj}\n";
+        $this->header = $header . $this->header;
+
+        // Соединяемся с почтовым сервером
+        $smtpConn = fsockopen($server, $port, $errno, $errstr, 30);
+        if (!$smtpConn) {
+            return false;
+        }
+
+        // Здороваемся с сервером
+        $this->getData($smtpConn);
+        fputs($smtpConn, "EHLO {$domain}\n");
+        $code = substr($this->getData($smtpConn), 0, 3);
+        if ($code != 250) {
+            fclose($smtpConn);
+            return false;
+        }
+
+        // Запрашиваем авторизацию
+        fputs($smtpConn, "AUTH LOGIN\n");
+        $code = substr($this->getData($smtpConn), 0, 3);
+        if ($code != 334) {
+            fclose($smtpConn);
+            return false;
+        }
+
+        // Отправляем логин
+        fputs($smtpConn, base64_encode($user) . "\n");
+        $code = substr($this->getData($smtpConn), 0, 3);
+        if ($code != 334) {
+            fclose($smtpConn);
+            return false;
+        }
+
+        // Отправляем пароль
+        fputs($smtpConn, base64_encode($password) . "\n");
+        $code = substr($this->getData($smtpConn), 0, 3);
+        if ($code != 235) {
+            fclose($smtpConn);
+            return false;
+        }
+
+        // Посылаем информацию об отправителе и размере писма
+        $sizeMsg = strlen($this->header ."\n". $this->body);
+        fputs($smtpConn, "MAIL FROM:<{$user}> SIZE=" . $sizeMsg . "\n");
+        $code = substr($this->getData($smtpConn), 0, 3);
+        if ($code != 250) {
+            fclose($smtpConn);
+            return false;
+        }
+
+        // Посылаем информацию о получателях
+        foreach ($receiver as $value) {
+            fputs($smtpConn, "RCPT TO:<{$value}>\n");
+            $code = substr($this->getData($smtpConn), 0, 3);
+            if ($code != 250 && $code != 251) {
+                fclose($smtpConn);
+                return false;
+            }
+        }
+
+        // Запрашиваем возможность ввода текста письма
+        fputs($smtpConn, "DATA\n");
+        $code = substr($this->getData($smtpConn), 0, 3);
+        if ($code != 354) {
+            fclose($smtpConn);
+            return false;
+        }
+
+        // Отправляем текст письма со всеми заголовками
+        fputs($smtpConn, $this->header ."\n". $this->body . "\n.\n");
+        $code = substr($this->getData($smtpConn), 0, 3);
+        if ($code != 250) {
+            fclose($smtpConn);
+            return false;
+        }
+
+        // Завершаем работу с сервером
+        fputs($smtpConn, "QUIT\n");
+        fclose($smtpConn);
+        return true;
+    }
+
+    /**
+     * Получает ответ от сервера
+     *
+     * @param $smtpConn resource Указатель на открытое соединение с сервером
+     * @return string Ответ от сервера
+     */
+    protected function getData($smtpConn)
+    {
+        $data = "";
+        while ($str = fgets($smtpConn, 515)) {
+            $data .= $str;
+            if (substr($str, 3, 1) == " ") {
+                break;
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Определяет достаточность предоставленных параметров для использования SMTP
+     */
+    public function setSmtp($params)
+    {
+        // Проверяем корректность переданных параметров подключения к SMTP
+        $fields = array('server', 'port', 'user', 'password', 'domain');
+        foreach ($fields as $field) {
+            if (empty($params[$field])) {
+                throw new \Exception('Отсутствует поле ' . $field . ' в настройках SMTP');
+            }
+        }
+        $this->isSmtp = true;
     }
 }

@@ -560,10 +560,11 @@ JS;
      * @param string $to Список получателей
      * @param string $title Заголовок письма
      * @param string $body Тело письма
-     * @param $html bool Флаг, если true значит текст содержит html, false - обычный текст.
+     * @param $html bool Флаг, если true значит текст содержит html, false - обычный текст
+     * @param $smtpParams array Параметры для отправки сообщения посредством smtp
      * @return bool Признак принятия почты к отправке
      */
-    public function sendMail($from, $to, $title, $body, $html = false)
+    public function sendMail($from, $to, $title, $body, $html = false, $smtpParams = array())
     {
         if (!class_exists('\Mail\Sender')) {
             // Окружение не инициализировано и продвинутого класса отправки почты нет
@@ -573,6 +574,9 @@ JS;
         }
         /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
         $sender = new \Mail\Sender();
+        if (!empty($smtpParams)) {
+            $sender->setSmtp($smtpParams);
+        }
 
         // Устанавливаем заголовок письма
         $sender->setSubj($title);
@@ -617,7 +621,6 @@ JS;
     }
 
     /**
-     *
      * Сохраняем в базу информацию о заказе
      *
      * @param string $name Имя заказчика
