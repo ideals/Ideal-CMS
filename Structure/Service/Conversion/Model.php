@@ -27,6 +27,9 @@ class Model
     /** @var mixed Строковое/числовое представление временного интервала для отображения на графике */
     protected $interval;
 
+    /** @var integer Флаг означающий надобность отображения только новых лидов */
+    protected $newLead;
+
     /** @var array Общий массив данных находящихся в заданном интервале  */
     protected $row;
 
@@ -42,13 +45,15 @@ class Model
      * @param integer $fromTimestamp Дата с которой начинать собирать информацию
      * @param integer $toTimestamp Дата до которой нужно собрать информацию
      * @param mixed $interval Строковое/числовое представление временного интервала для отображения на графике
+     * @param integer $newLead Флаг означающий надобность отображения только новых лидов
      */
-    public function __construct($fromTimestamp, $toTimestamp, $interval = 'day')
+    public function __construct($fromTimestamp, $toTimestamp, $interval = 'day', $newLead = 0)
     {
         $this->fromTimestamp = $fromTimestamp;
         $this->toTimestamp = $toTimestamp;
         $this->interval = $interval;
-        $this->row = self::getData();
+        $this->newLead = $newLead;
+        self::getData();
     }
 
     /**
@@ -320,7 +325,8 @@ class Model
     }
 
     /**
-     * Получает все данные о заказах находящиеся в заданном интервале
+     * Получает все данные о заказах находящиеся в заданном интервале.
+     * С учётом надобности отображения лидов из предыдущих периодов.
      *
      * @return array Массив данных находящихся в заданном интервале
      */
@@ -330,8 +336,14 @@ class Model
         $config = Config::getInstance();
         $par = array('fromDate' => $this->fromTimestamp, 'toDate' => $this->toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        return $db->select(
-            'SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER by date_create',
+
+        // При надобности исключаем лидов предыдущих периодов
+        $where = '';
+        if ($this->newLead) {
+            $where .= " AND customer NOT IN (SELECT customer FROM &table WHERE date_create < :fromDate AND customer IS NOT NULL)";
+        }
+        $this->row = $db->select(
+            "SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate{$where} ORDER by date_create",
             $par,
             $fields
         );

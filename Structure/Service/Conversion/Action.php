@@ -1,6 +1,7 @@
 <?php
 // @codingStandardsIgnoreFile
 $interval = 'day';
+$newLead = 0;
 parse_str($_SERVER['QUERY_STRING'], $queryString);
 if (isset($queryString['fromDate'])) {
     $fromTimestamp = strtotime(str_replace('.', '-', $queryString['fromDate']));
@@ -21,6 +22,10 @@ if (isset($queryString['grouping'])) {
     $interval = $queryString['grouping'];
     unset($queryString['grouping']);
 }
+if (isset($queryString['newLead'])) {
+    $newLead = $queryString['newLead'];
+    unset($queryString['newLead']);
+}
 
 // Получаем дату с которой формировать графики. По умолчанию 30 дней назад
 $fromDate = date('d.m.Y', $fromTimestamp);
@@ -29,7 +34,7 @@ $fromDate = date('d.m.Y', $fromTimestamp);
 $toDate = date('d.m.Y', $toTimestamp);
 
 // Собираем строку/js-массив для настройки отображения первого графика
-$conversion = new Ideal\Structure\Service\Conversion\Model($fromTimestamp, $toTimestamp, $interval);
+$conversion = new Ideal\Structure\Service\Conversion\Model($fromTimestamp, $toTimestamp, $interval, $newLead);
 $visualConfig = $conversion->getOrdersInfo();
 ?>
 
@@ -169,6 +174,11 @@ $visualConfig = $conversion->getOrdersInfo();
         <label class="radio-inline"><input type="radio" name="grouping" value="day" <?php if ($interval == 'day') { echo 'checked'; } ?> />дням</label>
         <label class="radio-inline"><input type="radio" name="grouping" value="week" <?php if ($interval == 'week') { echo 'checked'; } ?>/>неделям</label>
         <label class="radio-inline"><input type="radio" name="grouping" value="month" <?php if ($interval == 'month') { echo 'checked'; } ?>/>месяцам</label>
+    </div>
+
+    <div class="input-group grouping">
+        <label class="first-label">Только новые лиды:</label>
+        <label class="checkbox-inline"><input type="checkbox" name="newLead" value="1" <?php if ($newLead) { echo 'checked'; } ?> />&nbsp;</label>
     </div>
     <?php
      if (count($queryString) != 0) {
