@@ -55,24 +55,10 @@ class Model
      */
     public function getOrdersInfo()
     {
-        $visualConfig['quantityOfOrders'] = self::getQuantityOfOrdersInfo(
-            $this->fromTimestamp,
-            $this->toTimestamp,
-            $this->interval
-        );
-        $visualConfig['referer'] = self::getRefererOrdersInfo(
-            $this->fromTimestamp,
-            $this->toTimestamp
-        );
-        $visualConfig['sumOfOrder'] = self::getSumOfOrdersInfo(
-            $this->fromTimestamp,
-            $this->toTimestamp,
-            $this->interval
-        );
-        $visualConfig['orderType'] = self::getOrderTypeInfo(
-            $this->fromTimestamp,
-            $this->toTimestamp
-        );
+        $visualConfig['quantityOfOrders'] = self::getQuantityOfOrdersInfo();
+        $visualConfig['referer'] = self::getRefererOrdersInfo();
+        $visualConfig['sumOfOrder'] = self::getSumOfOrdersInfo();
+        $visualConfig['orderType'] = self::getOrderTypeInfo();
         return $visualConfig;
     }
 
