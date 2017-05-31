@@ -33,6 +33,9 @@ class Model
     /** @var string Цель поиска  */
     protected $target = '';
 
+    /** @var string Признак группировки */
+    protected $group = '';
+
     /**
      * Инициализация модели получения данных для графика
      *
@@ -56,6 +59,7 @@ class Model
     public function getOrdersInfo()
     {
         $visualConfig['quantityOfOrders'] = self::getQuantityOfOrdersInfo();
+        $visualConfig['quantityOfLead'] = self::getQuantityOfLead();
         $visualConfig['referer'] = self::getRefererOrdersInfo();
         $visualConfig['sumOfOrder'] = self::getSumOfOrdersInfo();
         $visualConfig['orderType'] = self::getOrderTypeInfo();
@@ -112,6 +116,67 @@ class Model
             }
             $visualConfig .= ']';
         }
+        return $visualConfig;
+    }
+
+    /**
+     * Генерирует конфигурационные данные для графика во вкладке "Кол-во лидов"
+     */
+    protected function getQuantityOfLead()
+    {
+        $visualConfig = '';
+
+        // Запускаем процесс построения строки/js-массива
+        if (count($this->row) > 0) {
+            $visualConfig .= "[['Section', 'Яндекс', 'Google', 'Другие сайты', 'Прямой заход', { role: 'annotation' }],";
+
+            // Устанавливаем цель поиска на источник перехода
+            $this->target = 'referer';
+
+            // Устанавливаем группировку по заказчику
+            $this->group = 'customer';
+
+            $groupedOrders = self::getGroupedOrders();
+
+            // Разбиваем даты по реферам
+            foreach ($groupedOrders as $key => $ordersInIterval) {
+                // Инициализируем группирующие описания рефереров по каждой точке в интервале
+                $groupedOrders[$key]['yandex'] = 0;
+                $groupedOrders[$key]['google'] = 0;
+                $groupedOrders[$key]['other'] = 0;
+                $groupedOrders[$key]['straight'] = 0;
+                if (!empty($ordersInIterval)) {
+                    foreach ($ordersInIterval as $refKey => $referer) {
+                        // Отлавливаем прямой переход
+                        if ($referer == 'null') {
+                            $groupedOrders[$key]['straight']++;
+                        } elseif (strripos($referer, 'yandex') !== false) { // Отлавливаем яндекс
+                            $groupedOrders[$key]['yandex']++;
+                        } elseif (strripos($referer, 'google') !== false) { // Отлавливаем гугл
+                            $groupedOrders[$key]['google']++;
+                        } else { // Отлавливаем другие сайты
+                            $groupedOrders[$key]['other']++;
+                        }
+                        unset($groupedOrders[$key][$refKey]);
+                    }
+                }
+            }
+
+            // Собираем строки для js конфигурации
+            end($groupedOrders);
+            $lastKey = key($groupedOrders);
+            foreach ($groupedOrders as $key => $ordersInIterval) {
+                $visualConfig .= "['{$key}', {$ordersInIterval['yandex']}, {$ordersInIterval['google']}, {$ordersInIterval['other']}, {$ordersInIterval['straight']}, '']";
+                if ($key != $lastKey) {
+                    $visualConfig .= ',';
+                }
+            }
+            $visualConfig .= ']';
+        }
+
+        // Обнуляем группировку данных
+        $this->group = 'customer';
+
         return $visualConfig;
     }
 
@@ -243,7 +308,12 @@ class Model
         // Проходим по всему массиву данных и собираем подходящие
         foreach ($this->row as $key => $value) {
             if ($value['date_create'] >= $timestamp && $value['date_create'] <= $timestamp + $interval) {
-                $resultArray[] = $value[$this->target];
+                // Если задана группировка, то формируем данные с её учётом
+                if (!$this->group) {
+                    $resultArray[] = $value[$this->target];
+                } elseif (!isset($resultArray[$value[$this->group]])) {
+                    $resultArray[$value[$this->group]] = $value[$this->target];
+                }
             }
         }
         return $resultArray;

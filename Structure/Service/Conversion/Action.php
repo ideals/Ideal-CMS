@@ -77,6 +77,25 @@ $visualConfig = $conversion->getOrdersInfo();
                 $('#quantityOfOrdersChart').html('Нет данных');
             <?php } ?>
 
+            <?php if (isset($visualConfig['quantityOfLead']) && !empty($visualConfig['quantityOfLead'])) { ?>
+            var quantityOfLeadData = google.visualization.arrayToDataTable(<?php print $visualConfig['quantityOfLead']; ?>);
+
+            var quantityOfLeadOptions = {
+                title: "Общее кол-во лидов за определённый срок",
+                isStacked: true,
+                height: 300,
+                legend: {position: 'top', maxLines: 3},
+                vAxis: {minValue: 0}
+            };
+
+            $('#quantityOfLeadChartTab').addClass('active');
+            var quantityOfLeadChart = new google.visualization.ColumnChart(document.getElementById('quantityOfLeadChart'));
+            quantityOfLeadChart.draw(quantityOfLeadData, quantityOfLeadOptions);
+            $('#quantityOfLeadChartTab').removeClass('active');
+            <?php } else { ?>
+                $('#quantityOfLeadChart').html('Нет данных');
+            <?php } ?>
+
             <?php if (isset($visualConfig['referer']) && !empty($visualConfig['referer'])) { ?>
             var refererChartData = google.visualization.arrayToDataTable(<?php print $visualConfig['referer']; ?>);
             var refererChartOptions = {
@@ -167,6 +186,7 @@ $visualConfig = $conversion->getOrdersInfo();
 
 <ul class="nav nav-tabs">
     <li class="active"><a href="#quantityOfOrdersChartTab" data-toggle="tab">Общее кол-во</a></li>
+    <li><a href="#quantityOfLeadChartTab" data-toggle="tab">Кол-во лидов</a></li>
     <li><a href="#refererChartTab" data-toggle="tab">Источники переходов</a></li>
     <li><a href="#orderTypeChartTab" data-toggle="tab">Виды заказов</a></li>
     <li><a href="#sumOfOrdersChartTab" data-toggle="tab">Сумма заказов</a></li>
@@ -175,6 +195,9 @@ $visualConfig = $conversion->getOrdersInfo();
 <div class="tab-content">
     <div class="tab-pane active" id="quantityOfOrdersChartTab">
         <div id="quantityOfOrdersChart"></div>
+    </div>
+    <div class="tab-pane" id="quantityOfLeadChartTab">
+        <div id="quantityOfLeadChart"></div>
     </div>
     <div class="tab-pane" id="refererChartTab">
         <div id="refererChart"></div>
