@@ -533,4 +533,14 @@ abstract class Model
     {
         $this->fieldsGroup = $name;
     }
+
+    /**
+     * "Умная" установка 404: если флаг уже установлен в true, то не сбрасываем его
+     *
+     * @param bool $is404 Устанавливаемый флаг 404-ой ошибки
+     */
+    public function set404($is404)
+    {
+        $this->is404 = $this->is404 || $is404;
+    }
 }

@@ -5,7 +5,6 @@ use Ideal\Core\Config;
 use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
-use Ideal\Structure\Error404;
 use Ideal\Structure\Home;
 
 class Router
@@ -17,9 +16,6 @@ class Router
     /** @var Model Модель активной страницы */
     protected $model = null;
 
-    /** @var Model Модель для обработки 404-ых ошибок */
-    protected $error404 = null;
-
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
      *
@@ -29,27 +25,8 @@ class Router
      */
     public function __construct()
     {
-        $is404 = false;
-
-        // Проверка на простой AJAX-запрос
-        $request = new Request();
-        if ($request->mode == 'ajax' && $request->controller != '') {
-            $controllerName = $request->controller . '\\AjaxController';
-            $is404 = true;
-            if (class_exists($controllerName)) {
-                // Если контроллер в запросе указан И запрошенный класс существует
-                // то устанавливаем контроллер и завершаем роутинг
-                if (!empty($request->action) && method_exists($controllerName, $request->action . 'Action')) {
-                    $this->controllerName = $controllerName;
-                    $is404 = false;
-                }
-            }
-        }
-
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
-
-        $this->error404 = new Error404\Model();
 
         if (is_null($this->model)) {
             $this->model = $this->routeByUrl();
@@ -59,11 +36,6 @@ class Router
 
         // Инициализируем данные модели
         $this->model->initPageData();
-
-        if ($is404) {
-            // Если при инициализации ajax-контроллера произошла 404-ая ошибка, то фиксируем её в любом случае
-            $this->saveAjax404();
-        }
 
         // Определяем корректную модель на основании поля structure
         if (!$this->model->is404) {
@@ -93,51 +65,44 @@ class Router
             return $model;
         }
 
-        $this->error404->setUrl($url);
-
-        // Проверяем наличие адреса среди уже известных 404-ых
-        $is404 = $this->error404->checkAvailability404();
-
-        // Определяем оставшиеся элементы пути
+        // Определяем первый элемент пути - главную страницу
         $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Site\\Model';
         /* @var $model Model */
         $model = new $modelClassName('0-' . $prevStructureId);
 
-        if ($is404 !== true) {
-            // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
-            $lengthSuffix = strlen($config->urlSuffix);
-            if ($lengthSuffix > 0) {
-                $suffix = substr($url, -$lengthSuffix);
-                if ($suffix != $config->urlSuffix) {
-                    $is404 = true;
-                }
-                $url = substr($url, 0, -$lengthSuffix); // убираем суффикс из url
-            }
+        // Проверяем наличие адреса среди уже известных 404-ых
+        $error404 = new \Ideal\Structure\Error404\Model();
+        $this->model->set404($error404->isKnown404($url));
 
-            // Проверка, не остался ли в конце URL слэш
-            if (substr($url, -1) == '/') {
-                // Убираем завершающие слэши, если они есть
-                $url = rtrim($url, '/');
-                // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
-                // то ставим 404-ошибку
-                $is404 = true;
-            }
-
-            // Разрезаем URL на части
-            $url = explode('/', $url);
-
-            // Запускаем определение пути и активной модели по $par
-            $model = $model->detectPageByUrl($path, $url);
-            if ($model->is404 == false && $is404) {
-                // Если роутинг нашёл нужную страницу, но суффикс неправильный
-                $model->is404 = true;
-            }
-            if ($model->is404) {
-                $this->error404->save404();
-            }
-        } else {
-            $model->is404 = true;
+        if ($this->model->is404) {
+            return $model;
         }
+
+        // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
+        $lengthSuffix = strlen($config->urlSuffix);
+        if ($lengthSuffix > 0) {
+            $suffix = substr($url, -$lengthSuffix);
+            if ($suffix != $config->urlSuffix) {
+                $this->model->set404(true);
+            }
+            $url = substr($url, 0, -$lengthSuffix); // убираем суффикс из url
+        }
+
+        // Проверка, не остался ли в конце URL слэш
+        if (substr($url, -1) == '/') {
+            // Убираем завершающие слэши, если они есть
+            $url = rtrim($url, '/');
+            // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
+            // то ставим 404-ошибку
+            $this->model->set404(true);
+        }
+
+        // Разрезаем URL на части
+        $url = explode('/', $url);
+
+        // Запускаем определение пути и активной модели по $par
+        $model = $model->detectPageByUrl($path, $url);
+
         return $model;
     }
 
@@ -165,9 +130,9 @@ class Router
 
         if (count($path) == 0) {
             Util::addError('Не удалось построить путь. Модель: ' . get_class($this->model));
-            $this->model->is404 = true;
-            // todo отображение 404 ошибки
+            $this->model->set404(true);
         }
+
         $end = array_pop($path);
         $prev = array_pop($path);
 
@@ -185,14 +150,29 @@ class Router
         }
 
         $request = new Request();
-        if ($request->mode == 'ajax' && $request->controller == '') {
-            // Если это ajax-вызов без указанного namespace класса ajax-контроллера,
-            // то используем namespace модели
-            $controllerName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\AjaxController';
-            if (!class_exists($controllerName)) {
-                $this->saveAjax404();
+        if ($request->mode == 'ajax') {
+            if ($request->controller == '') {
+                // Если это ajax-вызов без указанного namespace класса ajax-контроллера,
+                // то используем namespace модели
+                $controllerName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\AjaxController';
+                if (class_exists($controllerName)) {
+                    return $controllerName;
+                } else {
+                    $this->model->set404(true);
+                }
             } else {
-                return $controllerName;
+                // Проверка на простой AJAX-запрос с указанием контроллера
+                $controllerName = $request->controller . '\\AjaxController';
+                $is404 = true;
+                if (class_exists($controllerName)) {
+                    // Если контроллер в запросе указан И запрошенный класс существует
+                    // то устанавливаем контроллер и завершаем роутинг
+                    if (!empty($request->action) && method_exists($controllerName, $request->action . 'Action')) {
+                        $this->controllerName = $controllerName;
+                        $is404 = false;
+                    }
+                }
+                $this->model->set404($is404);
             }
         }
 
@@ -240,12 +220,21 @@ class Router
     }
 
     /**
-     * Возвращает значение флага отправки сообщения о 404ой ошибке
+     * Если обнаружена 404-ая ошибка, то записываем её и отправляем почтой уведомление
+     *
      * @return bool
      */
     public function send404()
     {
-        return $this->error404->send404();
+        if (!$this->model->is404) {
+            // Ошибки нет, делать ничего не надо
+            return false;
+        }
+
+        $error404 = new \Ideal\Structure\Error404\Model();
+        $error404->generate404();
+
+        return true;
     }
 
     /**
@@ -274,13 +263,5 @@ class Router
         $url = ltrim(substr($url, strlen($config->cms['startUrl'])), '/');
 
         return $url;
-    }
-
-    protected function saveAjax404()
-    {
-        $this->model->is404 = true;
-        $url = $this->prepareUrl($_SERVER['REQUEST_URI'], false);
-        $this->error404->setUrl($url);
-        $this->error404->save404();
     }
 }

@@ -15,8 +15,7 @@ class Router
     /** @var string Название контроллера обрабатывающего запрос */
     protected $controllerName = '';
 
-    /** @var bool Флаг 404-ошибки */
-    public $is404 = false;
+    protected $is404 = false;
 
     /**
      * Конструктор генерирует события onPreDispatch и onPostDispatch,
@@ -142,5 +141,12 @@ class Router
     public function send404()
     {
         return false;
+    }
+
+    public function getModel()
+    {
+        $model = new \stdClass();
+        $model->is404 = $this->is404;
+        return $model;
     }
 }

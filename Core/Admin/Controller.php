@@ -85,25 +85,6 @@ class Controller
     }
 
     /**
-     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
-     */
-    public function error404Action()
-    {
-        $name = $title = 'Страница не найдена';
-        $this->templateInit('404.twig');
-
-        // Добавляем в path пустой элемент
-        $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
-        $this->model->setPath($path);
-
-        // Устанавливаем нужный нам title
-        $pageData = $this->model->getPageData();
-        $pageData['title'] = $title;
-        $this->model->setPageData($pageData);
-    }
-
-    /**
      * Инициализация админского twig-шаблона
      *
      * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
@@ -232,6 +213,14 @@ class Controller
             $actionName = 'index';
         }
         $actionName = $actionName . 'Action';
+
+        if (!method_exists($this, $actionName)) {
+            $model = $router->getModel();
+            $model->set404(true);
+            $router->setModel($model);
+            return '';
+        }
+
         $this->$actionName();
 
         $config = Config::getInstance();

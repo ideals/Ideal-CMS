@@ -14,7 +14,7 @@ namespace Ideal\Core;
  * @property string cmsFolder Название папки с CMS
  * @property array yandex Массив с настройками подключения к сервисам Яндекса
  * @property string domain Доменная часть адреса сайта на котором установлена CMS
- * @property string cms Массив настроек cms
+ * @property array cms Массив настроек cms
  * @property string urlSuffix Стандартный суффикс url для страниц сайта (обычно .html)
  */
 class Config

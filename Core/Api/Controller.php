@@ -15,45 +15,8 @@ use Ideal\Core\View;
 
 class Controller
 {
-    /** @var View Объект вида — twig-шаблонизатор. В рамках API используется только для показа 404 ошибок */
-    protected $view;
-
     /** @var bool Признак необходимости переопределения типа отдаваемого контента */
     protected $jsonResponse = true;
-
-    /**
-     * Действие при некорректных запросах к API системы (обработка ошибки 404)
-     */
-    public function error404Action()
-    {
-        $this->jsonResponse = false;
-        $this->templateInit('404.twig');
-        $this->view->title = 'Страница не найдена';
-        $text = $this->view->render();
-        return $text;
-    }
-
-    /**
-     * Инициализация twig-шаблона
-     *
-     * @param string $tplName Название файла шаблона (с путём к нему)
-     */
-    public function templateInit($tplName = '')
-    {
-        // Проверяем, присутствует ли указанный файл шаблона на диске
-        if (!stream_resolve_include_path($tplName)) {
-            echo 'Нет файла шаблона ' . $tplName;
-            exit;
-        }
-        $tplRoot = dirname(stream_resolve_include_path($tplName));
-        $tplName = basename($tplName);
-
-        $config = Config::getInstance();
-        $folders = array($tplRoot);
-        $this->view = new View($folders, $config->cache['templateSite']);
-        $this->view->loadTemplate($tplName);
-    }
-
 
     /**
      * Реакиця контроллера на запрос
@@ -64,13 +27,13 @@ class Controller
     public function run(Router $router)
     {
         if ($router->is404()) {
-            $actionName = 'error404';
-        } else {
-            // Определяем и вызываем требуемый action у контроллера
-            $request = new Request();
-            $actionName = $request->action;
-            $actionName = empty($actionName) ? 'index' : $actionName;
+            return '';
         }
+
+        // Определяем и вызываем требуемый action у контроллера
+        $request = new Request();
+        $actionName = $request->action;
+        $actionName = empty($actionName) ? 'index' : $actionName;
 
         $actionName = $actionName . 'Action';
 

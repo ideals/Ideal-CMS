@@ -16,9 +16,6 @@ class Router
     /** @var Model Модель активной страницы */
     protected $model = null;
 
-    /** @var Model Модель для обработки 404-ых ошибок */
-    protected $error404 = null;
-
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
      *
@@ -28,23 +25,10 @@ class Router
      */
     public function __construct()
     {
-        // Проверка на простой AJAX-запрос
         $request = new Request();
-        if ($request->mode == 'ajax' && $request->controller != '') {
-            $controllerName = $request->controller . '\\AjaxController';
-            if (class_exists($controllerName)) {
-                // Если контроллер в запросе указан и запрошенный класс существует
-                // то устанавливаем контроллер и завершаем роутинг
-                if (!empty($request->action) && method_exists($controllerName, $request->action . 'Action')) {
-                    $this->controllerName = $controllerName;
-                }
-            }
-        }
 
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
-
-        $this->error404 = new Error404\Model();
 
         if (is_null($this->model)) {
             $this->model = $this->routeByPar();
@@ -123,6 +107,17 @@ class Router
         }
 
         $request = new Request();
+        // Проверка на простой AJAX-запрос
+        if ($request->mode == 'ajax' && $request->controller != '') {
+            $controllerName = $request->controller . '\\AjaxController';
+            if (class_exists($controllerName)) {
+                // Если контроллер в запросе указан и запрошенный класс существует
+                // то устанавливаем контроллер и завершаем роутинг
+                if (!empty($request->action) && method_exists($controllerName, $request->action . 'Action')) {
+                    $this->controllerName = $controllerName;
+                }
+            }
+        }
         if ($request->mode == 'ajax' && $request->controller != '') {
             // Если это ajax-вызов с явно указанным namespace класса ajax-контроллера
             return $request->controller . '\\AjaxController';
@@ -165,18 +160,18 @@ class Router
     }
 
     /**
+     * @param $model Model Устанавливает модель, найденную роутером (обычно использется в плагинах)
+     */
+    public function setModel($model)
+    {
+        $this->model = $model;
+    }
+
+    /**
      * Возвращает статус 404-ошибки, есть он или нет
      */
     public function is404()
     {
         return $this->model->is404;
-    }
-
-    /**
-     * Возвращает значение флага отпрваки сообщения о 404ой ошибке
-     */
-    public function send404()
-    {
-        return $this->error404->send404();
     }
 }

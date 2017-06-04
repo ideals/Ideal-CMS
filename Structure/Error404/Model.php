@@ -184,4 +184,59 @@ class Model
             return false;
         });
     }
+
+    /**
+     * Проверяем, входит ли указанный $url в массив известных 404-ых ошибок
+     *
+     * @param string $url Проверяемый url
+     * @return bool
+     */
+    public function isKnown404($url)
+    {
+        $config = Config::getInstance();
+
+        $knownFile = DOCUMENT_ROOT . $config->cmsFolder . '/known404.php';
+        $known404 = file_exists($knownFile) ? include($knownFile) : array('known' => array('known404' => ''));
+        $known404 = explode("\n", $known404['known']['known404']);
+        $is404 = $this->matchesRules($known404, $url);
+
+        return !empty($is404);
+    }
+
+    public function generate404()
+    {
+    }
+
+    /**
+     * Отправка письма о 404-ой ошибке
+     */
+    protected function emailError404()
+    {
+        $config = Config::getInstance();
+        $sent404 = true;
+        if (isset($config->cms['error404Notice'])) {
+            $sent404 = $config->cms['error404Notice'];
+        }
+        if ($sent404) {
+            if (empty($_SERVER['HTTP_REFERER'])) {
+                $from = 'Прямой переход.';
+            } else {
+                $from = 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
+            }
+            $message = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
+                . "произошли следующие ошибки.\n\n"
+                . "\n\nСтраница не найдена (404).\n\n"
+                . "\n\n{$from}\n\n";
+            $user = new User\Model();
+            if ($user->checkLogin()) {
+                $message .= "\n\nДействие совершил администратор.\n\n";
+            }
+            $message .= '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
+            $subject = "Страница не найдена (404) на сайте " . $config->domain;
+            $mail = new \Mail\Sender();
+            $mail->setSubj($subject);
+            $mail->setPlainBody($message);
+            $mail->sent($config->robotEmail, $config->cms['adminEmail']);
+        }
+    }
 }

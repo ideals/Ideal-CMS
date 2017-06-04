@@ -17,9 +17,6 @@ class AjaxController
     /** @var Model Модель соответствующая этому контроллеру */
     protected $model;
 
-    /* @var View Объект вида — twig-шаблонизатор */
-    protected $view;
-
     /**
      * Генерация контента страницы для отображения в браузере
      *
@@ -28,23 +25,28 @@ class AjaxController
      */
     public function run($router)
     {
+        if ($router->is404()) {
+            return '';
+        }
+
         $this->model = $router->getModel();
 
         // Определяем и вызываем требуемый action у контроллера
         $request = new Request();
         $actionName = $request->action;
 
-        if ($router->is404()) {
-            $actionName = 'error404';
-        }
-
         if ($actionName == '') {
             $actionName = 'index';
         }
 
         $actionName = $actionName . 'Action';
-        $text = $this->$actionName();
 
+        if (!method_exists($this, $actionName)) {
+            $router->set404();
+            return '';
+        }
+
+        $text = $this->$actionName();
         return $text;
     }
 
@@ -60,50 +62,5 @@ class AjaxController
         return array(
             'X-Robots-Tag' => 'noindex, nofollow'
         );
-    }
-
-    /**
-     * Генерация шаблона отображения
-     *
-     * @param string $tplName
-     */
-    public function templateInit($tplName = '')
-    {
-        if (!stream_resolve_include_path($tplName)) {
-            echo 'Нет файла шаблона ' . $tplName;
-            exit;
-        }
-        $tplRoot = dirname(stream_resolve_include_path($tplName));
-        $tplName = basename($tplName);
-
-        // Определяем корневую папку системы для подключение шаблонов из любой вложенной папки через их путь
-        $config = Config::getInstance();
-        $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
-
-        $folders = array_merge(array($tplRoot, $cmsFolder));
-        $this->view = new View($folders, $config->cache['templateSite']);
-        $this->view->loadTemplate($tplName);
-    }
-
-    /**
-     * Действие для отсутствующей страницы сайта (обработка ошибки 404)
-     */
-    public function error404Action()
-    {
-        $name = $title = 'Страница не найдена';
-        $this->templateInit('404.twig');
-
-        // Добавляем в path пустой элемент
-        $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
-        $this->model->setPath($path);
-
-        // Устанавливаем нужный нам title
-        $pageData = $this->model->getPageData();
-        $pageData['title'] = $title;
-        $this->model->setPageData($pageData);
-
-        $text = $this->view->render();
-        return $text;
     }
 }

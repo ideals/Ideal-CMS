@@ -34,6 +34,13 @@ class FrontController
             $this->referer();
         }
 
+        if ($router->is404() && ($mode !== 'site' || isset($_REQUEST['mode']))) {
+            // Если 404 и не просто страничка сайта, то роутим заново, как 404-ую public части сайта
+            unset($_REQUEST['mode']);
+            $this->run('site');
+            return;
+        }
+
         // Определяем имя контроллера для отображения запрошенной страницы
         $controllerName = $router->getControllerName();
 
@@ -41,14 +48,26 @@ class FrontController
         /* @var $controller Admin\Controller */
         $controller = new $controllerName();
 
+        if ($router->is404() && ($mode !== 'site' || isset($_REQUEST['mode']))) {
+            // Если 404 и не просто страничка сайта, то роутим заново, как 404-ую public части сайта
+            unset($_REQUEST['mode']);
+            $this->run('site');
+            return;
+        }
+
         // Запускаем в работу контроллер структуры
         $content = $controller->run($router);
 
+        if ($router->is404() && ($mode !== 'site' || isset($_REQUEST['mode']))) {
+            // Если 404 и не просто страничка сайта, то роутим заново, как 404-ую public части сайта
+            unset($_REQUEST['mode']);
+            $this->run('site');
+            return;
+        }
+
         if ($router->is404()) {
             $httpHeaders = array('HTTP/1.0 404 Not Found');
-            if ($router->send404()) {
-                $this->emailError404();
-            }
+            $router->send404();
         } else {
             $httpHeaders = $controller->getHttpHeaders();
 
@@ -101,39 +120,6 @@ class FrontController
         if (!$isContentType) {
             // Content-Type пользователем не изменён, отображаем стандартный
             header("Content-Type: text/html; charset=utf-8");
-        }
-    }
-
-    /**
-     * Отправка письма о 404-ой ошибке
-     */
-    protected function emailError404()
-    {
-        $config = Config::getInstance();
-        $sent404 = true;
-        if (isset($config->cms['error404Notice'])) {
-            $sent404 = $config->cms['error404Notice'];
-        }
-        if ($sent404) {
-            if (empty($_SERVER['HTTP_REFERER'])) {
-                $from = 'Прямой переход.';
-            } else {
-                $from = 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
-            }
-            $message = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
-                . "произошли следующие ошибки.\n\n"
-                . "\n\nСтраница не найдена (404).\n\n"
-                . "\n\n{$from}\n\n";
-            $user = new User\Model();
-            if ($user->checkLogin()) {
-                $message .= "\n\nДействие совершил администратор.\n\n";
-            }
-            $message .= '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
-            $subject = "Страница не найдена (404) на сайте " . $config->domain;
-            $mail = new \Mail\Sender();
-            $mail->setSubj($subject);
-            $mail->setPlainBody($message);
-            $mail->sent($config->robotEmail, $config->cms['adminEmail']);
         }
     }
 
