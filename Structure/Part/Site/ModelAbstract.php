@@ -132,6 +132,7 @@ class ModelAbstract extends Site\Model
                     $structure = $this->getNestedStructure($end);
                     // Запускаем определение пути и активной модели по $par
                     $newPath = array_merge($path, $branch['branch']);
+                    $path = array(); // сбрасываем начальный путь, т.к. влили его в основной newPath
 
                     // Подсчитываем кол-во элементов пути без is_skip
                     $count = 0;
