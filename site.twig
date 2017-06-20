@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns="http://www.w3.org/1999/html">
+<html lang="ru" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <link rel="canonical" href="{{ canonical|raw }}"/>
@@ -11,15 +11,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {% if minifier == 1 %}
-        <link media="all" rel="stylesheet" type="text/css" href="css/all.min.css?
-            css[]={{ startUrl }}/js/bootstrap/css/bootstrap.min.css
-            &css[]={{ startUrl }}/js/fancybox/jquery.fancybox.css"/>
-        <script type="text/javascript" src="js/all.min.js?
-            js[]={{ startUrl }}/js/jquery/jquery.min.js
-            &js[]={{ startUrl }}/js/bootstrap/js/bootstrap.min.js
-            &js[]={{ startUrl }}/js/fancybox/jquery.fancybox.pack.js
-            &js[]={{ startUrl }}/js/jsFlashCookies/swfstore.min.js
-            &js[]={{ startUrl }}/js/jsFlashCookies/refererDetector.js">
+        <link media="all" rel="stylesheet" type="text/css" href="css/all.min.css?{{ "
+            css[]=#{startUrl}/js/bootstrap/css/bootstrap.min.css
+            &css[]=#{startUrl}/js/fancybox/jquery.fancybox.css"
+        | replace({'[':'%5B', ']':'%5D', "\n": '', ' ':''}) }}">
+        <script type="text/javascript" src="js/all.min.js?{{ "
+            js[]=#{startUrl}/js/jquery/jquery.min.js
+            &js[]=#{startUrl}/js/bootstrap/js/bootstrap.min.js
+            &js[]=#{startUrl}/js/fancybox/jquery.fancybox.pack.js
+            &js[]=#{startUrl}/js/jsFlashCookies/swfstore.min.js
+            &js[]=#{startUrl}/js/jsFlashCookies/refererDetector.js"
+        | replace({'[':'%5B', ']':'%5D', "\n": '', ' ':''}) }}">
         </script>
     {% else %}
         <link href="js/bootstrap/css/bootstrap.min.css" rel="stylesheet">
