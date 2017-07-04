@@ -7,7 +7,7 @@ return array(
         'elements_cms' => 10, // количество элементов в списке в CMS
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_name' => 'user_id', // поле для входа в список потомков
-        'field_sort' => 'user_id DESC', // поле, по которому проводится сортировка в CMS
+        'field_sort' => 'user_id DESC', // поле, по которому проводится сортировка в CMS по умолчанию
         'field_list' => array('user_id')
     ),
     'fields' => array(
