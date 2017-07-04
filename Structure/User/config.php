@@ -5,7 +5,7 @@ return array(
         'structures' => array('Ideal_User'), // типы, которые можно создавать в этом разделе
         'elements_cms' => 20, // количество элементов в списке в CMS
         'elements_site' => 15, // количество элементов в списке на сайте
-        'field_sort' => 'reg_date DESC', // поле, по которому проводится сортировка в CMS
+        'field_sort' => 'reg_date DESC', // поле, по которому проводится сортировка в CMS по умолчанию
         'field_name' => '', // поле для входа в список потомков
         'field_list' => array('email', 'fio', 'reg_date', 'last_visit')
     ),

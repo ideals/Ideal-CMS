@@ -137,3 +137,7 @@ div.checkbox {
 .ui-widget {
     font-family: inherit;
 }
+.sortable-field {
+    cursor: pointer;
+    float: left;
+}
