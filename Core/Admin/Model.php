@@ -461,7 +461,10 @@ abstract class Model extends Core\Model
      */
     private function getSortField()
     {
-        $sortArray = array($this->params['field_sort'] => 'asc');
+        // Определяем название поля и порядок сортировки по умолчанию
+        list($fieldName, $orderType) = explode(' ', $this->params['field_sort']);
+
+        $sortArray = array($fieldName => $orderType ? strtolower($orderType) : 'asc');
         $request = new Request();
 
         // Проверяем была ли применена сортировка по возростанию
