@@ -47,7 +47,7 @@ return array(
             'type' => 'Ideal_JsonArea'
         ),
         'join_with_customer' => array(
-            'label' => 'Объеденить с заказчиком',
+            'label' => 'Объединить с заказчиком',
             'sql' => '',
             'type' => 'Ideal_Select',
             'medium' => '\\Ideal\\Medium\\CustomerList\\Model'
