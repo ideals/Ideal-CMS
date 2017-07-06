@@ -22,6 +22,9 @@ class Model extends AbstractModel
      */
     public function getList()
     {
+        // Получаем данные о редактируемом заказчике
+        $pageData = $this->obj->getPageData();
+
         $list = array(0 => '---');
         $db = Db::getInstance();
         $config = Config::getInstance();
@@ -29,7 +32,10 @@ class Model extends AbstractModel
         $sql = 'SELECT ID, name FROM ' . $table . ' ORDER BY name, ID ASC';
         $arr = $db->select($sql);
         foreach ($arr as $item) {
-            $list[$item['ID']] = $item['name'] ? $item['name'] . ' [' . $item['ID'] . ']' : $item['ID'];
+            // Исключаем из списка заказчиков, пригодных для объединения, самого редактируемого заказчика
+            if ($item['ID'] != $pageData['ID']) {
+                $list[$item['ID']] = $item['name'] ? $item['name'] . ' [' . $item['ID'] . ']' : $item['ID'];
+            }
         }
         return $list;
     }
