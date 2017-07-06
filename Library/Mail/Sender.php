@@ -395,6 +395,8 @@ class Sender
         foreach ($fields as $field) {
             if (empty($params[$field])) {
                 throw new \Exception('Отсутствует поле ' . $field . ' в настройках SMTP');
+            } else {
+                $this->smtp[$field] = $params[$field];
             }
         }
         $this->isSmtp = true;
