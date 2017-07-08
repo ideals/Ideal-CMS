@@ -533,9 +533,11 @@ class Forms
         $messages = isset($this->formJsArguments['messages']) ? $this->formJsArguments['messages'] : '{}';
         $methods = isset($this->formJsArguments['methods']) ? $this->formJsArguments['methods'] : '{}';
 
+        $params = "{ajaxUrl : '" . $this->ajaxUrl . "'" . $location . $successMessage . $clearForm . "}";
+
         $ajaxUrl = <<<JS
             $('#{$this->formName}').form(
-                $.extend({ajaxUrl : '{$this->ajaxUrl}'{$location}{$successMessage}{$clearForm}}, {$options}),
+                $.extend({$params}, {$options}),
                 {$messages},
                 {$methods}
             );
