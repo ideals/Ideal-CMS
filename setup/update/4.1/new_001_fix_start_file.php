@@ -20,17 +20,16 @@ $file = mb_ereg_replace("\r\n", "\n", $file);
 $fragment = 'if (strpos($_SERVER[\'REQUEST_URI\'], $config->cmsFolder . \'/\') === 1) {';
 
 $addText = <<<PHP
-\n
 if (strpos(\$_SERVER['REQUEST_URI'], 'api/') === 1) {
     // Обращение к api
     \$page->run('api');
 } elseif (strpos(\$_SERVER['REQUEST_URI'], \$config->cmsFolder . '/') === 1) {
 PHP;
 
-$insertPos = mb_strpos($file, $fragment) + mb_strlen($fragment);
+$insertPos = mb_strpos($file, $fragment);
 
 $start = mb_substr($file, 0, $insertPos);
-$end = mb_substr($file, $insertPos);
+$end = mb_substr($file, $insertPos + mb_strlen($fragment));
 
 $result = $start . $addText . $end;
 
