@@ -231,7 +231,8 @@ abstract class Model
         } else {
             $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
             $where = $this->getWhere($where);
-            $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} ORDER BY e.{$this->params['field_sort']}";
+            $order = $this->getOrder();
+            $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} {$order}";
         }
 
         if (is_null($page)) {
@@ -269,6 +270,25 @@ abstract class Model
             $where = 'WHERE ' . $where;
         }
         return $where;
+    }
+
+    /**
+     * Формирование ORDER-части запроса
+     *
+     * @return string Сформированная ORDER-часть
+     */
+    protected function getOrder()
+    {
+        $request = new Request();
+        $order = 'ORDER BY e.';
+        if ($request->asc) {
+            $order .= $request->asc;
+        } elseif ($request->desc) {
+            $order .= $request->desc . ' DESC';
+        } else {
+            $order .= $this->params['field_sort'];
+        }
+        return $order;
     }
 
     /**

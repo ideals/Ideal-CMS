@@ -117,7 +117,15 @@
                            onclick="$('input.chk:checkbox').each(function(){this.checked = !this.checked;});">
                 </th>
                 {% for header in headers %}
-                    <th>{{ header }}</th>
+                    <th>
+                        <div data-sort="{{ header.1 }}" class="sortable-field">
+                            {{ header.0 }}
+                            {% if header.2 is defined %}
+                                <span class="glyphicon glyphicon-chevron-{{ header.2 == 'asc' ? 'up' : 'down' }}">
+                                </span>
+                            {% endif %}
+                        </div>
+                    </th>
                 {% endfor %}
                 <th style="width: 93px; text-align: right;">
                     <a onClick="showModal('{{ par }}', 0, 'showCreate'); return false;"
@@ -708,6 +716,60 @@
                 window.location.href = path;
             }
         }
+    </script>
+
+    <script>
+        // Обеспечение работы сортировки при клике по заголовкам списка
+        $(function() {
+            $('th').on('click', '.sortable-field', function(){
+                // Получаем название поля для новой сортировки
+                var sortFieldName = $(this).data('sort');
+
+                // Определяем порядок сортировки (убывание/возрастание)
+                var orderType = 'asc';
+                var orderTypeElement = $(this).find('span');
+                if (orderTypeElement.length != 0) {
+                    if ($(orderTypeElement).hasClass('glyphicon-chevron-up')){
+                        orderType = 'desc';
+                    }
+                }
+                var allParams = [];
+
+                // Разбираем текущую строку
+                var params = window.location.href.split('?');
+
+                // Обрабатываем имеющиеся параметры только если они есть
+                if ('1' in params) {
+                    var paramsCouple = params['1'].split('&');
+                    $.each(paramsCouple, function(index, value) {
+                            var keyVal = value.split('=');
+                            allParams[keyVal['0']] = keyVal['1'];
+                    });
+                    delete allParams['asc'];
+                    delete allParams['desc'];
+                    delete allParams['page']; // при смене сортировки номер страницы не нужен
+                }
+
+                // Добавляем нужные параметры
+                allParams[orderType] = sortFieldName;
+
+                // Собираем параметры для подстановки в адресную строку
+                var paramString = '';
+                var i = 0;
+                for (var item in allParams) {
+                    if (i === 0){
+                        paramString += '?';
+                        i++;
+                    } else {
+                        paramString += '&';
+                    }
+                    paramString += item + '=' + allParams[item]
+                }
+
+                // Перезагружаем страницу с нужными параметрами
+                window.location.href = params['0'] + paramString;
+            });
+        });
     </script>
 
 </div>
