@@ -27,11 +27,17 @@ class Model
     /** @var mixed Строковое/числовое представление временного интервала для отображения на графике */
     protected $interval;
 
+    /** @var integer Флаг означающий надобность отображения только новых лидов */
+    protected $newLead;
+
     /** @var array Общий массив данных находящихся в заданном интервале  */
     protected $row;
 
     /** @var string Цель поиска  */
     protected $target = '';
+
+    /** @var string Признак группировки */
+    protected $group = '';
 
     /**
      * Инициализация модели получения данных для графика
@@ -39,13 +45,15 @@ class Model
      * @param integer $fromTimestamp Дата с которой начинать собирать информацию
      * @param integer $toTimestamp Дата до которой нужно собрать информацию
      * @param mixed $interval Строковое/числовое представление временного интервала для отображения на графике
+     * @param integer $newLead Флаг означающий надобность отображения только новых лидов
      */
-    public function __construct($fromTimestamp, $toTimestamp, $interval = 'day')
+    public function __construct($fromTimestamp, $toTimestamp, $interval = 'day', $newLead = 0)
     {
         $this->fromTimestamp = $fromTimestamp;
         $this->toTimestamp = $toTimestamp;
         $this->interval = $interval;
-        $this->row = self::getData();
+        $this->newLead = $newLead;
+        self::getData();
     }
 
     /**
@@ -55,24 +63,11 @@ class Model
      */
     public function getOrdersInfo()
     {
-        $visualConfig['quantityOfOrders'] = self::getQuantityOfOrdersInfo(
-            $this->fromTimestamp,
-            $this->toTimestamp,
-            $this->interval
-        );
-        $visualConfig['referer'] = self::getRefererOrdersInfo(
-            $this->fromTimestamp,
-            $this->toTimestamp
-        );
-        $visualConfig['sumOfOrder'] = self::getSumOfOrdersInfo(
-            $this->fromTimestamp,
-            $this->toTimestamp,
-            $this->interval
-        );
-        $visualConfig['orderType'] = self::getOrderTypeInfo(
-            $this->fromTimestamp,
-            $this->toTimestamp
-        );
+        $visualConfig['quantityOfOrders'] = self::getQuantityOfOrdersInfo();
+        $visualConfig['quantityOfLead'] = self::getQuantityOfLead();
+        $visualConfig['referer'] = self::getRefererOrdersInfo();
+        $visualConfig['sumOfOrder'] = self::getSumOfOrdersInfo();
+        $visualConfig['orderType'] = self::getOrderTypeInfo();
         return $visualConfig;
     }
 
@@ -126,6 +121,67 @@ class Model
             }
             $visualConfig .= ']';
         }
+        return $visualConfig;
+    }
+
+    /**
+     * Генерирует конфигурационные данные для графика во вкладке "Кол-во лидов"
+     */
+    protected function getQuantityOfLead()
+    {
+        $visualConfig = '';
+
+        // Запускаем процесс построения строки/js-массива
+        if (count($this->row) > 0) {
+            $visualConfig .= "[['Section', 'Яндекс', 'Google', 'Другие сайты', 'Прямой заход', { role: 'annotation' }],";
+
+            // Устанавливаем цель поиска на источник перехода
+            $this->target = 'referer';
+
+            // Устанавливаем группировку по заказчику
+            $this->group = 'customer';
+
+            $groupedOrders = self::getGroupedOrders();
+
+            // Разбиваем даты по реферам
+            foreach ($groupedOrders as $key => $ordersInIterval) {
+                // Инициализируем группирующие описания рефереров по каждой точке в интервале
+                $groupedOrders[$key]['yandex'] = 0;
+                $groupedOrders[$key]['google'] = 0;
+                $groupedOrders[$key]['other'] = 0;
+                $groupedOrders[$key]['straight'] = 0;
+                if (!empty($ordersInIterval)) {
+                    foreach ($ordersInIterval as $refKey => $referer) {
+                        // Отлавливаем прямой переход
+                        if ($referer == 'null') {
+                            $groupedOrders[$key]['straight']++;
+                        } elseif (strripos($referer, 'yandex') !== false) { // Отлавливаем яндекс
+                            $groupedOrders[$key]['yandex']++;
+                        } elseif (strripos($referer, 'google') !== false) { // Отлавливаем гугл
+                            $groupedOrders[$key]['google']++;
+                        } else { // Отлавливаем другие сайты
+                            $groupedOrders[$key]['other']++;
+                        }
+                        unset($groupedOrders[$key][$refKey]);
+                    }
+                }
+            }
+
+            // Собираем строки для js конфигурации
+            end($groupedOrders);
+            $lastKey = key($groupedOrders);
+            foreach ($groupedOrders as $key => $ordersInIterval) {
+                $visualConfig .= "['{$key}', {$ordersInIterval['yandex']}, {$ordersInIterval['google']}, {$ordersInIterval['other']}, {$ordersInIterval['straight']}, '']";
+                if ($key != $lastKey) {
+                    $visualConfig .= ',';
+                }
+            }
+            $visualConfig .= ']';
+        }
+
+        // Обнуляем группировку данных
+        $this->group = 'customer';
+
         return $visualConfig;
     }
 
@@ -257,14 +313,20 @@ class Model
         // Проходим по всему массиву данных и собираем подходящие
         foreach ($this->row as $key => $value) {
             if ($value['date_create'] >= $timestamp && $value['date_create'] <= $timestamp + $interval) {
-                $resultArray[] = $value[$this->target];
+                // Если задана группировка, то формируем данные с её учётом
+                if (!$this->group) {
+                    $resultArray[] = $value[$this->target];
+                } elseif (!isset($resultArray[$value[$this->group]])) {
+                    $resultArray[$value[$this->group]] = $value[$this->target];
+                }
             }
         }
         return $resultArray;
     }
 
     /**
-     * Получает все данные о заказах находящиеся в заданном интервале
+     * Получает все данные о заказах находящиеся в заданном интервале.
+     * С учётом надобности отображения лидов из предыдущих периодов.
      *
      * @return array Массив данных находящихся в заданном интервале
      */
@@ -274,8 +336,14 @@ class Model
         $config = Config::getInstance();
         $par = array('fromDate' => $this->fromTimestamp, 'toDate' => $this->toTimestamp);
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
-        return $db->select(
-            'SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate ORDER by date_create',
+
+        // При надобности исключаем лидов предыдущих периодов
+        $where = '';
+        if ($this->newLead) {
+            $where .= " AND customer NOT IN (SELECT customer FROM &table WHERE date_create < :fromDate AND customer IS NOT NULL)";
+        }
+        $this->row = $db->select(
+            "SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate{$where} ORDER by date_create",
             $par,
             $fields
         );

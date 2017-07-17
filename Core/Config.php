@@ -16,6 +16,7 @@ namespace Ideal\Core;
  * @property string domain Доменная часть адреса сайта на котором установлена CMS
  * @property string cms Массив настроек cms
  * @property string urlSuffix Стандартный суффикс url для страниц сайта (обычно .html)
+ * @property array smtp Массив с настройками SMTP
  */
 class Config
 {

@@ -50,14 +50,24 @@ if ($form->isPostRequest()) {
 Телефон: {$form->getValue('phone')}<br />
 Email: {$form->getValue('email')}
 HTML;
+
+        // Если требуется отправка через SMTP, то передаём дополнительные сведения в метод отправки
+        $smtp = array(
+            'domain' => 'example.org',
+            'server' => 'smtp.example.org',
+            'port' => '25',
+            'user' => 'robot@example.org',
+            'password' => 'password');
+        // Если отправка через SMTP не требуется, то передавать дополнительный параметр не нужно
+
         // Отправляем письмо пользователю
         $topic = 'Вы заполнили форму на сайте example.com';
-        $form->sendMail('robot@example.com', $form->getValue('email'), $topic, $body, true);
+        $form->sendMail('robot@example.com', $form->getValue('email'), $topic, $body, true, $smtp);
 
         // Отправляем письмо менеджеру с добавлением источника перехода
         $topic = 'Заявка с сайта example.com';
         $body .= '<br />Источник перехода: ' . $form->getValue('referer');
-        $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true);
+        $form->sendMail('robot@example.com', 'manager@example.com', $topic, $body, true, $smtp);
 
         // Сохраняем информацию о заказе, только если используется второй вариант подключения фреймворка форм.
         $form->saveOrder($form->getValue('name'), $form->getValue('email'));

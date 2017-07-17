@@ -1,6 +1,7 @@
 <?php
 // @codingStandardsIgnoreFile
 $interval = 'day';
+$newLead = 0;
 parse_str($_SERVER['QUERY_STRING'], $queryString);
 if (isset($queryString['fromDate'])) {
     $fromTimestamp = strtotime(str_replace('.', '-', $queryString['fromDate']));
@@ -21,6 +22,10 @@ if (isset($queryString['grouping'])) {
     $interval = $queryString['grouping'];
     unset($queryString['grouping']);
 }
+if (isset($queryString['newLead'])) {
+    $newLead = $queryString['newLead'];
+    unset($queryString['newLead']);
+}
 
 // Получаем дату с которой формировать графики. По умолчанию 30 дней назад
 $fromDate = date('d.m.Y', $fromTimestamp);
@@ -29,7 +34,7 @@ $fromDate = date('d.m.Y', $fromTimestamp);
 $toDate = date('d.m.Y', $toTimestamp);
 
 // Собираем строку/js-массив для настройки отображения первого графика
-$conversion = new Ideal\Structure\Service\Conversion\Model($fromTimestamp, $toTimestamp, $interval);
+$conversion = new Ideal\Structure\Service\Conversion\Model($fromTimestamp, $toTimestamp, $interval, $newLead);
 $visualConfig = $conversion->getOrdersInfo();
 ?>
 
@@ -75,6 +80,25 @@ $visualConfig = $conversion->getOrdersInfo();
             quantityOfOrdersChart.draw(quantityOfOrdersData, quantityOfOrdersOptions);
             <?php } else { ?>
                 $('#quantityOfOrdersChart').html('Нет данных');
+            <?php } ?>
+
+            <?php if (isset($visualConfig['quantityOfLead']) && !empty($visualConfig['quantityOfLead'])) { ?>
+            var quantityOfLeadData = google.visualization.arrayToDataTable(<?php print $visualConfig['quantityOfLead']; ?>);
+
+            var quantityOfLeadOptions = {
+                title: "Общее кол-во лидов за определённый срок",
+                isStacked: true,
+                height: 300,
+                legend: {position: 'top', maxLines: 3},
+                vAxis: {minValue: 0}
+            };
+
+            $('#quantityOfLeadChartTab').addClass('active');
+            var quantityOfLeadChart = new google.visualization.ColumnChart(document.getElementById('quantityOfLeadChart'));
+            quantityOfLeadChart.draw(quantityOfLeadData, quantityOfLeadOptions);
+            $('#quantityOfLeadChartTab').removeClass('active');
+            <?php } else { ?>
+                $('#quantityOfLeadChart').html('Нет данных');
             <?php } ?>
 
             <?php if (isset($visualConfig['referer']) && !empty($visualConfig['referer'])) { ?>
@@ -151,6 +175,11 @@ $visualConfig = $conversion->getOrdersInfo();
         <label class="radio-inline"><input type="radio" name="grouping" value="week" <?php if ($interval == 'week') { echo 'checked'; } ?>/>неделям</label>
         <label class="radio-inline"><input type="radio" name="grouping" value="month" <?php if ($interval == 'month') { echo 'checked'; } ?>/>месяцам</label>
     </div>
+
+    <div class="input-group grouping">
+        <label class="first-label">Только новые лиды:</label>
+        <label class="checkbox-inline"><input type="checkbox" name="newLead" value="1" <?php if ($newLead) { echo 'checked'; } ?> />&nbsp;</label>
+    </div>
     <?php
      if (count($queryString) != 0) {
          foreach($queryString as $key => $value) {
@@ -167,6 +196,7 @@ $visualConfig = $conversion->getOrdersInfo();
 
 <ul class="nav nav-tabs">
     <li class="active"><a href="#quantityOfOrdersChartTab" data-toggle="tab">Общее кол-во</a></li>
+    <li><a href="#quantityOfLeadChartTab" data-toggle="tab">Кол-во лидов</a></li>
     <li><a href="#refererChartTab" data-toggle="tab">Источники переходов</a></li>
     <li><a href="#orderTypeChartTab" data-toggle="tab">Виды заказов</a></li>
     <li><a href="#sumOfOrdersChartTab" data-toggle="tab">Сумма заказов</a></li>
@@ -175,6 +205,9 @@ $visualConfig = $conversion->getOrdersInfo();
 <div class="tab-content">
     <div class="tab-pane active" id="quantityOfOrdersChartTab">
         <div id="quantityOfOrdersChart"></div>
+    </div>
+    <div class="tab-pane" id="quantityOfLeadChartTab">
+        <div id="quantityOfLeadChart"></div>
     </div>
     <div class="tab-pane" id="refererChartTab">
         <div id="refererChart"></div>

@@ -226,14 +226,16 @@ abstract class Model extends Core\Model
     public function getHeaderNames()
     {
         $headers = $this->getHeaders();
-
+        $sortFieldArray = $this->getSortField();
         $headerNames = array();
 
         // Составляем список названий колонок
         foreach ($headers as $v) {
-            $headerNames[$v] = $this->fields[$v]['label'];
+            $headerNames[$v] = array($this->fields[$v]['label'], $v, );
+            if (isset($sortFieldArray[$v])) {
+                $headerNames[$v][2] = $sortFieldArray[$v];
+            }
         }
-
         return $headerNames;
     }
 
@@ -450,5 +452,32 @@ abstract class Model extends Core\Model
             }
         }
         return $list;
+    }
+
+    /**
+     * Получение поля по которому должна идти сортировка
+     *
+     * @return array Массив с названием поля и порядком сортировки по нему
+     */
+    private function getSortField()
+    {
+        // Определяем название поля и порядок сортировки по умолчанию
+        list($fieldName, $orderType) = explode(' ', $this->params['field_sort']);
+
+        $sortArray = array($fieldName => $orderType ? strtolower($orderType) : 'asc');
+        $request = new Request();
+
+        // Проверяем была ли применена сортировка по возростанию
+        $ascSort = $request->asc;
+        if ($ascSort) {
+            $sortArray = array($ascSort => 'asc');
+        }
+
+        // Проверяем была ли применена сортировка по убыванию
+        $descSort = $request->desc;
+        if ($descSort) {
+            $sortArray = array($descSort => 'desc');
+        }
+        return $sortArray;
     }
 }

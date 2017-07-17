@@ -321,7 +321,7 @@ class Util
      *
      * @return string Латинская буква - большая или маленькая
      */
-    public function randomChar($len = 1)
+    public static function randomChar($len = 1)
     {
         $str = '';
         for ($i = 0; $i < $len; $i++) {
@@ -368,5 +368,21 @@ class Util
             }
         }
         return $resultInfo;
+    }
+
+    /**
+     * Пытается получить cid из google analytics
+     *
+     * @return mixed cid из google analytics или false в случае неудачи
+     */
+    public static function getGACID()
+    {
+        $GACid = false;
+        if (isset($_COOKIE['_ga'])) {
+            list($version, $domainDepth, $cid1, $cid2) = explode('.', $_COOKIE["_ga"], 4);
+            $contents = array('version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1 . '.' . $cid2);
+            $GACid = $contents['cid'];
+        }
+        return $GACid;
     }
 }

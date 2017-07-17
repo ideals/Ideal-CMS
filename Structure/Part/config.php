@@ -8,7 +8,7 @@ return array(
         'elements_cms' => 10, // количество элементов в списке в CMS
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_name' => 'name', // поля для вывода информации по объекту
-        'field_sort' => 'cid', // поле, по которому проводится сортировка в CMS
+        'field_sort' => 'cid', // поле, по которому проводится сортировка в CMS по умолчанию
         'field_list' => array('cid!40', 'ID', 'name', 'date_mod', 'url'),
         'levels' => 6, // количество уровней вложенности
         'digits' => 3 // //кол-во разрядов
@@ -54,11 +54,14 @@ return array(
         ),
         'addon' => array(
             'label' => 'Аддоны',
-            'sql' => "varchar(255) not null default '[[\"1\",\"Ideal_Page\",\"Текст\"]]'",
+            'sql' => "varchar(255) not null default '[[\"1\",\"Ideal_Page\",\"Текст\"],"
+                . "[\"2\",\"Ideal_YandexWebmaster\",\"Я.Вебмастер\"]]'",
             'type' => 'Ideal_Addon',
             'medium'    => '\\Ideal\\Medium\\AddonList\\Model',
-            'available' =>  array('Ideal_Page', 'Ideal_PhpFile', 'Ideal_Photo', 'Ideal_SiteMap', 'Ideal_YandexSearch'),
-            'default'   => '[["1","Ideal_Page","Текст"]]',
+            'available' =>  array('Ideal_Page', 'Ideal_PhpFile', 'Ideal_Photo', 'Ideal_SiteMap',
+                'Ideal_YandexSearch', 'Ideal_YandexWebmaster'),
+            'default'   => '[["1","Ideal_Page","Текст"],["2","Ideal_YandexWebmaster","Я.Вебмастер"]]',
+            'webmaster' => array('index.twig' => array('annot', array('content'))),
         ),
         'name' => array(
             'label' => 'Название',

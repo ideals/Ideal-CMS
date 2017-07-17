@@ -7,7 +7,7 @@ return array(
         'elements_cms' => 10, // количество элементов в списке в CMS
         'elements_site' => 15, // количество элементов в списке на сайте
         'field_name' => '', // поле для входа в список потомков
-        'field_sort' => 'date_create DESC', // поле, по которому проводится сортировка в CMS
+        'field_sort' => 'date_create DESC', // поле, по которому проводится сортировка в CMS по умолчанию
         'field_list' => array('date_create', 'name', 'email', 'price', 'referer', 'order_type')
     ),
     'fields' => array(
@@ -56,6 +56,12 @@ return array(
             'label' => 'Тип заказа',
             'sql' => 'varchar(255) not null',
             'type' => 'Ideal_Text'
+        ),
+        'customer' => array(
+            'label' => 'Заказчик',
+            'sql' => 'int(8)',
+            'type' => 'Ideal_Select',
+            'medium' => '\\Ideal\\Medium\\CustomerList\\Model'
         ),
     ),
 );

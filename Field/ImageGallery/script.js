@@ -39,7 +39,7 @@ $(document).ready(function () {
     });
 
     // При смене описания картинки пересохраняем информацию для фотогалереи
-    $(".tab-pane .gallery-item-description").change(function () {
+    $(".tab-pane").on('change', '.gallery-item-description', function () {
         var id = $('.images-values').attr("id");
         var listSelector = '#' + id + '-list';
         var infoSelector = '#' + id;
@@ -54,7 +54,6 @@ function startSortable(listSelector, infoSelector) {
             rescanPhotogalleryItems(listSelector, infoSelector)
         }
     });
-    $(listSelector + " .sortable").disableSelection();
 }
 
 // Пересобираем информацию о фотогалерее
@@ -105,27 +104,27 @@ function getImageList(imageList, fieldId) {
     fieldList += '<ul id="' + fieldId + '-sortable" class="sortable">';
     $.each(imageList, function (index, value) {
         fieldList += '<li class="ui-state-default">';
-        fieldList += '<div class="col-xs-1">';
-        fieldList += '<span class="glyphicon glyphicon-sort" style="top: 9px;"></span>';
+        fieldList += '<div class="col-xs-1 text-center">';
+        fieldList += '<span class="glyphicon glyphicon-sort" style="top: 9px; cursor: pointer;"></span>';
         fieldList += '</div>';
-        fieldList += '<div class="col-xs-1">';
-        fieldList += '<span class="input-group-addon" style="padding: 0 5px">';
-        fieldList += '<img src="' + value[0] + '" style="max-height:32px" class="form-control gallery-item-image"';
+        fieldList += '<div class="col-xs-1 text-center">';
+        fieldList += '<span class="input-group-addon" style="padding: 0 5px; width: auto;">';
+        fieldList += '<img src="' + value[0] + '" style="max-height:32px; width: auto;" class="form-control gallery-item-image"';
         fieldList += ' id="gallery-item-image' + index + '">';
         fieldList += '</span>';
         fieldList += '</div>';
-        fieldList += '<div class="col-xs-5">';
+        fieldList += '<div class="col-xs-5 text-center">';
         fieldList += '<input type="text" class="form-control gallery-item-url" name="gallery-item-url-' + index + '"';
         fieldList += ' id="gallery-item-url' + index + '" value="' + value[0] + '">';
         fieldList += '</div>';
-        fieldList += '<div class="col-xs-4">'
+        fieldList += '<div class="col-xs-4 text-center">'
         fieldList += '<input type="text" class="form-control gallery-item-description"';
         fieldList += ' name="gallery-item-description' + index + '"';
         fieldList += ' id="gallery-item-description' + index + '" value="' + value[1] + '"';
         fieldList += ' placeholder="Описание изображения">';
         fieldList += '</div>';
-        fieldList += '<div class="col-xs-1">';
-        fieldList += '<span class="glyphicon glyphicon-remove remove-image" style="color: #FF0000; top: 7px;"></span>';
+        fieldList += '<div class="col-xs-1 text-center">';
+        fieldList += '<span class="glyphicon glyphicon-remove remove-image" style="color: #FF0000; top: 7px; cursor: pointer;"></span>';
         fieldList += '</div>';
         fieldList += '</li>';
     });
