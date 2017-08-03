@@ -9,16 +9,10 @@
 
 namespace Ideal\Addon\YandexWebmaster;
 
-use Ideal\Addon;
+use Ideal\Addon\AbstractAdminModel;
 
-class ModelAbstract extends Addon\AbstractModel
+class AdminModel extends AbstractAdminModel
 {
-    public function getPageData()
-    {
-        $this->setPageDataByPrevStructure($this->prevStructure);
-        return $this->pageData;
-    }
-
     /**
      * Получение контента из полей, указанных для отправки в Яндекс.Вебмастер
      *
