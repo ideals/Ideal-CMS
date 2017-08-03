@@ -65,6 +65,7 @@ class ModelAbstract extends Site\Model
         }
 
         // Сортируем ветки по количеству элементов (по убыванию), а при равном количестве — по is_skip
+
         usort(
             $branches,
             function ($a, $b) {
@@ -132,6 +133,7 @@ class ModelAbstract extends Site\Model
                     $structure = $this->getNestedStructure($end);
                     // Запускаем определение пути и активной модели по $par
                     $newPath = array_merge($path, $branch['branch']);
+                    $oldPath = $path;
                     $path = array(); // сбрасываем начальный путь, т.к. влили его в основной newPath
 
                     // Подсчитываем кол-во элементов пути без is_skip
@@ -151,6 +153,8 @@ class ModelAbstract extends Site\Model
 
                     if ($model->is404) {
                         // Если во вложенной структуре ничего не нашлось, перебираем ветки дальше
+                        $path = $oldPath;
+                        $newPath = [];
                         continue;
                     }
                     return $model;
