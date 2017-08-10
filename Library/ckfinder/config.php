@@ -91,8 +91,8 @@ Thumbnails : thumbnails settings. All thumbnails will end up in the same
 directory, no matter the resource type.
 */
 $config['Thumbnails'] = Array(
-		'url' => $baseUrl . '_thumbs',
-		'directory' => $baseDir . '_thumbs',
+		'url' => $baseUrl.'tmp/_thumbs',
+		'directory' => $baseDir . 'tmp' . DIRECTORY_SEPARATOR . '_thumbs',
 		'enabled' => true,
 		'directAccess' => false,
 		'maxWidth' => 100,
