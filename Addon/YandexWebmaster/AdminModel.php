@@ -24,6 +24,10 @@ class AdminModel extends AbstractAdminModel
         $pageData = $this->parentModel->getPageData();
         $this->parentModel->initPageData($pageData);
         $pageData = $this->parentModel->getPageData();
+        // Если страница только создаётся, данные извлекать неоткуда
+        if (empty($pageData['template'])) {
+            return '';
+        }
         // Получаем данные из полей определённых в параметре "content_fields"
         foreach ($this->parentModel->fields['addon']['webmaster'] as $template => $value) {
             if ($template != $pageData['template']) {
