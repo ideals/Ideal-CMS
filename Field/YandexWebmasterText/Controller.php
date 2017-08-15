@@ -112,7 +112,7 @@ HTML;
     {
         $value = parent::getValue();
         if (!$value) {
-            // Получаем данные из полей определённых в параметре "content_fields"
+            // Получаем данные из полей
             $value = $this->model->getContentFromFields();
         }
         // Ставим перед открывающимися тегами переноса
