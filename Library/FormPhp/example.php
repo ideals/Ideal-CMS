@@ -30,6 +30,9 @@ $form->setClickAndSend('SEND-FORM', 'SENT-FORM');
 // Устанавливаем нормер счётчика Метрики
 $form->setMetrika('yaCounter12345678');
 
+// Устанавливаем Google Tag Manager
+$form->setGtm();
+
 // Устанавливаем url, используемый при ajax-отправке формы
 $form->setAjaxUrl('/sendForm.php');
 
