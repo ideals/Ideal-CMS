@@ -154,7 +154,7 @@ class ModelAbstract extends Site\Model
                     if ($model->is404) {
                         // Если во вложенной структуре ничего не нашлось, перебираем ветки дальше
                         $path = $oldPath;
-                        $newPath = [];
+                        $newPath = array();
                         continue;
                     }
                     return $model;
