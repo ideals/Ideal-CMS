@@ -28,7 +28,7 @@ class AdminModel extends AbstractAdminModel
         if (empty($pageData['template'])) {
             return '';
         }
-        // Получаем данные из полей определённых в параметре "content_fields"
+        // Получаем данные из полей
         foreach ($this->parentModel->fields['addon']['webmaster'] as $template => $value) {
             if ($template != $pageData['template']) {
                 // Пропускаем неподходящие шаблоны

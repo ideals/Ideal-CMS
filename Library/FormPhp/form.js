@@ -269,7 +269,7 @@ jQuery.fn.form = function (options, messages, methods) {
             if (typeof this.yaCounter != 'undefined') {
                 return;
             }
-            var yaCounterName = $(this).find('[name = "_yaCounter"]').val();
+            var yaCounterName = $(this).find('[name = "_yandex"]').val();
             this.yaCounter = {};
             eval('var yaCounterName = typeof ' + yaCounterName + ' == \'undefined\' ? false : yaCounterName');
             if (yaCounterName !== false) {
@@ -296,12 +296,27 @@ jQuery.fn.form = function (options, messages, methods) {
                 this.ga = function (opt) {}
             }
         },
+        // Инициализация Google Tag Manager
+        initGtm: function () {
+            if (typeof this.gtm != 'undefined') {
+                return;
+            }
+            var gtmName = $(this).find('[name = "_gtm"]').val();
+
+            if (dataLayer === undefined || gtmName === undefined) {
+                this.gtm = {};
+                this.gtm.push = function (opt) {};
+            } else {
+                this.gtm = dataLayer;
+            }
+        },
         // Отправка метрики, при нажатии на кнопку отправки формы
         metrikaOnButtonClick: function () {
             var metka = $(this).data('click');
             if (metka) {
                 this.yaCounter.reachGoal(metka);
                 this.ga(metka);
+                this.gtm.push({'event': metka});
             }
         },
         // Отправка метрики, при успешной отправке формы
@@ -310,6 +325,7 @@ jQuery.fn.form = function (options, messages, methods) {
             if (metka) {
                 this.yaCounter.reachGoal(metka);
                 this.ga(metka);
+                this.gtm.push({'event': metka});
             }
         },
         // Добавление проверочного поля при нажатии на кнопку отправки формы
@@ -341,6 +357,12 @@ jQuery.fn.form = function (options, messages, methods) {
         },
         // Обработка успешной отправки формы
         successSend: function (result) {
+            if (options.ajaxDataType == 'text' || result[1] != 'error') {
+                if (options.clearForm == true) {
+                    $(this)[0].reset();
+                }
+                $(this).trigger('form.successSend', [result]);
+            }
             if (options.successMessage == true) {
                 if (options.ajaxDataType == 'text') {
                     alert(result);
@@ -348,14 +370,6 @@ jQuery.fn.form = function (options, messages, methods) {
                     alert(result[0], result[1]);
                 }
             }
-            if (options.ajaxDataType == 'text' || result[1] != 'error') {
-                if (options.clearForm == true) {
-                    $(this)[0].reset();
-                }
-                $(this).trigger('form.successSend', [result]);
-                return;
-            }
-            $(this).trigger('form.errorSend', [result]);
         },
         // Обработка неудачной отправки формы
         errorSend: function (result) {
@@ -383,6 +397,7 @@ jQuery.fn.form = function (options, messages, methods) {
 
                 methods.initYaCounter.apply(this);
                 methods.initGoogleAnalytics.apply(this);
+                methods.initGtm.apply(this);
 
                 $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
