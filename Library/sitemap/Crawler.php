@@ -980,6 +980,11 @@ XML;
             $this->stop("На странице {$current} неправильная ссылка, начинающаяся на пробел: '{$link}'");
         }
 
+        // Если ссылка начинается с '//', то добавляем к ней протокол
+        if (substr($link, 0, 2) == '//') {
+            $link = parse_url($this->config['website'], PHP_URL_SCHEME) . ':' . $link;
+        }
+
         if (substr($link, 0, 4) == 'http') {
             // Если ссылка начинается с http, то абсолютизировать её не надо
             $url = parse_url($link);
@@ -1064,12 +1069,17 @@ XML;
             return true;
         }
 
-        if (substr($link, 0, 4) != 'http') {
-            // Если ссылка не начинается с http, то она точно не внешняя, все варианты мы исключили
+        if (substr($link, 0, 4) != 'http' && substr($link, 0, 2) != '//') {
+            // Если ссылка не начинается с http или '//', то она точно не внешняя, все варианты мы исключили
             return false;
         }
 
         $url = parse_url($link);
+
+        // До 5.4.7 в path выводится весь адрес
+        if (!isset($url['host'])) {
+            list(,,$url['host']) = explode('/', $url);
+        }
 
         if ($this->host == $url['host']) {
             // Хост сайта и хост ссылки совпадают, значит она локальная

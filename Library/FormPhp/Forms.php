@@ -51,7 +51,7 @@ class Forms
     /** @var bool Флаг для осуществления изначальной валидации по местонахождению формы */
     protected $locationValidation = false;
     protected $targets;
-    protected $counters;
+    protected $counters = array();
     protected $ajaxUrl;
 
     /** @var array Аргументы js функции формы */
@@ -123,8 +123,9 @@ class Forms
             . $token->getInputText() . "\n"
             . $this->getValidatorsInput();
 
-        if (isset($this->counters['yandex'])) {
-            $start .= "\n" . '<input type="hidden" value="' . $this->counters['yandex'] . '" name="_yaCounter">';
+        // Установка скрытых полей для целей и счётчиков метрики или GTM
+        foreach ($this->counters as $key => $counter) {
+            $start .= "\n" . '<input type="hidden" value="' . $counter . '" name="_' . $key . '">';
         }
 
         return $start;
@@ -142,6 +143,16 @@ class Forms
             'click' => $click,
             'send' => $send,
         );
+    }
+
+    /**
+     * Установка GTM-события на успешную отправку формы
+     *
+     * @param string $gtmEvent Название события, которое должно сработать при отправке формы
+     */
+    public function setGtm($gtmEvent = 'gtm-event')
+    {
+        $this->counters['gtm'] = $gtmEvent;
     }
 
     /**
