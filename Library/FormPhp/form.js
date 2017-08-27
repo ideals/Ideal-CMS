@@ -303,7 +303,7 @@ jQuery.fn.form = function (options, messages, methods) {
             }
             var gtmName = $(this).find('[name = "_gtm"]').val();
 
-            if (dataLayer === undefined || gtmName === undefined) {
+            if (typeof dataLayer == 'undefined' || typeof gtmName == 'undefined') {
                 this.gtm = {};
                 this.gtm.push = function (opt) {};
             } else {
