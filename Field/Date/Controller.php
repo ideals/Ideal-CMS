@@ -35,7 +35,7 @@ class Controller extends AbstractController
     public function getInputText()
     {
         $value = $this->getValue();
-        $date = date('d.m.Y H:i:s', $value);
+        $date = empty($value) ? '' : date('d.m.Y H:i:s', $value);
         $htmlName = $this->htmlName;
         $html = <<<HTML
 <link href="Ideal/Library/datetimepicker/build/css/bootstrap-datetimepicker.min.css" rel="stylesheet" type="text/css" >
@@ -80,6 +80,10 @@ HTML;
 
         $fieldName = $this->htmlName;
         $newValue = $request->$fieldName;
+
+        if (empty($newValue)) {
+            return '0';
+        }
 
         $dateTime = date_create_from_format('d.m.Y H:i:s', $newValue);
         if ($dateTime === false) {
