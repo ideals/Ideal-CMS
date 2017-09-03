@@ -247,7 +247,7 @@ class Db extends \mysqli
         $this->updateTableName = "`" . parent::escape_string($this->updateTableName) . "`";
         $where = '';
 
-        if ($this->whereParams && $this->whereQuery) {
+        if ($this->whereQuery) {
             $where = 'WHERE ' . $this->prepareSql($this->whereQuery, $this->whereParams);
         }
 
