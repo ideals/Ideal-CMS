@@ -144,9 +144,13 @@ class Model
         $access = true;
         if (isset($this->user->data) && isset($this->user->data['user_group']) && $this->user->data['user_group']) {
             $data = $model->getPageData();
-            $config = Config::getInstance();
-            $structure = $config->getStructureByClass(get_class($model));
-            $structure = $structure['ID'] . '-' . $data['ID'];
+            if (empty($data['prev_structure'])) {
+                $structure = '0-' . $data['ID'];
+            } else {
+                $config = Config::getInstance();
+                $structure = $config->getStructureByClass(get_class($model));
+                $structure = $structure['ID'] . '-' . $data['ID'];
+            }
 
             // Получаем права на структуру из БД
             $db = Db::getInstance();
