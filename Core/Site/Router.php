@@ -136,6 +136,8 @@ class Router
                 $this->error404->save404();
             }
         } else {
+            unset($path[0]['ID']);
+            $model->setPath($path);
             $model->is404 = true;
         }
         return $model;

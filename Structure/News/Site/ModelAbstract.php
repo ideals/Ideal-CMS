@@ -51,7 +51,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
 
     public function getStructureElements()
     {
-        $list = $this->getList(0, 9999);
+        $list = $this->getList(0);
         return $list;
     }
 
