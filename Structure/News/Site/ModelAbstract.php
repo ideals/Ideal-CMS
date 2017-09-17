@@ -49,9 +49,16 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         return $this;
     }
 
+    /**
+     * Возвращающет список всех новостей
+     *
+     * Этот метод используется в построении html-карты сайта на основе БД
+     *
+     * @return array Список вложенных элементов
+     */
     public function getStructureElements()
     {
-        $list = $this->getList(0, 9999);
+        $list = $this->getList();
         return $list;
     }
 

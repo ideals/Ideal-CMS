@@ -696,7 +696,8 @@ class Crawler
                     $radarLinksReport .= "{$key} - {$value}\n";
                 }
                 if ($radarLinksSeoReport) {
-                    $radarLinksReport = "Ссылки с заданным приоритетом:\n{$radarLinksSeoReport}\nВсе ссылки:\n{$radarLinksReport}";
+                    $radarLinksReport = "Ссылки с заданным приоритетом:\n{$radarLinksSeoReport}\nВсе ссылки:\n"
+                        . $radarLinksReport;
                 }
                 if ($diffText) {
                     $radarLinksReport = "{$diffText}\n{$radarLinksReport}";
@@ -704,7 +705,11 @@ class Crawler
                 $this->sendEmail($radarLinksReport, '', $this->host . ' - перелинковка');
             }
         } else {
-            $this->sendEmail('Отчёт о перелинковке не может быть составлен, возможно не установлен радар.', '', $this->host . ' - перелинковка');
+            $this->sendEmail(
+                'Отчёт о перелинковке не может быть составлен, возможно не установлен радар.',
+                '',
+                $this->host . ' - перелинковка'
+            );
         }
         unlink($this->config['pageroot'] . $this->config['tmp_radar_file']);
     }
@@ -789,6 +794,14 @@ XML;
      */
     private function getUrl($k, $place)
     {
+        // Проверяем, не является ли файл тем, в котором не нужно искать ссылки
+        $ext = strtolower(pathinfo($k, PATHINFO_EXTENSION));
+        if (in_array($ext, array('xls', 'pdf', 'doc', 'docx'))) {
+            return '';
+        }
+
+        // Инициализируем CURL для получения содержимого страницы
+
         $ch = curl_init($k);
 
         curl_setopt_array($ch, $this->options);
