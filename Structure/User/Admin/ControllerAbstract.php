@@ -82,6 +82,9 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
                     header('Location: ' . $_SERVER['REQUEST_URI']);
                 }
             }
+        } else {
+            // На странице авторизации отдавать 404 заголовок
+            $this->model->is404 = true;
         }
 
         // Если запрашивается json при не авторизованном пользователе
