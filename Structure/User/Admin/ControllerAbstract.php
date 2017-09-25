@@ -62,6 +62,11 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
             $jsonResponse = true;
         }
 
+        // Если запрашивается не json и не html версия, то вероятнее всего это бот
+        if (!$jsonResponse && !preg_match("/.*html.*/i", $_SERVER['HTTP_ACCEPT'])) {
+            throw new \Exception('Какой-то робот пытается зайти на страницу админки.');
+        }
+
         $user = User\Model::getInstance();
 
         // Проверяем правильность логина и пароля
