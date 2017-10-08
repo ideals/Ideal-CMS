@@ -214,7 +214,11 @@ class Model
         $arr = $pluginBroker->makeEvent('onGetUrl', $arr);
         $lastUrlPart = $arr['last']['url'];
 
-        if (strpos($lastUrlPart, 'http:') === 0 || strpos($lastUrlPart, '/') === 0 || empty($lastUrlPart)) {
+        if (strpos($lastUrlPart, 'http:') === 0
+            || strpos($lastUrlPart, 'https:') === 0
+            || strpos($lastUrlPart, '/') === 0
+            || empty($lastUrlPart)
+        ) {
             // Если это уже сформированная или пустая ссылка, её и возвращаем
             return $lastUrlPart;
         }
@@ -277,6 +281,7 @@ class Model
                 continue;
             }
             if (strpos($v['url'], 'http:') === 0
+                || strpos($v['url'], 'https:') === 0
                 || strpos($v['url'], '/') === 0
             ) {
                 // Если в одном из элементов пути есть ссылки на другие страницы, то путь построить нельзя
