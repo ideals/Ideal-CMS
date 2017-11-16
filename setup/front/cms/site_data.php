@@ -30,6 +30,8 @@ return array(
         'yandexLogin' => "", // Яндекс логин | Ideal_Text
         'yandexKey' => "", // Яндекс ключ | Ideal_Text
         'proxyUrl' => "", // Адрес прокси скрипта | Ideal_Text
+        'clientId' => "", // Идентификатор приложения для доступа к сервису "Яндекс.Вебмастер" | Ideal_Text
+        'token' => "", // Токен для авторизации в сервисе "Яндекс.Вебмастер" | Ideal_Text
     ),
     'smtp' => array( // SMTP
         'server' => "", // Адрес SMTP-сервера | Ideal_Text

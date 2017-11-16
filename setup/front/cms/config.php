@@ -93,5 +93,13 @@ return array(
             'isShow' => 0,
             'hasTable' => true
         ),
+        // Подключаем справочник заказчиков
+        array(
+            'ID' => 11,
+            'structure' => 'Ideal_Crm',
+            'name' => 'Заказчики',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
     )
 );
