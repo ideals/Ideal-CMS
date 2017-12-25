@@ -84,10 +84,11 @@ class Model
      */
     public static function getInstance()
     {
-        if (empty(self::$instance)) {
-            self::$instance = new Model();
+        if (empty(static::$instance)) {
+            $className = get_called_class();
+            static::$instance = new $className();
         }
-        return self::$instance;
+        return static::$instance;
     }
 
     /**

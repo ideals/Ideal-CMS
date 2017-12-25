@@ -590,15 +590,16 @@
                 $('.nav-tabs > li > a').removeClass('error');
             }
 
-            function showFinder(fieldName, startupPath)
+            function showFinder(fieldName, startupType, startupPath)
             {
                 startupPath = typeof startupPath !== 'undefined' ?  startupPath : '';
                 window.idObject['fieldName'] = '#' + fieldName;
                 var finder = new CKFinder();
                 finder.basePath = '{{ cmsFolder }}/Ideal/Library/ckfinder/';
+                finder.rememberLastFolder = true;
                 finder.selectActionFunction = setFileField;
                 if (startupPath != '') {
-                    finder.startupPath = 'Images:' + startupPath;
+                    finder.startupPath = startupType + ':' + startupPath;
                     finder.StartupFolderExpanded = 'true';
                 }
                 finder.popup();
