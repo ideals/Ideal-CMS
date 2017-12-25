@@ -97,7 +97,7 @@ class Db extends \mysqli
 
         $db->dbName = $params['name'];
 
-        if ($config->cache['memcache']) {
+        if (isset($config->cache['memcache']) && $config->cache['memcache']) {
             // Если в настройках site_data.php включён memcache, подключаем его
             $db->cache = Memcache::getInstance();
         }

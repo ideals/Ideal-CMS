@@ -53,8 +53,8 @@ class Controller extends AbstractController
 <script type="text/javascript">
     $(function () {
         $('#picker_{$htmlName}').datetimepicker({
-            useSeconds: true,
-            language: 'ru'
+            format: 'DD.MM.YYYY HH:mm:ss',
+            locale: 'ru'
         });
     });
 </script>

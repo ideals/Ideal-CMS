@@ -32,7 +32,6 @@
     "disallowSpacesInNamedFunctionExpression": {
         "beforeOpeningRoundBrace": true
     },
-    "requireMultipleVarDecl": "onevar",
     "requireBlocksOnNewline": true,
     "disallowPaddingNewlinesInBlocks": true,
     "disallowEmptyBlocks": true,
@@ -54,7 +53,6 @@
     "requireCamelCaseOrUpperCaseIdentifiers": "ignoreProperties",
     "disallowKeywords": ["with"],
     "disallowMultipleLineStrings": true,
-    "validateLineBreaks": "LF",
     "validateIndentation": 4,
     "disallowTrailingWhitespace": true,
     "disallowTrailingComma": true,

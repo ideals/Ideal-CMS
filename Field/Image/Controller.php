@@ -36,16 +36,24 @@ class Controller extends AbstractController
     public function getInputText()
     {
         $value = htmlspecialchars($this->getValue());
+        $startupPath = '';
+        if (empty($value)) {
+            $img = '<span class="glyphicon glyphicon-remove" id="' . $this->htmlName . 'Span"></span>'
+                . '<img id="' . $this->htmlName . 'Img" src="" style="max-height:32px;display:none;">';
+        } else {
+            $img = '<img id="' . $this->htmlName . 'Img" src="' . $value . '" style="max-height:32px">';
+            $startupPath = substr(dirname($value), strpos($value, '/', 2)) . '/';
+        }
         return '<div class="input-group">'
         . '<span class="input-group-addon" style="padding: 0 5px">'
         // миниатюра картинки
-        . '<img id="' . $this->htmlName . 'Img" src="' . $value . '" style="max-height:32px"></span>'
+        . $img . '</span>'
         . '<input type="text" class="form-control" name="' . $this->htmlName
         . '" id="' . $this->htmlName
         . '" value="' . $value
-        . '" onchange="$(\'#' . $this->htmlName . 'Img\').attr(\'src\', $(this).val());">' // замена миниатюры картинки
+        . '" onchange="$(\'#' . $this->htmlName . 'Img\').show().attr(\'src\', $(this).val());$(\'#' . $this->htmlName . 'Span\').hide()">' // замена миниатюры картинки
         . '<span class="input-group-btn">'
-        . '<button class="btn" onclick="showFinder(\'' . $this->htmlName . '\'); return false;" >Выбрать</button>'
+        . '<button class="btn" onclick="showFinder(\'' . $this->htmlName . '\', \'Images\', \'' . $startupPath . '\'); return false;" >Выбрать</button>'
         . '</span></div>';
     }
 
