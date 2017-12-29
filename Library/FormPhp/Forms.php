@@ -66,6 +66,9 @@ class Forms
     /** @var bool Флаг отвечающий за отправку заголовков */
     protected $sendHeader = true;
 
+    /** @var bool Флаг отвечающий за отправку формы методом ajax */
+    protected $ajaxSend = true;
+
     /**
      * Инициализируем сессии, если это нужно
      *
@@ -223,6 +226,16 @@ class Forms
     public function setSendHeader($sendHeader)
     {
         $this->sendHeader = $sendHeader;
+    }
+
+    /**
+     * Устанавливает надобность отправки формы ajax методом
+     *
+     * @param bool $ajaxSend
+     */
+    public function setAjaxSend($ajaxSend)
+    {
+        $this->ajaxSend = $ajaxSend;
     }
 
     /**
@@ -539,12 +552,13 @@ class Forms
         $location = ($this->locationValidation) ? ', location: true' : '';
         $successMessage = (!$this->successMessage) ? ', successMessage: false' : '';
         $clearForm = (!$this->clearForm) ? ', clearForm: false' : '';
+        $ajaxSend = (!$this->ajaxSend) ? ', ajaxSend: false' : '';
 
         $options = isset($this->formJsArguments['options']) ? $this->formJsArguments['options'] : '{}';
         $messages = isset($this->formJsArguments['messages']) ? $this->formJsArguments['messages'] : '{}';
         $methods = isset($this->formJsArguments['methods']) ? $this->formJsArguments['methods'] : '{}';
 
-        $params = "{ajaxUrl : '" . $this->ajaxUrl . "'" . $location . $successMessage . $clearForm . "}";
+        $params = "{ajaxUrl : '{$this->ajaxUrl}'{$location}{$successMessage}{$clearForm}{$ajaxSend}}";
 
         $ajaxUrl = <<<JS
             $('#{$this->formName}').form(

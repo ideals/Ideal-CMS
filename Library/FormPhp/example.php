@@ -36,6 +36,9 @@ $form->setGtm();
 // Устанавливаем url, используемый при ajax-отправке формы
 $form->setAjaxUrl('/sendForm.php');
 
+// Устанавливаем надобность отправки формы через ajax, по умолчанию "true"
+// $form->setAjaxSend(false);
+
 
 $form->add('name', 'text'); // добавляем одно текстовое поле ввода
 $form->add('phone', 'text'); // добавляем одно текстовое поле ввода
