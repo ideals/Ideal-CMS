@@ -207,7 +207,8 @@ jQuery.fn.form = function (options, messages, methods) {
         ajaxDataType: 'text',
         location: false,
         successMessage:  true,
-        clearForm: true
+        clearForm: true,
+        ajaxSend: true
     }, options);
     var messagesOrig = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
@@ -382,6 +383,10 @@ jQuery.fn.form = function (options, messages, methods) {
         }
     }, methods);
 
+    if (options.ajaxSend === false){
+        methods = $.extend(methods, {submit: function() {}});
+    }
+
     var make = function (form) {
         $(this)
             .submit(function () {
@@ -415,7 +420,7 @@ jQuery.fn.form = function (options, messages, methods) {
                     $(this).trigger('form.valid');
                 }
 
-                if (typeof senderAjax == 'object') {
+                if (typeof senderAjax == 'object' && options.ajaxSend === true) {
                     return senderAjax.send(this, options, methods.successSend);
                 } else {
                     return methods.submit.apply(this);
