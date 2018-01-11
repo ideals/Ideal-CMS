@@ -151,4 +151,4 @@ foreach ($cronTasks() as $cronTask) {
 }
 
 // Изменяем дату модификации скрипта
-touch(__FILE__, $now = $now->getTimestamp());
+touch(__FILE__, $now->getTimestamp());
