@@ -519,7 +519,7 @@ class Forms
             if (!empty($js) && !empty($nextJs) && ($js != $nextJs)) {
                 throw new \Exception('Ошибка! Найдено несколько классов отправки формы');
             }
-            $js = $nextJs;
+            $js .= $nextJs;
         }
         return $js;
     }
