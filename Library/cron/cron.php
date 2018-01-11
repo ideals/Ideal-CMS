@@ -87,8 +87,16 @@ $test = function () use ($siteDataFilePath, $cronTasks, $parseCronTask, $modifyT
         echo "Файла с настройками сайта {$siteDataFilePath} не существует или он недоступен для чтения\n";
     }
 
+    // Проверяем доступность запускаемого файла для изменения его даты
+    if (!is_writable(__FILE__)) {
+        echo "Не получается изменить дату модификации файла \"" . __FILE__ . "\"\n";
+    } else {
+        echo "Файл \"" . __FILE__ . "\" позволяет вносить изменения в дату модификации\n";
+    }
+
     $failure = false;
     $taskIsset = false;
+    $tasks = $currentTasks = '';
     foreach ($cronTasks() as $cronTask) {
         if ($cronTask) {
             list($taskExpression, $fileTask) = $parseCronTask($cronTask);
@@ -109,10 +117,20 @@ $test = function () use ($siteDataFilePath, $cronTasks, $parseCronTask, $modifyT
 
             // Получаем дату следующего запуска задачи
             $cron = Cron\CronExpression::factory($taskExpression);
-            $nextRunDate = $cron->getNextRunDate($modifyTime)->format('d.m.Y H:i:s');
+            $nextRunDate = $cron->getNextRunDate($modifyTime);
 
-            echo "Следующий запуск файла \"{$fileTask}\" назначен на {$nextRunDate}\n";
+            $tasks .= $cronTask . "\nСледующий запуск файла \"{$fileTask}\" назначен на "
+                . $nextRunDate->format('d.m.Y H:i:s') . "\n";
             $taskIsset = true;
+
+            // Если дата следующего запуска меньше, либо равна текущей дате, то добавляем задачу на запуск
+            $now = new \DateTime();
+            if ($nextRunDate <= $now) {
+                $currentTasks .= $cronTask . "\n" . $fileTask
+                    . " modify: " .  $modifyTime->format('d.m.Y H:i:s')
+                    . " now: " . $now->format('d.m.Y H:i:s')
+                    . "\n";
+            }
         }
     }
 
@@ -123,12 +141,17 @@ $test = function () use ($siteDataFilePath, $cronTasks, $parseCronTask, $modifyT
         echo "Пока нет ни одного задания для выполнения\n";
     }
 
-    // Проверяем доступность запускаемого файла для изменения его даты
-    if (!is_writable(__FILE__)) {
-        echo "Не получается изменить дату модификации файла \"" . __FILE__ . "\"\n";
-    } else {
-        echo "Файл \"" . __FILE__ . "\" позволяет вносить изменения в дату модификации\n";
+    // Отображение информации о задачах, требующих запуска в данный момент
+    if ($currentTasks) {
+        echo "\nЗадачи для запуска в данный момент:\n";
+        echo $currentTasks;
+    } elseif ($taskIsset) {
+        echo "\nВ данный момент запуск задач не требуется\n";
     }
+
+    // Отображение информации о запланированных задачах и времени их запуска
+    $tasks = $tasks ? "\nЗапланированные задачи:\n" . $tasks : '';
+    echo $tasks . "\n";
 };
 
 // Если запуск тестовый, то выполняем только необходимые тесты
