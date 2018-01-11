@@ -38,6 +38,10 @@ require_once __DIR__ . '/../cron-expression/src/Cron/MinutesField.php';
 require_once __DIR__ . '/../cron-expression/src/Cron/MonthField.php';
 require_once __DIR__ . '/../cron-expression/src/Cron/YearField.php';
 
+// Получаем дату модификации скрипта (она же считается датой последнего запуска)
+$modifyTime = new \DateTime();
+$modifyTime->setTimestamp(filemtime(__FILE__));
+
 /**
  *  Получает список задач для крона из настроек Ideal CMS
  * @return array Массив со списком задач для крона из настроек Ideal CMS
@@ -75,7 +79,7 @@ $parseCronTask = function ($cronTask) use ($siteRootPath) {
  * Делает проверку на доступность файла настроек, правильность заданий в системе и возможность
  * модификации скрипта обработчика крона
  */
-$test = function () use ($siteDataFilePath, $cronTasks, $parseCronTask) {
+$test = function () use ($siteDataFilePath, $cronTasks, $parseCronTask, $modifyTime) {
     // Проверяем доступность файла настроек для чтения
     if (is_readable($siteDataFilePath)) {
         echo "Файл с настройками сайта существует и доступен для чтения\n";
@@ -102,6 +106,12 @@ $test = function () use ($siteDataFilePath, $cronTasks, $parseCronTask) {
                 echo "Не задан исполняемый файл для выражения \"{$taskExpression}\"\n";
                 $failure = true;
             }
+
+            // Получаем дату следующего запуска задачи
+            $cron = Cron\CronExpression::factory($taskExpression);
+            $nextRunDate = $cron->getNextRunDate($modifyTime)->format('d.m.Y H:i:s');
+
+            echo "Следующий запуск файла \"{$fileTask}\" назначен на {$nextRunDate}\n";
             $taskIsset = true;
         }
     }
@@ -126,10 +136,6 @@ if (isset($argv[1]) && $argv[1] == 'test') {
     $test();
     exit;
 }
-
-// Получаем дату модификации скрипта (она же считается датой последнего запуска)
-$modifyTime = new \DateTime();
-$modifyTime->setTimestamp(filemtime(__FILE__));
 
 // Обрабатываем задачи для крона из настроек Ideal CMS
 $now = new \DateTime();
