@@ -2,12 +2,13 @@
 $config = \Ideal\Core\Config::getInstance();
 $file = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 $configFile = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/crontab';
-$data = file_exists($configFile) ? file_get_contents($configFile) : '';
 
 if (isset($_POST['crontab'])) {
     // todo сделать тестирование задач крона и если некорректно, то сообщать об ошибках
     file_put_contents($configFile, $_POST['crontab']);
 }
+
+$data = file_exists($configFile) ? file_get_contents($configFile) : '';
 ?>
 <div>
     <h3>Управление задачами по расписанию из административной части</h3>
