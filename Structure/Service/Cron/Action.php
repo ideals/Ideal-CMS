@@ -5,11 +5,23 @@ $configFile = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/crontab';
 
 $alert = '';
 if (isset($_POST['crontab'])) {
-    // todo сделать тестирование задач крона и если некорректно, то сообщать об ошибках
     if (file_put_contents($configFile, $_POST['crontab'])) {
         $alert = '<div class="alert alert-block alert-success fade in">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         <span class="alert-heading">Изменения успешно сохранены</span></div>';
+
+        $cronClass = new \Cron\CronClass();
+        // Регистрируем автолоадер для библиотеки cron-expression
+        spl_autoload_register('Cron\CronClass::autoloader', true);
+
+        $cronClass->setType('web');
+        $response = $cronClass->testAction();
+
+        if ($response) {
+            $alert .= '<div class="alert alert-info alert-success fade in">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <span class="alert-heading">' . $response . '</span></div>';
+        }
     } else {
         $alert = '<div class="alert alert-danger fade in">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
