@@ -3,16 +3,24 @@ $config = \Ideal\Core\Config::getInstance();
 $file = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 $configFile = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/crontab';
 
+$alert = '';
 if (isset($_POST['crontab'])) {
     // todo сделать тестирование задач крона и если некорректно, то сообщать об ошибках
-    file_put_contents($configFile, $_POST['crontab']);
+    if (file_put_contents($configFile, $_POST['crontab'])) {
+        $alert = '<div class="alert alert-block alert-success fade in">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <span class="alert-heading">Изменения успешно сохранены</span></div>';
+    } else {
+        $alert = '<div class="alert alert-danger fade in">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <span class="alert-heading">Не удалось сохранить изменения в файл</span></div>';
+    }
 }
 
 $data = file_exists($configFile) ? file_get_contents($configFile) : '';
 ?>
 <div>
-    <h3>Управление задачами по расписанию из административной части</h3>
-
+    <?=$alert;?>
     <form action="" method=post enctype="multipart/form-data">
         <div id="general_cron_crontab-control-group" class="form-group">
             <label class=" control-label" for="general_cron_crontab">Установленные задачи крона:</label>
