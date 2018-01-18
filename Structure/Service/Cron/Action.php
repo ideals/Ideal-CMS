@@ -4,13 +4,33 @@ $file = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 $configFile = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/crontab';
 $data = file_exists($configFile) ? file_get_contents($configFile) : '';
 
+$test = '';
+if (!file_exists($configFile)) {
+    if (!file_put_contents($configFile, '')) {
+        $test = 'Не могу создать файл для записи заданий: ' . $configFile;
+    }
+}
+
+if (!is_writable($configFile)) {
+    $test = 'Файл ' . $configFile . ' недоступен для записи';
+}
+
 if (isset($_POST['crontab'])) {
-    // todo сделать тестирование задач крона и если некорректно, то сообщать об ошибках
-    file_put_contents($configFile, $_POST['crontab']);
+    $data = $_POST['crontab'];
+    if (empty($test)) {
+        file_put_contents($configFile, $_POST['crontab']);
+        require $config->cmsFolder . '/Ideal/Library/Cron/loader.php';
+        $cron = new \Cron\CronClass();
+        $test = $cron->testAction();
+    }
 }
 ?>
 <div>
     <h3>Управление задачами по расписанию из административной части</h3>
+
+    <?php if ($test) : ?>
+        <pre><?= $test ?></pre>
+    <?php endif; ?>
 
     <form action="" method=post enctype="multipart/form-data">
         <div id="general_cron_crontab-control-group" class="form-group">
