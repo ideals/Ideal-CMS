@@ -263,6 +263,10 @@ function createConfig()
     $file = file_get_contents($fileName);
     $file = fillPlaceholders($file);
     file_put_contents($fileName, $file);
+
+    // Файл настроек для управления кроном
+    $fileName = CMS_ROOT . '/crontab';
+    file_put_contents($fileName, '');
 }
 
 /**
