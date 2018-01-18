@@ -18,10 +18,18 @@ if (!is_writable($configFile)) {
 if (isset($_POST['crontab'])) {
     $data = $_POST['crontab'];
     if (empty($test)) {
-        file_put_contents($configFile, $_POST['crontab']);
         require $config->cmsFolder . '/Ideal/Library/Cron/loader.php';
         $cron = new \Cron\CronClass();
-        $test = $cron->testAction();
+
+        // Проверить правильность задач
+        $responseArray = $cron->testTasks($_POST['crontab']);
+        if (!$responseArray['failure']) {
+            file_put_contents($configFile, $_POST['crontab']);
+            $test .= "Новые правила успешно записаны!\n";
+        } else {
+            $test .= "Новые правила не записаны, так как содержат ошибки\n";
+        }
+        $test .= $cron->testAction();
     }
 }
 ?>
@@ -29,7 +37,7 @@ if (isset($_POST['crontab'])) {
     <h3>Управление задачами по расписанию из административной части</h3>
 
     <?php if ($test) : ?>
-        <pre><?= $test ?></pre>
+        <pre style="white-space: pre-line"><?= $test ?></pre>
     <?php endif; ?>
 
     <form action="" method=post enctype="multipart/form-data">

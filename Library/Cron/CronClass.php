@@ -39,11 +39,24 @@ class CronClass
             $response .= "Файла с настройками сайта {$this->dataFile} не существует или он недоступен для чтения\n";
         }
 
+        // Вычисляем путь до файла $this->cronFile в корне админки для использования в уведомлениях
+        $cronFilePathParts = explode('/', $this->cronFile);
+        $countDirUp = 0;
+        foreach ($cronFilePathParts as $key => $part) {
+            if ($part == '..') {
+                $countDirUp++;
+                unset($cronFilePathParts[$key]);
+            }
+        }
+        $file = array_pop($cronFilePathParts);
+        $cronFilePathParts = array_slice($cronFilePathParts, 0, count($cronFilePathParts) - $countDirUp);
+        $cronFilePath = implode('/', $cronFilePathParts) . '/' . $file;
+
         // Проверяем доступность запускаемого файла для изменения его даты
         if (is_writable($this->cronFile)) {
-            $response .= "Файл \"" . $this->cronFile . "\" позволяет вносить изменения в дату модификации\n";
+            $response .= "Файл \"{$cronFilePath}\" позволяет вносить изменения в дату модификации\n";
         } else {
-            $response .= "Не получается изменить дату модификации файла \"" . $this->cronFile . "\"\n";
+            $response .= "Не получается изменить дату модификации файла \"{$cronFilePath}\"\n";
         }
 
         // Загружаем данные из cron-файла
@@ -53,25 +66,51 @@ class CronClass
             $response .= $e->getMessage() . "\n";
         }
 
-        $failure = false;
+        $responseArray = $this->testTasks();
+        $response .= $responseArray['text'];
+
+        return $response;
+    }
+
+    /**
+     * Проверяет правильность введённых задач
+     *
+     * @param string $fieldTasksSetting Данные из введённого поля, если пустое, то значение берётся из файла
+     * @return array Массив с результатом проверки задач
+     * @throws \Exception
+     */
+    public function testTasks($fieldTasksSetting = '')
+    {
+        $response = array(
+            'failure' => false,
+            'text' => ''
+        );
+        if ($fieldTasksSetting) {
+            $this->cron = explode(PHP_EOL, $fieldTasksSetting);
+            $this->extractEmail();
+        }
+
         $taskIsset = false;
         $tasks = $currentTasks = '';
         foreach ($this->cron as $cronTask) {
             if ($cronTask) {
                 list($taskExpression, $fileTask) = $this->parseCronTask($cronTask);
+                $fileTask = trim($fileTask);
 
                 // Проверяем правильность написания выражения для крона и существование файла для выполнения
                 if (\Cron\CronExpression::isValidExpression($taskExpression) !== true) {
-                    $response .= "Неверное выражение \"{$taskExpression}\"\n";
-                    $failure = true;
+                    $response['text'] .= "Неверное выражение \"{$taskExpression}\"\n";
+                    $response['failure'] = true;
+                    continue;
                 }
-
                 if ($fileTask && !is_readable($fileTask)) {
-                    $response .= "Файла \"{$fileTask}\" не существует или он недоступен для чтения\n";
-                    $failure = true;
+                    $response['text'] .= "Файла \"{$fileTask}\" не существует или он недоступен для чтения\n";
+                    $response['failure'] = true;
+                    continue;
                 } elseif (!$fileTask) {
-                    $response .= "Не задан исполняемый файл для выражения \"{$taskExpression}\"\n";
-                    $failure = true;
+                    $response['text'] .= "Не задан исполняемый файл для выражения \"{$taskExpression}\"\n";
+                    $response['failure'] = true;
+                    continue;
                 }
 
                 // Получаем дату следующего запуска задачи
@@ -94,24 +133,23 @@ class CronClass
         }
 
         // Если в задачах из настройках Ideal CMS не обнаружено ошибок, уведомляем об этом
-        if (!$failure && $taskIsset) {
-            $response .= "В задачах из файла crontab ошибок не обнаружено\n";
+        if (!$response['failure'] && $taskIsset) {
+            $response['text'] .= "В задачах из файла crontab ошибок не обнаружено\n";
         } elseif (!$taskIsset) {
-            $response .= "Пока нет ни одного задания для выполнения\n";
+            $response['text'] .= "Пока нет ни одного задания для выполнения\n";
         }
 
         // Отображение информации о задачах, требующих запуска в данный момент
         if ($currentTasks) {
-            $response .= "\nЗадачи для запуска в данный момент:\n";
-            $response .=$currentTasks;
+            $response['text'] .= "\nЗадачи для запуска в данный момент:\n";
+            $response['text'] .= $currentTasks;
         } elseif ($taskIsset) {
-            $response .= "\nВ данный момент запуск задач не требуется\n";
+            $response['text'] .= "\nВ данный момент запуск задач не требуется\n";
         }
 
         // Отображение информации о запланированных задачах и времени их запуска
         $tasks = $tasks ? "\nЗапланированные задачи:\n" . $tasks : '';
-        $response .= $tasks . "\n";
-
+        $response['text'] .= $tasks . "\n";
         return $response;
     }
 
@@ -208,20 +246,22 @@ class CronClass
      */
     private function loadCrontab($fileName)
     {
-        $fileName = stream_resolve_include_path($fileName);
-        if ($fileName) {
-            $this->cron = explode(PHP_EOL, file_get_contents($fileName));
-            $this->cronEmail = $this->extractEmail();
-        } else {
-            $this->cron = array();
-            $fileName = stream_resolve_include_path(dirname($fileName)) . 'crontab';
-            file_put_contents($fileName, '');
-        }
-        $this->cronFile = $fileName;
+        if (empty($this->cron)) {
+            $fileName = stream_resolve_include_path($fileName);
+            if ($fileName) {
+                $this->cron = explode(PHP_EOL, file_get_contents($fileName));
+                $this->cronEmail = $this->extractEmail();
+            } else {
+                $this->cron = array();
+                $fileName = stream_resolve_include_path(dirname($fileName)) . 'crontab';
+                file_put_contents($fileName, '');
+            }
+            $this->cronFile = $fileName;
 
-        // Получаем дату модификации скрипта (она же считается датой последнего запуска)
-        $this->modifyTime = new \DateTime();
-        $this->modifyTime->setTimestamp(filemtime($fileName));
+            // Получаем дату модификации скрипта (она же считается датой последнего запуска)
+            $this->modifyTime = new \DateTime();
+            $this->modifyTime->setTimestamp(filemtime($fileName));
+        }
     }
 
     /**
