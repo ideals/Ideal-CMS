@@ -5,9 +5,8 @@ $cron = new \Cron\CronClass();
 
 // Если запуск тестовый, то выполняем только необходимые тесты
 if (isset($argv[1]) && $argv[1] === 'test') {
-    $res = $cron->testAction();
+    $cron->testAction();
+    echo $cron->getMessage();
 } else {
-    $res = $cron->runAction();
+    $cron->runAction();
 }
-
-echo $res;

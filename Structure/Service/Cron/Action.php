@@ -17,19 +17,27 @@ if (!is_writable($configFile)) {
 
 if (isset($_POST['crontab'])) {
     $data = $_POST['crontab'];
+
+    require $config->cmsFolder . '/Ideal/Library/Cron/loader.php';
+    $cron = new \Cron\CronClass();
+    $cronArr = $cron->parseCrontab($data);
+    if (!$cron->testTasks($cronArr)) {
+        $test = $cron->getMessage();
+    }
+
     if (empty($test)) {
         file_put_contents($configFile, $_POST['crontab']);
-        require $config->cmsFolder . '/Ideal/Library/Cron/loader.php';
         $cron = new \Cron\CronClass();
-        $test = $cron->testAction();
+        $cron->testAction();
+        $test = $cron->getMessage();
     }
 }
 ?>
 <div>
-    <h3>Управление задачами по расписанию из административной части</h3>
+    <h4>Управление задачами по расписанию</h4>
 
     <?php if ($test) : ?>
-        <pre><?= $test ?></pre>
+        <pre style="white-space: pre-line;"><?= $test ?></pre>
     <?php endif; ?>
 
     <form action="" method=post enctype="multipart/form-data">
@@ -72,7 +80,9 @@ if (isset($_POST['crontab'])) {
     <p>
         Эта инструкция означает запуск скрипта каждую минуту.
         Если это будет сильно нагружать сервер, то можно сделать запуск скрипта реже.
-        Задачи прописанные в поле ниже будут выполнены в момент запуска скрипта обработчика задач,
-        даже если их время прошло (если они ещё не запускались)
+    </p>
+    <p>
+        Указанные здесь задачи будут выполнены в момент запуска скрипта обработчика задач,
+        даже если их время прошло (если они ещё не запускались).
     </p>
 </div>
