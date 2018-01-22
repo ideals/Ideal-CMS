@@ -54,9 +54,22 @@ class CronClass
             $success = false;
         }
 
+        // Вычисляем путь до файла $this->cronFile в корне админки для использования в уведомлениях
+        $cronFilePathParts = explode('/', $this->cronFile);
+        $countDirUp = 0;
+        foreach ($cronFilePathParts as $key => $part) {
+            if ($part == '..') {
+                $countDirUp++;
+                unset($cronFilePathParts[$key]);
+            }
+        }
+        $file = array_pop($cronFilePathParts);
+        $cronFilePathParts = array_slice($cronFilePathParts, 0, count($cronFilePathParts) - $countDirUp);
+        $cronFilePath = implode('/', $cronFilePathParts) . '/' . $file;
+
         // Проверяем доступность запускаемого файла для изменения его даты
         if (is_writable($this->cronFile)) {
-            $this->message .= "Файл \"" . $this->cronFile . "\" позволяет вносить изменения в дату модификации\n";
+            $this->message .= "Файл \"{$cronFilePath}\" позволяет вносить изменения в дату модификации\n";
         } else {
             $this->message .= "Не получается изменить дату модификации файла \"" . $this->cronFile . "\"\n";
             $success = false;
