@@ -61,6 +61,9 @@ class FileMonitor
 
         $settings['exclude'] = explode("\n", $settings['exclude']);
 
+        // Убираем пустые строки из правил исключения
+        $settings['exclude'] = array_filter($settings['exclude']);
+
         $this->fileMonitor = $settings['tmpDir'] . $this->fileMonitor;
         $this->fileMonitorTmp = $settings['tmpDir'] . $this->fileMonitorTmp;
         $this->fileMonitorUpd = $settings['tmpDir'] . $this->fileMonitorUpd;
@@ -121,12 +124,16 @@ class FileMonitor
         foreach ($arr as $v) {
             $file = $dir . '/' . $v;
 
-            foreach ($this->exclude as $pattern) {
-                if (preg_match($pattern, $file)) {
-                    print 'Нашлось !' . $file; exit;
-                    continue 2;
+            if ($this->exclude) {
+                foreach ($this->exclude as $pattern) {
+                    if (preg_match($pattern, $file)) {
+                        print 'Нашлось !' . $file;
+                        exit;
+                        continue 2;
+                    }
+                    print $file . ' - ' . $pattern;
+                    exit;
                 }
-                print $file . ' - ' . $pattern; exit;
             }
 
             if (is_dir($file)) {
@@ -241,7 +248,11 @@ class FileMonitor
 
         // Записываем в файл текст отчёта
         if (!empty($message)) {
-            $reportFileName = dirname($this->fileMonitor) . '/file-reports/' . date('Y-m-d-H-i-s') . '.txt';
+            $fileMonitorReporstDir = dirname($this->fileMonitor) . '/file-reports/';
+            if (!file_exists($fileMonitorReporstDir)) {
+                mkdir($fileMonitorReporstDir);
+            }
+            $reportFileName = $fileMonitorReporstDir . date('Y-m-d-H-i-s') . '.txt';
             $fp = fopen($reportFileName, 'w+');
             fwrite($fp, $message);
             fclose($fp);
@@ -269,8 +280,12 @@ class FileMonitor
      */
     private function delTempFiles()
     {
-        unlink($this->fileMonitorTmp);
-        unlink($this->fileMonitorUpd);
+        if (file_exists($this->fileMonitorTmp)) {
+            unlink($this->fileMonitorTmp);
+        }
+        if (file_exists($this->fileMonitorUpd)) {
+            unlink($this->fileMonitorUpd);
+        }
     }
 
     /**
@@ -286,7 +301,7 @@ class FileMonitor
         $dataFile = __DIR__ . '/../../../site_data.php';
         if ($dataFile = stream_resolve_include_path($dataFile)) {
             $data = require $dataFile;
-            $scanDir = $data['monitoring']['scanFolder'];
+            $scanDir = $data['monitoring']['scanDir'];
             $settings['scanDir'] = stream_resolve_include_path(
                 empty($scanDir) ? $settings['scanDir'] : $scanDir
             );
