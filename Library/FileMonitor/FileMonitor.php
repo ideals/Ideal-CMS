@@ -35,9 +35,9 @@ class FileMonitor
     /** @var string Доменное имя */
     private $domain;
 
-    private $fileMonitor = '/file_monitor.txt';
-    private $fileMonitorTmp = '/file_monitor_tmp.txt';
-    private $fileMonitorUpd = '/file_monitor_upd.txt';
+    private $fileMonitor = '/file-monitor.txt';
+    private $fileMonitorTmp = '/file-monitor-tmp.txt';
+    private $fileMonitorUpd = '/file-monitor-upd.txt';
 
     /**
      * Устанавливает время начала работы скрипта и список файлов/каталогов для исключения из сбора.
@@ -85,6 +85,15 @@ class FileMonitor
      */
     public function scan()
     {
+        // Проверка, создан ли файл с хэшами
+        if (file_exists($this->fileMonitor)) {
+            $time = filemtime($this->fileMonitor);
+            if (date('d.m.Y') == date('d.m.Y', $time)) {
+                echo "Файлы сегодня уже проверялись.\n";
+                exit;
+            }
+        }
+
         // Если существует промежуточный файл с списком пройденных файлов считываем его
         if (file_exists($this->fileMonitorTmp)) {
             $temp = file_get_contents($this->fileMonitorTmp);
@@ -246,7 +255,7 @@ class FileMonitor
             if (!file_exists($fileMonitorReporstDir)) {
                 mkdir($fileMonitorReporstDir);
             }
-            $reportFileName = $fileMonitorReporstDir . date('Y-m-d-H-i-s') . '.txt';
+            $reportFileName = $fileMonitorReporstDir . date('Y-m-d') . '.txt';
             $fp = fopen($reportFileName, 'w+');
             fwrite($fp, $message);
             fclose($fp);
