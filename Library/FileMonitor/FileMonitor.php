@@ -68,6 +68,11 @@ class FileMonitor
         $this->fileMonitorTmp = $settings['tmpDir'] . $this->fileMonitorTmp;
         $this->fileMonitorUpd = $settings['tmpDir'] . $this->fileMonitorUpd;
 
+        // Игнорируем служебные файлы мониторинга
+        $settings['exclude'][] = '/^' . addcslashes($this->fileMonitor, '/\\') . '/';
+        $patternDir = addcslashes($settings['tmpDir'], '/\\');
+        $settings['exclude'][] = '/^' . $patternDir . '\/file-reports\/\d\d\d\d-\d\d-\d\d\.txt/';
+
         foreach ($defaultValues as $key => $item) {
             if (empty($settings[$key])) {
                 if (null === $item) {
