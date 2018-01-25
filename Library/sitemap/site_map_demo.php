@@ -16,7 +16,7 @@ return array(
     'change_freq' => "weekly", // Частота обновления страниц | Ideal_Select | {"dynamic":"dynamic","hourly":"hourly","daily":"daily","weekly":"weekly","monthly":"monthly","yearly":"yearly","never":"never"}
     'priority' => "0.8", // Приоритет для всех страниц | Ideal_Text
     'time_format' => "long", // Формат отображения времени | Ideal_Select | {"long":"long","short":"short"}
-    'disallow_regexp' => "/\.(xml|inc|txt|js|zip|bmp|jpg|jpeg|png|gif|css)$/i", // Регулярные выражения для файлов, которые не надо включать в карту сайта | Ideal_Area
+    'disallow_regexp' => "/\.(xml|inc|txt|js|zip|bmp|jpg|jpeg|png|gif|css|xlsx)$/i", // Регулярные выражения для файлов, которые не надо включать в карту сайта | Ideal_Area
     'disallow_key' => "sid\nPHPSESSID", // GET параметры, отбрасываемые при составлении карты сайта | Ideal_Area
     'seo_urls' => "http://example.com/promoted-page.html = 0.9", // Приоритет для продвигаемых ссылок | Ideal_Area
     'email_cron' => "help@neox.ru", // Электронная почта для cron-сообщений | Ideal_Text
