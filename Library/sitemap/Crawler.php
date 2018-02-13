@@ -796,7 +796,7 @@ XML;
     {
         // Проверяем, не является ли файл тем, в котором не нужно искать ссылки
         $ext = strtolower(pathinfo($k, PATHINFO_EXTENSION));
-        if (in_array($ext, array('xls', 'pdf', 'doc', 'docx'))) {
+        if (in_array($ext, array('xls', 'xlsx', 'pdf', 'doc', 'docx'))) {
             return '';
         }
 
