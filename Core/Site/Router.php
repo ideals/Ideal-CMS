@@ -42,7 +42,7 @@ class Router
         // Проверка на простой AJAX-запрос
         $request = new Request();
         if ($request->mode == 'ajax' && $request->controller != '') {
-            $controllerName = $request->controller . '\\AjaxController';
+            $controllerName = str_replace('.', '\\', $request->controller) . '\\AjaxController';
             $is404 = true;
             if (class_exists($controllerName)) {
                 // Если контроллер в запросе указан И запрошенный класс существует
