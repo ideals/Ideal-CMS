@@ -68,10 +68,12 @@ class FileMonitor
         $this->fileMonitorTmp = $settings['tmpDir'] . $this->fileMonitorTmp;
         $this->fileMonitorUpd = $settings['tmpDir'] . $this->fileMonitorUpd;
 
-        // Игнорируем служебные файлы мониторинга
+        // Игнорируем служебные файлы мониторинга и карту сайта (т.к. в ней ежедневно меняется дата)
         $settings['exclude'][] = '/^' . addcslashes($this->fileMonitor, '/\\') . '/';
         $patternDir = addcslashes($settings['tmpDir'], '/\\');
         $settings['exclude'][] = '/^' . $patternDir . '\/file-reports\/\d\d\d\d-\d\d-\d\d\.txt/';
+        $patternDir = rtrim(addcslashes($settings['scanDir'], '/\\'), '/');
+        $settings['exclude'][] = '/^' . $patternDir . '\/sitemap\.xml/';
 
         foreach ($defaultValues as $key => $item) {
             if (empty($settings[$key])) {
