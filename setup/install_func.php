@@ -263,6 +263,12 @@ function createConfig()
     $file = file_get_contents($fileName);
     $file = fillPlaceholders($file);
     file_put_contents($fileName, $file);
+
+    // Прописываем в файле crontab конфигурационные данные
+    $fileName = CMS_ROOT . '/crontab';
+    $file = file_get_contents($fileName);
+    $file = fillPlaceholders($file);
+    file_put_contents($fileName, $file);
 }
 
 /**
