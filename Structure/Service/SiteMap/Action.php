@@ -1,3 +1,13 @@
+<?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
+?>
 <style>
     #iframe {
         margin-top: 15px;
@@ -99,12 +109,11 @@ if (isset($_POST['edit'])) {
         <div>
             <p>&nbsp;</p>
             <h3>Запуск карты сайта через cron</h3>
-            <p>Чтобы прописать в cron'е команду на запуск составления карты сайта в терминале выполните команду:</p>
-            <pre><code>crontab -e</code></pre>
-            <p>Далее в открывшемся редакторе запишите такую строку:</p>
-            <pre><code>*/3 2-4 * * * /usr/bin/php <?php
-                    echo DOCUMENT_ROOT . '/' . $config->cmsFolder; ?>/Ideal/Library/sitemap/index.php</code></pre>
-            <p>Эта инструкция означает запуск скрипта каждые три минуты с двух до четырёх ночи.
+            <p>Чтобы прописать в cron'е команду на запуск составления карты сайта нужно зайти в пункт "Cron" раздела
+                "Сервис":</p>
+            <p>В поле для редактирования добавить следующую строчку:</p>
+            <pre><code>*/3 2-4 * * * <?php echo $config->cmsFolder; ?>/Ideal/Library/sitemap/index.php</code></pre>
+            <p>Эта инструкция означает запуск скрипта сбора карты сайта каждые три минуты с двух до четырёх ночи.
                 Если этого времени не хватает для составления карты сайта, то можно увеличить диапазон часов.</p>
         </div>
     </div>

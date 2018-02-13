@@ -1,4 +1,12 @@
 <?php
+/**
+ * Ideal CMS (http://idealcms.ru/)
+ *
+ * @link      http://github.com/ideals/idealcms репозиторий исходного кода
+ * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
+ * @license   http://idealcms.ru/license.html LGPL v3
+ */
+
 namespace Ideal\Core\Site;
 
 use Ideal\Core\Config;
@@ -34,7 +42,7 @@ class Router
         // Проверка на простой AJAX-запрос
         $request = new Request();
         if ($request->mode == 'ajax' && $request->controller != '') {
-            $controllerName = $request->controller . '\\AjaxController';
+            $controllerName = str_replace('.', '\\', $request->controller) . '\\AjaxController';
             $is404 = true;
             if (class_exists($controllerName)) {
                 // Если контроллер в запросе указан И запрошенный класс существует

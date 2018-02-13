@@ -36,14 +36,17 @@ $form->setGtm();
 // Устанавливаем url, используемый при ajax-отправке формы
 $form->setAjaxUrl('/sendForm.php');
 
+// Устанавливаем надобность отправки формы через ajax, по умолчанию "true"
+// $form->setAjaxSend(false);
+
 
 $form->add('name', 'text'); // добавляем одно текстовое поле ввода
 $form->add('phone', 'text'); // добавляем одно текстовое поле ввода
 $form->add('email', 'text'); // добавляем одно текстовое поле ввода
+$form->add('file', 'fileMulti', array('id' => 'fileMyForm')); // добавляем поле для загрузки файлов
 $form->setValidator('name', 'required'); // к полю ввода добавляем валидатор, требующий заполнить это поле
 $form->setValidator('email', 'email'); // к полю ввода добавляем валидатор, требующий заполнить это поле
 $form->setValidator('phone', 'phone'); // к полю ввода добавляем валидатор, требующий заполнить это поле
-$form->add('file', 'fileMulti', array('id' => 'fileMyForm')); // добавляем поле для загрузки файлов
 
 if ($form->isPostRequest()) {
     // Если отправлена форма, проверяем правильность её заполнения
