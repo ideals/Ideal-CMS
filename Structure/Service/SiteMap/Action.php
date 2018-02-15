@@ -138,8 +138,14 @@ if (isset($_POST['edit'])) {
     }
 
     function getSitemapAjaxify(param) {
+        var extParam = param;
+        if (extParam == '') {
+            extParam += '?timestamp=' + Date.now();
+        } else {
+            extParam += '&timestamp=' + Date.now();
+        }
         $.ajax({
-            url: 'Ideal/Library/sitemap/index.php' + param,
+            url: 'Ideal/Library/sitemap/index.php' + extParam,
             success: function (data) {
                 $('#iframe').append(data);
                 if (/Выход по таймауту/gim.test(data)) {
