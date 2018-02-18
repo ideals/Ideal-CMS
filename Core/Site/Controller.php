@@ -24,6 +24,9 @@ class Controller
     /* @var $model Model Модель соответствующая этому контроллеру */
     protected $model;
 
+    /** @var string Название параметра листалки */
+    protected $pageName = 'page';
+
     /* @var $path array Путь к этой странице, включая и её саму */
     protected $path;
 
@@ -148,7 +151,7 @@ class Controller
         }
 
         $request = new Request();
-        $page = intval($request->page);
+        $page = (int)$request->{$this->pageName};
 
         if ($page > 1) {
             // На страницах листалки описание категории отображать не надо
