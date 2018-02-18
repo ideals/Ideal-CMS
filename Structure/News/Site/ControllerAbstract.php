@@ -35,9 +35,9 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
         parent::indexAction();
 
         $request = new Request();
-        $page = intval($request->page);
+        $page = (int)$request->{$this->pageName};
 
         $this->view->parts = $this->model->getList($page);
-        $this->view->pager = $this->model->getPager('page');
+        $this->view->pager = $this->model->getPager($this->pageName);
     }
 }
