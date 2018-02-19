@@ -47,6 +47,23 @@ class Model extends \Ideal\Core\Admin\Model
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getPageData()
+    {
+        $data = parent::getPageData();
+        $orderModel = new \Ideal\Structure\Order\Model();
+        $orders = $orderModel->getCrmOrders();
+        foreach ($orders as &$item) {
+            $item['date_create_str'] = date('d.m.Y H:i', $item['date_create']);
+        }
+        unset($item);
+
+        $data['inbox'] = $orders;
+        return $data;
+    }
+
+    /**
      * Получение списка пунктов бокового меню
      *
      * @return array Массив с пунктами бокового меню

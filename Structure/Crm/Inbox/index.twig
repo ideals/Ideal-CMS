@@ -1,1 +1,14 @@
-Входящие
+<div class="col-xs-3">
+    <ul class="nav nav-pills nav-stacked">
+        {% for item in inbox %}
+            <li {% if ID == item.ID %}class="active"{% endif %}>
+                <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}">
+                    {% if item.name %}{{ item.name }}<br />{% endif %}
+                    {% if item.phone %}{{ item.phone }}<br />{% endif %}
+                    {% if item.email %}{{ item.email }}<br />{% endif %}
+                    {{ item.date_create_str }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>

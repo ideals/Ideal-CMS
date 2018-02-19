@@ -20,6 +20,11 @@ class Controller
     public function run()
     {
         $this->templateInit();
+        $model = new Model('');
+        $data = $model->getPageData();
+        foreach ($data as $key => $item) {
+            $this->view->$key = $item;
+        }
         return $this->view->render();
     }
 
