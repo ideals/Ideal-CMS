@@ -270,7 +270,8 @@ class Util
     {
         $config = Config::getInstance();
         if ($config->cms['errorLog'] == 'email' && count(self::$errorArray) > 0) {
-            $text = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
+            $protocol = $config->getProtocol();
+            $text = "Здравствуйте!\n\nНа странице {$protocol}{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"
                 . implode("\n\n", self::$errorArray) . "\n\n"
                 . '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
