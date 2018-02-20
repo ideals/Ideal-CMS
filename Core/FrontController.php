@@ -128,7 +128,8 @@ class FrontController
             } else {
                 $from = 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
             }
-            $message = "Здравствуйте!\n\nНа странице http://{$config->domain}{$_SERVER['REQUEST_URI']} "
+            $protocol = Util::getProtocol();
+            $message = "Здравствуйте!\n\nНа странице {$protocol}{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"
                 . "\n\nСтраница не найдена (404).\n\n"
                 . "\n\n{$from}\n\n";
