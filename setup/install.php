@@ -56,10 +56,37 @@ if ($error == '' && $errorText == 'Ok') {
     <script type="text/javascript" src="../Library/jquery/jquery.min.js"></script>
     <script type="text/javascript" src="../Library/bootstrap/js/bootstrap.min.js"></script>
     <script type="text/javascript">
+        function isValidDomain(v) {
+            if (typeof v !== 'string') return false;
+
+            var parts = v.split('.');
+            if (parts.length <= 1) return false;
+
+            var tld = parts.pop();
+            var tldRegex = /^[a-zA-Z0-9]+$/gi;
+
+            if (!tldRegex.test(tld)) return false;
+
+            var isValid = parts.every(function(host) {
+                var hostRegex = /^(?!:\/\/)([a-zA-Z0-9]+|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])$/gi;
+
+                return hostRegex.test(host)
+            });
+
+            return isValid
+        }
+
         $(document).ready(function () {
-            $('#siteName').on('change keyup', function (e) {
+            $('#siteName').on('change key   up', function (e) {
                 var val = e.target.value;
                 val = val.toLowerCase();
+                if (isValidDomain(val)) {
+                    $('#siteName').parent().removeClass('has-error');
+                    $('#helpBlock').addClass('hidden');
+                } else {
+                    $('#siteName').parent().addClass('has-error');
+                    $('#helpBlock').removeClass('hidden');
+                }
                 if (val.substr(0, 4) == 'www.') {
                     val = val.substr(4);
                 }
@@ -99,9 +126,10 @@ if ($error == '' && $errorText == 'Ok') {
     <form method="post" action="">
         <div class="col-lg-5">
             <div class="form-group">
-                <label for="siteName">Доменное имя сайта:</label>
+                <label for="siteName" class="control-label">Доменное имя сайта:</label>
                 <input type="text" class="form-control input-lg" id="siteName" name="siteName"
                        value="<?php echo $formValue['siteName']; ?>"/>
+                <span id="helpBlock" class="help-block hidden">неправильно указан домен</span>
             </div>
             <div class="form-group">
                 <label>Редирект:</label>
