@@ -75,6 +75,21 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
+    public function getValueForList($values, $fieldName)
+    {
+        $value = $values[$fieldName];
+
+        if (isset($this->field['values'])) {
+            // Если значения select заданы с помощью массива в поле values
+            $value = $this->field['values'][$value];
+        }
+
+        return $value;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function setModel($model, $fieldName, $groupName = 'general')
     {
         parent::setModel($model, $fieldName, $groupName);

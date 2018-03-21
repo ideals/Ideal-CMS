@@ -258,4 +258,43 @@ class Config
         }
         $this->structures = $structures;
     }
+
+    /**
+     * Получаем протокол, по которому работает сайт
+     *
+     * @return string Протокол сайта (http:// или https://)
+     */
+    public function getProtocol()
+    {
+        if (!empty($this->protocol)) {
+            return $this->protocol;
+        }
+
+        if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
+            $this->protocol = 'https://';
+            return $this->protocol;
+        }
+
+        if (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 80) {
+            $this->protocol = 'http://';
+            return $this->protocol;
+        }
+
+        // В консольных запросах единственный способ ориентировки - по настройкам карты сайта
+        $config = Config::getInstance();
+        $sitemapFile = $config->cmsFolder . '/site_map.php';
+        if (file_exists($sitemapFile)) {
+            $siteMap = include($sitemapFile);
+            if (!empty($siteMap['website'])) {
+                $isHttps = stripos($siteMap['website'], 'https');
+                if ($isHttps === 0) {
+                    $this->protocol = 'https://';
+                    return $this->protocol;
+                }
+            }
+        }
+
+        $this->protocol = 'http://';
+        return $this->protocol;
+    }
 }
