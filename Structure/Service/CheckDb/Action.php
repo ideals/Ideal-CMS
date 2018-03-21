@@ -42,10 +42,7 @@ foreach ($result as $v) {
     $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $table . ' FROM `' . $config->db['name'] . '`');
     $fields = array();
     array_walk($fieldsInfo, function ($v) use (&$fields) {
-        $key = $v['Field'];
-        unset($v['Field']);
-        list($type) = explode(' ', implode(' ', $v));
-        $fields[$key] = $type;
+        $fields[$v['Field']] = $v['Type'];
     });
     if (strpos($table, $config->db['prefix']) === 0) {
         $dbTables[$table] = $fields;
@@ -70,7 +67,7 @@ $checkTypeFile = function ($dir, $module, &$cfgTables, &$cfgTablesFull, &$config
                 if (array_key_exists($t, $cfgTables) === false) {
                     $fields = getFieldListWithTypes($c);
                     $cfgTables[$t] = $fields;
-                    $cfgTablesFull[$t] = ($module == 'Ideal') ? $type . '/' . $file : $module . '/' . $type . '/' . $file;
+                    $cfgTablesFull[$t] = $module == 'Ideal' ? $type . '/' . $file : $module . '/' . $type . '/' . $file;
                 }
             }
         }
@@ -184,9 +181,14 @@ if (isset($_POST['delete_field'])) {
 // Если есть поля, которые нужно преобразовать
 if (isset($_POST['change_type'])) {
     foreach ($_POST['change_type'] as $tableField => $v) {
-        list($table, $field, $type) = explode('-', $tableField);
+        list($table, $field, $type) = explode('-', $tableField, 3);
         echo '<p>Изменяем поле ' . $field . ' в таблице ' . $table . ' на тип' . $type . '…';
-        $db->query("ALTER TABLE {$table} MODIFY {$field} {$type};");
+        // Поле с типом "SET", требует особенного подхода в обновлении значений
+        if (strpos(mb_strtolower($type), 'set') === 0) {
+            $db->query("ALTER TABLE {$table} CHANGE {$field} {$field} {$type};");
+        } else {
+            $db->query("ALTER TABLE {$table} MODIFY {$field} {$type};");
+        }
         echo ' Готово.</p>';
         $dbTables[$table][$field] = $type;
     }
@@ -278,8 +280,19 @@ function getFieldListWithTypes($data)
     if (isset($data['fields']) && is_array($data['fields'])) {
         array_walk($data['fields'], function ($value, $key) use (&$fields) {
             if (isset($value['sql'])) {
-                list($type) = explode(' ', $value['sql']);
-                $fields[$key] = $type;
+                $type = '';
+                // получение всех значений при указании типа "SET"
+                if (strpos(mb_strtolower($value['sql']), 'set') === 0) {
+                    preg_match('/set\(.*?\)/is', $value['sql'], $matchesType);
+                    if (isset($matchesType[0])) {
+                        $type = preg_replace('/\v|\s\s/is', '', $matchesType[0]);
+                    }
+                } else {
+                    list($type) = explode(' ', $value['sql']);
+                }
+                if ($type) {
+                    $fields[$key] = $type;
+                }
             }
         });
     }
