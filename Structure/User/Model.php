@@ -174,7 +174,11 @@ class Model
         $this->data = $user;
 
         // Обновляем запись о последнем визите пользователя
-        $db->update($this->table)->set($user);
+        $userParams = array(
+            'last_visit' => $user['last_visit'],
+            'counter_failures' => $user['counter_failures'],
+        );
+        $db->update($this->table)->set($userParams);
         $db->where('ID=:id', array('id' => $user['ID']))->exec();
 
         // Записываем данные о пользователе в сессию
