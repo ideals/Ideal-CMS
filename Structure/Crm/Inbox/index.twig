@@ -8,7 +8,14 @@
                     {% if item.email %}{{ item.email }}<br />{% endif %}
                     {{ item.date_create_str }}
                 </a>
-                <span style="cursor: pointer;" onclick="showModal('{{ par }}', '{{ item.ID }}', 'showEdit');">open</span>
+                <div class="btn-group btn-group-xs button-edit">
+                    <button class="btn btn-info" title="Изменить" onclick="showModal('{{ par }}', '{{ item.ID }}', 'showEdit');" style="width: 47px;">
+                        <span class="glyphicon glyphicon-pencil"></span>
+                    </button>
+                    <button class="btn btn-danger" title="Удалить" onclick="showDeleteConfirm('{{ par }}', '{{ item.ID }}');">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </div>
             </li>
         {% endfor %}
     </ul>
