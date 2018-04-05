@@ -8,6 +8,7 @@
                     {% if item.email %}{{ item.email }}<br />{% endif %}
                     {{ item.date_create_str }}
                 </a>
+                <span style="cursor: pointer;" onclick="showModal('{{ par }}', '{{ item.ID }}', 'showEdit');">open</span>
             </li>
         {% endfor %}
     </ul>

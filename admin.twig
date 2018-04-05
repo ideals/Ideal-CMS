@@ -170,6 +170,57 @@
 
         </table>
 
+        <div class="modal fade" id="addon-confirm-modal">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Удаление аддона</h4>
+                    </div>
+                    <div class="modal-body">
+                        Действительно удалить?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Удалить</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+        {% if pager.pages|length > 1 %}
+        <div class="row">
+            <div class="col-md-11 text-center">
+                <ul class="pagination pagination-lg">
+                    {% if pager.pagePrev != '' %}
+                        <li><a href="{{ pagePrev }}">← назад</a></li>
+                    {% endif %}
+
+                    {% for page in pager.pages %}
+                        {% if page.current == 1 %}
+                            <li class="active"><a>{{ page.num }}</a></li>
+                        {% else %}
+                            <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pager.pageNext != '' %}
+                        <li><a href="{{ pageNext }}">вперёд →</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <form action="" method="get">
+                <input type="hidden" name="par" value="{{ par }}">
+                <div class="input-group col-md-1" style="margin-top: 25px;">
+                    <input class="form-control" aria-label="Количество элементов на странице" name="num" value="{{ pager.num }}">
+                    <div class="input-group-btn"><button type="submit" class="btn btn-default" aria-label="Изменить"><span class="glyphicon glyphicon-ok"></span></button></div>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    {% endblock %}
+
         <!-- Modal -->
         <div class="modal fade" id="myModal" role="dialog"
              aria-labelledby="myModalLabel" aria-hidden="true">
@@ -217,24 +268,6 @@
             <!-- /.modal-dialog -->
         </div><!-- /.modal -->
 
-        <div class="modal fade" id="addon-confirm-modal">
-            <div class="modal-dialog modal-sm">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title">Удаление аддона</h4>
-                    </div>
-                    <div class="modal-body">
-                        Действительно удалить?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">Удалить</button>
-                    </div>
-                </div><!-- /.modal-content -->
-            </div><!-- /.modal-dialog -->
-        </div><!-- /.modal -->
-
         <!-- Modal Login-->
         <div class="modal fade" id="myModalModal" role="dialog"
              aria-labelledby="myModalModalLabel" aria-hidden="true">
@@ -260,38 +293,6 @@
                 </div>
             </div>
         </div>
-
-        {% if pager.pages|length > 1 %}
-        <div class="row">
-            <div class="col-md-11 text-center">
-                <ul class="pagination pagination-lg">
-                    {% if pager.pagePrev != '' %}
-                        <li><a href="{{ pagePrev }}">← назад</a></li>
-                    {% endif %}
-
-                    {% for page in pager.pages %}
-                        {% if page.current == 1 %}
-                            <li class="active"><a>{{ page.num }}</a></li>
-                        {% else %}
-                            <li><a href="{{ page.url }}">{{ page.num }}</a></li>
-                        {% endif %}
-                    {% endfor %}
-
-                    {% if pager.pageNext != '' %}
-                        <li><a href="{{ pageNext }}">вперёд →</a></li>
-                    {% endif %}
-                </ul>
-            </div>
-
-            <form action="" method="get">
-                <input type="hidden" name="par" value="{{ par }}">
-                <div class="input-group col-md-1" style="margin-top: 25px;">
-                    <input class="form-control" aria-label="Количество элементов на странице" name="num" value="{{ pager.num }}">
-                    <div class="input-group-btn"><button type="submit" class="btn btn-default" aria-label="Изменить"><span class="glyphicon glyphicon-ok"></span></button></div>
-                </div>
-            </form>
-        </div>
-        {% endif %}
 
         <script>
             // Инициализируем глобальную переменную, где будут хранится параметры редактируемого объекта
@@ -666,8 +667,6 @@
             };
         </script>
 
-
-    {% endblock %}
     <script>
       // Запрос подтверждения на очистку кэша и инициализация его полной чистки
         function showClearCacheConfirm()
