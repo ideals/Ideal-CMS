@@ -10,6 +10,8 @@
 namespace Ideal\Structure\Crm\Admin;
 
 use Ideal\Core\Config;
+use Ideal\Core\Util;
+use Ideal\Core\Request;
 
 /**
  * Класс для построение бокового меню в разделе Сервис и запуска скриптов выбранного пункта
@@ -38,10 +40,26 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             }
         }
 
-        $this->setPageData($item);
         $path[] = $item;
-
         $this->path = $path;
+        $request = new Request();
+
+        if (count($par) > 0 && $request->id) {
+            // Запускаем вложенную структуру если остались неопределённые элементы пути и присутствует идентификатор
+            $trueResult = $this->path;
+            $end = array_pop($trueResult);
+            $prev = array_pop($trueResult);
+            list(, $moduleName) = explode('_', $end['ID']);
+            $modelClassName = Util::getClassName($prev['structure'], 'Structure') . '\\' . $moduleName . '\\Model';
+            /* @var $structure Model */
+            $structure = new $modelClassName($this->prevStructure);
+
+            // Запускаем определение пути и активной модели по $par
+            $model = $structure->detectPageByIds($this->path, $par);
+            return $model;
+        }
+
+        $this->setPageData($item);
 
         return $this;
     }

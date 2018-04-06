@@ -11,15 +11,37 @@ namespace Ideal\Structure\Crm\Inbox;
 
 use Ideal\Core\Config;
 use Ideal\Core\View;
+use Ideal\Core\Request;
 
 class Controller
 {
     /** @var View */
     private $view;
+    private $moduleName;
+    private $structureName;
+    private $crmName;
 
     public function run()
     {
+        // Определение названия модуля из названия класса контроллера
+        $parts = explode('\\', get_class($this));
+        $moduleName = $parts[0];
+        $this->moduleName = ($moduleName === 'Ideal') ? '' : $moduleName . '/';
+        $this->structureName = $parts[2];
+        $this->crmName = $parts[3];
+
         $this->templateInit();
+
+        $request = new Request();
+        list($par) = explode('-', $request->par);
+        if ($this->moduleName == '') {
+            $par .= '-Ideal';
+        } else {
+            $par .= '-' . $this->moduleName;
+        }
+        $par .= '_' . $this->crmName;
+        $this->view->par = $par;
+
         $model = new Model('');
         $data = $model->getPageData();
         foreach ($data as $key => $item) {
@@ -35,23 +57,16 @@ class Controller
      */
     public function templateInit($tplName = '')
     {
-        // Определение названия модуля из названия класса контроллера
-        $parts = explode('\\', get_class($this));
-        $moduleName = $parts[0];
-        $moduleName = ($moduleName === 'Ideal') ? '' : $moduleName . '/';
-        $structureName = $parts[2];
-        $crmName = $parts[3];
-
         // Инициализация шаблона страницы
         if ($tplName == '') {
-            $tplName = $moduleName . 'Structure/' . $structureName . '/'. $crmName . '/index.twig';
+            $tplName = $this->moduleName . 'Structure/' . $this->structureName . '/'. $this->crmName . '/index.twig';
         }
         $tplRoot = dirname(stream_resolve_include_path($tplName));
         $tplName = basename($tplName);
 
         if ($tplRoot == '') {
             // Если в структуре нет файла шаблона, пытаемся его найти в модуле
-            $tplName = $moduleName . 'Structure/' . $structureName . '/' . $crmName . '/index.twig';
+            $tplName = $this->moduleName . 'Structure/' . $this->structureName . '/' . $this->crmName . '/index.twig';
             if (!stream_resolve_include_path($tplName)) {
                 echo 'Нет файла шаблона ' . $tplName;
                 exit;

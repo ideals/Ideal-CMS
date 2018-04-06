@@ -24,25 +24,7 @@ class Model extends \Ideal\Core\Admin\Model
      */
     public function detectPageByIds($path, $par)
     {
-        $menu = $this->getMenu();
-        // Если par не указан, то активен первый пункт бокового меню
-        $item = reset($menu);
-
-        $first = reset($par);
-        if ($first) {
-            // Если $par указан, то находим активный пункт бокового меню
-            foreach ($menu as $item) {
-                if ($item['ID'] == $first) {
-                    break;
-                }
-            }
-        }
-
-        $this->setPageData($item);
-        $path[] = $item;
-
         $this->path = $path;
-
         return $this;
     }
 
@@ -92,6 +74,14 @@ class Model extends \Ideal\Core\Admin\Model
 
         $this->menu = $actions;
         return $actions;
+    }
+
+    public function detectActualModel()
+    {
+        // Если дошли до определения это модели, то нужно отдавать модель соответствующей структуры
+        $model = new \Ideal\Structure\Order\Admin\Model('');
+        $model->setVars($this);
+        return $model;
     }
 
     /**
