@@ -2,7 +2,8 @@
     <ul class="nav nav-pills nav-stacked">
         {% for item in inbox %}
             <li {% if ID == item.ID %}class="active"{% endif %}>
-                <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}">
+                <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}"
+                   onclick="showLead('{{ par }}', '{{ item.ID }}', 'showData'); return false;">
                     {% if item.name %}{{ item.name }}<br />{% endif %}
                     {% if item.phone %}{{ item.phone }}<br />{% endif %}
                     {% if item.email %}{{ item.email }}<br />{% endif %}
@@ -12,3 +13,27 @@
         {% endfor %}
     </ul>
 </div>
+<div class="col-xs-6">
+    <div class="lead-content" style="display: none;"></div>
+</div>
+<script type="text/javascript">
+    function showLead(par, id, action)
+    {
+        dataToAjax = {action: action, par: par, id: id};
+
+        $.ajax({
+            url: 'index.php',
+            data: dataToAjax,
+            success: function (data)
+            {
+                if ('data' in data && 'content' in data.data) {
+                    $('.lead-content').show();
+                    $('.lead-content').html(data.data.content);
+                }
+            },
+            type: 'GET',
+            dataType: "json"
+        });
+
+    }
+</script>
