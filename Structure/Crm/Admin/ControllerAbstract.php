@@ -82,5 +82,6 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
                 'data' => $data
             )
         );
+        exit;
     }
 }
