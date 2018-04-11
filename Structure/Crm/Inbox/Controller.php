@@ -80,7 +80,7 @@ class Controller
         $this->view = new View(array($tplRoot), $config->cache['templateAdmin']);
         $this->view->loadTemplate($tplName);
     }
-
+  
     /**
      *
      * Получает данные о лиде

@@ -77,6 +77,14 @@ class Model extends \Ideal\Core\Admin\Model
         return $actions;
     }
 
+    public function detectActualModel()
+    {
+        // Если дошли до определения это модели, то нужно отдавать модель соответствующей структуры
+        $model = new \Ideal\Structure\Order\Admin\Model('');
+        $model->setVars($this);
+        return $model;
+    }
+
     /**
      * Получает данные от соответствующей модели структуры
      *
