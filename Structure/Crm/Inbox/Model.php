@@ -10,6 +10,7 @@
 namespace Ideal\Structure\Crm\Inbox;
 
 use Ideal\Core\Config;
+use Ideal\Core\Request;
 
 /**
  * Класс для построение бокового меню в разделе Сервис и запуска скриптов выбранного пункта
@@ -82,6 +83,23 @@ class Model extends \Ideal\Core\Admin\Model
         $model = new \Ideal\Structure\Order\Admin\Model('');
         $model->setVars($this);
         return $model;
+    }
+
+    /**
+     * Получает данные от соответствующей модели структуры
+     *
+     * @return bool|mixed Данные элемента структуры или false в случае отсутствия идентификатора в запросе
+     * @throws \Exception
+     */
+    public function getLeadInfo()
+    {
+        $model = new \Ideal\Structure\Order\Admin\Model('');
+        $request = new Request();
+        if ($request->id) {
+            $model->setPageDataById($request->id);
+            return $model->getPageData();
+        }
+        return false;
     }
 
     /**

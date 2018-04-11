@@ -80,4 +80,21 @@ class Controller
         $this->view = new View(array($tplRoot), $config->cache['templateAdmin']);
         $this->view->loadTemplate($tplName);
     }
+
+    /**
+     * Получает данные о лиде
+     *
+     * @return array Данные о лиде либо пустой массив
+     * @throws \Exception
+     */
+    public function showDataAction()
+    {
+        $model = new Model('');
+        $leadInfo = $model->getLeadInfo();
+        $data = array();
+        if ($leadInfo) {
+            $data['content'] = $leadInfo['content'];
+        }
+        return $data;
+    }
 }
