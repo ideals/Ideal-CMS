@@ -26,6 +26,9 @@ class Util
     public static function addError($txt)
     {
         $config = Config::getInstance();
+        if (empty($config->cms['errorLog'])) {
+            return;
+        }
         switch ($config->cms['errorLog']) {
             case 'file':
                 // Вывод сообщения в текстовый файл
