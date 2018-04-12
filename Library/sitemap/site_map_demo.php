@@ -11,6 +11,7 @@ return array(
     'delay' => "1", // Задержка между запросами URL (секунды) | Ideal_Text
     'tmp_file' => "/tmp/sitemap.part", // Путь от корня сайта к временному файлу | Ideal_Text
     'old_sitemap' => "/tmp/sitemap-old.part", // Путь от корня сайта к файлу предыдущего сканирования | Ideal_Text
+    'is_radar' => "0", // Собирать перелинковку | Ideal_Checkbox
     'tmp_radar_file' => "/tmp/radar.part", // Путь от корня сайта к временному файлу отчёта о перелинковке | Ideal_Text
     'old_radar_file' => "/tmp/radar-old.part", // Путь от корня сайта к файлу предыдущего отчёта о перелинковке | Ideal_Text
     'change_freq' => "weekly", // Частота обновления страниц | Ideal_Select | {"dynamic":"dynamic","hourly":"hourly","daily":"daily","weekly":"weekly","monthly":"monthly","yearly":"yearly","never":"never"}
@@ -22,5 +23,4 @@ return array(
     'email_cron' => "help@neox.ru", // Электронная почта для cron-сообщений | Ideal_Text
     'email_notify' => "top@neox.ru", // Электронная почта для уведомления о добавленных/удалённых ссылках | Ideal_Text
     'email_json' => "help@neox.ru", // Электронная почта для уведомлений об изменениях в карте сайта (json-формат) | Ideal_Text
-    'get_links_in_content' => "0", // Собирать перелинковку | Ideal_Checkbox
 );

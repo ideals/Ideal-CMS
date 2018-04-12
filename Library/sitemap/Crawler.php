@@ -203,7 +203,7 @@ class Crawler
             'disallow_key' => '',
             'disallow_regexp' => '',
             'seo_urls' => '',
-            'get_links_in_content' => '1',
+            'is_radar' => '1',
         );
         foreach ($default as $key => $value) {
             if (!isset($this->config[$key])) {
@@ -335,7 +335,7 @@ class Crawler
             $this->external = $arr[2];
         }
 
-        if ($this->config['get_links_in_content']) {
+        if ($this->config['is_radar']) {
             // Если существует файл хранения временных данных отчёта о перелинковке
             $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
             if (file_exists($tmpRadarFile)) {
@@ -447,7 +447,7 @@ class Crawler
             // Добавляем ссылки в массив $this->links
             $this->addLinks($urls, $k);
 
-            if ($this->config['get_links_in_content']) {
+            if ($this->config['is_radar']) {
                 // Получаем список ссылок из области отмеченной радаром
                 $radarLinks = $this->parseRadarLinks($content);
 
@@ -464,7 +464,7 @@ class Crawler
             $time = microtime(1);
         }
 
-        if ($this->config['get_links_in_content'] && count($this->radarLinks) > 0) {
+        if ($this->config['is_radar'] && count($this->radarLinks) > 0) {
             $this->saveParsedRadarLinks();
         }
 
@@ -640,7 +640,7 @@ class Crawler
         }
 
         // Отправляем отчёт о перелинковке
-        if ($this->config['get_links_in_content']) {
+        if ($this->config['is_radar']) {
             $radarFile = $this->config['pageroot'] . $this->config['old_radar_file'];
             $oldRadar = file_exists($radarFile) ? unserialize(file_get_contents($radarFile)) : '';
 
