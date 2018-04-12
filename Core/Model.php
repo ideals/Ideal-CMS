@@ -561,4 +561,23 @@ abstract class Model
     {
         $this->fieldsGroup = $name;
     }
+
+    /**
+     * Формирование prev_structure из текущего элемента
+     *
+     * @return string Строка prev_structure
+     * @throws \Exception
+     */
+    public function getSelfStructure()
+    {
+        $data = $this->getPageData();
+        if (isset($data['prev_structure'])) {
+            $structure = explode('-', $data['prev_structure']);
+            $structure = $structure[1];
+            $prevStructure = $structure . '-' . $data['ID'];
+        } else {
+            throw new \Exception('No prev_structure in data');
+        }
+        return $prevStructure;
+    }
 }
