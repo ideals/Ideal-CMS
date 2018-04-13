@@ -14,6 +14,7 @@ use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
+use Ideal\Structure\ActionsLog\Model as ActionsLogModel;
 
 abstract class Model extends Core\Model
 {
@@ -78,6 +79,9 @@ abstract class Model extends Core\Model
             }
 
             $result = $this->saveAddData($result, $groups, $groupName, true);
+
+            // Устанавливаем данные только что созданного элемента для использования в логах
+            $this->setPageDataById($id);
         } else {
             // Добавить запись не получилось
             $result['isCorrect'] = 0;
@@ -401,6 +405,15 @@ abstract class Model extends Core\Model
                 $this->deleteAddon($addonInfo, $addonDataPrevStructure);
             }
         }
+    }
+
+    /**
+     * @param string $action Совершаемое действие
+     */
+    public function saveToLog($action)
+    {
+        $actionsLogModel = new ActionsLogModel($this, $action);
+        $actionsLogModel->addToLog();
     }
 
     /**
