@@ -409,11 +409,18 @@ abstract class Model extends Core\Model
 
     /**
      * @param string $action Совершаемое действие
+     * @throws \Exception
      */
     public function saveToLog($action)
     {
-        $logModel = new LogModel($this, $action);
-        $logModel->addToLog();
+        $logModel = new LogModel();
+        $context = array(
+            'model' => $this,
+            'type' => 'admin',
+        );
+        $pageData = $this->getPageData();
+        $message = $action . ' «' . $pageData['name'] . '»';
+        $logModel->log('info', $message, $context);
     }
 
     /**

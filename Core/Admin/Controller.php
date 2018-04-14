@@ -90,7 +90,7 @@ class Controller
         if ($result['isCorrect'] == 1) {
             $result = $this->model->saveElement($result);
             $this->runClearFileCache();
-            $this->model->saveToLog('Внесены изменения');
+            $this->model->saveToLog('Изменён');
         }
 
         echo json_encode($result);

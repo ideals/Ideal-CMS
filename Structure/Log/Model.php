@@ -23,53 +23,43 @@ class Model
      */
     protected $table;
 
-    /**
-     * @var string Действие совершаемое над элементом
-     */
-    protected $action;
-
-    /**
-     * @var string Модель структуры с которой совершается действие
-     */
-    protected $model;
-
-    public function __construct($model, $action)
+    public function __construct()
     {
         $config = Config::getInstance();
         $this->table = $config->db['prefix'] . 'ideal_structure_log';
-        $this->model = $model;
-        $this->action = $action;
     }
 
     /**
      * Записывает информацию в лог
+     *
+     * @param string $level
+     * @param string $message
+     * @param array $context
      */
-    public function addToLog()
+    public function log($level, $message, $context)
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
-
         $user = UserModel::getInstance();
-        $structure = $config->getStructureByClass(get_class($this->model));
+        $json = array();
 
-        // Формируем строку для обозначения элемента
-        $pageData = $this->model->getPageData();
-        $element = '(' . $pageData['ID'] . ')';
-        if (isset($pageData['name'])) {
-            $element .= ' ' . $pageData['name'];
+        if (isset($context['model'])) {
+            $model = $context['model'];
+            $structure = $config->getStructureByClass(get_class($model));
+            $pageData = $model->getPageData();
+            $json['structure_id'] = $structure['ID'];
+            $json['element_id'] = $pageData['ID'];
         }
-        if (isset($pageData['url'])) {
-            $element .= ' - ' . $pageData['url'];
-        }
-
 
         $par = array(
             'date_create' => time(),
-            'user' => $user->data['ID'],
-            'structure' => $structure['ID'],
-            'element' => $element,
-            'action' => $this->action,
+            'level' => $level,
+            'user_id' => $user->data['ID'],
+            'type' => $context['type'],
+            'message' => $message,
+            'json' => json_encode($json, JSON_UNESCAPED_UNICODE),
         );
+
         $db->insert($this->table, $par);
     }
 }

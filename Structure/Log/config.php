@@ -20,21 +20,25 @@ return array(
             'label' => 'Дата создания записи',
             'sql' => 'int(11) not null',
         ),
-        'user' => array(
+        'level' => array(
+            'label' => 'Уровень лога',
+            'sql' => 'varcar(9) not null',
+        ),
+        'user_id' => array(
             'label' => 'Идентификатор пользователя совершившего действие',
             'sql' => 'int(11) not null',
         ),
-        'structure' => array(
-            'label' => 'Идентификатор структуры над которой совершилось действие',
-            'sql' => 'int(11) not null',
+        'type' => array(
+            'label' => 'Тип события',
+            'sql' => 'varchar(100) not null',
         ),
-        'element' => array(
-            'label' => 'Обозначение элемента над которым совершилось действие',
+        'message' => array(
+            'label' => 'Событие',
             'sql' => 'varchar(255) not null',
         ),
-        'action' => array(
-            'label' => 'Какое именно действие было совершено',
-            'sql' => 'varchar(255) not null',
+        'json' => array(
+            'label' => 'Дополнительные данные',
+            'sql' => 'text',
         ),
     ),
 );
