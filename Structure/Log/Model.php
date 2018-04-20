@@ -140,7 +140,16 @@ class Model
             $json['element_id'] = $pageData['ID'];
         }
 
+        // Генерируем преструктуру для записи в базу
+        $par = array('structure' => 'Ideal_Log');
+        $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
+        $result = $db->select('SELECT * FROM &table WHERE structure = :structure', $par, $fields);
+        $id = $result[0]['ID'];
+        $datalistStructure = $config->getStructureByName('Ideal_DataList');
+        $prevStructure = $datalistStructure['ID'] . '-' . $id;
+
         $par = array(
+            'prev_structure' => $prevStructure,
             'date_create' => time(),
             'level' => $level,
             'user_id' => $user->data['ID'],
