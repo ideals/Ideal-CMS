@@ -1,7 +1,8 @@
 <div class="col-xs-3">
-    <ul class="nav nav-pills nav-stacked">
+    <table class="table table-striped table-hover">
         {% for item in inbox %}
-            <li {% if ID == item.ID %}class="active"{% endif %}>
+            <tr>
+            <td {% if ID == item.ID %}class="active"{% endif %}>
                 <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}"
                    onclick="showLead('{{ par }}', '{{ item.ID }}', 'showData'); return false;">
                     {% if item.name %}{{ item.name }}<br />{% endif %}
@@ -9,6 +10,7 @@
                     {% if item.email %}{{ item.email }}<br />{% endif %}
                     {{ item.date_create_str }}
                 </a>
+                {#
                 <div class="btn-group btn-group-xs button-edit">
                     <button class="btn btn-info" title="Изменить" onclick="showModal('{{ par }}', '{{ item.ID }}', 'showEdit');" style="width: 47px;">
                         <span class="glyphicon glyphicon-pencil"></span>
@@ -17,9 +19,11 @@
                         <span class="glyphicon glyphicon-remove"></span>
                     </button>
                 </div>
-            </li>
+                #}
+            </td>
+            </tr>
         {% endfor %}
-    </ul>
+    </table>
 </div>
 <div class="col-xs-6">
     <div class="lead-content" style="display: none;"></div>
