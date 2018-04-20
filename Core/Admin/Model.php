@@ -420,7 +420,7 @@ abstract class Model extends Core\Model
         );
         $pageData = $this->getPageData();
         $message = $action . ' «' . $pageData['name'] . '»';
-        $logModel->log('info', $message, $context);
+        $logModel->info($message, $context);
     }
 
     /**
