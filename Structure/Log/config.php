@@ -22,7 +22,7 @@ return array(
         ),
         'level' => array(
             'label' => 'Уровень лога',
-            'sql' => 'varcar(9) not null',
+            'sql' => 'varchar(9) not null',
         ),
         'user_id' => array(
             'label' => 'Идентификатор пользователя совершившего действие',
