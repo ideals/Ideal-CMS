@@ -360,7 +360,10 @@ abstract class Model
             if (is_array($addonsInfo)) {
                 foreach ($addonsInfo as $addonInfo) {
                     // Инициализируем модель аддона
-                    $className = Util::getClassName($addonInfo[1], 'Addon') . '\\SiteModel';
+                    $class = strtolower(get_class($this));
+                    $class = explode('\\', trim($class, '\\'));
+                    $modelName = ($class[3] == 'admin') ? '\\AdminModel' : '\\SiteModel';
+                    $className = Util::getClassName($addonInfo[1], 'Addon') . $modelName;
                     $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
                     $addon = new $className($prevStructure);
                     $addon->setParentModel($this);

@@ -44,8 +44,9 @@ class Model
 
     /**
      * Считывает данные о пользователе из сессии
+     * @param string $seance Кастомизированная переменная сеанса
      */
-    public function __construct()
+    public function __construct($seance = '')
     {
         // Запуск сессий только в случае, если они не запущены
         if (session_id() == '') {
@@ -58,11 +59,11 @@ class Model
         // Устанавливаем имя связанной таблицы
         $this->table = $config->db['prefix'] . $this->table;
 
-        // TODO сделать считывание переменной сеанса из конфига
-
         // Инициализируем переменную сеанса
-        if ($this->seance == '') {
-            $this->seance = $config->domain;
+        if ($seance == '') {
+            $this->seance = $this->seance == '' ? $config->domain : $this->seance;
+        } else {
+            $this->seance = $seance;
         }
 
         // Загружаем данные о пользователе, если запущена сессия
@@ -80,13 +81,14 @@ class Model
      * Особенность — во всех потомках нужно обязательно определять свойство
      * protected static $instance
      *
+     * @param string $seance Кастомизированная переменная сеанса
      * @return mixed
      */
-    public static function getInstance()
+    public static function getInstance($seance = '')
     {
         if (empty(static::$instance)) {
             $className = get_called_class();
-            static::$instance = new $className();
+            static::$instance = new $className($seance);
         }
         return static::$instance;
     }
