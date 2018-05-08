@@ -93,5 +93,13 @@ return array(
             'isShow' => 0,
             'hasTable' => true
         ),
+        // Подключаем структуру ведения логов администраторов
+        array(
+            'ID' => 11,
+            'structure' => 'Ideal_Log',
+            'name' => 'Лог администраторов',
+            'isShow' => 0,
+            'hasTable' => true
+        ),
     )
 );
