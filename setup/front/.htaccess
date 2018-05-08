@@ -48,3 +48,6 @@ RewriteRule ^(.*)$ tmp/cache/fileCache/$1 [NC,L]
 
 # Если файла на диске нет, вызывается скрипт
 RewriteRule ^.*$ [[SUBFOLDER_START_SLASH]]/_.php [NC,L]
+
+# browser cache
+# end browser cache

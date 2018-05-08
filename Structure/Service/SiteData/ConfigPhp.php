@@ -37,6 +37,7 @@ class ConfigPhp
     {
         $response = array('res' => true, 'text' => '');
         $pageData = array();
+        $applyChange = new ApplyChange();
         foreach ($this->params as $tabId => $tab) {
             foreach ($tab['arr'] as $field => $param) {
                 $fieldName = $tabId . '_' . $field;
@@ -53,6 +54,14 @@ class ConfigPhp
 
                 // Получаем данные от пользователя
                 $value = $fieldModel->pickupNewValue();
+
+                // Если нужно сделать ещё какие-нибудь действия после изменения данного поля,
+                // то вызываем соответствующий метод
+                if (method_exists($applyChange, $field . 'Change') && $param["value"] != $value) {
+                    $methodName = $field . 'Change';
+                    $applyChange->setValue($value);
+                    $applyChange->$methodName();
+                }
 
                 // Обработка данных введённых пользователем
                 $item = $fieldModel->parseInputValue(false);
@@ -113,8 +122,11 @@ class ConfigPhp
      * @param string $text Текст для информирующего блока
      * @return bool Флаг успешности сохранения данных в файл
      */
-    public function changeAndSave($fileName, $res = true, $class = 'alert alert-block alert-success', $text = 'Настройки сохранены!')
+    public function changeAndSave($fileName, $res = true, $class = '', $text = 'Настройки сохранены!')
     {
+        if (empty($class)) {
+            $class = 'alert alert-block alert-success';
+        }
         // Заменяем настройки на введённые пользователем
         $response = $this->pickupValues();
         if ($response['res'] === false) {

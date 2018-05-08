@@ -25,6 +25,7 @@ return array(
         'indexFile' => "index.html", // Индексный файл в папке | Ideal_Text
         'fileCache' => "0", // Кэширование страниц в файлы | Ideal_Checkbox
         'excludeFileCache' => "", // Адреса для исключения из кэша (по одному на строку, формат "регулярные выражения") | Ideal_RegexpList
+        'browserCache' => "0", // Кэширование в браузере | Ideal_Checkbox
     ),
     'yandex' => array( // Яндекс
         'yandexLogin' => "", // Яндекс логин | Ideal_Text
