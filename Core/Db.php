@@ -336,7 +336,11 @@ class Db extends \mysqli
 
         foreach ($params as $column => $value) {
             $columns[] = "`" . parent::escape_string($column) . "`";
-            $values[] = "'" . parent::escape_string($value) . "'";
+            if (null === $value) {
+                $values[] = 'NULL';
+            } else {
+                $values[] = "'" . parent::escape_string($value) . "'";
+            }
         }
 
         $columns = implode(', ', $columns);
