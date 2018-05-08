@@ -670,7 +670,7 @@ JS;
             /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
             $config = \Ideal\Core\Config::getInstance();
 
-            $customerId = null;
+            $customerId = 0;
 
             // Получаем идентификатор заказчика, если структура "Зазкачиков" подключена и доступен соответствующий класс
             if ($config->getStructureByName('Ideal_Crm') && class_exists('\Ideal\Structure\Crm\Model')) {
