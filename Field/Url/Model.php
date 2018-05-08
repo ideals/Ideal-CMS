@@ -165,7 +165,7 @@ class Model
     public function cutSuffix($link)
     {
         $config = Config::getInstance();
-        $link = substr($link, 0, -count($config->urlSuffix));
+        $link = substr($link, 0, -strlen($config->urlSuffix));
         return $link;
     }
 
