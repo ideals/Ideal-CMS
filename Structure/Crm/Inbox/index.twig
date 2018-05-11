@@ -1,7 +1,7 @@
 <div class="col-xs-3">
     <table class="table table-striped table-hover">
         {% for item in inbox %}
-            <tr>
+            <tr class="order-{{ item.ID }}">
             <td {% if ID == item.ID %}class="active"{% endif %}>
                 <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}"
                    onclick="showLead('{{ par }}', '{{ item.ID }}', 'showData'); return false;">
@@ -10,16 +10,6 @@
                     {% if item.email %}{{ item.email }}<br />{% endif %}
                     {{ item.date_create_str }}
                 </a>
-                {#
-                <div class="btn-group btn-group-xs button-edit">
-                    <button class="btn btn-info" title="Изменить" onclick="showModal('{{ par }}', '{{ item.ID }}', 'showEdit');" style="width: 47px;">
-                        <span class="glyphicon glyphicon-pencil"></span>
-                    </button>
-                    <button class="btn btn-danger" title="Удалить" onclick="showDeleteConfirm('{{ par }}', '{{ item.ID }}');">
-                        <span class="glyphicon glyphicon-remove"></span>
-                    </button>
-                </div>
-                #}
             </td>
             </tr>
         {% endfor %}
@@ -40,7 +30,19 @@
             {
                 if ('data' in data && 'content' in data.data) {
                     $('.lead-content').show();
-                    $('.lead-content').html(data.data.content);
+
+                    // Дополняем контент заявки кнопками
+                    var content = '<div class="btn-group btn-group-xs button-edit">\n' +
+                        '<button class="btn btn-info" title="Изменить" ' +
+                        'onclick="showModal(\'' + par + '\', \'' + id + '\', \'showEdit\');" style="width: 47px;">\n' +
+                        '<span class="glyphicon glyphicon-pencil"></span>\n' +
+                        '</button>\n' +
+                        '<button class="btn btn-danger" title="Удалить" ' +
+                        'onclick="showDeleteConfirm(\'' + par + '\', \'' + id + '\');">\n' +
+                        '<span class="glyphicon glyphicon-remove"></span>\n' +
+                        '</button>\n' +
+                        '</div>' + data.data.content;
+                    $('.lead-content').html(content);
                 }
             },
             type: 'GET',

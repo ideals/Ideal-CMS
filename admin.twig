@@ -635,7 +635,15 @@
             {
                 switch (data['isCorrect']) {
                     case 1:
-                        $('#row' + data['ID']).remove();
+                        // Убираем удалённый элемент из списка на обычных страницах
+                        if ($('#row' + data['ID']).length > 0) {
+                            $('#row' + data['ID']).remove();
+                        }
+                        // Убираем удалённый элемент из списка на страницах CRM
+                        if ($('tr.order-' + data['ID']).length > 0) {
+                            $('tr.order-' + data['ID']).remove();
+                            $('.lead-content').hide();
+                        }
                         break;
                     case 2:
                         alert('Ошибка. Нельзя удалить раздел со вложенными элементами.');
