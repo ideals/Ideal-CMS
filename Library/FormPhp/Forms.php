@@ -670,10 +670,11 @@ JS;
             /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
             $config = \Ideal\Core\Config::getInstance();
 
-            $customerId = null;
-
+            $lead = null;
             // Получаем идентификатор заказчика, если структура "Зазкачиков" подключена и доступен соответствующий класс
-            if ($config->getStructureByName('Ideal_Crm') && class_exists('\Ideal\Structure\Crm\Model')) {
+            if ($config->getStructureByName('Ideal_ContactPerson') &&
+                class_exists('\Ideal\Structure\ContactPerson\Model')
+            ) {
                 // Чистим телефон, чтобы остались только цифры
                 $phone = preg_replace('/\D/', '', $phone);
 
@@ -682,12 +683,15 @@ JS;
                     $phone = str_pad('', '11', '0');
                 }
 
-                $customer = new \Ideal\Structure\Crm\Model();
-                $customerId = $customer
+                $contactPerson = new \Ideal\Structure\ContactPerson\Model();
+                $contactPerson = $contactPerson
                     ->setPhone($phone)
                     ->setEmail($email)
                     ->setName($name)
-                    ->getCustomerId();
+                    ->getContactPerson();
+                if (isset($contactPerson[0]) && isset($contactPerson[0]['lead'])) {
+                    $lead = $contactPerson[0]['lead'];
+                }
             }
 
             // Формируем название таблицы, в которую записывается информация о заказе
@@ -716,7 +720,7 @@ JS;
                     'referer' => $this->getValue('referer'),
                     'content' => $content,
                     'order_type' => $this->orderType,
-                    'customer' => $customerId
+                    'lead' => $lead
                 )
             );
         }

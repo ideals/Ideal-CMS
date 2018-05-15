@@ -7,14 +7,14 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Structure\Crm;
+namespace Ideal\Structure\ContactPerson;
 
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Util;
 
 /**
- * Класс для работы с заказчиками
+ * Класс для работы с контактными лицами
  */
 class Model
 {
@@ -63,7 +63,7 @@ class Model
     /**
      * Получает идентификатор заказчика
      */
-    public function getCustomerId()
+    public function getContactPerson()
     {
         $this->clientId = Util::getGACID();
         $this->clientId = $this->clientId ? $this->clientId : '';
@@ -81,28 +81,8 @@ class Model
             }
         }
         $where = ltrim($where, ' OR');
-        $fields = array('table' => $config->db['prefix'] . 'ideal_structure_crm');
-        $customer = $db->select("SELECT * FROM &table WHERE {$where} LIMIT 1", null, $fields);
-
-        // Если нашли заказчика, то возвращаем его идентификатор
-        if ($customer) {
-            $customerId = $customer[0]['ID'];
-        } else { // Если заказчика не нашли, то создаём его с заданными данными
-            foreach ($par as $key => $value) {
-                if ($value) {
-                    $par[$key] = json_encode(array($value));
-                }
-            }
-            $par['name'] = $this->name;
-            $par['date_create'] = time();
-
-            // Получаем идентификатор справочника "Заказчики" для правильного построения поля "prev_structure"
-            $prevStructureId = $db->select(
-                "SELECT ID FROM {$config->db['prefix']}ideal_structure_datalist WHERE structure = 'Ideal_Crm'"
-            );
-            $par['prev_structure'] = '3-' . $prevStructureId['0']['ID'];
-            $customerId = $db->insert($config->db['prefix'] . 'ideal_structure_crm', $par);
-        }
-        return $customerId;
+        $fields = array('table' => $config->db['prefix'] . 'ideal_structure_contactperson');
+        $contactPerson = $db->select("SELECT * FROM &table WHERE {$where} LIMIT 1", null, $fields);
+        return $contactPerson;
     }
 }

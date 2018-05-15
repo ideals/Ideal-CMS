@@ -7,9 +7,9 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Structure\Crm\Admin;
+namespace Ideal\Structure\ContactPerson\Admin;
 
-class Controller extends ControllerAbstract
+class ControllerAbstract extends \Ideal\Structure\Roster\Admin\ControllerAbstract
 {
 
 }

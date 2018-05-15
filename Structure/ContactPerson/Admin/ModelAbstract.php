@@ -7,7 +7,7 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Structure\Crm\Admin;
+namespace Ideal\Structure\ContactPerson\Admin;
 
 use Ideal\Core\Config;
 

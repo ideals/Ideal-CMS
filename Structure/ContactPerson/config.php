@@ -7,25 +7,13 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-// Заказчики
+// Контактное лицо
 return array(
-    'params' => array(
-        'in_structures' => array('Ideal_DataList'), // в каких структурах можно создавать эту структуру
-        'elements_cms' => 10, // количество элементов в списке в CMS
-        'elements_site' => 15, // количество элементов в списке на сайте
-        'field_name' => '', // поле для входа в список потомков
-        'field_sort' => 'date_create DESC', // поле, по которому проводится сортировка в CMS
-        'field_list' => array('ID', 'date_create', 'name')
-    ),
+    'params' => array(),
     'fields' => array(
         'ID' => array(
             'label' => 'Идентификатор',
             'sql' => 'int(4) unsigned not null auto_increment primary key',
-            'type' => 'Ideal_Hidden'
-        ),
-        'prev_structure' => array(
-            'label' => 'ID родительских структур',
-            'sql' => 'char(15)',
             'type' => 'Ideal_Hidden'
         ),
         'date_create' => array(
@@ -53,11 +41,10 @@ return array(
             'sql' => 'text',
             'type' => 'Ideal_JsonArea'
         ),
-        'join_with_customer' => array(
-            'label' => 'Объединить с заказчиком',
-            'sql' => '',
-            'type' => 'Ideal_Select',
-            'medium' => '\\Ideal\\Medium\\CustomerList\\Model'
+        'lead' => array(
+            'label' => 'Лид',
+            'sql' => 'int(8)',
+            'type' => 'Ideal_Hidden',
         ),
     ),
 );
