@@ -43,6 +43,11 @@ return array(
             'sql' => 'varchar(255) not null',
             'type' => 'Ideal_Text'
         ),
+        'phone' => array(
+            'label' => 'Телефон',
+            'sql' => 'text',
+            'type' => 'Ideal_Text'
+        ),
         'price' => array(
             'label' => 'Сумма заказа',
             'sql'   => 'int',
@@ -64,11 +69,10 @@ return array(
             'sql' => 'varchar(255) not null',
             'type' => 'Ideal_Text'
         ),
-        'customer' => array(
-            'label' => 'Заказчик',
+        'lead' => array(
+            'label' => 'Лид',
             'sql' => 'int(8)',
-            'type' => 'Ideal_Select',
-            'medium' => '\\Ideal\\Medium\\CustomerList\\Model'
+            'type' => 'Ideal_Hidden',
         ),
     ),
 );
