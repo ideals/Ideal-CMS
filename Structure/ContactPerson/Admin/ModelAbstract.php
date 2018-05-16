@@ -10,6 +10,7 @@
 namespace Ideal\Structure\ContactPerson\Admin;
 
 use Ideal\Core\Config;
+use Ideal\Core\Db;
 use Ideal\Core\Request;
 use Ideal\Structure\Order\Admin\Model as OrderModel;
 
@@ -56,7 +57,16 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
 
     public function createElement($result, $groupName = 'general')
     {
-        $result['items']['general_join_with_customer']['value'] = null;
+        $config = Config::getInstance();
+        $db = Db::getInstance();
+
+        // Создаём новый лид при создании контактного лица
+        $leadTable = $config->getTableByName('Ideal_Lead');
+        $leadId = $db->insert($leadTable, array());
+
+        // Привязываем новое контактное лицо к только-что созданному лиду
+        $result["items"]["general_lead"]["value"] = $leadId;
+        
         return parent::createElement($result, $groupName);
     }
 
