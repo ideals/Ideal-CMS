@@ -4,7 +4,7 @@
             <tr class="order-{{ item.ID }}">
             <td {% if ID == item.ID %}class="active"{% endif %}>
                 <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}"
-                   onclick="showLead('{{ par }}', '{{ item.ID }}', 'showData'); return false;">
+                   onclick="showOrder('{{ par }}', '{{ item.ID }}', 'showData'); return false;">
                     {% if item.name %}{{ item.name }}<br />{% endif %}
                     {% if item.phone %}{{ item.phone }}<br />{% endif %}
                     {% if item.email %}{{ item.email }}<br />{% endif %}
@@ -19,7 +19,7 @@
     <div class="lead-content" style="display: none;"></div>
 </div>
 <script type="text/javascript">
-    function showLead(par, id, action)
+    function showOrder(par, id, action)
     {
         dataToAjax = {action: action, par: par, id: id};
 
@@ -41,6 +41,12 @@
                         'onclick="showDeleteConfirm(\'' + par + '\', \'' + id + '\');">\n' +
                         '<span class="glyphicon glyphicon-remove"></span>\n' +
                         '</button>\n' +
+                        {% if contactPersonStructureId is defined %}
+                            '<button class="btn" title="Создать/привязать к контакту" ' +
+                            'onclick="showModal(\'{{ contactPersonStructureId }}\', \'0\', \'showCreate\');">\n' +
+                            '<span class="glyphicon glyphicon-user"></span>\n' +
+                            '</button>\n' +
+                        {% endif %}
                         '</div>' + data.data.content;
                     $('.lead-content').html(content);
                 }

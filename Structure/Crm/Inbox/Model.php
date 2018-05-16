@@ -91,7 +91,7 @@ class Model extends \Ideal\Core\Admin\Model
      * @return bool|mixed Данные элемента структуры или false в случае отсутствия идентификатора в запросе
      * @throws \Exception
      */
-    public function getLeadInfo()
+    public function getOrderInfo()
     {
         $model = new \Ideal\Structure\Order\Admin\Model('');
         $request = new Request();

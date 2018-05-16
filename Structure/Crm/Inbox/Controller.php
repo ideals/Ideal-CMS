@@ -47,6 +47,15 @@ class Controller
         foreach ($data as $key => $item) {
             $this->view->$key = $item;
         }
+
+        // Получаем идентификатор структуры контактных лиц для передачи его в шаблон
+        // и дальнейшего использования в функции вызова модального окна создания нового "Контактного лица"
+        $config = Config::getInstance();
+        $contactPerson = $config->getStructureByName('Ideal_ContactPerson');
+        if ($contactPerson) {
+            $this->view->contactPersonStructureId = $contactPerson["ID"];
+        }
+
         return $this->view->render();
     }
 
@@ -82,18 +91,18 @@ class Controller
     }
 
     /**
-     * Получает данные о лиде
+     * Получает данные о заказе
      *
-     * @return array Данные о лиде либо пустой массив
+     * @return array Данные о заказе либо пустой массив
      * @throws \Exception
      */
     public function showDataAction()
     {
         $model = new Model('');
-        $leadInfo = $model->getLeadInfo();
+        $orderInfo = $model->getOrderInfo();
         $data = array();
-        if ($leadInfo) {
-            $data['content'] = $leadInfo['content'];
+        if ($orderInfo) {
+            $data['content'] = $orderInfo['content'];
         }
         return $data;
     }
