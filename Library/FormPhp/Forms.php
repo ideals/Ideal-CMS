@@ -716,6 +716,7 @@ JS;
                     'date_create' => time(),
                     'name' => $name,
                     'email' => $email,
+                    'phone' => $phone,
                     'price' => $price,
                     'referer' => $this->getValue('referer'),
                     'content' => $content,
