@@ -26,20 +26,20 @@ return array(
             'sql' => 'varchar(255)',
             'type' => 'Ideal_Text'
         ),
-        'emails' => array(
-            'label' => 'Электронные адреса',
+        'email' => array(
+            'label' => 'Электронный адрес',
             'sql' => 'text ',
-            'type' => 'Ideal_JsonArea'
+            'type' => 'Ideal_Text'
         ),
-        'client_ids' => array(
+        'client_id' => array(
             'label' => 'Client ID',
             'sql'   => 'text',
-            'type'  => 'Ideal_JsonArea'
+            'type'  => 'Ideal_Text'
         ),
-        'phones' => array(
-            'label' => 'Телефоны',
+        'phone' => array(
+            'label' => 'Телефон',
             'sql' => 'text',
-            'type' => 'Ideal_JsonArea'
+            'type' => 'Ideal_Text'
         ),
         'lead' => array(
             'label' => 'Лид',

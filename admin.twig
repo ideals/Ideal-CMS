@@ -299,8 +299,9 @@
             window.idObject = [];
 
             // Делает AJAX-запрос для получения html-данных модального окна
-            function showModal(par, id, action)
+            function showModal(par, id, action, relatedData)
             {
+                relatedData = typeof relatedData !== 'undefined' ?  relatedData : '';
                 // Скрываем статусное сообщение (может остаться от предыдущего окна)
                 $('#message').addClass('hide');
 
@@ -314,7 +315,7 @@
                     window.idObject['id'] = id;
                     window.idObject['action'] = action;
 
-                    dataToAjax = {action: action, par: par, id: id}
+                    dataToAjax = {action: action, par: par, id: id, relatedData: relatedData}
 
                 }
 

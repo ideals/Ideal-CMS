@@ -10,6 +10,8 @@
 namespace Ideal\Structure\ContactPerson\Admin;
 
 use Ideal\Core\Config;
+use Ideal\Core\Request;
+use Ideal\Structure\Order\Admin\Model as OrderModel;
 
 class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
 {
@@ -56,5 +58,38 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
     {
         $result['items']['general_join_with_customer']['value'] = null;
         return parent::createElement($result, $groupName);
+    }
+
+    /**
+     * Установка пустого pageData.
+     * Либо установка начальных данных по даннмы заказа.
+     */
+    public function setPageDataNew()
+    {
+        $request = new Request();
+        $pageData = array();
+
+        // Проверяем наличие переданных связанных данных
+        $relatedData = $request->relatedData;
+        if ($relatedData) {
+            // Разбираем строку переданых связанных данных
+            $relatedData = explode('-', $relatedData);
+            if (isset($relatedData[0]) && $relatedData[0] == 'orderId') {
+                $order = new OrderModel('');
+                $order->setPageDataById((int)$relatedData[1]);
+                $orderPageData = $order->getPageData();
+                if ($orderPageData['name']) {
+                    $pageData['name'] = $orderPageData['name'];
+                }
+                if ($orderPageData['email']) {
+                    $pageData['email'] = $orderPageData['email'];
+                }
+                if ($orderPageData['phone']) {
+                    $pageData['phone'] = $orderPageData['phone'];
+                }
+            }
+        }
+        $pageData['lead'] = 0;
+        $this->setPageData($pageData);
     }
 }

@@ -31,6 +31,8 @@
                 if ('data' in data && 'content' in data.data) {
                     $('.lead-content').show();
 
+                    var relatedData = 'orderId-' + id;
+
                     // Дополняем контент заявки кнопками
                     var content = '<div class="btn-group btn-group-xs button-edit">\n' +
                         '<button class="btn btn-info" title="Изменить" ' +
@@ -43,7 +45,8 @@
                         '</button>\n' +
                         {% if contactPersonStructureId is defined %}
                             '<button class="btn" title="Создать/привязать к контакту" ' +
-                            'onclick="showModal(\'{{ contactPersonStructureId }}\', \'0\', \'showCreate\');">\n' +
+                            'onclick="showModal(' +
+                            '\'{{ contactPersonStructureId }}\', \'0\', \'showCreate\', \'' + relatedData + '\');">\n' +
                             '<span class="glyphicon glyphicon-user"></span>\n' +
                             '</button>\n' +
                         {% endif %}
