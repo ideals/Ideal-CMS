@@ -103,6 +103,7 @@ class Controller
         $data = array();
         if ($orderInfo) {
             $data['content'] = $orderInfo['content'];
+            $data['lead'] = (int)$orderInfo['lead'];
         }
         return $data;
     }

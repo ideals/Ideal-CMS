@@ -33,6 +33,17 @@
 
                     var relatedData = 'orderId-' + id;
 
+                    var contactContent = '';
+                    if ('lead' in data.data && parseInt(data.data.lead) === 0) {
+                        {% if contactPersonStructureId is defined %}
+                        contactContent += '<button class="btn" title="Создать/привязать к контакту" ' +
+                            'onclick="showModal(' +
+                            '\'{{ contactPersonStructureId }}\', \'0\', \'showCreate\', \'' + relatedData + '\');">\n' +
+                            '<span class="glyphicon glyphicon-user"></span>\n' +
+                            '</button>\n';
+                        {% endif %}
+                    }
+
                     // Дополняем контент заявки кнопками
                     var content = '<div class="btn-group btn-group-xs button-edit">\n' +
                         '<button class="btn btn-info" title="Изменить" ' +
@@ -42,14 +53,7 @@
                         '<button class="btn btn-danger" title="Удалить" ' +
                         'onclick="showDeleteConfirm(\'' + par + '\', \'' + id + '\');">\n' +
                         '<span class="glyphicon glyphicon-remove"></span>\n' +
-                        '</button>\n' +
-                        {% if contactPersonStructureId is defined %}
-                            '<button class="btn" title="Создать/привязать к контакту" ' +
-                            'onclick="showModal(' +
-                            '\'{{ contactPersonStructureId }}\', \'0\', \'showCreate\', \'' + relatedData + '\');">\n' +
-                            '<span class="glyphicon glyphicon-user"></span>\n' +
-                            '</button>\n' +
-                        {% endif %}
+                        '</button>\n' + contactContent +
                         '</div>' + data.data.content;
                     $('.lead-content').html(content);
                 }
