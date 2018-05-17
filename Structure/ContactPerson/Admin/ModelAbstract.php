@@ -19,6 +19,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
 
     public function saveElement($result, $groupName = 'general')
     {
+        $result = $this->clearFields($result, $groupName);
         if (isset($result['items']['general_join_with_customer']) && $result['items']['general_join_with_customer']) {
             // Объединение телефонов, электронных адресов и Client Id
             $recipientId = $result['items']['general_join_with_customer']['value'];
@@ -60,14 +61,51 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         $config = Config::getInstance();
         $db = Db::getInstance();
 
-        // Создаём новый лид при создании контактного лица
-        $leadTable = $config->getTableByName('Ideal_Lead');
-        $leadId = $db->insert($leadTable, array());
+        $leadId = 0;
 
-        // Привязываем новое контактное лицо к только-что созданному лиду
-        $result["items"]["general_lead"]["value"] = $leadId;
-        
-        return parent::createElement($result, $groupName);
+        // Получаем связанные данные
+        $relatedData = '';
+        if (isset($result['items'][$groupName . '_relatedData']) &&
+            isset($result['items'][$groupName . '_relatedData']['value'])
+        ) {
+            $relatedData = $result['items'][$groupName . '_relatedData']['value'];
+        }
+
+        // Если выбрано существующее контактное лицо, то берём его лид
+        if ($result['items'][$groupName . '_existingСontactPerson']['value']) {
+            $par = array('ID' => (int) $result['items'][$groupName . '_existingСontactPerson']['value']);
+            $fields = array('table' => $this->_table);
+            $rows = $db->select('SELECT * FROM &table WHERE ID = :ID', $par, $fields);
+            if ($rows) {
+                $leadId = (int) $rows[0]['lead'];
+            }
+            $result['responseMessage'] = 'Заказ успешно отнесён к лиду выбранного контакта';
+            $tempName = 'Связь контактного лица ' . $par['ID'] . ' и заказа ' . $relatedData . ' с лидом ' . $leadId;
+            $this->setPageData(array('ID'=> $par['ID'], 'name' => $tempName));
+        } else {
+            // Создаём новый лид при создании контактного лица
+            $leadTable = $config->getTableByName('Ideal_Lead');
+            $leadId = $db->insert($leadTable, array());
+
+            // Привязываем новое контактное лицо к только-что созданному лиду
+            $result["items"][$groupName . "_lead"]["value"] = $leadId;
+            $result = $this->clearFields($result, $groupName);
+            $result = parent::createElement($result, $groupName);
+        }
+
+        // Привязываем лид к заказу
+        if ($relatedData && $leadId) {
+            $relatedData = explode('-', $relatedData);
+            if (isset($relatedData[0]) && $relatedData[0] == 'orderId') {
+                $orderTable = $config->getTableByName('Ideal_Order');
+                $values = array('lead' => $leadId);
+                $sql = 'ID = :ID';
+                $params = array('ID' => (int)$relatedData[1]);
+                $db->update($orderTable)->set($values)->where($sql, $params)->exec();
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -82,6 +120,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         // Проверяем наличие переданных связанных данных
         $relatedData = $request->relatedData;
         if ($relatedData) {
+            $pageData['relatedData'] = $relatedData;
             // Разбираем строку переданых связанных данных
             $relatedData = explode('-', $relatedData);
             if (isset($relatedData[0]) && $relatedData[0] == 'orderId') {
@@ -101,5 +140,23 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         }
         $pageData['lead'] = 0;
         $this->setPageData($pageData);
+    }
+
+    /**
+     * Убирает поля "Выбрать существующий контакт" и "Связанные данные"
+     *
+     * @param $result array Данные с формы
+     * @param $groupName string Нсзвание группы полей
+     * @return array очищенный от полей которые не нужно записывать в базу
+     */
+    private function clearFields($result, $groupName)
+    {
+        if (isset($result['items'][$groupName . '_existingСontactPerson'])) {
+            unset($result['items'][$groupName . '_existingСontactPerson']);
+        }
+        if (isset($result['items'][$groupName . '_relatedData'])) {
+            unset($result['items'][$groupName . '_relatedData']);
+        }
+        return $result;
     }
 }

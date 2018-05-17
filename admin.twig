@@ -482,7 +482,11 @@
                         message = $('#message');
                         if (data['isCorrect'] == '1') {
                             message.addClass('alert-success');
-                            message.html('Элемент успешно сохранён.');
+                            if (!('responseMessage' in data)) {
+                                message.html('Элемент успешно сохранён.');
+                            } else {
+                                message.html(data['responseMessage']);
+                            }
                             // Если нажата кнопка "Сохранить" - нужно перезагрузить окно
                             if (window.idObject['closeWindow']) {
                                 // TODO сделать, чтобы окно всегда перегружалось при закрытии после создания элемента

@@ -16,6 +16,12 @@ return array(
             'sql' => 'int(4) unsigned not null auto_increment primary key',
             'type' => 'Ideal_Hidden'
         ),
+        'existingСontactPerson' => array(
+            'label' => 'Выбрать существующий контакт',
+            'type' => 'Ideal_Select',
+            'sql' => '',
+            'medium' => '\\Ideal\\Medium\\ContactPerson\\Model'
+        ),
         'date_create' => array(
             'label' => 'Дата создания',
             'sql' => 'int(11) not null',
@@ -44,6 +50,11 @@ return array(
         'lead' => array(
             'label' => 'Лид',
             'sql' => 'int(8)',
+            'type' => 'Ideal_Hidden',
+        ),
+        'relatedData' => array(
+            'label' => 'Связанные данные',
+            'sql' => '',
             'type' => 'Ideal_Hidden',
         ),
     ),

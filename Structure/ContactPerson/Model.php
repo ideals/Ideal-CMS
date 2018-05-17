@@ -70,19 +70,19 @@ class Model
         $config = Config::getInstance();
         $db = Db::getInstance();
         $par = array(
-            'phones' => $db->escape_string($this->phone),
-            'client_ids' => $db->escape_string($this->clientId),
-            'emails' => $db->escape_string($this->email)
+            'phone' => $db->escape_string($this->phone),
+            'client_id' => $db->escape_string($this->clientId),
+            'email' => $db->escape_string($this->email)
         );
         $where = '';
         foreach ($par as $key => $value) {
             if ($value) {
-                $where .= " OR {$key} LIKE '%{$value}%'";
+                $where .= " OR {$key} = :{$key}";
             }
         }
         $where = ltrim($where, ' OR');
         $fields = array('table' => $config->db['prefix'] . 'ideal_structure_contactperson');
-        $contactPerson = $db->select("SELECT * FROM &table WHERE {$where} LIMIT 1", null, $fields);
+        $contactPerson = $db->select("SELECT * FROM &table WHERE {$where} LIMIT 1", $par, $fields);
         return $contactPerson;
     }
 }
