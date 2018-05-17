@@ -9,7 +9,10 @@
 
 // Лид
 return array(
-    'params' => array(),
+    'params' => array(
+        'field_sort' => 'ID',
+        'elements_cms' => PHP_INT_MAX
+    ),
     'fields' => array(
         'ID' => array(
             'label' => 'Идентификатор',

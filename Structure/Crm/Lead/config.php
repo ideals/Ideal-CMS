@@ -9,7 +9,7 @@
 
 return array(
     'name' => 'Лиды',
-    'pos' => 10,
+    'pos' => 11,
     'info' => '',
     'structure' => 'Ideal_Crm',
     'ID' => 'Ideal_Lead'

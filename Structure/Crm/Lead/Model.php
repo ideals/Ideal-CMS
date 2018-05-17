@@ -14,4 +14,15 @@ namespace Ideal\Structure\Crm\Lead;
  */
 class Model extends \Ideal\Core\Admin\Model
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function getPageData()
+    {
+        $data = parent::getPageData();
+        $leadModel = new \Ideal\Structure\Lead\Admin\Model('');
+        $leadList = $leadModel->getList(1);
+        $data['leads'] = $leadList;
+        return $data;
+    }
 }

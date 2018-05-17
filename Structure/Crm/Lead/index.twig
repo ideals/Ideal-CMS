@@ -1,0 +1,22 @@
+<div class="col-xs-3">
+    <table class="table table-striped table-hover">
+        {% for lead in leads %}
+            <tr class="lead-{{ lead.ID }}">
+                <td>
+                    <a href="index.php?par={{ par }}-{{ lead.ID }}"
+                       title="{% if lead.name %}{{ lead.name }}{% elseif lead.cpName %}{{ lead.cpName }}{% endif %}"
+                       onclick="showOrder('{{ par }}', '{{ lead.ID }}', 'showData'); return false;">
+                        {% if lead.name %}
+                            {{ lead.name }}<br/>
+                        {% elseif lead.cpName %}
+                            {{ lead.cpName }}<br/>
+                        {% else %}
+                            № {{ lead.ID }}<br/>
+                        {% endif %}
+                        {% if lead.comment %}{{ lead.comment }}<br/>{% endif %}
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
