@@ -99,12 +99,6 @@ class Controller
     public function showDataAction()
     {
         $model = new Model('');
-        $orderInfo = $model->getOrderInfo();
-        $data = array();
-        if ($orderInfo) {
-            $data['content'] = $orderInfo['content'];
-            $data['lead'] = (int)$orderInfo['lead'];
-        }
-        return $data;
+        return $model->getOrderInfo();
     }
 }

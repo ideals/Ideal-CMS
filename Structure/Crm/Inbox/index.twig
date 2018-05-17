@@ -32,6 +32,7 @@
                     $('.lead-content').show();
 
                     var relatedData = 'orderId-' + id;
+                    var contactInfo = '<br />';
 
                     var contactContent = '';
                     if ('lead' in data.data && parseInt(data.data.lead) === 0) {
@@ -44,6 +45,18 @@
                         {% endif %}
                     }
 
+                    if ('name' in data.data) {
+                        contactInfo += 'Имя - ' + data.data.name + '<br />'
+                    }
+
+                    if ('email' in data.data) {
+                        contactInfo += 'E-mail - ' + data.data.email + '<br />'
+                    }
+
+                    if ('phone' in data.data) {
+                        contactInfo += 'Телефон - ' + data.data.phone + '<br />'
+                    }
+
                     // Дополняем контент заявки кнопками
                     var content = '<div class="btn-group btn-group-xs button-edit">\n' +
                         '<button class="btn btn-info" title="Изменить" ' +
@@ -54,7 +67,7 @@
                         'onclick="showDeleteConfirm(\'' + par + '\', \'' + id + '\');">\n' +
                         '<span class="glyphicon glyphicon-remove"></span>\n' +
                         '</button>\n' + contactContent +
-                        '</div>' + data.data.content;
+                        '</div>' + contactInfo + data.data.content;
                     $('.lead-content').html(content);
                 }
             },

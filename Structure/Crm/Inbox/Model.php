@@ -99,7 +99,7 @@ class Model extends \Ideal\Core\Admin\Model
             $model->setPageDataById($request->id);
             return $model->getPageData();
         }
-        return false;
+        return array();
     }
 
     /**
