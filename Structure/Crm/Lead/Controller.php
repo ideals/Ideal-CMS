@@ -49,6 +49,15 @@ class Controller
             $this->view->$key = $item;
         }
 
+        // Получаем идентификатор структуры лида
+        $config = Config::getInstance();
+        $leadStructure = $config->getStructureByName('Ideal_Lead');
+        if ($leadStructure) {
+            $this->view->leadStructureId = $leadStructure['ID'];
+        } else {
+            throw new \Exception('Не подключена структуры лида');
+        }
+
         return $this->view->render();
     }
 

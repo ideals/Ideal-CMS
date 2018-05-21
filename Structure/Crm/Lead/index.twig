@@ -5,7 +5,7 @@
                 <td>
                     <a href="index.php?par={{ par }}-{{ lead.ID }}"
                        title="{% if lead.name %}{{ lead.name }}{% elseif lead.cpName %}{{ lead.cpName }}{% endif %}"
-                       onclick="showOrder('{{ par }}', '{{ lead.ID }}', 'showData'); return false;">
+                       onclick="showModal({{ leadStructureId }}, {{ lead.ID }}, 'showEdit'); return false;">
                         {% if lead.name %}
                             {{ lead.name }}<br/>
                         {% elseif lead.cpName %}
@@ -13,7 +13,6 @@
                         {% else %}
                             № {{ lead.ID }}<br/>
                         {% endif %}
-                        {% if lead.comment %}{{ lead.comment }}<br/>{% endif %}
                     </a>
                 </td>
             </tr>
