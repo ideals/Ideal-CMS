@@ -69,8 +69,8 @@ return array(
             'sql' => 'varchar(255) not null',
             'type' => 'Ideal_Text'
         ),
-        'lead' => array(
-            'label' => 'Лид',
+        'contact_person' => array(
+            'label' => 'Контактное лицо',
             'sql' => 'int(8)',
             'type' => 'Ideal_Hidden',
         ),

@@ -61,8 +61,6 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         $config = Config::getInstance();
         $db = Db::getInstance();
 
-        $leadId = 0;
-
         // Получаем связанные данные
         $relatedData = '';
         if (isset($result['items'][$groupName . '_relatedData']) &&
@@ -71,17 +69,16 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
             $relatedData = $result['items'][$groupName . '_relatedData']['value'];
         }
 
-        // Если выбрано существующее контактное лицо, то берём его лид
+        // Если выбрано существующее контактное лицо, то берём его
         if ($result['items'][$groupName . '_existingСontactPerson']['value']) {
             $par = array('ID' => (int) $result['items'][$groupName . '_existingСontactPerson']['value']);
             $fields = array('table' => $this->_table);
             $rows = $db->select('SELECT * FROM &table WHERE ID = :ID', $par, $fields);
-            if ($rows) {
-                $leadId = (int) $rows[0]['lead'];
+            if (!$rows) {
+                throw new \Exception('Выбранного контактного лица не существует');
             }
-            $result['responseMessage'] = 'Заказ успешно отнесён к лиду выбранного контакта';
-            $tempName = 'Связь контактного лица ' . $par['ID'] . ' и заказа ' . $relatedData . ' с лидом ' . $leadId;
-            $this->setPageData(array('ID'=> $par['ID'], 'name' => $tempName));
+            $result['responseMessage'] = 'Заказ успешно отнесён к контактному лицу';
+            $this->setPageData($rows[0]);
         } else {
             // Создаём новый лид при создании контактного лица
             $leadTable = $config->getTableByName('Ideal_Lead');
@@ -93,12 +90,13 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
             $result = parent::createElement($result, $groupName);
         }
 
-        // Привязываем лид к заказу
-        if ($relatedData && $leadId) {
+        // Привязываем контактное лицо к заказу
+        if ($relatedData) {
             $relatedData = explode('-', $relatedData);
             if (isset($relatedData[0]) && $relatedData[0] == 'orderId') {
                 $orderTable = $config->getTableByName('Ideal_Order');
-                $values = array('lead' => $leadId);
+                $pageData = $this->getPageData();
+                $values = array('contact_person' => $pageData['ID']);
                 $sql = 'ID = :ID';
                 $params = array('ID' => (int)$relatedData[1]);
                 $db->update($orderTable)->set($values)->where($sql, $params)->exec();
@@ -110,7 +108,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
 
     /**
      * Установка пустого pageData.
-     * Либо установка начальных данных по даннмы заказа.
+     * Либо установка начальных данных по данным заказа.
      */
     public function setPageDataNew()
     {

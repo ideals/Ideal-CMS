@@ -35,7 +35,7 @@
                     var contactInfo = '<br />';
 
                     var contactContent = '';
-                    if ('lead' in data.data && parseInt(data.data.lead) === 0) {
+                    if ('contact_person' in data.data && parseInt(data.data.contact_person) === 0) {
                         {% if contactPersonStructureId is defined %}
                         contactContent += '<button class="btn" title="Создать/привязать к контакту" ' +
                             'onclick="showModal(' +

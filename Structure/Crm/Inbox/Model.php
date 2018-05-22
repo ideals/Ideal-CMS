@@ -97,7 +97,13 @@ class Model extends \Ideal\Core\Admin\Model
         $request = new Request();
         if ($request->id) {
             $model->setPageDataById($request->id);
-            return $model->getPageData();
+            $data = $model->getPageData();
+            if ($data['contact_person']) {
+                $data['contact_person'] = (int)$data['contact_person'];
+            } else {
+                $data['contact_person'] = 0;
+            }
+            return $data;
         }
         return array();
     }

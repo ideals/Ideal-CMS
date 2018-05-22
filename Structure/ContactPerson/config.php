@@ -47,8 +47,8 @@ return array(
             'sql' => 'text',
             'type' => 'Ideal_Text'
         ),
-        'contact_person' => array(
-            'label' => 'Контактное лицо',
+        'lead' => array(
+            'label' => 'Лид',
             'sql' => 'int(8)',
             'type' => 'Ideal_Hidden',
         ),
