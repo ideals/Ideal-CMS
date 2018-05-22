@@ -72,7 +72,8 @@ return array(
         'contact_person' => array(
             'label' => 'Контактное лицо',
             'sql' => 'int(8)',
-            'type' => 'Ideal_Hidden',
+            'type' => 'Ideal_Select',
+            'medium' => '\\Ideal\\Medium\\ContactPerson\\Model'
         ),
     ),
 );

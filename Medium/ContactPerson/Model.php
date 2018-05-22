@@ -29,7 +29,11 @@ class Model extends AbstractModel
         $contactPersonTable = $config->getTableByName('Ideal_ContactPerson');
         $contactPersonList = $db->select('SELECT * FROM ' . $contactPersonTable);
 
-        $list = array('0' => 'Новое контактное лицо');
+        if (is_a($this->obj, '\Ideal\Structure\Order\Admin\ModelAbstract')) {
+            $list = array('0' => 'Контактное лицо не выбрано');
+        } else {
+            $list = array('0' => 'Новое контактное лицо');
+        }
         foreach ($contactPersonList as $contactPerson) {
             $listName = array($contactPerson['name'], $contactPerson['email'], $contactPerson['phone']);
             $listName = array_filter($listName, function ($v) {
