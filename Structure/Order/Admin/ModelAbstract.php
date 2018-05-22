@@ -21,25 +21,41 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         $db = Db::getInstance();
         $config = Config::getInstance();
 
-        // Ищем всех заказчиков для составления фильтра
-        $_table = $config->db['prefix'] . 'ideal_structure_crm';
-        $_sql = "SELECT ID, name FROM {$_table} ORDER BY name, ID";
-        $this->customers = $db->select($_sql);
+        // Ищем всех лидов для составления фильтра
+        $leadtable = $config->getTableByName('Ideal_Lead');
+        $contactPersonTable = $config->getTableByName('Ideal_ContactPerson');
+        $_sql = "
+          SELECT 
+            e.ID, 
+            e.name as leadName,
+            cps.name as cpsLeadName 
+          FROM 
+            {$leadtable} as e 
+          LEFT JOIN {$contactPersonTable} as cps 
+          ON e.ID = cps.lead
+          GROUP BY e.ID
+          ORDER BY e.name, e.ID";
+        $leads = $db->select($_sql);
 
         $request = new Request();
-        $currentCustomer = '';
-        if (isset($request->toolbar['customer'])) {
-            $currentCustomer = $request->toolbar['customer'];
+        $currentLead = '';
+        if (isset($request->toolbar['lead'])) {
+            $currentLead = $request->toolbar['lead'];
         }
 
-        $select = '<select class="form-control" name="toolbar[customer]"><option value="">Не фильтровать</option>';
-        foreach ($this->customers as $customer) {
+        $select = '<select class="form-control" name="toolbar[lead]"><option value="">Не фильтровать</option>';
+        foreach ($leads as $lead) {
+            if ($lead['name']) {
+                $name = $lead['leadName'];
+            } else {
+                $name = $lead['cpsLeadName'];
+            }
             $selected = '';
-            if ($customer['ID'] == $currentCustomer) {
+            if ($lead['ID'] == $currentLead) {
                 $selected = 'selected="selected"';
             }
-            $select .= '<option ' . $selected . ' value="' . $customer['ID'] . '">';
-            $select .= $customer['name'] . ' ['. $customer ['ID'].']</option>';
+            $select .= '<option ' . $selected . ' value="' . $lead['ID'] . '">';
+            $select .= $name . ' ['. $lead['ID'].']</option>';
         }
         $select .= '</select>';
 
@@ -55,17 +71,17 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
     protected function getWhere($where)
     {
         $request = new Request();
-        $currentCustomer = '';
-        if (isset($request->toolbar['customer'])) {
-            $currentCustomer = $request->toolbar['customer'];
+        $currentLead = '';
+        if (isset($request->toolbar['lead'])) {
+            $currentLead = $request->toolbar['lead'];
         }
-        if ($currentCustomer != '') {
+        if ($currentLead != '') {
             $db = DB::getInstance();
             if ($where != '') {
                 $where .= ' AND ';
             }
-            // Выборка статей, принадлежащих этой категории
-            $where .= 'customer =' . $db->real_escape_string($currentCustomer);
+            // Выборка заказов, принадлежащих этому лиду
+            $where .= 'lead =' . $db->real_escape_string($currentLead);
         }
         if ($where != '') {
             $where = 'WHERE ' . $where;
