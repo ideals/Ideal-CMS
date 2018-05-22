@@ -21,41 +21,32 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         $db = Db::getInstance();
         $config = Config::getInstance();
 
-        // Ищем всех лидов для составления фильтра
-        $leadtable = $config->getTableByName('Ideal_Lead');
+        // Ищем все контактные лица для составления фильтра
         $contactPersonTable = $config->getTableByName('Ideal_ContactPerson');
         $_sql = "
           SELECT 
             e.ID, 
-            e.name as leadName,
-            cps.name as cpsLeadName 
+            e.name
           FROM 
-            {$leadtable} as e 
-          LEFT JOIN {$contactPersonTable} as cps 
-          ON e.ID = cps.lead
-          GROUP BY e.ID
+            {$contactPersonTable} as e 
           ORDER BY e.name, e.ID";
-        $leads = $db->select($_sql);
+        $contactPersons = $db->select($_sql);
 
         $request = new Request();
-        $currentLead = '';
-        if (isset($request->toolbar['lead'])) {
-            $currentLead = $request->toolbar['lead'];
+        $currentContactPerson = '';
+        if (isset($request->toolbar['contact_person'])) {
+            $currentContactPerson = $request->toolbar['contact_person'];
         }
 
-        $select = '<select class="form-control" name="toolbar[lead]"><option value="">Не фильтровать</option>';
-        foreach ($leads as $lead) {
-            if ($lead['name']) {
-                $name = $lead['leadName'];
-            } else {
-                $name = $lead['cpsLeadName'];
-            }
+        $select = '<select class="form-control" name="toolbar[contact_person]">';
+        $select .= '<option value="">Не фильтровать</option>';
+        foreach ($contactPersons as $contactPerson) {
             $selected = '';
-            if ($lead['ID'] == $currentLead) {
+            if ($contactPerson['ID'] == $currentContactPerson) {
                 $selected = 'selected="selected"';
             }
-            $select .= '<option ' . $selected . ' value="' . $lead['ID'] . '">';
-            $select .= $name . ' ['. $lead['ID'].']</option>';
+            $select .= '<option ' . $selected . ' value="' . $contactPerson['ID'] . '">';
+            $select .= $contactPerson['name'] . ' ['. $contactPerson['ID'].']</option>';
         }
         $select .= '</select>';
 
@@ -72,16 +63,16 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
     {
         $request = new Request();
         $currentLead = '';
-        if (isset($request->toolbar['lead'])) {
-            $currentLead = $request->toolbar['lead'];
+        if (isset($request->toolbar['contact_person'])) {
+            $currentLead = $request->toolbar['contact_person'];
         }
         if ($currentLead != '') {
             $db = DB::getInstance();
             if ($where != '') {
-                $where .= ' AND ';
+                $where .= ' AND';
             }
             // Выборка заказов, принадлежащих этому лиду
-            $where .= 'lead =' . $db->real_escape_string($currentLead);
+            $where .= ' contact_person =' . $db->real_escape_string($currentLead);
         }
         if ($where != '') {
             $where = 'WHERE ' . $where;
