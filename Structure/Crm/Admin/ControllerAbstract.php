@@ -61,7 +61,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
     }
 
     /**
-     * В ответ на запрос сервера получает данные о лиде из соответствующего модуля и возвращает их
+     * В ответ на запрос сервера получает данные о заказе из соответствующего модуля и возвращает их
      *
      * @return string Данные о лиде в json формате
      */
@@ -75,7 +75,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $class = '\\' . $structure[0] . '\\Structure\\Crm\\' . $structure[1] . '\\Controller';
         $controller = new $class();
 
-        // Запускаем метод контроллера - получаем данные лида, которые нужно отобразить
+        // Запускаем метод контроллера - получаем данные заказа, которые нужно отобразить
         $data = $controller->showDataAction();
         echo json_encode(
             array(

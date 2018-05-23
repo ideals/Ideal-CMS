@@ -12,9 +12,44 @@ namespace Ideal\Structure\Order\Admin;
 use Ideal\Core\Db;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
+use Ideal\Structure\ContactPerson\Model as ContactPersonModel;
 
 class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
 {
+    /**
+     * Пытается установить контактное лицо для заказа
+     * @throws \Exception
+     */
+    public function setContactPerson()
+    {
+        // По данным из заказа пытаемся связать его с определённым контактным лицом
+        $pageData = $this->getPageData();
+
+        // Если у заказа уже есть контактное лицо, то ничего делать не нужно
+        if (!$pageData['contact_person']) {
+            $contactPersonModel = new ContactPersonModel();
+            $contactPersonId = $contactPersonModel->setEmail($pageData['email'])
+                ->setClientId(isset($pageData['client_id']) ? $pageData['client_id'] : '')
+                ->setName(isset($pageData['name']) ? $pageData['name'] : '')
+                ->setPhone(isset($pageData['phone']) ? $pageData['phone'] : '')
+                ->getContactPersonId();
+
+            // Если нашли контактное лицо, то заказ привязываем к нему
+            if (false !== $contactPersonId) {
+                $pageData['contact_person'] = $contactPersonId;
+                $this->setPageData($pageData);
+
+                // Записываем соотнесение контактного лица с заказом в базу
+                $db = Db::getInstance();
+                $values = array('contact_person' => $contactPersonId);
+                $sql = 'ID = :ID';
+                $params = array('ID' => $pageData['ID']);
+                $db->update($this->_table)->set($values)->where($sql, $params)->exec();
+            } else {
+                $pageData['contact_person'] = 0;
+            }
+        }
+    }
 
     public function getToolbar()
     {

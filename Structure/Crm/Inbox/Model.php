@@ -93,16 +93,12 @@ class Model extends \Ideal\Core\Admin\Model
      */
     public function getOrderInfo()
     {
-        $model = new \Ideal\Structure\Order\Admin\Model('');
         $request = new Request();
         if ($request->id) {
+            $model = new \Ideal\Structure\Order\Admin\Model('');
             $model->setPageDataById($request->id);
+            $model->setContactPerson();
             $data = $model->getPageData();
-            if ($data['contact_person']) {
-                $data['contact_person'] = (int)$data['contact_person'];
-            } else {
-                $data['contact_person'] = 0;
-            }
             return $data;
         }
         return array();
