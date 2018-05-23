@@ -3,6 +3,9 @@
         {% for item in inbox %}
             <tr class="order-{{ item.ID }}">
             <td {% if ID == item.ID %}class="active"{% endif %}>
+                {% if item.contact_person %}
+                    <span class="glyphicon glyphicon-certificate" style="color:#00bf1c;"></span>
+                {% endif %}
                 <a href="index.php?par={{ par }}-{{ item.ID }}" title="{{ item.info }}"
                    onclick="showOrder('{{ par }}', '{{ item.ID }}', 'showData'); return false;">
                     {% if item.name %}{{ item.name }}<br />{% endif %}
