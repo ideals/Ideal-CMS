@@ -7,7 +7,7 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-// Новости
+// Заказ
 return array(
     'params' => array(
         'in_structures' => array('Ideal_DataList'), // в каких структурах можно создавать эту структуру
@@ -45,6 +45,11 @@ return array(
         ),
         'phone' => array(
             'label' => 'Телефон',
+            'sql' => 'text',
+            'type' => 'Ideal_Text'
+        ),
+        'client_id' => array(
+            'label' => 'Client ID',
             'sql' => 'text',
             'type' => 'Ideal_Text'
         ),

@@ -684,6 +684,15 @@ JS;
             // Умножаем сумму заказа на 100 для хранения в базе
             $price *= 100;
 
+            if (class_exists('\Ideal\Core\Util')) {
+                $gACid = \Ideal\Core\Util::getGACID();
+                if (!$gACid) {
+                    $gACid = '';
+                }
+            } else {
+                $gACid = '';
+            }
+
             // Записываем данные
             $newOrderId = $db->insert(
                 $orderTable,
@@ -693,6 +702,7 @@ JS;
                     'name' => $name,
                     'email' => $email,
                     'phone' => $phone,
+                    'client_id' => $gACid,
                     'price' => $price,
                     'referer' => $this->getValue('referer'),
                     'content' => $content,
