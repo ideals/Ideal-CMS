@@ -7,7 +7,7 @@ use Ideal\Core\Config;
 class LeadFilter extends Filter
 {
 
-    /** @var \Ideal\Structure\Lead\Admin\ModelAbstract Объект модели категории */
+    /** @var \Ideal\Structure\Lead\Admin\ModelAbstract Объект модели лида */
     protected $leadModel = array();
 
     public function getSql()
