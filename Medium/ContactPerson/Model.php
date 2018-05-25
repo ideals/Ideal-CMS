@@ -40,7 +40,7 @@ class Model extends AbstractModel
                 if (is_string($v)) {
                     $v = trim($v);
                 }
-                return boolval($v);
+                return (bool)$v;
             });
             $list[$contactPerson['ID']] = implode(' - ', $listName);
         }
