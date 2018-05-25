@@ -26,7 +26,9 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         $pageData = $this->getPageData();
 
         // Если у заказа уже есть контактное лицо, то ничего делать не нужно
-        if (!$pageData['contact_person']) {
+        if (!$pageData['contact_person'] ||
+            'NULL' == $pageData['contact_person'] ||
+            is_null($pageData['contact_person'])) {
             $contactPersonModel = new ContactPersonModel();
             $contactPersonId = $contactPersonModel->setEmail($pageData['email'])
                 ->setClientId(isset($pageData['client_id']) ? $pageData['client_id'] : '')
@@ -37,7 +39,6 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
             // Если нашли контактное лицо, то заказ привязываем к нему
             if (false !== $contactPersonId) {
                 $pageData['contact_person'] = $contactPersonId;
-                $this->setPageData($pageData);
 
                 // Записываем соотнесение контактного лица с заказом в базу
                 $db = Db::getInstance();
@@ -48,6 +49,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
             } else {
                 $pageData['contact_person'] = 0;
             }
+            $this->setPageData($pageData);
         }
     }
 
