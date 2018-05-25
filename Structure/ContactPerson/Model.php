@@ -91,10 +91,14 @@ class Model
             }
         }
         $where = ltrim($where, ' OR');
-        $fields = array('table' => $config->getTableByName('Ideal_ContactPerson'));
-        $contactPerson = $db->select("SELECT * FROM &table WHERE {$where}", $par, $fields);
-        if ($contactPerson && count($contactPerson) == 1) {
-            return $contactPerson[0]['ID'];
+
+        // Если нет условий для поиска, то и искать нечего
+        if ($where) {
+            $fields = array('table' => $config->getTableByName('Ideal_ContactPerson'));
+            $contactPerson = $db->select("SELECT * FROM &table WHERE {$where}", $par, $fields);
+            if ($contactPerson && count($contactPerson) == 1) {
+                return $contactPerson[0]['ID'];
+            }
         }
         return false;
     }
