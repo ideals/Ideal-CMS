@@ -8,7 +8,7 @@ $config = Config::getInstance();
 $db = Db::getInstance();
 
 // 1. Если в config.php отсутствует подключение Ideal_Log - подключаем
-$log = $config->getStructureByName('Ideal_log');
+$log = $config->getStructureByName('Ideal_Log');
 if ($log === false) {
     $logId = 0;
     foreach ($config->structures as $val) {
