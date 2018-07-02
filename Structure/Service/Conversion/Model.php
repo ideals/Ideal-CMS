@@ -80,7 +80,8 @@ class Model
 
         // Запускаем процесс построения строки/js-массива
         if (count($this->row) > 0) {
-            $visualConfig .= "[['Section', 'Яндекс', 'Google', 'Другие сайты', 'Прямой заход', { role: 'annotation' }],";
+            $visualConfig .= "[['Section', 'Яндекс', 'Google', 'Другие сайты', 'Прямой заход',";
+            $visualConfig .= " { role: 'annotation' }],";
 
             // Устанавливаем цель поиска на источник перехода
             $this->target = 'referer';
@@ -114,7 +115,8 @@ class Model
             end($groupedOrders);
             $lastKey = key($groupedOrders);
             foreach ($groupedOrders as $key => $ordersInIterval) {
-                $visualConfig .= "['{$key}', {$ordersInIterval['yandex']}, {$ordersInIterval['google']}, {$ordersInIterval['other']}, {$ordersInIterval['straight']}, '']";
+                $visualConfig .= "['{$key}', {$ordersInIterval['yandex']}, {$ordersInIterval['google']},";
+                $visualConfig .= " {$ordersInIterval['other']}, {$ordersInIterval['straight']}, '']";
                 if ($key != $lastKey) {
                     $visualConfig .= ',';
                 }
@@ -133,13 +135,14 @@ class Model
 
         // Запускаем процесс построения строки/js-массива
         if (count($this->row) > 0) {
-            $visualConfig .= "[['Section', 'Яндекс', 'Google', 'Другие сайты', 'Прямой заход', { role: 'annotation' }],";
+            $visualConfig .= "[['Section', 'Яндекс', 'Google', 'Другие сайты', 'Прямой заход',";
+            $visualConfig .= " { role: 'annotation' }],";
 
             // Устанавливаем цель поиска на источник перехода
             $this->target = 'referer';
 
-            // Устанавливаем группировку по заказчику
-            $this->group = 'customer';
+            // Устанавливаем группировку по контактному лицу заказчика
+            $this->group = 'lead';
 
             $groupedOrders = self::getGroupedOrders();
 
@@ -171,7 +174,8 @@ class Model
             end($groupedOrders);
             $lastKey = key($groupedOrders);
             foreach ($groupedOrders as $key => $ordersInIterval) {
-                $visualConfig .= "['{$key}', {$ordersInIterval['yandex']}, {$ordersInIterval['google']}, {$ordersInIterval['other']}, {$ordersInIterval['straight']}, '']";
+                $visualConfig .= "['{$key}', {$ordersInIterval['yandex']}, {$ordersInIterval['google']},";
+                $visualConfig .= " {$ordersInIterval['other']}, {$ordersInIterval['straight']}, '']";
                 if ($key != $lastKey) {
                     $visualConfig .= ',';
                 }
@@ -180,7 +184,7 @@ class Model
         }
 
         // Обнуляем группировку данных
-        $this->group = 'customer';
+        $this->group = 'lead';
 
         return $visualConfig;
     }
@@ -327,23 +331,31 @@ class Model
     /**
      * Получает все данные о заказах находящиеся в заданном интервале.
      * С учётом надобности отображения лидов из предыдущих периодов.
-     *
-     * @return array Массив данных находящихся в заданном интервале
      */
     protected function getData()
     {
         $db = Db::getInstance();
         $config = Config::getInstance();
         $par = array('fromDate' => $this->fromTimestamp, 'toDate' => $this->toTimestamp);
-        $fields = array('table' => $config->db['prefix'] . 'ideal_structure_order');
+        $fields = array(
+            'table' => $config->db['prefix'] . 'ideal_structure_order',
+            'contactPersonTable' => $config->db['prefix'] . 'ideal_structure_contactperson'
+        );
 
-        // При надобности исключаем лидов предыдущих периодов
+        // При надобности исключаем контактные лица предыдущих периодов
         $where = '';
         if ($this->newLead) {
-            $where .= " AND customer NOT IN (SELECT customer FROM &table WHERE date_create < :fromDate AND customer IS NOT NULL)";
+            $where .= ' AND e.contact_person NOT IN';
+            $where .= ' (SELECT cp.ID FROM &contactPersonTable as cp WHERE cp.date_create < :fromDate';
+            $where .= ' AND cp.lead IS NOT NULL AND cp.lead = (';
+            $where .= ' SELECT cp2.lead FROM &contactPersonTable as cp2 WHERE ID = e.contact_person))';
         }
+        $sql = 'SELECT e.*, cpjoin.lead FROM &table as e';
+        $sql .= ' LEFT JOIN &contactPersonTable as cpjoin ON cpjoin.ID = e.contact_person';
+        $sql .= " WHERE e.date_create >= :fromDate AND e.date_create < :toDate{$where}";
+        $sql .= ' GROUP BY e.ID ORDER by e.date_create';
         $this->row = $db->select(
-            "SELECT * FROM &table WHERE date_create >= :fromDate AND date_create < :toDate{$where} ORDER by date_create",
+            $sql,
             $par,
             $fields
         );
