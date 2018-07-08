@@ -32,6 +32,13 @@ table.table-hover tbody tr:hover td {
 table.table-hover tbody tr:hover td div.button-edit {
     display: inline;
 }
+a.lead-link {
+    display: inline-block;
+}
+table.table-hover tbody tr:hover td div.button-edit.edit-lead {
+    position: absolute;
+    right: 20px;
+}
 .form-horizontal .help-block {
     margin-top: 3px;
 }
