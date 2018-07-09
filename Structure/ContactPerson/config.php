@@ -47,11 +47,6 @@ return array(
             'sql' => 'text',
             'type' => 'Ideal_Text'
         ),
-        'lead' => array(
-            'label' => 'Лид',
-            'sql' => 'int(8)',
-            'type' => 'Ideal_Hidden',
-        ),
         'relatedData' => array(
             'label' => 'Связанные данные',
             'sql' => '',

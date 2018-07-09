@@ -29,5 +29,13 @@ return array(
             'sql' => 'text',
             'type' => 'Ideal_Area'
         ),
+        'addon' => array(
+            'label' => 'Аддоны',
+            'sql' => "varchar(255) not null default '[[\"1\",\"Ideal_ContactPerson\",\"Контактное лицо\"]]'",
+            'type' => 'Ideal_Addon',
+            'medium'    => '\\Ideal\\Medium\\AddonList\\Model',
+            'available' =>  array('Ideal_ContactPerson'),
+            'default'   => '[["1","Ideal_ContactPerson","Контактное лицо"]]',
+        ),
     ),
 );

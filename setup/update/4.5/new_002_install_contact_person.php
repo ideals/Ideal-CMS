@@ -96,10 +96,4 @@ if (empty($crmRes) && empty($contactPersonRes)) {
         $sql = "ALTER TABLE {$contactPersonTable} ADD phone text COMMENT 'Телефон' AFTER `client_id`;";
         $db->query($sql);
     }
-
-    // Обработка поля 'lead'
-    if (!isset($fields['lead'])) {
-        $sql = "ALTER TABLE {$contactPersonTable} ADD lead int(8) COMMENT 'Лид' AFTER `phone`;";
-        $db->query($sql);
-    }
 }
