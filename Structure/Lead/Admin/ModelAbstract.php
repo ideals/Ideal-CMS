@@ -47,7 +47,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
                 $contactPersonTable = $config->getTableByName('Ideal_ContactPerson');
 
                 $sql = "SELECT cp.* FROM {$contactPersonAddonTable} as cpa";
-                $sql .= " LEFT JOIN {$contactPersonTable} as cp ON cp.ID = cpa.contact_person_ID";
+                $sql .= " LEFT JOIN {$contactPersonTable} as cp ON cp.ID = cpa.contact_person";
                 $sql .= " WHERE cpa.prev_structure = CONCAT_WS('-', {$leadStructure['ID']}, {$pageData['ID']})";
                 $sql .= " ORDER BY cpa.tab_ID LIMIT 1";
                 $contactPersons = $db->select($sql);

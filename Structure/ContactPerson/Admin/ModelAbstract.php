@@ -49,19 +49,20 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         } else {
             $result = $this->clearFields($result, $groupName);
             $result = parent::createElement($result, $groupName);
+            $pageData = $this->getPageData();
 
             // Создаём новый лид при создании контактного лица
             $leadStructure = $config->getStructureByName('Ideal_Lead');
             $leadTable = $config->getTableByName('Ideal_Lead');
-            $leadId = $db->insert($leadTable, array('addon' => '[["1","Ideal_ContactPerson","Контактное лицо"]]'));
+            $leadId = $db->insert($leadTable, array(
+                'addon' => '[["1","Ideal_ContactPerson","' . $pageData['name'] . '"]]'));
 
             // Делаем запись в таблице аддона "Контактное лицо"
-            $pageData = $this->getPageData();
             $contactPersonAddonTable = $config->getTableByName('Ideal_ContactPerson', 'Addon');
             $values = array(
                 'prev_structure' => $leadStructure['ID'] . '-' . $leadId,
                 'tab_ID' => 1,
-                'contact_person_ID' => $pageData['ID'],
+                'contact_person' => $pageData['ID'],
             );
             $db->insert($contactPersonAddonTable, $values);
         }

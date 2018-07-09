@@ -20,15 +20,10 @@ return array(
             'sql' => 'int not null default 0',
             'type' => 'Ideal_Hidden'
         ),
-        'contact_person_ID' => array(
-            'label' => 'Идентификатор контактного лица',
-            'type' => 'Ideal_Hidden',
-            'sql' => 'int not null',
-        ),
-        'contact_person_data' => array(
+        'contact_person' => array(
             'label' => 'Данные контактного лица',
-            'type' => 'Ideal_Info',
-            'sql' => '',
+            'type' => 'Ideal_ContactPerson',
+            'sql' => 'int not null',
         ),
     )
 );

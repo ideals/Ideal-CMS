@@ -73,7 +73,7 @@ class LeadFilter extends Filter
         $leftJoin = " LEFT JOIN {$contactPersonAddonTable} as cpa";
         $leftJoin .= "  ON cpa.prev_structure = CONCAT_WS('-', {$leadStructure['ID']}, e.ID)";
         $contactPersonStructureTable = $config->getTableByName('Ideal_ContactPerson');
-        $leftJoin .= " LEFT JOIN {$contactPersonStructureTable} as cp ON cp.ID = cpa.contact_person_ID ";
+        $leftJoin .= " LEFT JOIN {$contactPersonStructureTable} as cp ON cp.ID = cpa.contact_person ";
         return $leftJoin;
     }
 }
