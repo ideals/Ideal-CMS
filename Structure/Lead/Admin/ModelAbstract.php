@@ -40,12 +40,17 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
             $config = Config::getInstance();
             $contactPersonStructure = $config->getStructureByName('Ideal_ContactPerson');
             if ($contactPersonStructure) {
+                $config = Config::getInstance();
                 $db = Db::getInstance();
+                $leadStructure = $config->getStructureByName('Ideal_Lead');
+                $contactPersonAddonTable = $config->getTableByName('Ideal_ContactPerson', 'Addon');
                 $contactPersonTable = $config->getTableByName('Ideal_ContactPerson');
-                $par = array('lead' => $id);
-                $fields = array('table' => $contactPersonTable);
-                $sql = 'SELECT * FROM &table WHERE lead = :lead ORDER BY ID LIMIT 1';
-                $contactPersons = $db->select($sql, $par, $fields);
+
+                $sql = "SELECT cp.* FROM {$contactPersonAddonTable} as cpa";
+                $sql .= " LEFT JOIN {$contactPersonTable} as cp ON cp.ID = cpa.contact_person_ID";
+                $sql .= " WHERE cpa.prev_structure = CONCAT_WS('-', {$leadStructure['ID']}, {$pageData['ID']})";
+                $sql .= " ORDER BY cpa.tab_ID LIMIT 1";
+                $contactPersons = $db->select($sql);
                 if ($contactPersons) {
                     $pageData['name'] = $contactPersons[0]['name'];
                     $this->setPageData($pageData);
