@@ -68,12 +68,12 @@ class LeadFilter extends Filter
     protected function generateLeftJoin()
     {
         $config = Config::getInstance();
-        $leftJoin = '';
-        $contactPersonStructure = $config->getStructureByName('Ideal_ContactPerson');
-        if ($contactPersonStructure) {
-            $contactPersonStructureTable = $config->getTableByName('Ideal_ContactPerson');
-            $leftJoin = " LEFT JOIN {$contactPersonStructureTable} as cp ON cp.lead = e.ID ";
-        }
+        $leadStructure = $config->getStructureByName('Ideal_Lead');
+        $contactPersonAddonTable = $config->getTableByName('Ideal_ContactPerson', 'Addon');
+        $leftJoin = " LEFT JOIN {$contactPersonAddonTable} as cpa";
+        $leftJoin .= "  ON cpa.prev_structure = CONCAT_WS('-', {$leadStructure['ID']}, e.ID)";
+        $contactPersonStructureTable = $config->getTableByName('Ideal_ContactPerson');
+        $leftJoin .= " LEFT JOIN {$contactPersonStructureTable} as cp ON cp.ID = cpa.contact_person_ID ";
         return $leftJoin;
     }
 }
