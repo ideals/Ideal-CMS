@@ -65,30 +65,20 @@ class Controller extends AbstractController
     public function parseInputValue($isCreate)
     {
         $item = parent::parseInputValue($isCreate);
-
-        // Формируем запрос на обновление данных контактного лица
-        $this->contactPersonModel->setPageDataById($item["value"]);
-        $contactPersonPageData = $this->contactPersonModel->getPageData();
-        $contactPersonTable = $this->contactPersonModel->getTableName();
-        $updateFieldStrings= array();
-        foreach ($this->contactPersonModel->fields as $fieldName => $field) {
-            // Определеям класс контроллера для соответствующего поля
-            $fieldClass = Util::getClassName($field['type'], 'Field') . '\\Controller';
-            /* @var $fieldModel \Ideal\Field\AbstractController */
-            $fieldModel = $fieldClass::getInstance();
-            $fieldModel->setModel($this->contactPersonModel, $fieldName, $this->groupName);
-            // Получаем данные, введённые пользователем
-            $fieldItem = $fieldModel->parseInputValue($isCreate);
-
-            if (isset($contactPersonPageData[$fieldName]) &&
-                $fieldItem['value'] != $contactPersonPageData[$fieldName]
-            ) {
-                $updateFieldStrings[] = "{$fieldName}='{$fieldItem['value']}'";
+        if (!empty($item["value"])) {
+            $this->contactPersonModel->setPageDataById($item["value"]);
+            $this->contactPersonModel->setFieldsGroup($this->groupName);
+            $result = $this->contactPersonModel->parseInputParams();
+            $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+            // Проверяем, есть ли право редактирования элемента
+            if ($result['isCorrect'] == 1) {
+                $result['isCorrect'] = $aclModel->checkAccess($this->contactPersonModel, 'edit');
             }
-        }
-        if (!empty($updateFieldStrings)) {
-            $updateString = ' SET ' . implode(', ', $updateFieldStrings);
-            $item['sqlAdd'] = "UPDATE {$contactPersonTable}{$updateString}";
+
+            if ($result['isCorrect'] == 1) {
+                $this->contactPersonModel->saveElement($result, $this->groupName);
+                $this->contactPersonModel->saveToLog('Изменён');
+            }
         }
         return $item;
     }
