@@ -124,6 +124,21 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         $this->setPageData($pageData);
     }
 
+    public function parseInputParams($isCreate = false)
+    {
+        $result = parent::parseInputParams($isCreate);
+
+        // При сохранении контактного лица через аддоны идентификатор может находиться в другом поле,
+        // проверяем его наличие и при надобности подменяем значение идентификатора
+        $request = new Request();
+        $requestName = $this->fieldsGroup . '_CPID';
+        $cotPersonId = $request->$requestName;
+        if ($cotPersonId) {
+            $result['items'][$this->fieldsGroup . '_ID']['value'] = $cotPersonId;
+        }
+        return $result;
+    }
+
     /**
      * Убирает поля "Выбрать существующий контакт" и "Связанные данные"
      *

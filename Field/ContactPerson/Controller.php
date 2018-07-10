@@ -57,6 +57,10 @@ class Controller extends AbstractController
 
         // Формируем правильные имена и идентификаторы для полей внутри таба
         $fields = str_replace('general', $this->groupName, $fields);
+
+        // Заменяем ключ хранения идентификатора контактного лица чтобы он не пересекался с аддоном
+        $fields = str_replace($this->groupName . '_ID', $this->groupName . '_CPID', $fields);
+
         return $fields;
     }
 
@@ -64,7 +68,7 @@ class Controller extends AbstractController
     {
         parent::pickupNewValue();
         $request = new Request();
-        $fieldName = $this->groupName . '_ID';
+        $fieldName = $this->groupName . '_CPID';
         $this->newValue = $request->$fieldName;
         if (!$this->newValue) {
             $fieldName = $this->groupName . '_existingСontactPerson';
