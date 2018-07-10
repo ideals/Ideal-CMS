@@ -10,7 +10,6 @@
 namespace Ideal\Field\ContactPerson;
 
 use Ideal\Core\Request;
-use Ideal\Core\Util;
 use Ideal\Field\AbstractController;
 use Ideal\Structure\ContactPerson\Admin\Model;
 
@@ -45,8 +44,14 @@ class Controller extends AbstractController
     public function getInputText()
     {
         $pageData = $this->model->getPageData();
-        $this->contactPersonModel->setPageDataById($pageData['ID']);
-        $fields = $this->contactPersonModel->getFieldsList($this->contactPersonModel->fields);
+        $fields = $this->contactPersonModel->fields;
+        if (isset($pageData['contact_person'])) {
+            $this->contactPersonModel->setPageDataById($pageData['contact_person']);
+
+            // Если присутствует идентификатор контактного лица, то убираем поле выбора существующего контактного лица
+            unset($fields['existingСontactPerson']);
+        }
+        $fields = $this->contactPersonModel->getFieldsList($fields);
 
         // Формируем правильные имена и идентификаторы для полей внутри таба
         $fields = str_replace('general', $this->groupName, $fields);
