@@ -20,7 +20,14 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
     public function saveElement($result, $groupName = 'general')
     {
         $result = $this->clearFields($result, $groupName);
-        return parent::saveElement($result, $groupName);
+        if (!isset($result['items'][$groupName . '_existingСontactPerson']['value']) ||
+            !$result['items'][$groupName . '_existingСontactPerson']['value']
+        ) {
+            return parent::saveElement($result, $groupName);
+        } else {
+            // Если выбран существующий контакт, то сохранять поля не нужно
+            return '';
+        }
     }
 
     public function createElement($result, $groupName = 'general')

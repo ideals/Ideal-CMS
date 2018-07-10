@@ -9,6 +9,8 @@
 
 namespace Ideal\Field\ContactPerson;
 
+use Ideal\Core\Config;
+use Ideal\Core\Db;
 use Ideal\Core\Request;
 use Ideal\Field\AbstractController;
 use Ideal\Structure\ContactPerson\Admin\Model;
@@ -64,6 +66,10 @@ class Controller extends AbstractController
         $request = new Request();
         $fieldName = $this->groupName . '_ID';
         $this->newValue = $request->$fieldName;
+        if (!$this->newValue) {
+            $fieldName = $this->groupName . '_existingСontactPerson';
+            $this->newValue = $request->$fieldName;
+        }
         return $this->newValue;
     }
 
@@ -81,8 +87,29 @@ class Controller extends AbstractController
             }
 
             if ($result['isCorrect'] == 1) {
-                $this->contactPersonModel->saveElement($result, $this->groupName);
-                $this->contactPersonModel->saveToLog('Изменён');
+                // Если выбрано существующее конттактное лицо то делаем дополнительный запрос на замену названия вкладки
+                if (isset($result['items'][$this->groupName . '_existingСontactPerson']) &&
+                    !empty($result['items'][$this->groupName . '_existingСontactPerson']['value'])
+                ) {
+                    $config = Config::getInstance();
+                    $db = Db::getInstance();
+                    $parentModel = $this->model->getParentModel();
+                    $parentModelTable = $parentModel->getTableName();
+                    $parentModelPageData = $parentModel->getPageData();
+                    $contactPersonTable = $config->getTableByName('Ideal_ContactPerson');
+                    $contactPersonId = $result['items'][$this->groupName . '_existingСontactPerson']['value'];
+                    $sqlToSelectName = "SELECT name FROM {$contactPersonTable} WHERE ID = {$contactPersonId}";
+                    $contactPersonName = $db->select($sqlToSelectName);
+                    $contactPersonName = $contactPersonName[0]['name'];
+                    $item['sqlAdd'] = "UPDATE {$parentModelTable} SET addon = CONCAT(REPLACE(";
+                    $item['sqlAdd'] .= "LEFT(addon, INSTR(addon, 'Контактное лицо') +";
+                    $item['sqlAdd'] .= " LENGTH('Контактное лицо') - 1),'Контактное лицо', '{$contactPersonName}'),";
+                    $item['sqlAdd'] .= "SUBSTRING(addon, INSTR(addon, 'Контактное лицо') + LENGTH('Контактное лицо')))";
+                    $item['sqlAdd'] .= " WHERE INSTR(addon, 'Контактное лицо') AND ID = {$parentModelPageData['ID']};";
+                } else {
+                    $this->contactPersonModel->saveElement($result, $this->groupName);
+                    $this->contactPersonModel->saveToLog('Изменён');
+                }
             }
         }
         return $item;
