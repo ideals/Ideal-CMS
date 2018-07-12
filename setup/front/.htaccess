@@ -28,6 +28,11 @@ RewriteRule ^(.*)$ - [NC,L]
 # Если картинки с изменёнными размерами нет, то создаём
 RewriteRule ^images/resized/(.*) /[[CMS]]/Ideal/Library/Resize/image.php?img=$1 [L,QSA]
 
+# редирект на страницу без параметра в случае запроса первой страницы списка с параметром
+RewriteCond %{QUERY_STRING} !(.*)page=1[0-9]+(.*)$
+RewriteCond %{QUERY_STRING} (.*)page=1(.*)$
+RewriteRule ^(.*)$ $1?%1%2 [R=301,L]
+
 # file cache redirects
 # Запрашивается главная страница
 RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/index.html -f [OR]
@@ -39,7 +44,7 @@ RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/index.html -f [O
 RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/index.html -l
 RewriteRule ^(.*)$ tmp/cache/fileCache/$1/index.html [NC,L]
 
-# Запрашивается внутреняя страница при произворльном значении суффикса
+# Запрашивается внутреняя страница при произвольном значении суффикса
 RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -f [OR]
 RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -d [OR]
 RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -l
