@@ -68,7 +68,7 @@ if (isset($_POST['crontab'])) {
     </p>
     <p>Для этого в терминале выполните команду:</p>
     <pre><code>/usr/bin/php <?php
-            echo DOCUMENT_ROOT . '/' . $config->cmsFolder; ?>/Ideal/Library/cron/cron.php test</code></pre>
+            echo DOCUMENT_ROOT . '/' . $config->cmsFolder; ?>/Ideal/Library/Cron/cron.php test</code></pre>
     <p>
         Если тестовый запуск прошёл успешно, то можно встраивать запуск этой задачи в системный cron.
         Для этого выполните команду:
@@ -76,7 +76,7 @@ if (isset($_POST['crontab'])) {
     <pre><code>crontab -e</code></pre>
     <p>Далее в открывшемся редакторе запишите такую строку:</p>
     <pre><code>* * * * * /usr/bin/php <?php
-            echo DOCUMENT_ROOT . '/' . $config->cmsFolder; ?>/Ideal/Library/cron/cron.php</code></pre>
+            echo DOCUMENT_ROOT . '/' . $config->cmsFolder; ?>/Ideal/Library/Cron/cron.php</code></pre>
     <p>
         Эта инструкция означает запуск скрипта каждую минуту.
         Если это будет сильно нагружать сервер, то можно сделать запуск скрипта реже.
