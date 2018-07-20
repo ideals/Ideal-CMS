@@ -58,20 +58,23 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
             $result = parent::createElement($result, $groupName);
             $pageData = $this->getPageData();
 
-            // Создаём новый лид при создании контактного лица
-            $leadStructure = $config->getStructureByName('Ideal_Lead');
-            $leadTable = $config->getTableByName('Ideal_Lead');
-            $leadId = $db->insert($leadTable, array(
-                'addon' => '[["1","Ideal_ContactPerson","' . $pageData['name'] . '"]]'));
+            // Создаём новый лид при создании контактного лица,
+            // в том случае если контактное лицо создаётся не через аддон
+            if ($groupName == 'general') {
+                $leadStructure = $config->getStructureByName('Ideal_Lead');
+                $leadTable = $config->getTableByName('Ideal_Lead');
+                $leadId = $db->insert($leadTable, array(
+                    'addon' => '[["1","Ideal_ContactPerson","' . $pageData['name'] . '"]]'));
 
-            // Делаем запись в таблице аддона "Контактное лицо"
-            $contactPersonAddonTable = $config->getTableByName('Ideal_ContactPerson', 'Addon');
-            $values = array(
-                'prev_structure' => $leadStructure['ID'] . '-' . $leadId,
-                'tab_ID' => 1,
-                'contact_person' => $pageData['ID'],
-            );
-            $db->insert($contactPersonAddonTable, $values);
+                // Делаем запись в таблице аддона "Контактное лицо"
+                $contactPersonAddonTable = $config->getTableByName('Ideal_ContactPerson', 'Addon');
+                $values = array(
+                    'prev_structure' => $leadStructure['ID'] . '-' . $leadId,
+                    'tab_ID' => 1,
+                    'contact_person' => $pageData['ID'],
+                );
+                $db->insert($contactPersonAddonTable, $values);
+            }
         }
 
         // Привязываем контактное лицо к заказу

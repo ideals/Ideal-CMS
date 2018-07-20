@@ -81,6 +81,7 @@ class Controller extends AbstractController
     {
         $item = parent::parseInputValue($isCreate);
         if (!empty($item["value"])) {
+            // Обновление данных о контактном лице
             $this->contactPersonModel->setPageDataById($item["value"]);
             $this->contactPersonModel->setFieldsGroup($this->groupName);
             $result = $this->contactPersonModel->parseInputParams();
@@ -91,31 +92,53 @@ class Controller extends AbstractController
             }
 
             if ($result['isCorrect'] == 1) {
-                // Если выбрано существующее конттактное лицо то делаем дополнительный запрос на замену названия вкладки
+                // Если выбрано существующее контактное лицо то делаем дополнительный запрос на замену названия вкладки
                 if (isset($result['items'][$this->groupName . '_existingСontactPerson']) &&
                     !empty($result['items'][$this->groupName . '_existingСontactPerson']['value'])
                 ) {
-                    $config = Config::getInstance();
-                    $db = Db::getInstance();
-                    $parentModel = $this->model->getParentModel();
-                    $parentModelTable = $parentModel->getTableName();
-                    $parentModelPageData = $parentModel->getPageData();
-                    $contactPersonTable = $config->getTableByName('Ideal_ContactPerson');
-                    $contactPersonId = $result['items'][$this->groupName . '_existingСontactPerson']['value'];
-                    $sqlToSelectName = "SELECT name FROM {$contactPersonTable} WHERE ID = {$contactPersonId}";
-                    $contactPersonName = $db->select($sqlToSelectName);
-                    $contactPersonName = $contactPersonName[0]['name'];
-                    $item['sqlAdd'] = "UPDATE {$parentModelTable} SET addon = CONCAT(REPLACE(";
-                    $item['sqlAdd'] .= "LEFT(addon, INSTR(addon, 'Контактное лицо') +";
-                    $item['sqlAdd'] .= " LENGTH('Контактное лицо') - 1),'Контактное лицо', '{$contactPersonName}'),";
-                    $item['sqlAdd'] .= "SUBSTRING(addon, INSTR(addon, 'Контактное лицо') + LENGTH('Контактное лицо')))";
-                    $item['sqlAdd'] .= " WHERE INSTR(addon, 'Контактное лицо') AND ID = {$parentModelPageData['ID']};";
+                    $item['sqlAdd'] = $this->generateAdditionalQuery(
+                        $result['items'][$this->groupName . '_existingСontactPerson']['value']
+                    );
                 } else {
                     $this->contactPersonModel->saveElement($result, $this->groupName);
                     $this->contactPersonModel->saveToLog('Изменён');
                 }
             }
+        } else {
+            // Создание нового контактного лица
+            $this->contactPersonModel->setPageDataNew();
+            $this->contactPersonModel->setFieldsGroup($this->groupName);
+            $result = $this->contactPersonModel->parseInputParams(true);
+            if ($result['isCorrect']) {
+                $result = $this->contactPersonModel->createElement($result, $this->groupName);
+                if ($result['isCorrect']) {
+                    $this->contactPersonModel->saveToLog('Создан');
+                    $item['value'] = $result['items'][$this->groupName . '_ID']['value'];
+                    $item['sqlAdd'] = $this->generateAdditionalQuery($item['value']);
+                }
+            }
         }
         return $item;
+    }
+
+
+    private function generateAdditionalQuery($contactPersonId)
+    {
+        $sqlAdd = '';
+        $config = Config::getInstance();
+        $db = Db::getInstance();
+        $parentModel = $this->model->getParentModel();
+        $parentModelTable = $parentModel->getTableName();
+        $parentModelPageData = $parentModel->getPageData();
+        $contactPersonTable = $config->getTableByName('Ideal_ContactPerson');
+        $sqlToSelectName = "SELECT name FROM {$contactPersonTable} WHERE ID = {$contactPersonId}";
+        $contactPersonName = $db->select($sqlToSelectName);
+        $contactPersonName = $contactPersonName[0]['name'];
+        $item['sqlAdd'] = "UPDATE {$parentModelTable} SET addon = CONCAT(REPLACE(";
+        $item['sqlAdd'] .= "LEFT(addon, INSTR(addon, 'Контактное лицо') +";
+        $item['sqlAdd'] .= " LENGTH('Контактное лицо') - 1),'Контактное лицо', '{$contactPersonName}'),";
+        $item['sqlAdd'] .= "SUBSTRING(addon, INSTR(addon, 'Контактное лицо') + LENGTH('Контактное лицо')))";
+        $item['sqlAdd'] .= " WHERE INSTR(addon, 'Контактное лицо') AND ID = {$parentModelPageData['ID']};";
+        return $sqlAdd;
     }
 }
