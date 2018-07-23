@@ -134,11 +134,11 @@ class Controller extends AbstractController
         $sqlToSelectName = "SELECT name FROM {$contactPersonTable} WHERE ID = {$contactPersonId}";
         $contactPersonName = $db->select($sqlToSelectName);
         $contactPersonName = $contactPersonName[0]['name'];
-        $item['sqlAdd'] = "UPDATE {$parentModelTable} SET addon = CONCAT(REPLACE(";
-        $item['sqlAdd'] .= "LEFT(addon, INSTR(addon, 'Контактное лицо') +";
-        $item['sqlAdd'] .= " LENGTH('Контактное лицо') - 1),'Контактное лицо', '{$contactPersonName}'),";
-        $item['sqlAdd'] .= "SUBSTRING(addon, INSTR(addon, 'Контактное лицо') + LENGTH('Контактное лицо')))";
-        $item['sqlAdd'] .= " WHERE INSTR(addon, 'Контактное лицо') AND ID = {$parentModelPageData['ID']};";
+        $sqlAdd .= "UPDATE {$parentModelTable} SET addon = CONCAT(REPLACE(";
+        $sqlAdd .= "LEFT(addon, INSTR(addon, 'Контактное лицо') +";
+        $sqlAdd .= " LENGTH('Контактное лицо') - 1),'Контактное лицо', '{$contactPersonName}'),";
+        $sqlAdd .= "SUBSTRING(addon, INSTR(addon, 'Контактное лицо') + LENGTH('Контактное лицо')))";
+        $sqlAdd .= " WHERE INSTR(addon, 'Контактное лицо') AND ID = {$parentModelPageData['ID']};";
         return $sqlAdd;
     }
 }
