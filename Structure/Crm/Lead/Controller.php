@@ -91,4 +91,16 @@ class Controller
         $this->view = new View(array($tplRoot), $config->cache['templateAdmin']);
         $this->view->loadTemplate($tplName);
     }
+
+    /**
+     * Получает данные о заказах лида
+     *
+     * @return array Данные о заказе либо пустой массив
+     * @throws \Exception
+     */
+    public function showDataAction()
+    {
+        $model = new Model('');
+        return $model->getLeadOrders();
+    }
 }

@@ -5,7 +5,7 @@
                 <td>
                     <a href="index.php?par={{ par }}-{{ lead.ID }}" class="lead-link"
                        title="{% if lead.name %}{{ lead.name }}{% elseif lead.cpName %}{{ lead.cpName }}{% endif %}"
-                       onclick="return false;">
+                       onclick="showLeadOrders('{{ par }}', '{{ lead.ID }}'); return false;">
                         {% if lead.name %}
                             {{ lead.name }}<br/>
                         {% elseif lead.cpName %}
@@ -25,3 +25,54 @@
         {% endfor %}
     </table>
 </div>
+<div class="col-xs-6">
+    <div class="lead-orders" style="display: none;"></div>
+</div>
+<script type="text/javascript">
+    function showLeadOrders(par, leadId)
+    {
+        dataToAjax = {action: 'showData', par: par, leadId: leadId};
+
+        $.ajax({
+            url: 'index.php',
+            data: dataToAjax,
+            success: function (data)
+            {
+                console.log(data);
+                if ('data' in data) {
+                    $('.lead-orders').show();
+
+                    var ordersInfo = '<table class="table">' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th scope="col">№ заказа</th>' +
+                                '<th scope="col">Лид</th>' +
+                                '<th scope="col">Контактное лицо</th>' +
+                                '<th scope="col">Сумма заказа</th>' +
+                            '</tr>';
+                        '</thead>';
+                    $.each(data.data, function( index, value ) {
+                        if (value.name) {
+                            var leadName = value.name;
+                        } else {
+                            var leadName = value.cpName;
+                        }
+                        ordersInfo += '<tr>' +
+                            '<td>' + value.orderId + '</td>' +
+                            '<td>' + leadName + '</td>' +
+                            '<td>' + value.cpName + '(' + value.cpEmail + ')</td>' +
+                            '<td>' + new Intl.NumberFormat('ru-RU').format(value.orderPrice) + '</td>' +
+                            '</tr>';
+                    });
+
+                    ordersInfo += '</table>';
+
+                    $('.lead-orders').html(ordersInfo);
+                }
+            },
+            type: 'GET',
+            dataType: "json"
+        });
+
+    }
+</script>
