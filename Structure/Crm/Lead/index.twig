@@ -52,16 +52,23 @@
                             '</tr>';
                         '</thead>';
                     $.each(data.data, function( index, value ) {
+                        var leadName = '';
                         if (value.name) {
-                            var leadName = value.name;
+                            leadName = value.name;
                         } else {
-                            var leadName = value.cpName;
+                            leadName = value.cpName;
+                        }
+                        var contactPersonName = '';
+                        if (value.cpEmail) {
+                            contactPersonName = value.cpName + '(' + value.cpEmail + ')';
+                        } else {
+                            contactPersonName = value.cpName;
                         }
                         ordersInfo += '<tr>' +
                             '<td>' + value.orderId + '</td>' +
                             '<td>' + leadName + '</td>' +
-                            '<td>' + value.cpName + '(' + value.cpEmail + ')</td>' +
-                            '<td>' + new Intl.NumberFormat('ru-RU').format(value.orderPrice) + '</td>' +
+                            '<td>' + contactPersonName + '</td>' +
+                            '<td>' + new Intl.NumberFormat('ru-RU').format(value.orderPrice/100) + '</td>' +
                             '</tr>';
                     });
 
