@@ -16,27 +16,39 @@ use Ideal\Core\Request;
  */
 class Model extends \Ideal\Core\Admin\Model
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function getPageData()
+    /**  /Ideal\Structure\Lead\Admin\Model Модель лида административной части */
+    public $leadModel = null;
+
+    public function __construct($prevStructure)
     {
-        $data = parent::getPageData();
-        $leadModel = new \Ideal\Structure\Lead\Admin\Model('');
-        $leadList = $leadModel->getList(1);
-        $data['leads'] = $leadList;
-        return $data;
+        parent::__construct($prevStructure);
+        $this->leadModel = new \Ideal\Structure\Lead\Admin\Model('');
     }
 
+    /**
+     * @return array список лидов
+     * @throws \Exception
+     */
     public function getLeadOrders()
     {
         $request = new Request();
         if ($request->leadId) {
-            $model = new \Ideal\Structure\Lead\Admin\Model('');
-            $model->setPageDataById($request->leadId);
-            $data = $model->getLeadOrders();
+            $this->leadModel->setPageDataById($request->leadId);
+            $data = $this->leadModel->getLeadOrders();
             return $data;
         }
         return array();
+    }
+
+    public function getHeaderNames()
+    {
+        $this->params = $this->leadModel->params;
+        $this->fields = $this->leadModel->fields;
+        return parent::getHeaderNames();
+    }
+
+    public function getList($page = null)
+    {
+        return $this->leadModel->getList($page);
     }
 }

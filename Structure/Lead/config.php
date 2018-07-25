@@ -11,6 +11,7 @@
 return array(
     'params' => array(
         'field_sort' => 'ID',
+        'field_list' => array('ID', 'cpNames', 'lastInteraction', 'cpPhones', 'cpEmails'),
         'elements_cms' => PHP_INT_MAX
     ),
     'fields' => array(
@@ -36,6 +37,22 @@ return array(
             'medium'    => '\\Ideal\\Medium\\AddonList\\Model',
             'available' =>  array('Ideal_ContactPerson'),
             'default'   => '[["1","Ideal_ContactPerson","Контактное лицо"]]',
+        ),
+        'cpNames' => array(
+            'label' => 'Список имён контактных лиц лида',
+            'type' => 'Ideal_CpNames'
+        ),
+        'lastInteraction' => array(
+            'label' => 'Дата последнего взаимодействия',
+            'type' => 'Ideal_LastInteraction'
+        ),
+        'cpPhones' => array(
+            'label' => 'Телефон',
+            'type' => 'Ideal_CpPhones'
+        ),
+        'cpEmails' => array(
+            'label' => 'Почта',
+            'type' => 'Ideal_CpEmails'
         ),
     ),
 );

@@ -11,6 +11,7 @@ namespace Ideal\Structure\Crm\Lead;
 
 use Ideal\Core\Config;
 use Ideal\Core\Request;
+use Ideal\Core\Util;
 use Ideal\Core\View;
 
 class Controller
@@ -21,6 +22,12 @@ class Controller
     private $moduleName;
     private $structureName;
     private $crmName;
+    private $model;
+
+    public function __construct()
+    {
+        $this->model = new Model('');
+    }
 
     public function run()
     {
@@ -43,11 +50,10 @@ class Controller
         $par .= '_' . $this->crmName;
         $this->view->par = $par;
 
-        $model = new Model('');
-        $data = $model->getPageData();
-        foreach ($data as $key => $item) {
-            $this->view->$key = $item;
-        }
+        $listing = $this->model->getListAcl(1);
+        $headers = $this->model->getHeaderNames();
+
+        $this->parseList($headers, $listing);
 
         // Получаем идентификатор структуры лида
         $config = Config::getInstance();
@@ -102,5 +108,44 @@ class Controller
     {
         $model = new Model('');
         return $model->getLeadOrders();
+    }
+
+    public function parseList($headers, $list)
+    {
+        // Инициализируем объект запроса
+        $request = new Request();
+
+        // Отображение списка заголовков
+        $this->view->headers = $headers;
+
+        // Отображение списка элементов
+        $rows = array();
+        foreach ($list as $k => $v) {
+            $fields = '';
+            foreach ($headers as $key => $v2) {
+                $type = $this->model->fields[$key]['type'];
+                $fieldClassName = Util::getClassName($type, 'Field') . '\\Controller';
+                $fieldModel = $fieldClassName::getInstance();
+                $fieldModel->setModel($this->model, $key);
+                $value = $fieldModel->getValueForList($v, $key);
+                if (isset($this->model->params['field_name']) && $key == $this->model->params['field_name']
+                    && (!isset($v['acl']) || $v['acl']['enter']) ) {
+                    // На активный элемент ставим ссылку
+                    $par = $request->par . '-' . $v['ID'];
+                    $value = '<a href="index.php?par=' . $par . '">' . $value . '</a>';
+                }
+                $fields .= '<td>' . $value . '</td>';
+            }
+            $rows[] = array(
+                'ID' => $v['ID'],
+                'row' => $fields,
+                'is_active' => (isset($v['is_active'])) ? $v['is_active'] : 1,
+                'is_not_menu' => (isset($v['is_not_menu'])) ? $v['is_not_menu'] : 0,
+                'acl_edit' => (isset($v['acl'])) ? $v['acl']['edit'] : 1,
+                'acl_delete' => (isset($v['acl'])) ? $v['acl']['delete'] : 1,
+                'acl_enter' => (isset($v['acl'])) ? $v['acl']['enter'] : 1,
+            );
+        }
+        $this->view->rows = $rows;
     }
 }

@@ -1,3 +1,82 @@
+<table class="table table-striped table-hover">
+    <thead>
+    <tr>
+        {% for header in headers %}
+            <th>
+                <div data-sort="{{ header.1 }}" class="sortable-field">
+                    {{ header.0 }}
+                    {% if header.2 is defined %}
+                        <span class="glyphicon glyphicon-chevron-{{ header.2 == 'asc' ? 'up' : 'down' }}"></span>
+                    {% endif %}
+                </div>
+            </th>
+        {% endfor %}
+        <th style="width: 93px; text-align: right;">
+            <a onClick="showModal({{ leadStructureId }}, 0, 'showCreate'); return false;"
+               href="#myModal" class="btn btn-default btn-xs">
+                <i class="glyphicon glyphicon-plus"></i>&nbsp;Создать
+            </a>
+        </th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {% for item in rows %}
+        <tr class="element {% if item.is_active == 0 %}inactive{% endif %} {% if item.is_not_menu == 1 %}not-menu{% endif %}"
+            id="row{{ item.ID }}">
+            {{ item.row | raw }}
+            <td style="vertical-align: middle;">
+                <div class="btn-group btn-group-xs button-edit">
+                    {% if item.acl_edit %}
+                        <button class="btn btn-info" title="Изменить"
+                                onClick="showModal({{ leadStructureId }}, {{ item.ID }}, 'showEdit');"
+                                style="width: 47px;">
+                            <span class="glyphicon glyphicon-pencil"></span>
+                        </button>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+
+</table>
+
+{% if pager.pages|length > 1 %}
+    <div class="row">
+        <div class="col-md-11 text-center">
+            <ul class="pagination pagination-lg">
+                {% if pager.pagePrev != '' %}
+                    <li><a href="{{ pagePrev }}">← назад</a></li>
+                {% endif %}
+
+                {% for page in pager.pages %}
+                    {% if page.current == 1 %}
+                        <li class="active"><a>{{ page.num }}</a></li>
+                    {% else %}
+                        <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pager.pageNext != '' %}
+                    <li><a href="{{ pageNext }}">вперёд →</a></li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <form action="" method="get">
+            <input type="hidden" name="par" value="{{ par }}">
+            <div class="input-group col-md-1" style="margin-top: 25px;">
+                <input class="form-control" aria-label="Количество элементов на странице" name="num" value="{{ pager.num }}">
+                <div class="input-group-btn"><button type="submit" class="btn btn-default" aria-label="Изменить"><span class="glyphicon glyphicon-ok"></span></button></div>
+            </div>
+        </form>
+    </div>
+{% endif %}
+
+
+
+{#
 <div class="col-xs-3">
     <table class="table table-striped table-hover">
         {% for lead in leads %}
@@ -82,4 +161,4 @@
         });
 
     }
-</script>
+</script>#}
