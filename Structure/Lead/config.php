@@ -11,12 +11,12 @@
 return array(
     'params' => array(
         'field_sort' => 'ID',
-        'field_list' => array('ID', 'cpNames', 'lastInteraction', 'cpPhones', 'cpEmails'),
+        'field_list' => array('ID', 'cpName', 'lastInteraction', 'cpPhone', 'cpEmail'),
         'elements_cms' => PHP_INT_MAX
     ),
     'fields' => array(
         'ID' => array(
-            'label' => 'Идентификатор',
+            'label' => 'ID',
             'sql' => 'int(8) unsigned not null auto_increment primary key',
             'type' => 'Ideal_Hidden'
         ),
@@ -38,21 +38,21 @@ return array(
             'available' =>  array('Ideal_ContactPerson'),
             'default'   => '[["1","Ideal_ContactPerson","Контактное лицо"]]',
         ),
-        'cpNames' => array(
+        'cpName' => array(
             'label' => 'Список имён контактных лиц лида',
-            'type' => 'Ideal_CpNames'
+            'type' => 'Ideal_CpName'
         ),
         'lastInteraction' => array(
             'label' => 'Дата последнего взаимодействия',
             'type' => 'Ideal_LastInteraction'
         ),
-        'cpPhones' => array(
+        'cpPhone' => array(
             'label' => 'Телефон',
-            'type' => 'Ideal_CpPhones'
+            'type' => 'Ideal_CpPhone'
         ),
-        'cpEmails' => array(
+        'cpEmail' => array(
             'label' => 'Почта',
-            'type' => 'Ideal_CpEmails'
+            'type' => 'Ideal_CpEmail'
         ),
     ),
 );

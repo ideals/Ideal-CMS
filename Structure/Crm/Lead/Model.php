@@ -49,6 +49,17 @@ class Model extends \Ideal\Core\Admin\Model
 
     public function getList($page = null)
     {
-        return $this->leadModel->getList($page);
+        $leadList = $this->leadModel->getList($page);
+
+        // Складываем данные по контактным лицам в элемент массива списка лидов
+        $list = array();
+        foreach ($leadList as $lead) {
+            if (!isset($list[$lead['ID']])) {
+                $list[$lead['ID']] = array_slice($lead, 0, 4);
+            }
+            $list[$lead['ID']]['contactPerson'][] = array_slice($lead, 4);
+        }
+
+        return $list;
     }
 }
