@@ -38,4 +38,3 @@ ADD;
     file_put_contents($fileName, $file);
     $config->loadSettings();
 }
-
