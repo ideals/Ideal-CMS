@@ -9,18 +9,23 @@
 
 namespace Ideal\Field\LastInteraction;
 
+use Ideal\Core\Config;
 use Ideal\Field\AbstractController;
+use Ideal\Addon\ContactPerson\AdminModel as AddonAdminModel;
+use Ideal\Structure\Interaction\Admin\Model as InteractionModel;
 
 /**
  * Поле, недоступное для редактирования пользователем в админке.
  *
  * Отображается в виде скрытого поля ввода <input type="hidden" />
  *
+ * Используется в структуре "Ideal_Lead" для отображения последнего взаимодействия с контактным лицом
+ * отнесённым к лиду
+ *
  * Пример объявления в конфигурационном файле структуры:
- *     'date_create' => array(
- *         'label' => 'ID родительских структур',
- *         'sql'   => 'char(15)',
- *         'type'  => 'Ideal_Hidden'
+ *     'lastInteraction' => array(
+ *         'label' => 'Дата последнего взаимодействия',
+ *         'type' => 'Ideal_LastInteraction'
  *     ),
  */
 class Controller extends AbstractController
@@ -55,15 +60,41 @@ class Controller extends AbstractController
     public function getValueForList($values, $fieldName)
     {
         $value = '';
-        if (isset($values["contactPerson"])) {
-            foreach ($values["contactPerson"] as $contactPerson) {
-                if (isset($contactPerson[$fieldName])) {
-                    if ($value < $contactPerson[$fieldName]) {
-                        $value = $contactPerson[$fieldName];
-                    }
+
+        // Составляем престркутуру модели "Взаимодействия"
+        $config = Config::getInstance();
+        if (isset($this->model->leadModel)) {
+            $structure = $config->getStructureByClass(get_class($this->model->leadModel));
+        } else {
+            $structure = $config->getStructureByClass(get_class($this->model));
+        }
+        $prevStructure = $structure['ID'] . '-' . $values['ID'];
+
+        // Получаем идентификаторы кантактных лиц из аддона
+        $contactPersonAddon = new AddonAdminModel($prevStructure);
+        $contactPersonsList = $contactPersonAddon->getList();
+        $contactPersons = array();
+        foreach ($contactPersonsList as $contactPerson) {
+            $contactPersons[$contactPerson['contact_person']] = $contactPerson['contact_person'];
+        }
+
+        $interaction = new InteractionModel('');
+        $interactions = $interaction->getInteractions($contactPersons);
+
+        // Получаем дату самого последнего взаимодействия
+        $lastDate = 0;
+        foreach ($interactions as $interactionType) {
+            foreach ($interactionType as $interaction) {
+                if ($interaction['date_create'] > $lastDate) {
+                    $lastDate = $interaction['date_create'];
                 }
             }
         }
+
+        if ($lastDate) {
+            $value = date('d.m.Y', $lastDate);
+        }
+
         return $value;
     }
 }
