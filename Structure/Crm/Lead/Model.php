@@ -9,20 +9,57 @@
 
 namespace Ideal\Structure\Crm\Lead;
 
+use Ideal\Core\Request;
+
 /**
  * Класс для построение бокового меню в разделе CRM и запуска скриптов выбранного пункта
  */
 class Model extends \Ideal\Core\Admin\Model
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function getPageData()
+    /**  /Ideal\Structure\Lead\Admin\Model Модель лида административной части */
+    public $leadModel = null;
+
+    public function __construct($prevStructure)
     {
-        $data = parent::getPageData();
-        $leadModel = new \Ideal\Structure\Lead\Admin\Model('');
-        $leadList = $leadModel->getList(1);
-        $data['leads'] = $leadList;
-        return $data;
+        parent::__construct($prevStructure);
+        $this->leadModel = new \Ideal\Structure\Lead\Admin\Model('');
+    }
+
+    /**
+     * @return array список лидов
+     * @throws \Exception
+     */
+    public function getLeadOrders()
+    {
+        $request = new Request();
+        if ($request->leadId) {
+            $this->leadModel->setPageDataById($request->leadId);
+            $data = $this->leadModel->getLeadOrders();
+            return $data;
+        }
+        return array();
+    }
+
+    public function getHeaderNames()
+    {
+        $this->params = $this->leadModel->params;
+        $this->fields = $this->leadModel->fields;
+        return parent::getHeaderNames();
+    }
+
+    public function getList($page = null)
+    {
+        $leadList = $this->leadModel->getList($page);
+
+        // Складываем данные по контактным лицам в элемент массива списка лидов
+        $list = array();
+        foreach ($leadList as $lead) {
+            if (!isset($list[$lead['ID']])) {
+                $list[$lead['ID']] = array_slice($lead, 0, 4);
+            }
+            $list[$lead['ID']]['contactPerson'][] = array_slice($lead, 4);
+        }
+
+        return $list;
     }
 }
