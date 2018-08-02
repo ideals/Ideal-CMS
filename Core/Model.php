@@ -560,6 +560,16 @@ abstract class Model
         $this->parentModel = $model;
     }
 
+    /**
+     * Метод используется в полях аддонов для получения доступа к модели владельца аддона
+     *
+     * @return Model
+     */
+    public function getParentModel()
+    {
+        return $this->parentModel;
+    }
+
     public function setFieldsGroup($name)
     {
         $this->fieldsGroup = $name;
