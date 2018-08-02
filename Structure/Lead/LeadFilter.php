@@ -17,7 +17,7 @@ class LeadFilter extends Filter
         $contactPersonStructure = $config->getStructureByName('Ideal_ContactPerson');
         $addSelect = '';
         if ($contactPersonStructure) {
-            $addSelect = ', cp.name as cpName';
+            $addSelect = ', cp.name as cpName, cp.email as cpEmail, cp.phone as cpPhone, \'\' as lastInteraction';
         }
         $sql = 'SELECT e.*' . $addSelect . ' FROM ' . $tableName  . ' AS e ';
         if (empty($this->where)) {
@@ -27,7 +27,7 @@ class LeadFilter extends Filter
             $this->generateOrderBy();
         }
         $leftJoin = $this->generateLeftJoin();
-        $sql .= $leftJoin . $this->where . $this->orderBy . ' GROUP BY e.ID';
+        $sql .= $leftJoin . $this->where . $this->orderBy;
         return $sql;
     }
 
@@ -75,5 +75,13 @@ class LeadFilter extends Filter
         $contactPersonStructureTable = $config->getTableByName('Ideal_ContactPerson');
         $leftJoin .= " LEFT JOIN {$contactPersonStructureTable} as cp ON cp.ID = cpa.contact_person ";
         return $leftJoin;
+    }
+
+    /**
+     * Генерирует order by часть запроса
+     */
+    protected function generateOrderBy()
+    {
+        $this->orderBy = ' ORDER BY e.ID';
     }
 }

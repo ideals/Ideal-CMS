@@ -7,8 +7,11 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Structure\Lead\Admin;
-
-class Model extends ModelAbstract
-{
-}
+// Взаимодействие
+return array(
+    'params' => array(
+        'field_sort' => 'date_create DESC',
+        'field_list' => array('date_create', 'type'),
+        'elements_cms' => PHP_INT_MAX
+    ),
+);
