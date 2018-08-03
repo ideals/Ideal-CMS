@@ -9,10 +9,11 @@
 
 namespace Ideal\Structure\Crm\Lead;
 
-use Ideal\Core\Config;
-use Ideal\Core\Request;
 use Ideal\Core\Util;
 use Ideal\Core\View;
+use Ideal\Core\Config;
+use Ideal\Core\Request;
+use Ideal\Structure\Interaction\Admin\Model as InteractionModel;
 
 class Controller
 {
@@ -23,11 +24,6 @@ class Controller
     private $structureName;
     private $crmName;
     private $model;
-
-    public function __construct()
-    {
-        $this->model = new Model('');
-    }
 
     public function run()
     {
@@ -41,7 +37,8 @@ class Controller
         $this->templateInit();
 
         $request = new Request();
-        list($par) = explode('-', $request->par);
+        $parParts = explode('-', $request->par);
+        $par = reset($parParts);
         if ($this->moduleName == '') {
             $par .= '-Ideal';
         } else {
@@ -49,6 +46,9 @@ class Controller
         }
         $par .= '_' . $this->crmName;
         $this->view->par = $par;
+
+        $prevStructure = implode('-', array_slice($parParts, -2));
+        $this->model = new Model($prevStructure);
 
         $listing = $this->model->getListAcl(1);
         $headers = $this->model->getHeaderNames();
@@ -96,18 +96,6 @@ class Controller
         $config = Config::getInstance();
         $this->view = new View(array($tplRoot), $config->cache['templateAdmin']);
         $this->view->loadTemplate($tplName);
-    }
-
-    /**
-     * Получает данные о заказах лида
-     *
-     * @return array Данные о заказе либо пустой массив
-     * @throws \Exception
-     */
-    public function showDataAction()
-    {
-        $model = new Model('');
-        return $model->getLeadOrders();
     }
 
     public function parseList($headers, $list)

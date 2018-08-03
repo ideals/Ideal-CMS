@@ -11,8 +11,8 @@ namespace Ideal\Field\LastInteraction;
 
 use Ideal\Core\Config;
 use Ideal\Field\AbstractController;
-use Ideal\Addon\ContactPerson\AdminModel as AddonAdminModel;
 use Ideal\Structure\Interaction\Admin\Model as InteractionModel;
+use Ideal\Addon\ContactPerson\AdminModel as AddonContactPersonAdminModel;
 
 /**
  * Поле, недоступное для редактирования пользователем в админке.
@@ -61,17 +61,17 @@ class Controller extends AbstractController
     {
         $value = '';
 
-        // Составляем престркутуру модели "Взаимодействия"
+        // Составляем престркутуру для получения списка контактных лиц из аддона "Контактное лицо"
         $config = Config::getInstance();
-        if (isset($this->model->leadModel)) {
-            $structure = $config->getStructureByClass(get_class($this->model->leadModel));
+        if (isset($this->model->subModel)) {
+            $structure = $config->getStructureByClass(get_class($this->model->subModel));
         } else {
             $structure = $config->getStructureByClass(get_class($this->model));
         }
         $prevStructure = $structure['ID'] . '-' . $values['ID'];
 
         // Получаем идентификаторы кантактных лиц из аддона
-        $contactPersonAddon = new AddonAdminModel($prevStructure);
+        $contactPersonAddon = new AddonContactPersonAdminModel($prevStructure);
         $contactPersonsList = $contactPersonAddon->getList();
         $contactPersons = array();
         foreach ($contactPersonsList as $contactPerson) {
@@ -82,6 +82,7 @@ class Controller extends AbstractController
         $interactions = $interaction->getInteractions($contactPersons);
 
         // Получаем дату самого последнего взаимодействия
+        // Помним что даты в базе данных хранятся в timestamp
         $lastDate = 0;
         foreach ($interactions as $interactionType) {
             foreach ($interactionType as $interaction) {

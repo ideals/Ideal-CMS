@@ -58,4 +58,9 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract implemen
         }
         return $interactions;
     }
+
+    public function getHeader()
+    {
+        return 'Взаимодействия';
+    }
 }

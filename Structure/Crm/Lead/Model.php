@@ -9,47 +9,38 @@
 
 namespace Ideal\Structure\Crm\Lead;
 
-use Ideal\Core\Request;
-
 /**
- * Класс для построение бокового меню в разделе CRM и запуска скриптов выбранного пункта
+ * Класс для получения списка лидов и взаимодействий разных типов
  */
 class Model extends \Ideal\Core\Admin\Model
 {
-    /**  /Ideal\Structure\Lead\Admin\Model Модель лида административной части */
-    public $leadModel = null;
+    /**  \Ideal\Structure\Lead\Admin\Model|\Ideal\Structure\Interaction\Admin\Model
+     * Вспомогательная модель для отображения списка
+     */
+    public $subModel = null;
 
     public function __construct($prevStructure)
     {
         parent::__construct($prevStructure);
-        $this->leadModel = new \Ideal\Structure\Lead\Admin\Model('');
-    }
-
-    /**
-     * @return array список лидов
-     * @throws \Exception
-     */
-    public function getLeadOrders()
-    {
-        $request = new Request();
-        if ($request->leadId) {
-            $this->leadModel->setPageDataById($request->leadId);
-            $data = $this->leadModel->getLeadOrders();
-            return $data;
+        $prevStructureParts = explode('-', $prevStructure);
+        $prevStructureParts = array_slice($prevStructureParts, -2);
+        if ((int)$prevStructureParts[0] !== 0) {
+            $this->subModel = new \Ideal\Structure\Lead\Admin\Model($prevStructure);
+        } else {
+            $this->subModel = new \Ideal\Structure\Interaction\Admin\Model($prevStructure);
         }
-        return array();
     }
 
     public function getHeaderNames()
     {
-        $this->params = $this->leadModel->params;
-        $this->fields = $this->leadModel->fields;
+        $this->params = $this->subModel->params;
+        $this->fields = $this->subModel->fields;
         return parent::getHeaderNames();
     }
 
     public function getList($page = null)
     {
-        $leadList = $this->leadModel->getList($page);
+        $leadList = $this->subModel->getList($page);
 
         // Складываем данные по контактным лицам в элемент массива списка лидов
         $list = array();
@@ -61,5 +52,10 @@ class Model extends \Ideal\Core\Admin\Model
         }
 
         return $list;
+    }
+
+    public function getHeader()
+    {
+        return $this->subModel->getHeader();
     }
 }
