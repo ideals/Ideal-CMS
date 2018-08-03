@@ -10,19 +10,52 @@
 namespace Ideal\Structure\Crm\Lead;
 
 /**
- * Класс для построение бокового меню в разделе CRM и запуска скриптов выбранного пункта
+ * Класс для получения списка лидов и взаимодействий разных типов
  */
 class Model extends \Ideal\Core\Admin\Model
 {
-    /**
-     * {@inheritdoc}
+    /**  \Ideal\Structure\Lead\Admin\Model|\Ideal\Structure\Interaction\Admin\Model
+     * Вспомогательная модель для отображения списка
      */
-    public function getPageData()
+    public $subModel = null;
+
+    public function __construct($prevStructure)
     {
-        $data = parent::getPageData();
-        $leadModel = new \Ideal\Structure\Lead\Admin\Model('');
-        $leadList = $leadModel->getList(1);
-        $data['leads'] = $leadList;
-        return $data;
+        parent::__construct($prevStructure);
+        $prevStructureParts = explode('-', $prevStructure);
+        $prevStructureParts = array_slice($prevStructureParts, -2);
+        if ((int)$prevStructureParts[0] !== 0) {
+            $this->subModel = new \Ideal\Structure\Lead\Admin\Model($prevStructure);
+        } else {
+            $this->subModel = new \Ideal\Structure\Interaction\Admin\Model($prevStructure);
+        }
+    }
+
+    public function getHeaderNames()
+    {
+        $this->params = $this->subModel->params;
+        $this->fields = $this->subModel->fields;
+        return parent::getHeaderNames();
+    }
+
+    public function getList($page = null)
+    {
+        $leadList = $this->subModel->getList($page);
+
+        // Складываем данные по контактным лицам в элемент массива списка лидов
+        $list = array();
+        foreach ($leadList as $lead) {
+            if (!isset($list[$lead['ID']])) {
+                $list[$lead['ID']] = array_slice($lead, 0, 4);
+            }
+            $list[$lead['ID']]['contactPerson'][] = array_slice($lead, 4);
+        }
+
+        return $list;
+    }
+
+    public function getHeader()
+    {
+        return $this->subModel->getHeader();
     }
 }

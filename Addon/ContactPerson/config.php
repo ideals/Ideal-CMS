@@ -3,6 +3,7 @@
 return array(
     'params' => array(
         'name' => 'Контактное лицо',
+        'field_sort' => 'contact_person'
     ),
     'fields' => array(
         'ID' => array(
