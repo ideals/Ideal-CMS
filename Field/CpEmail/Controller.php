@@ -16,11 +16,12 @@ use Ideal\Field\AbstractController;
  *
  * Отображается в виде скрытого поля ввода <input type="hidden" />
  *
+ * Используется в структуре "Ideal_Lead" для отображения электронных адресов из списка Контактных лиц отнесённых к лиду
+ *
  * Пример объявления в конфигурационном файле структуры:
- *     'date_create' => array(
- *         'label' => 'ID родительских структур',
- *         'sql'   => 'char(15)',
- *         'type'  => 'Ideal_Hidden'
+ *     'cpEmail' => array(
+ *         'label' => 'Почта',
+ *         'type' => 'Ideal_CpEmail'
  *     ),
  */
 class Controller extends AbstractController
