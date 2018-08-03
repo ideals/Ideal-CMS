@@ -29,8 +29,11 @@
             <td style="vertical-align: middle;">
                 <div class="btn-group btn-group-xs button-edit">
                     {% if item.acl_edit %}
+                        {% if item.structureId == 0 %}
+                            {% set item = item|merge({'structureId': leadStructureId}) %}
+                        {% endif %}
                         <button class="btn btn-info" title="Изменить"
-                                onClick="showModal({{ leadStructureId }}, {{ item.ID }}, 'showEdit');"
+                                onClick="showModal({{ item.structureId }}, {{ item.ID }}, 'showEdit');"
                                 style="width: 47px;">
                             <span class="glyphicon glyphicon-pencil"></span>
                         </button>

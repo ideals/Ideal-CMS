@@ -12,6 +12,7 @@ namespace Ideal\Structure\Interaction\Admin;
 use Ideal\Core\Config;
 use Ideal\Core\Util;
 use Ideal\Structure\Interaction\InteractionInterface;
+use Ideal\Addon\ContactPerson\AdminModel as AddonContactPersonAdminModel;
 
 class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract implements InteractionInterface
 {
@@ -61,6 +62,48 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract implemen
 
     public function getHeader()
     {
-        return 'Взаимодействия';
+        $config = Config::getInstance();
+        $structure = $config->getStructureByClass(get_class($this));
+        return $structure['name'];
+    }
+
+    public function getList($page = null)
+    {
+        $list = array();
+
+
+        // Если список запрашивается с внутренних страниц раздела "CRM",
+        // то преструктура содержит название стркутуры родителя
+        $prevStructure = $this->getPrevStructure();
+        $prevStructureParts = explode('-', $prevStructure);
+        if ((int)$prevStructureParts[0] !== 0) {
+            $list = parent::getList($page);
+        } else {
+            // Составляем престркутуру для получения списка контактных лиц из аддона "Контактное лицо"
+            $config = Config::getInstance();
+            $structure = $config->getStructureByName($prevStructureParts[0]);
+            $prevStructure = $structure['ID'] . '-' . $prevStructureParts[1];
+
+            // Получаем идентификаторы кантактных лиц из аддона
+            $contactPersonAddon = new AddonContactPersonAdminModel($prevStructure);
+            $contactPersonsList = $contactPersonAddon->getList();
+            $contactPersons = array();
+            foreach ($contactPersonsList as $contactPerson) {
+                $contactPersons[$contactPerson['contact_person']] = $contactPerson['contact_person'];
+            }
+            $interactions = $this->getInteractions($contactPersons);
+
+            // Формируем из всех взаимодействий общий список пригодный для отображения
+            foreach ($interactions as $interactionType => $interactionsOfType) {
+                $structure = $config->getStructureByName($interactionType);
+                foreach ($interactionsOfType as $interaction) {
+                    $interaction['interaction_type'] = $structure['name'];
+                    $interaction['structureId'] = $structure['ID'];
+                    $list[] = $interaction;
+                }
+            }
+        }
+
+        return $list;
     }
 }

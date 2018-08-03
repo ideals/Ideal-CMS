@@ -132,6 +132,7 @@ class Controller
                 'acl_edit' => (isset($v['acl'])) ? $v['acl']['edit'] : 1,
                 'acl_delete' => (isset($v['acl'])) ? $v['acl']['delete'] : 1,
                 'acl_enter' => (isset($v['acl'])) ? $v['acl']['enter'] : 1,
+                'structureId' => (isset($v['structureId'])) ? $v['structureId'] : '',
             );
         }
         $this->view->rows = $rows;

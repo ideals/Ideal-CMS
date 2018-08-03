@@ -40,15 +40,20 @@ class Model extends \Ideal\Core\Admin\Model
 
     public function getList($page = null)
     {
-        $leadList = $this->subModel->getList($page);
-
-        // Складываем данные по контактным лицам в элемент массива списка лидов
         $list = array();
-        foreach ($leadList as $lead) {
-            if (!isset($list[$lead['ID']])) {
-                $list[$lead['ID']] = array_slice($lead, 0, 4);
+        $tempList = $this->subModel->getList($page);
+
+        // Если получаем списко лидов, то
+        // складываем данные по контактным лицам в элемент массива списка лидов
+        if ($this->subModel instanceof \Ideal\Structure\Lead\Admin\Model) {
+            foreach ($tempList as $lead) {
+                if (!isset($list[$lead['ID']])) {
+                    $list[$lead['ID']] = array_slice($lead, 0, 4);
+                }
+                $list[$lead['ID']]['contactPerson'][] = array_slice($lead, 4);
             }
-            $list[$lead['ID']]['contactPerson'][] = array_slice($lead, 4);
+        } else {
+            $list = $tempList;
         }
 
         return $list;

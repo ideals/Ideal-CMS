@@ -11,8 +11,21 @@
 return array(
     'params' => array(
         'field_sort' => 'date_create DESC',
-        'field_list' => array('date_create', 'type'),
+        'field_list' => array('interaction_type', 'date_create', 'contact_person'),
         'elements_cms' => PHP_INT_MAX
     ),
-    'fields' => array()
+    'fields' => array(
+        'interaction_type' => array(
+            'label' => 'Тип взаимодействия',
+            'type' => 'Ideal_Text'
+        ),
+        'date_create' => array(
+            'label' => 'Дата создания',
+            'type' => 'Ideal_DateSet'
+        ),
+        'contact_person' => array(
+            'label' => 'Контактное лицо',
+            'type' => 'Ideal_ContactPerson'
+        ),
+    )
 );

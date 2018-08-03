@@ -141,4 +141,21 @@ class Controller extends AbstractController
         $sqlAdd .= " WHERE INSTR(addon, 'Контактное лицо') AND ID = {$parentModelPageData['ID']};";
         return $sqlAdd;
     }
+
+    public function getValueForList($values, $fieldName)
+    {
+        $value = '';
+        $this->contactPersonModel->setPageDataById($values[$fieldName]);
+        $contactPersonPageData = $this->contactPersonModel->getPageData();
+        if ($contactPersonPageData['name']) {
+            $value .= $contactPersonPageData['name'];
+        }
+        if ($contactPersonPageData['email']) {
+            if ($value) {
+                $value .= ' ';
+            }
+            $value .= '(' . $contactPersonPageData['email'] . ')';
+        }
+        return $value;
+    }
 }

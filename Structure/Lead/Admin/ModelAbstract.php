@@ -58,43 +58,4 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
             }
         }
     }
-
-    /**
-     * Получает список заказов для лида
-     *
-     * @return array Список заказов
-     * @throws \Exception
-     */
-    public function getLeadOrders()
-    {
-        $db = Db::getInstance();
-        $config = Config::getInstance();
-        $contactPersonAddonTable = $config->getTableByName('Ideal_ContactPerson', 'Addon');
-        $contactPersonStructureTable = $config->getTableByName('Ideal_ContactPerson');
-        $orderStructureTable = $config->getTableByName('Ideal_Order');
-        $structure = $config->getStructureByClass(get_class($this));
-        $pageData = $this->getPageData();
-        $prevStructure = $structure['ID'] . '-' . $pageData['ID'];
-        $sql = <<<SQL
-          SELECT
-           isl.*,
-           iscp.name as cpName,
-           iscp.email as cpEmail,
-           iso.content as orderContent,
-           iso.price as orderPrice,
-           iso.ID as orderId
-          FROM
-           {$this->_table} as isl
-          LEFT JOIN {$contactPersonAddonTable} as iacp
-          ON iacp.prev_structure = '{$prevStructure}' 
-          LEFT JOIN {$contactPersonStructureTable} as iscp
-          ON iscp.ID = iacp.contact_person
-          LEFT JOIN {$orderStructureTable} as iso
-          ON iso.contact_person = iscp.ID
-          WHERE isl.ID = {$pageData['ID']}
-          GROUP BY iso.ID
-SQL;
-
-        return $db->select($sql);
-    }
 }

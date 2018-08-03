@@ -12,6 +12,7 @@ return array(
     'params' => array(
         'field_sort' => 'ID',
         'field_list' => array('ID', 'cpName', 'lastInteraction', 'cpPhone', 'cpEmail'),
+        'field_name' => 'cpName',
         'elements_cms' => PHP_INT_MAX
     ),
     'fields' => array(
