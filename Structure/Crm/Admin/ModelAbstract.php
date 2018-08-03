@@ -82,6 +82,23 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getHeader()
+    {
+        // Определяем модуль, на основе выбранного пункта раздела и получаем от неё заголовок
+        $structure = explode('_', $this->pageData['ID']);
+        $class = '\\' . $structure[0] . '\\Structure\\Crm\\' . $structure[1] . '\\Model';
+        $request = new Request();
+        $model = new $class($request->par);
+        $crmHeader = $model->getHeader();
+        if (!$crmHeader) {
+            $crmHeader = parent::getHeader();
+        }
+        return $crmHeader;
+    }
+
+    /**
      * Получение списка пунктов бокового меню
      *
      * @return array Массив с пунктами бокового меню

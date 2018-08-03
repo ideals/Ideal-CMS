@@ -7,7 +7,7 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Structure\Lead\Admin;
+namespace Ideal\Structure\Interaction\Admin;
 
 class Model extends ModelAbstract
 {
