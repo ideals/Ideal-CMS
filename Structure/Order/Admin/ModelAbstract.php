@@ -13,8 +13,9 @@ use Ideal\Core\Db;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Structure\ContactPerson\Model as ContactPersonModel;
+use Ideal\Structure\Interaction\InteractionInterface;
 
-class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
+class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract implements InteractionInterface
 {
     /**
      * Пытается установить контактное лицо для заказа
@@ -170,5 +171,13 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         }
 
         return $where;
+    }
+
+    public function getInteractions($contactPersons)
+    {
+        $db = Db::getInstance();
+        $contactPersons = implode(',', $contactPersons);
+        $sql = "SELECT * FROM {$this->_table} WHERE contact_person IN ({$contactPersons})";
+        return $db->select($sql);
     }
 }
