@@ -170,24 +170,6 @@
 
         </table>
 
-        <div class="modal fade" id="addon-confirm-modal">
-            <div class="modal-dialog modal-sm">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title">Удаление аддона</h4>
-                    </div>
-                    <div class="modal-body">
-                        Действительно удалить?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">Удалить</button>
-                    </div>
-                </div><!-- /.modal-content -->
-            </div><!-- /.modal-dialog -->
-        </div><!-- /.modal -->
-
         {% if pager.pages|length > 1 %}
         <div class="row">
             <div class="col-md-11 text-center">
@@ -293,6 +275,25 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Addon confirmation -->
+        <div class="modal fade" id="addon-confirm-modal">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Удаление аддона</h4>
+                    </div>
+                    <div class="modal-body">
+                        Действительно удалить?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Удалить</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
 
         <script>
             // Инициализируем глобальную переменную, где будут хранится параметры редактируемого объекта
