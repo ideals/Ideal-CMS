@@ -162,6 +162,11 @@ class Controller
             }
             // Страницы листалки неиндексируются, но ссылки с них — индексируются
             $this->model->metaTags['robots'] = 'follow, noindex';
+        } elseif ($page === 1) {
+            // Устраняем из адреса параметр с номером страницы
+            $url = $this->model->getCanonical();
+            $url = $request->getQueryWithout($this->pageName, $url);
+            $this->redirect($url);
         }
     }
 
@@ -273,5 +278,15 @@ class Controller
         $parts = explode('\\', get_class($this));
         $moduleName = ($parts[0] == 'Ideal') ? '' : $parts[0] . '/';
         return $moduleName . $parts[1] . '/' . $parts[2] . '/Site/' . $tplName;
+    }
+
+    /**
+     * Редирект по указанному адресу
+     * @param string $url Адрес для редиректа
+     */
+    protected function redirect($url)
+    {
+        header('Location: ' . $url);
+        exit;
     }
 }

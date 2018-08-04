@@ -39,7 +39,7 @@ RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/index.html -f [O
 RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/index.html -l
 RewriteRule ^(.*)$ tmp/cache/fileCache/$1/index.html [NC,L]
 
-# Запрашивается внутреняя страница при произворльном значении суффикса
+# Запрашивается внутреняя страница при произвольном значении суффикса
 RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -f [OR]
 RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -d [OR]
 RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -l
