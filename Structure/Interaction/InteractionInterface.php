@@ -7,8 +7,9 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Structure\Lead\Admin;
+namespace Ideal\Structure\Interaction;
 
-class Model extends ModelAbstract
+interface InteractionInterface
 {
+    public function getInteractions($contactPersons);
 }

@@ -1,3 +1,86 @@
+<table class="table table-striped table-hover">
+    <thead>
+    <tr>
+        {% for header in headers %}
+            <th>
+                <div data-sort="{{ header.1 }}" class="sortable-field">
+                    {{ header.0 }}
+                    {% if header.2 is defined %}
+                        <span class="glyphicon glyphicon-chevron-{{ header.2 == 'asc' ? 'up' : 'down' }}"></span>
+                    {% endif %}
+                </div>
+            </th>
+        {% endfor %}
+        <th style="width: 93px; text-align: right;">
+            {# Пока нельзя создавать Лиды и Взаимодействия со страницы списка #}
+            {#<a onClick="showModal({{ leadStructureId }}, 0, 'showCreate'); return false;"#}
+               {#href="#myModal" class="btn btn-default btn-xs">#}
+                {#<i class="glyphicon glyphicon-plus"></i>&nbsp;Создать#}
+            {#</a>#}
+        </th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {% for item in rows %}
+        <tr class="element {% if item.is_active == 0 %}inactive{% endif %} {% if item.is_not_menu == 1 %}not-menu{% endif %}"
+            id="row{{ item.ID }}">
+            {{ item.row | raw }}
+            <td style="vertical-align: middle;">
+                <div class="btn-group btn-group-xs button-edit">
+                    {% if item.acl_edit %}
+                        {% if item.structureId == 0 %}
+                            {% set item = item|merge({'structureId': leadStructureId}) %}
+                        {% endif %}
+                        <button class="btn btn-info" title="Изменить"
+                                onClick="showModal({{ item.structureId }}, {{ item.ID }}, 'showEdit');"
+                                style="width: 47px;">
+                            <span class="glyphicon glyphicon-pencil"></span>
+                        </button>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+
+</table>
+
+{% if pager.pages|length > 1 %}
+    <div class="row">
+        <div class="col-md-11 text-center">
+            <ul class="pagination pagination-lg">
+                {% if pager.pagePrev != '' %}
+                    <li><a href="{{ pagePrev }}">← назад</a></li>
+                {% endif %}
+
+                {% for page in pager.pages %}
+                    {% if page.current == 1 %}
+                        <li class="active"><a>{{ page.num }}</a></li>
+                    {% else %}
+                        <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pager.pageNext != '' %}
+                    <li><a href="{{ pageNext }}">вперёд →</a></li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <form action="" method="get">
+            <input type="hidden" name="par" value="{{ par }}">
+            <div class="input-group col-md-1" style="margin-top: 25px;">
+                <input class="form-control" aria-label="Количество элементов на странице" name="num" value="{{ pager.num }}">
+                <div class="input-group-btn"><button type="submit" class="btn btn-default" aria-label="Изменить"><span class="glyphicon glyphicon-ok"></span></button></div>
+            </div>
+        </form>
+    </div>
+{% endif %}
+
+
+
+{#
 <div class="col-xs-3">
     <table class="table table-striped table-hover">
         {% for lead in leads %}
@@ -5,7 +88,7 @@
                 <td>
                     <a href="index.php?par={{ par }}-{{ lead.ID }}" class="lead-link"
                        title="{% if lead.name %}{{ lead.name }}{% elseif lead.cpName %}{{ lead.cpName }}{% endif %}"
-                       onclick="return false;">
+                       onclick="showLeadOrders('{{ par }}', '{{ lead.ID }}'); return false;">
                         {% if lead.name %}
                             {{ lead.name }}<br/>
                         {% elseif lead.cpName %}
@@ -25,3 +108,61 @@
         {% endfor %}
     </table>
 </div>
+<div class="col-xs-6">
+    <div class="lead-orders" style="display: none;"></div>
+</div>
+<script type="text/javascript">
+    function showLeadOrders(par, leadId)
+    {
+        dataToAjax = {action: 'showData', par: par, leadId: leadId};
+
+        $.ajax({
+            url: 'index.php',
+            data: dataToAjax,
+            success: function (data)
+            {
+                console.log(data);
+                if ('data' in data) {
+                    $('.lead-orders').show();
+
+                    var ordersInfo = '<table class="table">' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th scope="col">№ заказа</th>' +
+                                '<th scope="col">Лид</th>' +
+                                '<th scope="col">Контактное лицо</th>' +
+                                '<th scope="col">Сумма заказа</th>' +
+                            '</tr>';
+                        '</thead>';
+                    $.each(data.data, function( index, value ) {
+                        var leadName = '';
+                        if (value.name) {
+                            leadName = value.name;
+                        } else {
+                            leadName = value.cpName;
+                        }
+                        var contactPersonName = '';
+                        if (value.cpEmail) {
+                            contactPersonName = value.cpName + '(' + value.cpEmail + ')';
+                        } else {
+                            contactPersonName = value.cpName;
+                        }
+                        ordersInfo += '<tr>' +
+                            '<td>' + value.orderId + '</td>' +
+                            '<td>' + leadName + '</td>' +
+                            '<td>' + contactPersonName + '</td>' +
+                            '<td>' + new Intl.NumberFormat('ru-RU').format(value.orderPrice/100) + '</td>' +
+                            '</tr>';
+                    });
+
+                    ordersInfo += '</table>';
+
+                    $('.lead-orders').html(ordersInfo);
+                }
+            },
+            type: 'GET',
+            dataType: "json"
+        });
+
+    }
+</script>#}
