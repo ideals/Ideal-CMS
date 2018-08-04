@@ -311,7 +311,9 @@ class Crawler
             $countHourForNotify = $this->config['existence_time_file'] * 2;
             $existenceTimeFile = $countHourForNotify * 60 * 60;
             $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
-            if (time() - filemtime($xmlFile) > $existenceTimeFile && time() - filemtime($tmpFile) > 43200) {
+            if (file_exists($tmpFile)
+                && time() - filemtime($xmlFile) > $existenceTimeFile
+                && time() - filemtime($tmpFile) > 43200) {
                 $msg = 'Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.';
                 $this->sendEmail($msg);
             }

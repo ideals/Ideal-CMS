@@ -35,7 +35,7 @@ $.jsonp({
             $.each(update, function (keyLine, line) {
                 buf = 'updateModule("' + key + '", "' + line['version'] + '", "' + value + '")';
                 $('<button>')
-                    .appendTo('form:last')
+                    .appendTo('form.update-form')
                     .attr('class', 'btn ')
                     .attr('onClick', buf)
                     .text('Обновить на версию ' + line['version'] + ' (' + line['date'] + ')');
