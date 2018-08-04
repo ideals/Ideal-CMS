@@ -70,12 +70,14 @@ class Request
      * Получение из query string строки за исключением параметра $without и его значения
      *
      * @param string $without Параметр, который нужно исключить из query string
+     * @param string $url Полный адрес вызываемой страницы
      * @return string Query string без параметра $without
      */
-    public function getQueryWithout($without)
+    public function getQueryWithout($without, $url = '')
     {
+        $url = empty($url) ? $_SERVER['REQUEST_URI'] : $url;
         // Убираем переменную $without стоящую внутри GET-строки
-        $uri = preg_replace('/' . $without . '\=(.*)(\&|$)/iU', '', $_SERVER['REQUEST_URI']);
+        $uri = preg_replace('/' . $without . '\=(.*)(\&|$)/iU', '', $url);
         // Убираем переменную $without в конце строки
         $uri = preg_replace('/' . $without . '\=(.*)(\&|$)/iU', '', $uri);
         // Убираем последний амперсанд, если остался после предыдущих операций
