@@ -109,6 +109,14 @@ abstract class AbstractController
      */
     public function parseInputValue($isCreate)
     {
+        // Если поле sql не указано, то его данные не надо сохранять в БД
+        if (empty($this->field['sql'])) {
+            return array(
+                'message' => '',
+                'sqlAdd' => '',
+            );
+        }
+
         $this->newValue = $this->pickupNewValue();
 
         $item = array(
