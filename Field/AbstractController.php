@@ -131,9 +131,13 @@ abstract class AbstractController
             return $item;
         }
 
-        // Поле sql должно быть всегда, поэтому если тут генерируется Notice,
-        // значит неправильно сформировано поле редактирования
-        $sql = strtolower($this->field['sql']);
+        // Данных об sql-представлении поля  может и не быть,
+        // чтобы не вызывать расхождения при проверке целостности базы данных
+        if (isset($this->field['sql'])) {
+            $sql = strtolower($this->field['sql']);
+        } else {
+            $sql = '';
+        }
 
         if (($this->newValue === '') && (strpos($sql, 'not null') !== false) && (strpos($sql, 'default') === false)) {
             // Установлен NOT NULL и нет DEFAULT и $value пустое
