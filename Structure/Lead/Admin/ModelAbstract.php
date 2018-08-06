@@ -24,6 +24,19 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         $this->filter = new LeadFilter();
     }
 
+    public function saveElement($result, $groupName = 'general')
+    {
+        $result = $this->clearFields($result, $groupName);
+        return parent::saveElement($result, $groupName);
+    }
+
+
+    public function createElement($result, $groupName = 'general')
+    {
+        $result = $this->clearFields($result, $groupName);
+        return parent::saveElement($result, $groupName);
+    }
+
     public function getList($page = null)
     {
         $this->filter->setLeadModel($this);
@@ -57,5 +70,29 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
                 }
             }
         }
+    }
+
+    /**
+     * Убирает поля с внешними данными из сохранения
+     *
+     * @param $result array Данные с формы
+     * @param $groupName string Нсзвание группы полей
+     * @return array очищенный от полей которые не нужно записывать в базу
+     */
+    private function clearFields($result, $groupName)
+    {
+        if (isset($result['items'][$groupName . '_cpName'])) {
+            unset($result['items'][$groupName . '_cpName']);
+        }
+        if (isset($result['items'][$groupName . '_lastInteraction'])) {
+            unset($result['items'][$groupName . '_lastInteraction']);
+        }
+        if (isset($result['items'][$groupName . '_cpPhone'])) {
+            unset($result['items'][$groupName . '_cpPhone']);
+        }
+        if (isset($result['items'][$groupName . '_cpEmail'])) {
+            unset($result['items'][$groupName . '_cpEmail']);
+        }
+        return $result;
     }
 }
