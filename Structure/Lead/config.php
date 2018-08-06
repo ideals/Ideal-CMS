@@ -11,7 +11,7 @@
 return array(
     'params' => array(
         'field_sort' => 'ID',
-        'field_list' => array('ID', 'cpName', 'lastInteraction', 'cpPhone', 'cpEmail'),
+        'field_list' => array('ID', 'cpName', 'cpPhone', 'cpEmail', 'lastInteraction'),
         'field_name' => 'cpName',
         'elements_cms' => PHP_INT_MAX
     ),
@@ -41,19 +41,22 @@ return array(
         ),
         'cpName' => array(
             'label' => 'Список имён контактных лиц лида',
-            'type' => 'Ideal_CpName'
+            'type' => 'Ideal_OuterList',
+            'array' => 'contactPerson',
         ),
         'lastInteraction' => array(
             'label' => 'Дата последнего взаимодействия',
-            'type' => 'Ideal_LastInteraction'
+            'type' => 'Ideal_LastInteraction',
         ),
         'cpPhone' => array(
             'label' => 'Телефон',
-            'type' => 'Ideal_CpPhone'
+            'type' => 'Ideal_OuterList',
+            'array' => 'contactPerson',
         ),
         'cpEmail' => array(
             'label' => 'Почта',
-            'type' => 'Ideal_CpEmail'
+            'type' => 'Ideal_OuterList',
+            'array' => 'contactPerson',
         ),
     ),
 );

@@ -7,7 +7,7 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Field\CpName;
+namespace Ideal\Field\OuterList;
 
 use Ideal\Field\AbstractController;
 
@@ -15,40 +15,19 @@ use Ideal\Field\AbstractController;
  * Поле, недоступное для редактирования пользователем в админке.
  *
  * Отображается в виде скрытого поля ввода <input type="hidden" />
- *
- * Используется в структуре "Ideal_Lead" для отображения имён из списка Контактных лиц отнесённых к лиду
+ * Используется в структуре "Ideal_Lead" для отображения в списке элементов данных нескольких лиц, отнесённых к лиду
  *
  * Пример объявления в конфигурационном файле структуры:
- *     'cpName' => array(
- *         'label' => 'Список имён контактных лиц лида',
- *         'type' => 'Ideal_CpName'
+ *     'cpEmail' => array(
+ *         'label' => 'Почта',
+ *         'type' => 'Ideal_CpEmail',
+ *         'array' => 'contactPerson',
  *     ),
  */
-class Controller extends AbstractController
+class Controller extends \Ideal\Field\Hidden\Controller
 {
-
     /** {@inheritdoc} */
     protected static $instance;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function showEdit()
-    {
-        $this->htmlName = $this->groupName . '_' . $this->name;
-        $input = $this->getInputText();
-        return $input;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getInputText()
-    {
-        return '<input type="hidden" id="' . $this->htmlName
-        . '" name="' . $this->htmlName
-        . '" value="' . $this->getValue() . '">';
-    }
 
     /**
      * @inheritdoc
@@ -57,8 +36,9 @@ class Controller extends AbstractController
     {
         $listValue = '';
         $valuesList = array();
-        if (isset($values["contactPerson"])) {
-            foreach ($values["contactPerson"] as $contactPerson) {
+        $arrayName = $this->field['array'];
+        if (isset($values[$arrayName])) {
+            foreach ($values[$arrayName] as $contactPerson) {
                 if (isset($contactPerson[$fieldName])) {
                     $valuesList[] = $contactPerson[$fieldName];
                 }
