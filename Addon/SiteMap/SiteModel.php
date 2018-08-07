@@ -85,19 +85,45 @@ class SiteModel extends AbstractSiteModel
         $newElements = array();
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
         if (!empty($elements)) {
+            $inStructurePath = array();
             foreach ($elements as $element) {
                 $newElements[] = $element;
                 if (!isset($element['structure']) || ($element['structure'] == $end['structure'])) {
+                    // Если у элементов есть lvl и он отличен от того что хранится в массиве путей соседних структур,
+                    // то подменяем элемент с соответствующим ключом
+                    if (isset($element['lvl']) && $element['url'] != '/') {
+                        $lastInStructurePath = end($inStructurePath);
+                        if (empty($inStructurePath) ||
+                            $lastInStructurePath['lvl'] != $element['lvl']
+                        ) {
+                            if (isset($inStructurePath[$element['lvl']])) {
+                                $inStructurePath = array_slice(
+                                    $inStructurePath,
+                                    0,
+                                    array_search($element['lvl'], array_keys($inStructurePath)) - 1,
+                                    true
+                                );
+                            }
+                        }
+                        $inStructurePath[$element['lvl']] = $element;
+                    }
                     continue;
+                } elseif (!empty($inStructurePath) && count($inStructurePath) > 1) {
+                    // Если перешли в другую структуру, то последний элемент в соседней структуре уже не нужен
+                    array_pop($inStructurePath);
                 }
                 // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
                 // считываем элементы вложенной структуры
-                $structure = $config->getStructureByName($end['structure']);
                 $className = Util::getClassName($element['structure'], 'Structure') . '\\Site\\Model';
-                $prevStructure = $structure['ID'] . '-' . $element['ID'];
-                $nextStructure = new $className($prevStructure);
-                $fullPath = array_merge($path, array($element));
+
+                $nextStructure = new $className('');
+                $fullPath = array_merge($path, $inStructurePath, array($element));
                 $nextStructure->setPath($fullPath);
+
+                $structure = $config->getStructureByName($end['structure']);
+                $prevStructure = $structure['ID'] . '-' . $element['ID'];
+                $nextStructure->setPrevStructure($prevStructure);
+
                 // Считываем элементы из вложенной структуры
                 $addElements = $nextStructure->getStructureElements();
                 // Рекурсивно читаем вложенные элементы из вложенной структуры
@@ -140,9 +166,13 @@ class SiteModel extends AbstractSiteModel
                 $str .= str_repeat("</li>\n</ul>\n</li>\n", $c);
             }
 
-            if ((!isset($v['link']) || empty($v['link'] ))
-                || (isset($v['is_skip']) && ($v['is_skip'] == 1) && ($v['url'] == '---'))) {
-                // Если у элемента нет ссылки, или у него прописан is_skip=1 и url='--', то не выводим ссылку
+            if ((!isset($v['link']) || empty($v['link'])) ||
+                (
+                    (isset($v['is_skip']) && ($v['is_skip'] == 1)) ||
+                    ($v['url'] == '---')
+                )
+            ) {
+                // Если у элемента нет ссылки, или у него прописан is_skip=1 или url='---', то не выводим ссылку
                 $str .= '<li>' . $v['name'];
             } else {
                 // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
@@ -161,7 +191,11 @@ class SiteModel extends AbstractSiteModel
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }
-                $str .= '<li><a href="' . $v['link'] . '">' . $v['name'] . '</a>';
+                if (strpos($v['link'], 'href') === false) {
+                    $str .= '<li><a href="' . $v['link'] . '">' . $v['name'] . '</a>';
+                } else {
+                    $str .= '<li><a ' . $v['link'] . '>' . $v['name'] . '</a>';
+                }
             }
             $lvl = $v['lvl'];
         }
