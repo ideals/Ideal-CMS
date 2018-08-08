@@ -41,20 +41,24 @@ return array(
         ),
         'cpName' => array(
             'label' => 'Список имён контактных лиц лида',
+            'sql' => '',
             'type' => 'Ideal_OuterList',
             'array' => 'contactPerson',
         ),
         'lastInteraction' => array(
             'label' => 'Дата последнего взаимодействия',
+            'sql' => '',
             'type' => 'Ideal_LastInteraction',
         ),
         'cpPhone' => array(
             'label' => 'Телефон',
+            'sql' => '',
             'type' => 'Ideal_OuterList',
             'array' => 'contactPerson',
         ),
         'cpEmail' => array(
             'label' => 'Почта',
+            'sql' => '',
             'type' => 'Ideal_OuterList',
             'array' => 'contactPerson',
         ),

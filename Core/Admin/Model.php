@@ -51,7 +51,7 @@ abstract class Model extends Core\Model
             }
 
             // Если в значении NULL, то сохранять это поле не надо
-            if ($v['value'] === null) {
+            if ($v['value'] === null || isset($v['notSave'])) {
                 continue;
             }
 
@@ -183,7 +183,7 @@ abstract class Model extends Core\Model
             }
 
             // Если в значении NULL, то сохранять это поле не надо
-            if ($v['value'] === null) {
+            if ($v['value'] === null || isset($v['notSave'])) {
                 continue;
             }
 

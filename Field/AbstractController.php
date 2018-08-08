@@ -118,6 +118,11 @@ abstract class AbstractController
             'sqlAdd' => ''
         );
 
+        // Если поле sql не указано, то добавляем флаг отмены сохранения данных в базу
+        if (empty($this->field['sql'])) {
+            $item['notSave'] = true;
+        }
+
         // В первой версии только на правильность данных и их наличие, если в описании бд указано not null
         if (($this->name == 'ID') && $isCreate) {
             if (!empty($this->newValue)) {
