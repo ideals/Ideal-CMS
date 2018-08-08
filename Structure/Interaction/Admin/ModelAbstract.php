@@ -10,6 +10,7 @@
 namespace Ideal\Structure\Interaction\Admin;
 
 use Ideal\Core\Config;
+use Ideal\Core\Request;
 use Ideal\Core\Util;
 use Ideal\Structure\Interaction\InteractionInterface;
 use Ideal\Addon\ContactPerson\AdminModel as AddonContactPersonAdminModel;
@@ -105,5 +106,19 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract implemen
         }
 
         return $list;
+    }
+
+    public function getPath()
+    {
+        // Так как структура "Взаимодействий" доступна только лишь в разделе "CRM",
+        // то при запросе пути формируем отдельный дополнительный элемент пути.
+        // Необходимо для правильного отображения хлебных крошек.
+        $request = new Request();
+        $path =  parent::getPath();
+        $config = Config::getInstance();
+        $par = explode('-', $request->par);
+        $structure = $config->getStructureById($par[0]);
+        $path[] = array('ID' => end($par), 'name' => $this->getHeader(), 'structure' => $structure['structure']);
+        return $path;
     }
 }

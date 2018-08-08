@@ -86,7 +86,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
      */
     public function getHeader()
     {
-        // Определяем модуль, на основе выбранного пункта раздела и получаем от неё заголовок
+        // Определяем модель, на основе выбранного пункта раздела и получаем от неё заголовок
         $structure = explode('_', $this->pageData['ID']);
         $class = '\\' . $structure[0] . '\\Structure\\Crm\\' . $structure[1] . '\\Model';
         $request = new Request();
@@ -96,6 +96,24 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $crmHeader = parent::getHeader();
         }
         return $crmHeader;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPath()
+    {
+        $path = parent::getPath();
+        // Определяем модель, на основе выбранного пункта раздела и получаем от неё свой путь
+        $structure = explode('_', $this->pageData['ID']);
+        $class = '\\' . $structure[0] . '\\Structure\\Crm\\' . $structure[1] . '\\Model';
+        $request = new Request();
+        $model = new $class($request->par);
+        $crmPath = $model->getPath();
+        if ($crmPath) {
+            $path = array_merge($path, $crmPath);
+        }
+        return $path;
     }
 
     /**
