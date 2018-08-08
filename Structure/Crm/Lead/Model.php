@@ -63,4 +63,9 @@ class Model extends \Ideal\Core\Admin\Model
     {
         return $this->subModel->getHeader();
     }
+
+    public function getPath()
+    {
+        return $this->subModel->getPath();
+    }
 }
