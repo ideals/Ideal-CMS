@@ -11,5 +11,11 @@ namespace Ideal\Structure\Interaction;
 
 interface InteractionInterface
 {
+    /**
+     * Получение списка элементов взаимодействия определённого типа
+     *
+     * @param array $contactPersons Массив с идентификаторами контактных лиц
+     * @return array Список взаимодействий определённого типа
+     */
     public function getInteractions($contactPersons);
 }
