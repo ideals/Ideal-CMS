@@ -75,6 +75,27 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract implemen
         } else {
             $list = $this->getElementsList();
 
+            // Учитываем сортировку
+            $request = new Request();
+            $direction = 'ASC';
+            if ($request->asc) {
+                $fieldSort =  $request->asc;
+            } elseif ($request->desc) {
+                $fieldSort =  $request->desc;
+                $direction = 'DESC';
+            } else {
+                $fieldSort =  $this->params['field_sort'];
+            }
+            usort($list, function ($a, $b) use ($fieldSort, $direction) {
+                if ($a[$fieldSort] == $b[$fieldSort]) {
+                    return 0;
+                } elseif ($direction == 'ASC') {
+                    return ($a[$fieldSort] < $b[$fieldSort]) ? -1 : 1;
+                } elseif ($direction == 'DESC') {
+                    return ($a[$fieldSort] > $b[$fieldSort]) ? -1 : 1;
+                }
+            });
+
             // Учитываем пагинацию
             $request = new Request();
             $offset = $request->page && $request->page != 1 ? ($request->page - 1) * $this->params["elements_cms"] : 0;
