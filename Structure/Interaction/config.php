@@ -12,7 +12,7 @@ return array(
     'params' => array(
         'field_sort' => 'date_create DESC',
         'field_list' => array('interaction_type', 'date_create', 'contact_person'),
-        'elements_cms' => PHP_INT_MAX
+        'elements_cms' => 10
     ),
     'fields' => array(
         'interaction_type' => array(

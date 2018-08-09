@@ -70,39 +70,15 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract implemen
 
     public function getList($page = null)
     {
-        $list = array();
-
-
-        // Если список запрашивается с внутренних страниц раздела "CRM",
-        // то преструктура содержит название стркутуры родителя
-        $prevStructure = $this->getPrevStructure();
-        $prevStructureParts = explode('-', $prevStructure);
-        if ((int)$prevStructureParts[0] !== 0) {
+        if ($this->toParent()) {
             $list = parent::getList($page);
         } else {
-            // Составляем престркутуру для получения списка контактных лиц из аддона "Контактное лицо"
-            $config = Config::getInstance();
-            $structure = $config->getStructureByName($prevStructureParts[0]);
-            $prevStructure = $structure['ID'] . '-' . $prevStructureParts[1];
+            $list = $this->getElementsList();
 
-            // Получаем идентификаторы кантактных лиц из аддона
-            $contactPersonAddon = new AddonContactPersonAdminModel($prevStructure);
-            $contactPersonsList = $contactPersonAddon->getList();
-            $contactPersons = array();
-            foreach ($contactPersonsList as $contactPerson) {
-                $contactPersons[$contactPerson['contact_person']] = $contactPerson['contact_person'];
-            }
-            $interactions = $this->getInteractions($contactPersons);
-
-            // Формируем из всех взаимодействий общий список пригодный для отображения
-            foreach ($interactions as $interactionType => $interactionsOfType) {
-                $structure = $config->getStructureByName($interactionType);
-                foreach ($interactionsOfType as $interaction) {
-                    $interaction['interaction_type'] = $structure['name'];
-                    $interaction['structureId'] = $structure['ID'];
-                    $list[] = $interaction;
-                }
-            }
+            // Учитываем пагинацию
+            $request = new Request();
+            $offset = $request->page && $request->page != 1 ? ($request->page - 1) * $this->params["elements_cms"] : 0;
+            $list = array_slice($list, $offset, $this->params["elements_cms"]);
         }
 
         return $list;
@@ -120,5 +96,82 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract implemen
         $structure = $config->getStructureById($par[0]);
         $path[] = array('ID' => end($par), 'name' => $this->getHeader(), 'structure' => $structure['structure']);
         return $path;
+    }
+
+    public function getListCount()
+    {
+        if ($this->toParent()) {
+            $listCount = parent::getListCount();
+        } else {
+            $list = $this->getElementsList();
+            $listCount = count($list);
+        }
+        return $listCount;
+    }
+
+
+    /**
+     * Собирает все элементы всех возможных "Взаимодействий"
+     *
+     * @return array
+     */
+    private function getElementsList()
+    {
+        $list = array();
+        $prevStructureParts = $this->getPrevStructureParts();
+
+        // Составляем престркутуру для получения списка контактных лиц из аддона "Контактное лицо"
+        $config = Config::getInstance();
+        $structure = $config->getStructureByName($prevStructureParts[0]);
+        $prevStructure = $structure['ID'] . '-' . $prevStructureParts[1];
+
+        // Получаем идентификаторы кантактных лиц из аддона
+        $contactPersonAddon = new AddonContactPersonAdminModel($prevStructure);
+        $contactPersonsList = $contactPersonAddon->getList();
+        $contactPersons = array();
+        foreach ($contactPersonsList as $contactPerson) {
+            $contactPersons[$contactPerson['contact_person']] = $contactPerson['contact_person'];
+        }
+        $interactions = $this->getInteractions($contactPersons);
+
+        // Формируем из всех взаимодействий общий список пригодный для отображения
+        foreach ($interactions as $interactionType => $interactionsOfType) {
+            $structure = $config->getStructureByName($interactionType);
+            foreach ($interactionsOfType as $interaction) {
+                $interaction['interaction_type'] = $structure['name'];
+                $interaction['structureId'] = $structure['ID'];
+                $list[] = $interaction;
+            }
+        }
+        return $list;
+    }
+
+
+    /**
+     * Разбивает преструктуру на части
+     *
+     * @return array части преструктуры
+     */
+    private function getPrevStructureParts()
+    {
+        $prevStructure = $this->getPrevStructure();
+        return explode('-', $prevStructure);
+    }
+
+    /**
+     * Проверяет надобность запроса списка элементов от родительского класса
+     *
+     * @return bool флаг надобности запроса списка элементов от родительского класса
+     */
+    private function toParent()
+    {
+        // Если преструктура содержит название структуры родителя,
+        // то список запрашивается с внутренних страниц раздела "CRM".
+        // Требуется генерация списка особым способом.
+        $prevStructureParts = $this->getPrevStructureParts();
+        if ((int)$prevStructureParts[0] !== 0) {
+            return true;
+        }
+        return false;
     }
 }
