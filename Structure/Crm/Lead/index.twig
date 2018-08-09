@@ -12,7 +12,10 @@
             </th>
         {% endfor %}
         <th style="width: 93px; text-align: right;">
-            {# Пока нельзя создавать Лиды и Взаимодействия со страницы списка #}
+            {# Пока нельзя создавать Лиды и Взаимодействия со страницы списка.
+            Добавить создание лида не проблема, а вот типов взаимодействий может быть несколько.
+            В случае наличия нескольких типов взаимодействий,
+             сначала нужно будет выбрать какой именно тип следует создать. #}
             {#<a onClick="showModal({{ leadStructureId }}, 0, 'showCreate'); return false;"#}
                {#href="#myModal" class="btn btn-default btn-xs">#}
                 {#<i class="glyphicon glyphicon-plus"></i>&nbsp;Создать#}
@@ -77,92 +80,3 @@
         </form>
     </div>
 {% endif %}
-
-
-
-{#
-<div class="col-xs-3">
-    <table class="table table-striped table-hover">
-        {% for lead in leads %}
-            <tr class="lead-{{ lead.ID }} element">
-                <td>
-                    <a href="index.php?par={{ par }}-{{ lead.ID }}" class="lead-link"
-                       title="{% if lead.name %}{{ lead.name }}{% elseif lead.cpName %}{{ lead.cpName }}{% endif %}"
-                       onclick="showLeadOrders('{{ par }}', '{{ lead.ID }}'); return false;">
-                        {% if lead.name %}
-                            {{ lead.name }}<br/>
-                        {% elseif lead.cpName %}
-                            {{ lead.cpName }}<br/>
-                        {% else %}
-                            № {{ lead.ID }}<br/>
-                        {% endif %}
-                    </a>
-                    <div class="btn-group btn-group-xs button-edit edit-lead">
-                        <button class="btn btn-info" title="Изменить"
-                                onclick="showModal({{ leadStructureId }}, {{ lead.ID }}, 'showEdit');">
-                            <span class="glyphicon glyphicon-pencil"></span>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        {% endfor %}
-    </table>
-</div>
-<div class="col-xs-6">
-    <div class="lead-orders" style="display: none;"></div>
-</div>
-<script type="text/javascript">
-    function showLeadOrders(par, leadId)
-    {
-        dataToAjax = {action: 'showData', par: par, leadId: leadId};
-
-        $.ajax({
-            url: 'index.php',
-            data: dataToAjax,
-            success: function (data)
-            {
-                console.log(data);
-                if ('data' in data) {
-                    $('.lead-orders').show();
-
-                    var ordersInfo = '<table class="table">' +
-                        '<thead>' +
-                            '<tr>' +
-                                '<th scope="col">№ заказа</th>' +
-                                '<th scope="col">Лид</th>' +
-                                '<th scope="col">Контактное лицо</th>' +
-                                '<th scope="col">Сумма заказа</th>' +
-                            '</tr>';
-                        '</thead>';
-                    $.each(data.data, function( index, value ) {
-                        var leadName = '';
-                        if (value.name) {
-                            leadName = value.name;
-                        } else {
-                            leadName = value.cpName;
-                        }
-                        var contactPersonName = '';
-                        if (value.cpEmail) {
-                            contactPersonName = value.cpName + '(' + value.cpEmail + ')';
-                        } else {
-                            contactPersonName = value.cpName;
-                        }
-                        ordersInfo += '<tr>' +
-                            '<td>' + value.orderId + '</td>' +
-                            '<td>' + leadName + '</td>' +
-                            '<td>' + contactPersonName + '</td>' +
-                            '<td>' + new Intl.NumberFormat('ru-RU').format(value.orderPrice/100) + '</td>' +
-                            '</tr>';
-                    });
-
-                    ordersInfo += '</table>';
-
-                    $('.lead-orders').html(ordersInfo);
-                }
-            },
-            type: 'GET',
-            dataType: "json"
-        });
-
-    }
-</script>#}
