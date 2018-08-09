@@ -289,9 +289,9 @@ abstract class Model
     {
         $request = new Request();
         $order = 'ORDER BY e.';
-        if ($request->asc) {
+        if ($request->asc && isset($this->fields[$request->asc])) {
             $order .= $request->asc;
-        } elseif ($request->desc) {
+        } elseif ($request->desc && isset($this->fields[$request->desc])) {
             $order .= $request->desc . ' DESC';
         } else {
             $order .= $this->params['field_sort'];
