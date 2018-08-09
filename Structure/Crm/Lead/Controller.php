@@ -38,14 +38,7 @@ class Controller
 
         $request = new Request();
         $parParts = explode('-', $request->par);
-        $par = reset($parParts);
-        if ($this->moduleName == '') {
-            $par .= '-Ideal';
-        } else {
-            $par .= '-' . $this->moduleName;
-        }
-        $par .= '_' . $this->crmName;
-        $this->view->par = $par;
+        $this->view->par = $request->par;
 
         $prevStructure = implode('-', array_slice($parParts, -2));
         $this->model = new Model($prevStructure);
@@ -63,6 +56,8 @@ class Controller
         } else {
             throw new \Exception('Не подключена структуры лида');
         }
+
+        $this->view->pager = $this->model->getPager('page');
 
         return $this->view->render();
     }

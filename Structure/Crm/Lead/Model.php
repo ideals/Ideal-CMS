@@ -68,4 +68,9 @@ class Model extends \Ideal\Core\Admin\Model
     {
         return $this->subModel->getPath();
     }
+
+    public function getPager($pageName)
+    {
+        return $this->subModel->getPager($pageName);
+    }
 }
