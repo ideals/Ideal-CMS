@@ -9,8 +9,8 @@
 
 return array(
     'name' => 'Конверсия',
-    'pos' => 70,
+    'pos' => 12,
     'info' => '',
-    'structure' => 'Ideal_Service',
+    'structure' => 'Ideal_Crm',
     'ID' => 'Ideal_Conversion'
 );
