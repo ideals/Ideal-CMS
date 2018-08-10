@@ -7,7 +7,7 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Structure\Service\Conversion;
+namespace Ideal\Structure\CRM\Conversion;
 
 use \Ideal\Core\Db;
 use \Ideal\Core\Config;
@@ -16,7 +16,7 @@ use \Ideal\Core\Config;
  * Класс для получения и обработки данных о заказах с их последующим отображением на графиках
  *
  */
-class Model
+class Model extends \Ideal\Core\Admin\Model
 {
     /** @var integer Дата с которой начинать собирать информацию */
     protected $fromTimestamp;
@@ -40,29 +40,13 @@ class Model
     protected $group = '';
 
     /**
-     * Инициализация модели получения данных для графика
-     *
-     * @param integer $fromTimestamp Дата с которой начинать собирать информацию
-     * @param integer $toTimestamp Дата до которой нужно собрать информацию
-     * @param mixed $interval Строковое/числовое представление временного интервала для отображения на графике
-     * @param integer $newLead Флаг означающий надобность отображения только новых лидов
-     */
-    public function __construct($fromTimestamp, $toTimestamp, $interval = 'day', $newLead = 0)
-    {
-        $this->fromTimestamp = $fromTimestamp;
-        $this->toTimestamp = $toTimestamp;
-        $this->interval = $interval;
-        $this->newLead = $newLead;
-        self::getData();
-    }
-
-    /**
      * Получает конфигурационные данные для всех графиков
      *
      * @return array Массив с конфигурационными строками для графиков.
      */
-    public function getOrdersInfo()
+    public function getPageData()
     {
+        self::getData();
         $visualConfig['quantityOfOrders'] = self::getQuantityOfOrdersInfo();
         $visualConfig['quantityOfLead'] = self::getQuantityOfLead();
         $visualConfig['referer'] = self::getRefererOrdersInfo();
@@ -332,28 +316,37 @@ class Model
      * Получает все данные о заказах находящиеся в заданном интервале.
      * С учётом надобности отображения лидов из предыдущих периодов.
      */
-    protected function getData()
+    private function getData()
     {
         $db = Db::getInstance();
         $config = Config::getInstance();
+        $leadStructure = $config->getStructureByName('Ideal_Lead');
         $par = array('fromDate' => $this->fromTimestamp, 'toDate' => $this->toTimestamp);
         $fields = array(
             'table' => $config->db['prefix'] . 'ideal_structure_order',
-            'contactPersonTable' => $config->db['prefix'] . 'ideal_structure_contactperson'
+            'contactPersonTable' => $config->db['prefix'] . 'ideal_structure_contactperson',
+            'contactPersonAddonTable' => $config->db['prefix'] . 'ideal_addon_contactperson'
         );
 
         // При надобности исключаем контактные лица предыдущих периодов
         $where = '';
         if ($this->newLead) {
             $where .= ' AND e.contact_person NOT IN';
-            $where .= ' (SELECT cp.ID FROM &contactPersonTable as cp WHERE cp.date_create < :fromDate';
-            $where .= ' AND cp.lead IS NOT NULL AND cp.lead = (';
-            $where .= ' SELECT cp2.lead FROM &contactPersonTable as cp2 WHERE ID = e.contact_person))';
+            $where .= ' (SELECT scp2.ID FROM &contactPersonTable scp2 WHERE scp2.date_create < :fromDate';
+            $where .= ' AND sl.ID IS NOT NULL AND sl.ID = (';
+            $where .= ' SELECT sl2.ID FROM &contactPersonTable as scp3 LEFT JOIN &contactPersonAddonTable as acp2';
+            $where .= ' ON acp2.contact_person = scp3.ID LEFT JOIN i_ideal_structure_lead as sl2';
+            $where .= ' ON sl2.ID = REPLACE(acp2.prev_structure, \'' . $leadStructure['ID'] . '-\', \'\')';
+            $where .= ' WHERE scp3.ID = e.contact_person ))';
         }
-        $sql = 'SELECT e.*, cpjoin.lead FROM &table as e';
-        $sql .= ' LEFT JOIN &contactPersonTable as cpjoin ON cpjoin.ID = e.contact_person';
+        $sql = 'SELECT e.*, sl.ID as lead FROM &table as e';
+        $sql .= ' LEFT JOIN &contactPersonTable as scp ON scp.ID = e.contact_person';
+        $sql .= ' LEFT JOIN &contactPersonAddonTable as acp ON acp.contact_person = scp.ID';
+        $sql .= ' LEFT JOIN i_ideal_structure_lead as sl';
+        $sql .= ' ON sl.ID = REPLACE(acp.prev_structure, \'' . $leadStructure['ID'] . '-\', \'\')';
         $sql .= " WHERE e.date_create >= :fromDate AND e.date_create < :toDate{$where}";
         $sql .= ' GROUP BY e.ID ORDER by e.date_create';
+
         $this->row = $db->select(
             $sql,
             $par,
@@ -436,6 +429,38 @@ class Model
                 }
                 break;
         }
+    }
+
+    /**
+     * @param int $fromTimestamp
+     */
+    public function setFromTimestamp($fromTimestamp)
+    {
+        $this->fromTimestamp = $fromTimestamp;
+    }
+
+    /**
+     * @param int $toTimestamp
+     */
+    public function setToTimestamp($toTimestamp)
+    {
+        $this->toTimestamp = $toTimestamp;
+    }
+
+    /**
+     * @param mixed $interval
+     */
+    public function setInterval($interval)
+    {
+        $this->interval = $interval;
+    }
+
+    /**
+     * @param int $newLead
+     */
+    public function setNewLead($newLead)
+    {
+        $this->newLead = $newLead;
     }
 
     /**

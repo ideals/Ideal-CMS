@@ -1,0 +1,211 @@
+<div class="col-xs-9" role="main">
+    <style>
+        .no-border-radius {
+            border-radius: 0;
+        }
+
+        .grouping {
+            margin: 10px 0;
+        }
+
+        .first-label {
+            margin: 0 5px 0 0;
+        }
+
+        #fromWrapper, #toWrapper {
+            float: left;
+        }
+
+        #fromWrapper label, #toWrapper label {
+            margin-right: 10px;
+        }
+
+        #toWrapper {
+            margin-left: 10px;
+        }
+    </style>
+    <link href="Ideal/Library/datetimepicker/build/css/bootstrap-datetimepicker.min.css" rel="stylesheet"
+          type="text/css">
+    <script type="text/javascript" src="Ideal/Library/moment/moment.js"></script>
+    <script type="text/javascript" src="Ideal/Library/moment/locale/ru.js"></script>
+    <script type="text/javascript" src="Ideal/Library/datetimepicker/src/js/bootstrap-datetimepicker.js"></script>
+
+    <!--Load the AJAX API-->
+    {% if quantityOfOrders or quantityOfLead or referer or sumOfOrder or orderType %}
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load('visualization', '1.0', {'packages': ['corechart']});
+        google.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+
+            {% if quantityOfOrders %}
+                var quantityOfOrdersData = google.visualization.arrayToDataTable({{ quantityOfOrders|raw }});
+
+                var quantityOfOrdersOptions = {
+                    title: "Общее кол-во заказов за определённый срок",
+                    isStacked: true,
+                    height: 300,
+                    legend: {position: 'top', maxLines: 3},
+                    vAxis: {minValue: 0}
+                };
+
+                var quantityOfOrdersChart = new google.visualization.ColumnChart(document.getElementById('quantityOfOrdersChart'));
+                quantityOfOrdersChart.draw(quantityOfOrdersData, quantityOfOrdersOptions);
+            {% else %}
+                $('#quantityOfOrdersChart').html('Нет данных');
+            {% endif %}
+
+            {% if quantityOfLead %}
+                var quantityOfLeadData = google.visualization.arrayToDataTable({{ quantityOfLead|raw }});
+
+                var quantityOfLeadOptions = {
+                    title: "Общее кол-во лидов за определённый срок",
+                    isStacked: true,
+                    height: 300,
+                    legend: {position: 'top', maxLines: 3},
+                    vAxis: {minValue: 0}
+                };
+
+                $('#quantityOfLeadChartTab').addClass('active');
+                var quantityOfLeadChart = new google.visualization.ColumnChart(document.getElementById('quantityOfLeadChart'));
+                quantityOfLeadChart.draw(quantityOfLeadData, quantityOfLeadOptions);
+                $('#quantityOfLeadChartTab').removeClass('active');
+            {% else %}
+                $('#quantityOfLeadChart').html('Нет данных');
+            {% endif %}
+
+            {% if referer %}
+                var refererChartData = google.visualization.arrayToDataTable({{ referer|raw }});
+                var refererChartOptions = {
+                    title: 'Распределение заказов по источникам переходов'
+                };
+
+                $('#refererChartTab').addClass('active');
+                var refererChart = new google.visualization.PieChart(document.getElementById('refererChart'));
+                refererChart.draw(refererChartData, refererChartOptions);
+                $('#refererChartTab').removeClass('active');
+            {% else %}
+                $('#refererChart').html('Нет данных');
+            {% endif %}
+
+            {% if orderType %}
+                var orderTypeChartData = google.visualization.arrayToDataTable({{ orderType|raw }});
+                var orderTypeChartOptions = {
+                    title: 'Распределение заказов по видам'
+                };
+
+                $('#orderTypeChartTab').addClass('active');
+                var orderTypeChart = new google.visualization.PieChart(document.getElementById('orderTypeChart'));
+                orderTypeChart.draw(orderTypeChartData, orderTypeChartOptions);
+                $('#orderTypeChartTab').removeClass('active');
+            {% else %}
+                $('#orderTypeChart').html('Нет данных');
+            {% endif %}
+
+            {% if sumOfOrder %}
+                var sumOfOrdersData = google.visualization.arrayToDataTable({{ sumOfOrder|raw }});
+                var sumOfOrdersDataOptions = {
+                    height: 300,
+                    title: 'Сумма заказов'
+                };
+
+                $('#sumOfOrdersChartTab').addClass('active');
+                var sumOfOrdersDataChart = new google.visualization.ColumnChart(document.getElementById('sumOfOrdersChart'));
+                sumOfOrdersDataChart.draw(sumOfOrdersData, sumOfOrdersDataOptions);
+                $('#sumOfOrdersChartTab').removeClass('active');
+            {% else %}
+                $('#sumOfOrdersChart').html('Нет данных');
+            {% endif %}
+        }
+    </script>
+    {% endif %}
+
+    <form action="" id="graphSettings">
+        <div>
+            <div class="input-group date">
+                <div id="fromWrapper" class="input-group date">
+                    <label>Выберите период c:</label>
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                    <input id="fromDate" type="text" name="fromDate" value="{{ fromDate }}"
+                           class="input-sm no-border-radius">
+                </div>
+                <div id="toWrapper" class="input-group date">
+                    <label>по:</label>
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                    <input id="toDate" type="text" name="toDate" value="{{ toDate }}" class="input-sm no-border-radius">
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group grouping">
+            <label class="first-label">Сгруппировать по:</label>
+            <label class="radio-inline">
+                <input type="radio" name="grouping" value="day" {{ interval == 'day' ? 'checked=""' : '' }}>дням
+            </label>
+            <label class="radio-inline">
+                <input type="radio" name="grouping" value="week" {{ interval == 'week' ? 'checked=""' : '' }}>неделям
+            </label>
+            <label class="radio-inline">
+                <input type="radio" name="grouping" value="month" {{ interval == 'month' ? 'checked=""' : '' }}>месяцам
+            </label>
+        </div>
+
+        <div class="input-group grouping">
+            <label class="first-label">Только новые лиды:</label>
+            <label class="checkbox-inline">
+                <input type="checkbox" name="newLead" value="1" {{ newLead != '0' ? 'checked' : '' }}>&nbsp;
+            </label>
+        </div>
+        <input type="hidden" value="{{ par }}" name="par">
+        <input type="submit" value="Перестроить графики" class="btn btn-primary btn-large">
+    </form>
+
+    <br>
+    <br>
+    <br>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#quantityOfOrdersChartTab" data-toggle="tab" aria-expanded="true">Общее кол-во</a>
+        </li>
+        <li class=""><a href="#quantityOfLeadChartTab" data-toggle="tab" aria-expanded="false">Кол-во лидов</a></li>
+        <li class=""><a href="#refererChartTab" data-toggle="tab" aria-expanded="false">Источники переходов</a></li>
+        <li class=""><a href="#orderTypeChartTab" data-toggle="tab" aria-expanded="false">Виды заказов</a></li>
+        <li class=""><a href="#sumOfOrdersChartTab" data-toggle="tab" aria-expanded="false">Сумма заказов</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="quantityOfOrdersChartTab">
+            <div id="quantityOfOrdersChart"></div>
+        </div>
+        <div class="tab-pane" id="quantityOfLeadChartTab">
+            <div id="quantityOfLeadChart"></div>
+        </div>
+        <div class="tab-pane" id="refererChartTab">
+            <div id="refererChart"></div>
+        </div>
+        <div class="tab-pane" id="orderTypeChartTab">
+            <div id="orderTypeChart"></div>
+        </div>
+        <div class="tab-pane" id="sumOfOrdersChartTab">
+            <div id="sumOfOrdersChart"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $(function () {
+            $('#fromWrapper').datetimepicker({
+                format: 'DD.MM.YYYY',
+                locale: 'ru'
+            });
+            $('#toWrapper').datetimepicker({
+                format: "DD.MM.YYYY",
+                locale: 'ru'
+            });
+        });
+    </script>
+</div>
