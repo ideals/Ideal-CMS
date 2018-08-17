@@ -670,26 +670,6 @@ JS;
             /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
             $config = \Ideal\Core\Config::getInstance();
 
-            $customerId = null;
-
-            // Получаем идентификатор заказчика, если структура "Зазкачиков" подключена и доступен соответствующий класс
-            if ($config->getStructureByName('Ideal_Crm') && class_exists('\Ideal\Structure\Crm\Model')) {
-                // Чистим телефон, чтобы остались только цифры
-                $phone = preg_replace('/\D/', '', $phone);
-
-                // Если телефон заказнчивается на 10 нолей, то считаем что это тестовый заказ
-                if (preg_match('/0{10}$/', $phone)) {
-                    $phone = str_pad('', '11', '0');
-                }
-
-                $customer = new \Ideal\Structure\Crm\Model();
-                $customerId = $customer
-                    ->setPhone($phone)
-                    ->setEmail($email)
-                    ->setName($name)
-                    ->getCustomerId();
-            }
-
             // Формируем название таблицы, в которую записывается информация о заказе
             $orderTable = $config->db['prefix'] . 'ideal_structure_order';
 
@@ -716,7 +696,6 @@ JS;
                     'referer' => $this->getValue('referer'),
                     'content' => $content,
                     'order_type' => $this->orderType,
-                    'customer' => $customerId
                 )
             );
         }
