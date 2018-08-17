@@ -144,6 +144,7 @@ HTML;
             $addon = new $addonName('не имеет значения, т.к. только парсим ввод пользователя');
             $explodeAddonType = explode('_', $addonType);
             $groupName = strtolower(end($explodeAddonType)) . '-' . $tabID;
+            $addon->setParentModel($this->model);
             $addon->setFieldsGroup($groupName);
             $item['items'][$tabID] = $addon->parseInputParams($isCreate);
         }
