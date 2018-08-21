@@ -40,7 +40,17 @@ return array(
         ),
         'email' => array(
             'label' => 'Email',
-            'sql' => 'varchar(255) not null',
+            'sql' => 'varchar(255)',
+            'type' => 'Ideal_Text'
+        ),
+        'phone' => array(
+            'label' => 'Телефон',
+            'sql' => 'varchar(100)',
+            'type' => 'Ideal_Text'
+        ),
+        'client_id' => array(
+            'label' => 'Google ClientID',
+            'sql' => 'varchar(100)',
             'type' => 'Ideal_Text'
         ),
         'price' => array(

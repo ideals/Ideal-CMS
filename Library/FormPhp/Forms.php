@@ -684,6 +684,13 @@ JS;
             // Умножаем сумму заказа на 100 для хранения в базе
             $price *= 100;
 
+            // Определяем Google ClientID
+            $googleClientId = null;
+            if (isset($_COOKIE['_ga'])) {
+                list($version, $domainDepth, $cid1, $cid2) = explode('.', $_COOKIE["_ga"], 4);
+                $googleClientId = empty($cid1) && empty($cid2) ? null : $cid1 . '.' . $cid2;
+            }
+
             // Записываем данные
             $newOrderId = $db->insert(
                 $orderTable,
@@ -692,6 +699,8 @@ JS;
                     'date_create' => time(),
                     'name' => $name,
                     'email' => $email,
+                    'phone' => $phone,
+                    'client_id' => $googleClientId,
                     'price' => $price,
                     'referer' => $this->getValue('referer'),
                     'content' => $content,
