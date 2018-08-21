@@ -130,6 +130,9 @@ class Router
             return $this->controllerName;
         }
 
+        if (method_exists ($this->model, 'getControllerName')) {
+            return $this->model->getControllerName();
+        }
         $request = new Request();
         if ($request->mode == 'ajax' && $request->controller != '') {
             // Если это ajax-вызов с явно указанным namespace класса ajax-контроллера
