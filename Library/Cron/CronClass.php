@@ -117,10 +117,10 @@ class CronClass
             // Если дата следующего запуска меньше, либо равна текущей дате, то добавляем задачу на запуск
             $now = new \DateTime();
             if ($nextRunDate <= $now) {
-                $currentTasks .= $cronTask . "\n" . $fileTask
-                    . " modify: " . $this->modifyTime->format('d.m.Y H:i:s')
-                    . " now: " . $now->format('d.m.Y H:i:s')
-                    . "\n";
+                $currentTasks .= $cronTask . "\n" . $fileTask . "\n"
+                    . 'modify: ' . $this->modifyTime->format('d.m.Y H:i:s') . "\n"
+                    . 'nextRun: ' . $nextRunDate->format('d.m.Y H:i:s') . "\n"
+                    . 'now: ' . $now->format('d.m.Y H:i:s') . "\n";
             }
         }
 
