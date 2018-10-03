@@ -239,7 +239,11 @@ class Db extends \mysqli
 
         foreach ($this->updateValues as $column => $value) {
             $column = "`" . parent::escape_string($column) . "`";
-            $value = "'" . parent::escape_string($value) . "'";
+            if (null === $value) {
+                $value = 'NULL';
+            } else {
+                $value = "'" . parent::escape_string($value) . "'";
+            }
             $values[] = "{$column} = {$value}";
         }
 
@@ -270,8 +274,12 @@ class Db extends \mysqli
     {
         if (is_array($params)) {
             foreach ($params as $key => $value) {
-                $value = parent::escape_string($value);
-                $sql = str_replace(":{$key}", "'$value'", $sql);
+                if (null === $value) {
+                    $value = 'NULL';
+                } else {
+                    $value = "'" . parent::escape_string($value) . "'";
+                }
+                $sql = str_replace(":{$key}", $value, $sql);
             }
         }
 
