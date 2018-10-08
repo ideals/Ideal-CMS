@@ -22,24 +22,24 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         $config = Config::getInstance();
 
         // Ищем всех заказчиков для составления фильтра
-        $_table = $config->db['prefix'] . 'ideal_structure_crm';
-        $_sql = "SELECT ID, name FROM {$_table} ORDER BY name, ID";
-        $this->customers = $db->select($_sql);
+        $_table = $config->db['prefix'] . 'ideal_structure_order';
+        $_sql = "SELECT DISTINCT order_type FROM {$_table} ORDER BY order_type";
+        $this->types = $db->select($_sql);
 
         $request = new Request();
-        $currentCustomer = '';
-        if (isset($request->toolbar['customer'])) {
-            $currentCustomer = $request->toolbar['customer'];
+        $currentType = '';
+        if (isset($request->toolbar['types'])) {
+            $currentType = $request->toolbar['types'];
         }
 
-        $select = '<select class="form-control" name="toolbar[customer]"><option value="">Не фильтровать</option>';
-        foreach ($this->customers as $customer) {
+        $select = '<select class="form-control" name="toolbar[types]"><option value="">Не фильтровать</option>';
+        foreach ($this->types as $type) {
             $selected = '';
-            if ($customer['ID'] == $currentCustomer) {
+            if ($type['order_type'] === $currentType) {
                 $selected = 'selected="selected"';
             }
-            $select .= '<option ' . $selected . ' value="' . $customer['ID'] . '">';
-            $select .= $customer['name'] . ' ['. $customer ['ID'].']</option>';
+            $select .= '<option ' . $selected . ' value="' . $type['order_type'] . '">';
+            $select .= $type['order_type'] . '</option>';
         }
         $select .= '</select>';
 
@@ -55,17 +55,17 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
     protected function getWhere($where)
     {
         $request = new Request();
-        $currentCustomer = '';
-        if (isset($request->toolbar['customer'])) {
-            $currentCustomer = $request->toolbar['customer'];
+        $currentType = '';
+        if (isset($request->toolbar['types'])) {
+            $currentType = $request->toolbar['types'];
         }
-        if ($currentCustomer != '') {
+        if ($currentType != '') {
             $db = DB::getInstance();
             if ($where != '') {
                 $where .= ' AND ';
             }
             // Выборка статей, принадлежащих этой категории
-            $where .= 'customer =' . $db->real_escape_string($currentCustomer);
+            $where .= 'order_type = "' . $db->real_escape_string($currentType) . '" ';
         }
         if ($where != '') {
             $where = 'WHERE ' . $where;

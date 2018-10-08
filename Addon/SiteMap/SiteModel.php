@@ -80,42 +80,66 @@ class SiteModel extends AbstractSiteModel
      */
     protected function recursive($path, $elements)
     {
+        if (empty($elements)) {
+            return array();
+        }
+
         $config = Config::getInstance();
         $end = end($path);
+        $fullPath = $path;
+        $lvl = 0;
         $newElements = array();
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
-        if (!empty($elements)) {
-            foreach ($elements as $element) {
-                $newElements[] = $element;
-                if (!isset($element['structure']) || ($element['structure'] == $end['structure'])) {
-                    continue;
-                }
-                // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
-                // считываем элементы вложенной структуры
-                $structure = $config->getStructureByName($end['structure']);
-                $className = Util::getClassName($element['structure'], 'Structure') . '\\Site\\Model';
-                $prevStructure = $structure['ID'] . '-' . $element['ID'];
-                $nextStructure = new $className($prevStructure);
-                $fullPath = array_merge($path, array($element));
-                $nextStructure->setPath($fullPath);
-                // Считываем элементы из вложенной структуры
-                $addElements = $nextStructure->getStructureElements();
-                // Рекурсивно читаем вложенные элементы из вложенной структуры
-                $addElements = $this->recursive($fullPath, $addElements);
+        foreach ($elements as $element) {
+            $newElements[] = $element;
 
-                // Увеличиваем уровень вложенности на считанных элементах
-                foreach ($addElements as $k => $v) {
-                    if (isset($v['lvl'])) {
-                        $addElements[$k]['lvl'] += $element['lvl'];
-                    } else {
-                        $addElements[$k]['lvl'] = $element['lvl'] + 1;
-                    }
+            // Строим полный путь до каждого элемента структуры
+            if (isset($element['lvl'])) {
+                if ($element['lvl'] <= $lvl) {
+                    // Срезаем элементы пути предыдущего элемента
+                    $c = $lvl - $element['lvl'] + 1;
+                    $fullPath = array_slice($fullPath, 0, -$c);
                 }
-
-                // Получившийся список добавляем в наш массив новых элементов
-                $newElements = array_merge($newElements, $addElements);
+                $lvl = $element['lvl'];
+                $fullPath[] = $element;
+            } else {
+                // Если структура без вложенных элементов, то каждый раз заменяем последний элемент
+                if (count($fullPath) > count($path)) {
+                    array_pop($fullPath);
+                }
+                $fullPath[] = $element;
             }
+
+            if (!isset($element['structure']) || ($element['structure'] == $end['structure'])) {
+                continue;
+            }
+
+            // Если структуры предпоследнего $end и последнего $element элементов не совпадают,
+            // считываем элементы вложенной структуры
+            $structure = $config->getStructureByName($end['structure']);
+            $className = Util::getClassName($element['structure'], 'Structure') . '\\Site\\Model';
+            $prevStructure = $structure['ID'] . '-' . $element['ID'];
+            $nextStructure = new $className($prevStructure);
+            $nextStructure->setPath($fullPath);
+            $nextStructure->setPrevStructure($prevStructure);
+            // Считываем элементы из вложенной структуры
+            $addElements = $nextStructure->getStructureElements();
+            // Рекурсивно читаем вложенные элементы из вложенной структуры
+            $addElements = $this->recursive($fullPath, $addElements);
+
+            // Увеличиваем уровень вложенности на считанных элементах
+            foreach ($addElements as $k => $v) {
+                if (isset($v['lvl'])) {
+                    $addElements[$k]['lvl'] += $element['lvl'];
+                } else {
+                    $addElements[$k]['lvl'] = $element['lvl'] + 1;
+                }
+            }
+
+            // Получившийся список добавляем в наш массив новых элементов
+            $newElements = array_merge($newElements, $addElements);
         }
+
         return $newElements;
     }
 
@@ -161,7 +185,9 @@ class SiteModel extends AbstractSiteModel
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }
-                $str .= '<li><a href="' . $v['link'] . '">' . $v['name'] . '</a>';
+                $href = strpos($v['link'], 'href=') === false ? 'href="' . $v['link'] . '"' : $v['link'];
+                $href = $href == 'href=""' ? '' : $href;
+                $str .= '<li><a ' . $href . '>' . $v['name'] . '</a>';
             }
             $lvl = $v['lvl'];
         }

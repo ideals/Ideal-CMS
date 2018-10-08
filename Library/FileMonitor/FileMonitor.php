@@ -97,7 +97,7 @@ class FileMonitor
             $time = filemtime($this->fileMonitor);
             if (date('d.m.Y') == date('d.m.Y', $time)) {
                 echo "Файлы сегодня уже проверялись.\n";
-                exit;
+                return;
             }
         }
 

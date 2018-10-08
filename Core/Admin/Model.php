@@ -187,6 +187,11 @@ abstract class Model extends Core\Model
                 continue;
             }
 
+            // Если у этого поля не прописан sql, то сохранять его не надо
+            if ($group == $groupName && empty($this->fields[$field]['sql'])) {
+                continue;
+            }
+
             $groups[$group][$field] = $v['value'];
         }
 

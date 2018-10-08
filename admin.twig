@@ -170,6 +170,39 @@
 
         </table>
 
+        {% if pager.pages|length > 1 %}
+        <div class="row">
+            <div class="col-md-11 text-center">
+                <ul class="pagination pagination-lg">
+                    {% if pager.pagePrev != '' %}
+                        <li><a href="{{ pagePrev }}">← назад</a></li>
+                    {% endif %}
+
+                    {% for page in pager.pages %}
+                        {% if page.current == 1 %}
+                            <li class="active"><a>{{ page.num }}</a></li>
+                        {% else %}
+                            <li><a href="{{ page.url }}">{{ page.num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pager.pageNext != '' %}
+                        <li><a href="{{ pageNext }}">вперёд →</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <form action="" method="get">
+                <input type="hidden" name="par" value="{{ par }}">
+                <div class="input-group col-md-1" style="margin-top: 25px;">
+                    <input class="form-control" aria-label="Количество элементов на странице" name="num" value="{{ pager.num }}">
+                    <div class="input-group-btn"><button type="submit" class="btn btn-default" aria-label="Изменить"><span class="glyphicon glyphicon-ok"></span></button></div>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    {% endblock %}
+
         <!-- Modal -->
         <div class="modal fade" id="myModal" role="dialog"
              aria-labelledby="myModalLabel" aria-hidden="true">
@@ -217,6 +250,7 @@
             <!-- /.modal-dialog -->
         </div><!-- /.modal -->
 
+        <!-- Modal Addon confirmation -->
         <div class="modal fade" id="addon-confirm-modal">
             <div class="modal-dialog modal-sm">
                 <div class="modal-content">
@@ -260,38 +294,6 @@
                 </div>
             </div>
         </div>
-
-        {% if pager.pages|length > 1 %}
-        <div class="row">
-            <div class="col-md-11 text-center">
-                <ul class="pagination pagination-lg">
-                    {% if pager.pagePrev != '' %}
-                        <li><a href="{{ pagePrev }}">← назад</a></li>
-                    {% endif %}
-
-                    {% for page in pager.pages %}
-                        {% if page.current == 1 %}
-                            <li class="active"><a>{{ page.num }}</a></li>
-                        {% else %}
-                            <li><a href="{{ page.url }}">{{ page.num }}</a></li>
-                        {% endif %}
-                    {% endfor %}
-
-                    {% if pager.pageNext != '' %}
-                        <li><a href="{{ pageNext }}">вперёд →</a></li>
-                    {% endif %}
-                </ul>
-            </div>
-
-            <form action="" method="get">
-                <input type="hidden" name="par" value="{{ par }}">
-                <div class="input-group col-md-1" style="margin-top: 25px;">
-                    <input class="form-control" aria-label="Количество элементов на странице" name="num" value="{{ pager.num }}">
-                    <div class="input-group-btn"><button type="submit" class="btn btn-default" aria-label="Изменить"><span class="glyphicon glyphicon-ok"></span></button></div>
-                </div>
-            </form>
-        </div>
-        {% endif %}
 
         <script>
             // Инициализируем глобальную переменную, где будут хранится параметры редактируемого объекта
@@ -480,7 +482,11 @@
                         message = $('#message');
                         if (data['isCorrect'] == '1') {
                             message.addClass('alert-success');
-                            message.html('Элемент успешно сохранён.');
+                            if (!('responseMessage' in data)) {
+                                message.html('Элемент успешно сохранён.');
+                            } else {
+                                message.html(data['responseMessage']);
+                            }
                             // Если нажата кнопка "Сохранить" - нужно перезагрузить окно
                             if (window.idObject['closeWindow']) {
                                 // TODO сделать, чтобы окно всегда перегружалось при закрытии после создания элемента
@@ -666,8 +672,6 @@
             };
         </script>
 
-
-    {% endblock %}
     <script>
       // Запрос подтверждения на очистку кэша и инициализация его полной чистки
         function showClearCacheConfirm()
