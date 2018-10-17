@@ -504,6 +504,7 @@ class TurboClass
             '<br>',
             '<ul>',
             '<ol>',
+            '<li>',
             '<b>',
             '<strong>',
             '<i>',
