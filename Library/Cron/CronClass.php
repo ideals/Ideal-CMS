@@ -184,7 +184,7 @@ class CronClass
 
 
         // Обрабатываем задачи для крона из настроек Ideal CMS
-        $now = new \DateTime();
+        $nowCron = new \DateTime();
         foreach ($this->cron as $cronTask) {
             list($taskExpression, $fileTask) = $this->parseCronTask($cronTask);
             if (!$taskExpression || !$fileTask) {
@@ -193,17 +193,17 @@ class CronClass
             // Получаем дату следующего запуска задачи
             $cron = \Cron\CronExpression::factory($taskExpression);
             $nextRunDate = $cron->getNextRunDate($this->modifyTime);
-            $now = new \DateTime();
+            $nowCron = new \DateTime();
 
             // Если дата следующего запуска меньше, либо равна текущей дате, то запускаем скрипт
-            if ($nextRunDate <= $now) {
+            if ($nextRunDate <= $nowCron) {
                 require_once $fileTask;
                 break; // Прекращаем цикл выполнения задач, чтобы не произошло наложения задач друг на друга
             }
         }
 
         // Изменяем дату модификации файла содержащего задачи для крона
-        touch($this->cronFile, $now->getTimestamp());
+        touch($this->cronFile, $nowCron->getTimestamp());
     }
 
     /**
