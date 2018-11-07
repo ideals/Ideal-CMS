@@ -323,7 +323,7 @@ class TurboClass
     protected function getMetaTags($content)
     {
         preg_match('/<title>(.*?)<\/title>/i', $content, $title);
-        preg_match('/<meta\s+name=[\'"]description[\'"].*?content=[\'"](.*?)[\'"].*?\/>/i', $content, $description);
+        preg_match('/<meta\s+name=[\'"]description[\'"].*?content=[\'"](.*?)[\'"].*?(\/)?>/i', $content, $description);
         if (!$title || !$description) {
             $this->stop("Не указан title или description");
         }
