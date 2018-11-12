@@ -14,7 +14,7 @@ return array(
         'elements_cms' => 10, // количество элементов в списке в CMS
         'field_name' => '', // поле для входа в список потомков
         'field_sort' => 'date_create DESC', // поле, по которому проводится сортировка в CMS
-        'field_list' => array('date_create', 'type', 'user_id')
+        'field_list' => array('date_create', 'type', 'message', 'user_id')
     ),
     'fields' => array(
         'ID' => array(

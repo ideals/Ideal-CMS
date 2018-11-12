@@ -54,11 +54,16 @@ abstract class Model extends Core\Model
             $url->setParentUrl($pars);
             $link = $url->getUrl($v);
             $pars[] = $v;
-            if ($link == '/') {
-                $breadCrumbs[] = array(
-                    'link' => $link,
-                    'name' => $v['startName']
-                );
+            if ($link === '/') {
+                if ($v['url'] === '') {
+                    $breadCrumbs[] = array(
+                        'link' => $link,
+                        'name' => $v['startName']
+                    );
+                } else {
+                    // В случае, если путь строится для главной страницы - дублирование не нужно
+                    continue;
+                }
             } else {
                 $breadCrumbs[] = array(
                     'link' => $link,

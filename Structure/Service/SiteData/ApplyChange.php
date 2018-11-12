@@ -38,19 +38,23 @@ class ApplyChange
             if ($this->value) {
                 $addString = <<<string
                 
-<IfModule mod_expires.c>
-Header append Cache-Control "public"
 FileETag MTime Size
-ExpiresActive On
-ExpiresDefault "access plus 0 minutes"
-ExpiresByType image/ico "access plus 1 years"
-ExpiresByType text/css "access plus 1 years"
-ExpiresByType text/javascript "access plus 1 years"
-ExpiresByType image/gif "access plus 1 years"
-ExpiresByType image/jpg "access plus 1 years"
-ExpiresByType image/jpeg "access plus 1 years"
-ExpiresByType image/bmp "access plus 1 years"
-ExpiresByType image/png "access plus 1 years"
+
+<IfModule headers_module.c>
+	Header append Cache-Control "public"
+</IfModule>        
+
+<IfModule mod_expires.c>
+	ExpiresActive On
+	ExpiresDefault "access plus 0 minutes"
+	ExpiresByType image/ico "access plus 1 years"
+	ExpiresByType text/css "access plus 1 years"
+	ExpiresByType text/javascript "access plus 1 years"
+	ExpiresByType image/gif "access plus 1 years"
+	ExpiresByType image/jpg "access plus 1 years"
+	ExpiresByType image/jpeg "access plus 1 years"
+	ExpiresByType image/bmp "access plus 1 years"
+	ExpiresByType image/png "access plus 1 years"
 </IfModule>
 
 string;
