@@ -19,6 +19,9 @@ abstract class Model extends Core\Model
         'robots' => 'index, follow'
     );
 
+    /** @var bool Нужно ли удалять заголовок h1 из текста */
+    protected $isExtractHeader = true;
+
     abstract public function detectPageByUrl($path, $url);
 
     /**
@@ -109,7 +112,9 @@ abstract class Model extends Core\Model
     {
         $header = '';
         if (preg_match('/<h1.*>(.*)<\/h1>/isU', $text, $headerArray)) {
-            $text = preg_replace('/<h1.*>(.*)<\/h1>/isU', '', $text, 1);
+            if ($this->isExtractHeader) {
+                $text = preg_replace('/<h1.*>(.*)<\/h1>/isU', '', $text, 1);
+            }
             $header = $headerArray[1];
         }
         return array($header, $text);
