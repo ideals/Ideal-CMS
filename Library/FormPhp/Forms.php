@@ -468,11 +468,12 @@ class Forms
     /**
      * Установка валидатора на элемент формы
      *
-     * @param string       $name Название элемента формы
+     * @param string $name Название элемента формы
      * @param string|array $validator Название, список или класс валидатора
+     * @param array $options Массив опций
      * @throws \Exception
      */
-    public function setValidator($name, $validator)
+    public function setValidator($name, $validator, $options = array())
     {
         if (is_string($validator)) {
             if (!isset($this->fields[$name])) {
@@ -482,7 +483,7 @@ class Forms
             if (!class_exists($fieldName)) {
                 throw new \Exception('Не найден класс ' . $fieldName . ' для валидатора');
             }
-            $this->validators[$validator] = new $fieldName();
+            $this->validators[$validator] = new $fieldName($options);
             /** @var \FormPhp\Field\AbstractField $field */
             $field = $this->fields[$name];
             $field->setValidator($this->validators[$validator]);

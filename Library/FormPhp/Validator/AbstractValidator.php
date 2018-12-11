@@ -9,6 +9,20 @@ namespace FormPhp\Validator;
 abstract class AbstractValidator
 {
     protected $errorMsg = "Поля, выделенные красным, заполнены неверно!";
+
+    /** @var array Массив опций для валидатора */
+    protected $options = array();
+
+    /**
+     * Добавление валидатора
+     *
+     * @param array $options Массив опций
+     */
+    public function __construct($options = array())
+    {
+        $this->options = $options;
+    }
+
     /**
      * Проверка введённого пользователем значения
      *
