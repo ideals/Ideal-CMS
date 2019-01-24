@@ -12,38 +12,35 @@ namespace YandexTurboPage;
 class TurboClass
 {
     /** @var float Время начала работы скрипта */
-    private $start;
-
-    /** @var array Ссылки на страницы, которые нужно представить в турбо-фиде */
-    private $links = array();
+    protected $start;
 
     /** @var \SimpleXMLElement Фид яндекса в виде объекта */
-    private $rss;
+    protected $rss;
 
     /** @var array Массив для данных из конфига */
     public $config = array();
 
     /** @var string Переменная содержащая адрес сайта */
-    private $host;
+    protected $host;
 
     /** @var bool Флаг необходимости кэширования echo/print */
     public $ob = false;
 
     /** @var bool Флаг необходимости принудительного сбра фида */
-    private $forceParse = false;
+    protected $forceParse = false;
 
     /** @var bool Флаг необходимости сброса ранее собранных страниц */
-    private $clearTemp = false;
+    protected $clearTemp = false;
 
     /** @var bool Допустимое количество элементов в одном фиде */
-    private $itemsLimit = 500;
+    protected $itemsLimit = 500;
 
     /** @var array Массив параметров curl для получения заголовков и html кода страниц */
-    private $options = array(
+    protected $options = array(
         CURLOPT_RETURNTRANSFER => true, //  возвращать строку, а не выводить в браузере
         CURLOPT_VERBOSE => false, // вывод дополнительной информации (?)
         CURLOPT_HEADER => true, // включать заголовки в вывод
-        CURLOPT_ENCODING => "", // декодировать запрос используя все возможные кодировки
+        CURLOPT_ENCODING => '', // декодировать запрос используя все возможные кодировки
         CURLOPT_AUTOREFERER => true, // автоматическая установка поля referer в запросах, перенаправленных Location
         CURLOPT_CONNECTTIMEOUT => 4, // кол-во секунд ожидания при соединении (мб лучше CURLOPT_CONNECTTIMEOUT_MS)
         CURLOPT_TIMEOUT => 4, // максимальное время выполнения функций cURL функций
@@ -61,38 +58,15 @@ class TurboClass
     {
         // Время начала работы скрипта
         $this->start = microtime(1);
-
-
+        
         // Проверяем надобность сброса ранее собранных страниц и повторного сбора фида
         $argv = !empty($_SERVER['argv']) ? $_SERVER['argv'] : array();
-        if (isset($_GET['w']) || (array_search('w', $argv) !== false)) {
+        if (isset($_GET['w']) || in_array('w', $argv)) {
             $this->forceParse = true;
         }
-        if (isset($_GET['с']) || (array_search('с', $argv) !== false)) {
+        if (isset($_GET['с']) || in_array('с', $argv)) {
             $this->clearTemp = true;
         }
-    }
-
-    /**
-     * Загрузка данных из конфига и из промежуточных файлов
-     * @throws \Exception
-     */
-    public function loadData()
-    {
-        // Считываем настройки для создания фида
-        $this->loadConfig();
-
-        // Проверка существования файла yandexrss и его даты
-        $this->prepareYandexRssFile();
-
-        // Проверка существования файла sitemap.xml
-        $this->prepareSiteMapFile();
-
-        // Подготавливаем файл содержащий промежуточные значения между запуском скрипта
-        $this->prepareTempFile();
-
-        // Получение ссылок от карты сайта
-        $this->getLinksFromSitemap();
     }
 
     /**
@@ -108,8 +82,8 @@ class TurboClass
             . "Content-type: text/plain; charset=utf-8\r\n"
             . 'From: turbofeed@' . $this->host;
 
-        $to = (empty($to)) ? $this->config['error_email_notify'] : $to;
-        $subject = (empty($subject)) ? $this->host . ' yandex turbo-pages' : $subject;
+        $to = empty($to) ? $this->config['error_email_notify'] : $to;
+        $subject = empty($subject) ? $this->host . ' yandex turbo-pages' : $subject;
 
         // Отправляем письма об изменениях
         mail($to, $subject, $text, $header);
@@ -121,9 +95,21 @@ class TurboClass
      */
     public function run()
     {
-        $this->loadData();
         $time = microtime(1);
-        while (count($this->links) > 0) {
+
+        // Считываем настройки для создания фида
+        $this->loadConfig();
+
+        // Проверка существования файла yandexrss и его даты
+        $this->prepareYandexRssFile();
+
+        /** @var array Ссылки на страницы, которые нужно представить в турбо-фиде */
+        $links = $this->getLinksFromSitemap();
+
+        // Подготавливаем RSS-файл, содержащий промежуточные значения между запуском скрипта
+        $this->rss = $this->getTempFile();
+
+        while (count($links) > 0) {
             // Если текущее время минус время начала работы скрипта больше 50 секунд - завершаем работу скрипта
             if (($time - $this->start) > 50) {
                 break;
@@ -133,10 +119,10 @@ class TurboClass
             usleep(1000000);
 
             // Устанавливаем указатель на 1-й элемент
-            $includeUrl = reset($this->links);
+            $includeUrl = reset($links);
 
             // Извлекаем первую ссылку
-            $url = key($this->links);
+            $url = key($links);
 
             $contentToFeed = '';
             // Получаем html-код страницы только для активных страниц
@@ -153,16 +139,16 @@ class TurboClass
             $item->addChild('xmlsn:turbo:content', "<![CDATA[\n{$contentToFeed}");
 
             // И удаляем из массива непройденных
-            unset($this->links[$url]);
+            unset($links[$url]);
 
             $time = microtime(1);
         }
 
-        if (count($this->links) > 0) {
-            $this->saveParsedUrls();
+        if (count($links) > 0) {
+            $this->saveParsedUrls($links);
             $this->saveTempFeed();
             $message = "\nВыход по таймауту\n"
-                . 'Всего непройденных ссылок: ' . count($this->links) . "\n"
+                . 'Всего непройденных ссылок: ' . count($links) . "\n"
                 . 'Затраченное время: ' . ($time - $this->start) . "\n\n"
                 . "Everything it's alright.\n\n";
             $this->stop($message, false);
@@ -261,9 +247,6 @@ class TurboClass
             if (!is_writable($this->config['pageroot'] . $this->config['yandexRssFile'])) {
                 $this->stop("File {$this->config['yandexRssFile']} is not writable!");
             }
-            if ($this->forceParse) {
-                unlink($this->config['pageroot'] . $this->config['yandexRssFile']);
-            }
         } else {
             if ((file_put_contents($this->config['pageroot'] . $this->config['yandexRssFile'], '') === false)) {
                 // Файла нет и создать его не удалось
@@ -282,39 +265,28 @@ class TurboClass
     }
 
     /**
-     * Проверка наличия xml-файла карты сайта
-     */
-    protected function prepareSiteMapFile()
-    {
-        // Проверяем существует ли файл
-        if (!file_exists($this->config['pageroot'] . $this->config['sitemapFile'])) {
-            $this->stop("Нет файла карты сайта из которого берутся адреса для генерации фида");
-        }
-    }
-
-
-    /**
      * Создание временного файла и получение из него инфорации
      *
      * @throws \Exception
      */
-    protected function prepareTempFile()
+    protected function getTempFile()
     {
+        $yandexRssTempFile = $this->config['pageroot'] . $this->config['yandexRssTempFile'];
         // Если временного файла нет, то создаём его
-        if (!file_exists($this->config['pageroot'] . $this->config['yandexRssTempFile']) || $this->clearTemp) {
+        if ($this->clearTemp || !file_exists($yandexRssTempFile)) {
             // Получаем html-код главной страницы
             $content = $this->getContent($this->config['website']);
 
             // Получаем title и description для составления заголовка фида
             $meta = $this->getMetaTags($content);
 
-            $rss = self::getNewSimpleXmlObject($meta['title'], $meta['description']);
-            $rss->saveXML($this->config['pageroot'] . $this->config['yandexRssTempFile']);
-            $this->rss = $rss;
-        } else {
-            $yandexRssTempFile = file_get_contents($this->config['pageroot'] . $this->config['yandexRssTempFile']);
-            $this->rss = new \SimpleXMLElement($yandexRssTempFile);
+            $rss = $this->getNewSimpleXmlObject($meta['title'], $meta['description']);
+            $rss->saveXML($yandexRssTempFile);
+            return $rss;
         }
+        $yandexRssTempFile = file_get_contents($yandexRssTempFile);
+        $rss = new \SimpleXMLElement($yandexRssTempFile);
+        return $rss;
     }
 
     /**
@@ -336,29 +308,35 @@ class TurboClass
     protected function getLinksFromSitemap()
     {
         // Считываем из файла необработанные ссылки
-        $this->links = array();
+        $links = array();
         if (file_exists($this->config['pageroot'] . $this->config['linksFile'])) {
             // Если возраст файла необработанных ссылок более 23 часов, то считаем что его следует пересобрать
             if (time() - date('U', filemtime($this->config['pageroot'] . $this->config['linksFile'])) > 82800) {
                 $this->clearTemp = true;
             }
             if (!$this->clearTemp) {
-                $this->links = file_get_contents($this->config['pageroot'] . $this->config['linksFile']);
+                $links = file_get_contents($this->config['pageroot'] . $this->config['linksFile']);
             }
         }
-        if ($this->links) {
-            $this->links = unserialize($this->links);
+        if ($links) {
+            $links = unserialize($links);
         } else {
             // Если ссылок ещё нет, то парсим ссылки из карты сайта
+
+            // Проверяем существует ли файл
+            if (!file_exists($this->config['pageroot'] . $this->config['sitemapFile'])) {
+                $this->stop("Нет файла карты сайта из которого берутся адреса для генерации фида");
+            }
+
             $sitemap = file_get_contents($this->config['pageroot'] . $this->config['sitemapFile']);
             $xml = new \SimpleXMLElement($sitemap);
             foreach ($xml->url as $element) {
-                $link = (string) $element->loc;
+                $link = (string)$element->loc;
 
                 // Проверяем страницы на надобность деактивации
                 foreach ($this->config['disable_regexp'] as $regExp) {
                     if ($regExp && preg_match($regExp, $link)) {
-                        $this->links[$link] = 0;
+                        $links[$link] = 0;
                         continue 2;
                     }
                 }
@@ -367,21 +345,24 @@ class TurboClass
                         continue 2;
                     }
                 }
-                $this->links[$link] = 1;
+                $links[$link] = 1;
             }
 
             // Записываем данные из карты сайта в файл со списком ссылок
-            file_put_contents($this->config['pageroot'] . $this->config['linksFile'], serialize($this->links));
+            $this->saveParsedUrls($links);
         }
+
+        return $links;
     }
 
     /**
      * Метод для сохранения распарсенных данных во временный файл
+     * @param array $links Список ссылок для сохранения в файл
      */
-    protected function saveParsedUrls()
+    protected function saveParsedUrls($links)
     {
         // Записываем данные из карты сайта в файл со списком ссылок
-        file_put_contents($this->config['pageroot'] . $this->config['linksFile'], serialize($this->links));
+        file_put_contents($this->config['pageroot'] . $this->config['linksFile'], serialize($links));
     }
 
     /**
@@ -403,13 +384,13 @@ class TurboClass
             $filesParts = pathinfo($this->config['yandexRssFile']);
             $i = 1;
             $fileNum = '';
-            $newFeedRss = self::getNewSimpleXmlObject();
+            $newFeedRss = $this->getNewSimpleXmlObject();
             foreach ($this->rss->channel->item as $item) {
                 if ($i > $this->itemsLimit) {
                     $pathToSave = $this->config['pageroot'] . $filesParts['dirname'] . $filesParts['filename'];
                     $pathToSave .= $fileNum . '.' . $filesParts['extension'];
                     $newFeedRss->saveXML($pathToSave);
-                    $newFeedRss = self::getNewSimpleXmlObject();
+                    $newFeedRss = $this->getNewSimpleXmlObject();
                     $fileNum = (int)$fileNum + 1;
                     $i = 1;
                 }
@@ -439,7 +420,7 @@ class TurboClass
     /**
      * Сохранение промежуточных значений во временный файл
      */
-    private function saveTempFeed()
+    protected function saveTempFeed()
     {
         $this->rss->saveXML($this->config['pageroot'] . $this->config['yandexRssTempFile']);
     }
@@ -451,7 +432,7 @@ class TurboClass
      * @return string Html-код страницы
      * @throws \Exception
      */
-    private function getContent($url)
+    protected function getContent($url)
     {
         // Инициализируем CURL для получения содержимого страницы
         $ch = curl_init($url);
@@ -459,7 +440,7 @@ class TurboClass
         $res = curl_exec($ch); // получаем html код страницы, включая заголовки
         $info = curl_getinfo($ch); // получаем информацию о запрошенной странице
 
-        // Если страница недоступна прекращаем выполнение скрипта
+        // Если страница недоступна, то прекращаем выполнение скрипта
         if ($info['http_code'] != 200) {
             $this->stop("Страница {$url} недоступна. Статус: {$info['http_code']}.");
         }
@@ -475,7 +456,7 @@ class TurboClass
      * @param string $content Контент страницы полностью
      * @return string Контент для турбо страницы
      */
-    private function getContentToFeed($content)
+    protected function getContentToFeed($content)
     {
         $turboContent = '';
         // Берём контент сотмеченный для фида
@@ -546,15 +527,15 @@ class TurboClass
     }
 
     /**
-     * Генерация скилета нового XML-документа фида в виде объекта "SimpleXMLElement"
+     * Генерация скелета нового XML-документа фида в виде объекта "SimpleXMLElement"
      *
      * @param string $title Значение тэга "title" нового XML-документа
      * @param string $description Значение тэга "description" нового XML-документа
      * @return \SimpleXMLElement
      */
-    private function getNewSimpleXmlObject($title = '', $description = '')
+    protected function getNewSimpleXmlObject($title = '', $description = '')
     {
-        $rss = new \SimpleXMLElement("<?xml version=\"1.0\" encoding=\"utf-8\"?><rss></rss>");
+        $rss = new \SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><rss></rss>');
         $rss->addAttribute('xmlns:xmlns:atom', 'http://www.w3.org/2005/Atom');
         $rss->addAttribute('xmlns:xmlns:dc', 'http://purl.org/dc/elements/1.1/');
         $rss->addAttribute('xmlns:xmlns:content', 'http://purl.org/rss/1.0/modules/content/');
