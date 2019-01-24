@@ -119,8 +119,8 @@ class Db extends \mysqli
     {
         $result = parent::query($query, $resultMode);
 
-        if ($this->error) {
-            Util::addError($this->error . PHP_EOL . 'Query: ' . $query);
+        if ($error = $this->error) {
+            Util::addError($error . PHP_EOL . 'Query: ' . $query);
         }
 
         return $result;

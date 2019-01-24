@@ -96,11 +96,11 @@ class Crawler
         // Проверка существования файла sitemap.xml и его даты
         $this->prepareSiteMapFile();
 
-        // Проверка доступности и времени последнего сохранения промежуточного файла ссылок
-        $this->checkTmpFile();
-
         // Загружаем данные, собранные на предыдущих шагах работы скрипта
         $this->loadParsedUrls();
+
+        // Проверка доступности и времени последнего сохранения промежуточного файла ссылок
+        $this->loadRadarData();
 
         // Уточняем время, доступное для обхода ссылок $this->config['script_timeout']
         $this->setTimeout();
@@ -235,8 +235,11 @@ class Crawler
     /**
      * Проверка доступности временных файлов и времени последнего сохранения промежуточного файла ссылок
      */
-    protected function checkTmpFile()
+    protected function loadRadarData()
     {
+        if (empty($this->config['is_radar'])) {
+            return;
+        }
 
         $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
 
@@ -247,25 +250,14 @@ class Crawler
         } elseif ((file_put_contents($tmpRadarFile, '') === false)) {
             // Файла нет и создать его не удалось
             $this->stop("Не удалось создать временный файл {$tmpRadarFile}!");
+        } else {
+            unlink($tmpRadarFile);
         }
 
-        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
-
-        if (file_exists($tmpFile)) {
-            if (!is_writable($tmpFile)) {
-                $this->stop("Временный файл {$tmpFile} недоступен для записи!");
-            }
-
-            // Если промежуточный файл ссылок последний раз обновлялся более того количества часов назад,
-            // которое указано в настройках, то производим его принудительную очистку.
-            $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
-            if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
-                file_put_contents($tmpFile, '');
-                file_put_contents($tmpRadarFile, '');
-            }
-        } elseif ((file_put_contents($tmpFile, '') === false)) {
-            // Файла нет и создать его не удалось
-            $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
+        // Если существует файл хранения временных данных отчёта о перелинковке
+        if (file_exists($tmpRadarFile)) {
+            $arr = file_get_contents($tmpRadarFile);
+            $this->radarLinks = unserialize($arr);
         }
     }
 
@@ -325,25 +317,37 @@ class Crawler
      */
     protected function loadParsedUrls()
     {
+        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+
+        if (file_exists($tmpFile)) {
+            if (!is_writable($tmpFile)) {
+                $this->stop("Временный файл {$tmpFile} недоступен для записи!");
+            }
+
+            // Если промежуточный файл ссылок последний раз обновлялся более того количества часов назад,
+            // которое указано в настройках, то производим его принудительную очистку.
+            $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
+            if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
+                unlink($tmpFile);
+                unlink($tmpRadarFile);
+            }
+        } elseif ((file_put_contents($tmpFile, '') === false)) {
+            // Файла нет и создать его не удалось
+            $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
+        } else {
+            unlink($tmpFile);
+        }
+
         // Если существует файл хранения временных данных сканирования,
         // Данные разбиваются на 2 массива: пройденных и непройденных ссылок
-        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
         if (file_exists($tmpFile)) {
             $arr = file_get_contents($tmpFile);
             $arr = unserialize($arr);
 
-            $this->links = $arr[0];
-            $this->checked = $arr[1];
-            $this->external = $arr[2];
-        }
-
-        if ($this->config['is_radar']) {
-            // Если существует файл хранения временных данных отчёта о перелинковке
-            $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
-            if (file_exists($tmpRadarFile)) {
-                $arr = file_get_contents($tmpRadarFile);
-                $this->radarLinks = unserialize($arr);
-            }
+            $this->links = empty($arr[0]) ? array() : $arr[0];
+            $this->checked = empty($arr[1]) ? array() : $arr[1];
+            $this->external = empty($arr[2]) ? array() : $arr[2];
         }
     }
 
@@ -544,7 +548,7 @@ class Crawler
     {
         // Карта сайта
         $file = $this->config['pageroot'] . $this->config['old_sitemap'];
-        $old = file_exists($file) ? unserialize(file_get_contents($file)) : '';
+        $old = file_exists($file) ? unserialize(file_get_contents($file)) : array(array(), array());
 
         $oldUrl = $old[0];
         $oldExternal = $old[1];
@@ -791,7 +795,9 @@ XML;
         fclose($fp);
 
         $tmp = $this->config['pageroot'] . $this->config['tmp_file'];
-        unlink($tmp);
+        if (file_exists($tmp)) {
+            unlink($tmp);
+        }
 
         return $xmlFile;
     }
