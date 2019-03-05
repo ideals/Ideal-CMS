@@ -71,6 +71,11 @@ class Config
         $this->array[$name] = $value;
     }
 
+    public function __isset($name)
+    {
+        return isset($this->array[$name]);
+    }
+
     /**
      * Из списка подключённых структур находит стартовую по наличию заполненного параметра startName
      *
