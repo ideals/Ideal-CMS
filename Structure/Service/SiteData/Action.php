@@ -19,7 +19,13 @@
     if (isset($_POST['edit'])) {
         $fileCache = new \Ideal\Structure\Service\Cache\Model($file);
         $response = $fileCache->checkSettings();
-        $file->changeAndSave(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php', $response['res'], $response['class'], $response['text']);
+        $response['text'] = empty($response['text']) ? 'Настройки сохранены' : $response['text'];
+        $file->changeAndSave(
+            DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php',
+            $response['res'],
+            $response['class'],
+            $response['text']
+        );
     }
     echo $file->showEdit();
     ?>
