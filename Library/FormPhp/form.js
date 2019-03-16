@@ -208,6 +208,7 @@ jQuery.fn.form = function (options, messages, methods) {
         location: false,
         successMessage:  true,
         clearForm: true,
+        redirect: '',
         ajaxSend: true
     }, options);
     var messagesOrig = $.extend({
@@ -363,6 +364,8 @@ jQuery.fn.form = function (options, messages, methods) {
                     $(this)[0].reset();
                 }
                 $(this).trigger('form.successSend', [result]);
+            } else {
+                $(this).trigger('form.errorSend');
             }
             if (options.successMessage == true) {
                 if (options.ajaxDataType == 'text') {
@@ -378,8 +381,12 @@ jQuery.fn.form = function (options, messages, methods) {
             alert(messages.ajaxError);
         },
         // Вывод сообщений
-        alert: function ($message, $status) {
-            window.alert($message);
+        alert: function (message, status) {
+            window.alert(message);
+            // При успешной отправке формы запускаем редирект, если нужно
+            if (status === 'success' && options.redirect !== '') {
+                document.location.href = options.redirect;
+            }
         }
     }, methods);
 
@@ -395,7 +402,7 @@ jQuery.fn.form = function (options, messages, methods) {
                 if (this.defaultSubmit === true) {
                     return true;
                 }
-                if (this.disableSubmit == true) {
+                if (this.disableSubmit === true) {
                     return false;
                 }
                 this.disableSubmit = true;
