@@ -17,6 +17,9 @@ class AjaxController
     /** @var Model Модель соответствующая этому контроллеру */
     protected $model;
 
+    /** @var array Дополнительные HTTP-заголовки ответа  */
+    protected $httpHeaders = array('X-Robots-Tag' => 'noindex, nofollow');
+
     /* @var View Объект вида — twig-шаблонизатор */
     protected $view;
 
@@ -57,9 +60,7 @@ class AjaxController
      */
     public function getHttpHeaders()
     {
-        return array(
-            'X-Robots-Tag' => 'noindex, nofollow'
-        );
+        return $this->httpHeaders;
     }
 
     /**
