@@ -82,6 +82,11 @@ class TurboClass
             . "Content-type: text/plain; charset=utf-8\r\n"
             . 'From: turbofeed@' . $this->host;
 
+        if (empty($to) && empty($this->config['error_email_notify'])) {
+            echo $text;
+            return;
+        }
+
         $to = empty($to) ? $this->config['error_email_notify'] : $to;
         $subject = empty($subject) ? $this->host . ' yandex turbo-pages' : $subject;
 
@@ -204,7 +209,7 @@ class TurboClass
         }
 
         $tmp = parse_url($this->config['website']);
-        $this->host = $tmp['host'];
+        $this->host = empty($tmp['host']) ? $this->config['website'] : $tmp['host'];
 
         // Массив значений по умолчанию
         $default = array(
@@ -461,6 +466,11 @@ class TurboClass
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
         curl_close($ch);
         $res = substr($res, $header_size); // вырезаем html код страницы
+
+        // Заменяем в тексте страницы неподходящие символы на знаки вопроса
+        $res = htmlspecialchars($res, ENT_NOQUOTES | ENT_DISALLOWED);
+        $res = htmlspecialchars_decode($res, ENT_NOQUOTES | ENT_DISALLOWED);
+
         return $res;
     }
 
@@ -527,7 +537,7 @@ class TurboClass
         }
 
         // Оборачиваем заголовки страниц нужными тегами
-        $turboContent = preg_replace('/<h1.*?>(.*?)<\/h1>/i', '<header><h1>$1</h1></header>', $turboContent);
+        $turboContent = preg_replace('/<h1.*>(.*)<\/h1>/is', '<header><h1>$1</h1></header>', $turboContent);
 
         return $turboContent;
     }
