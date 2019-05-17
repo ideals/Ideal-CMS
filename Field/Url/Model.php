@@ -349,4 +349,57 @@ class Model
         $name = strtr($name, $arr);
         return $name . $ext;
     }
+
+    /**
+     * Построение url на основе cid элемета $part
+     *
+     * @param array $part Массив с данными элемента, для которого нужно построить url по cid
+     * @param string $structureName Название структуры, в которой находится элемент
+     * @return string
+     */
+    public function getUrlByCid($part, $structureName)
+    {
+        $structureClass = explode('_', $structureName);
+        $structureClass = '\\' . $structureClass[0] . '\\Structure\\' . $structureClass[1] . '\\Site\\Model';
+
+        /** @var \Ideal\Structure\Part\Site\Model $structureModel */
+        $structureModel = new $structureClass($part['prev_structure']);
+
+        $structureModel->setPageData($part);
+        $path = $structureModel->getLocalPath();
+        array_pop($path);
+
+        $url = array();
+        foreach ($path as $item) {
+            $url[] = $item['url'];
+        }
+
+        return self::getUrlWithPrefix($part, $url);
+    }
+
+    /**
+     * Установка пути для построения URL по prev_structure
+     * Используется для построения пути у повторяющихся элементов на одном уровне, если путь для них не построен
+     * Например, список товаров в корзине и т.п.
+     *
+     * @param string $prevStructure prev_structure родительского элемента
+     * @return array Путь, включая и родительский элемент
+     * @throws \Exception В случае, если родтельский элемент не найден (неправильная prev_structure)
+     */
+    public function setPathByPrevStructure($prevStructure)
+    {
+        $config = Config::getInstance();
+
+        // Находим элемент по prevStructure
+        list($structureId, $elementId) = explode('-', $prevStructure);
+        $structure = $config->getStructureById($structureId);
+        list($mod, $structure) = explode('_', $structure['structure']);
+        $class = '\\' . $mod . '\\Structure\\' . $structure . '\\Site\\Model';
+
+        /** @var \Ideal\Core\Site\Model $model */
+        $model = new $class('');
+        $model->initPageDataById($elementId);
+
+        return $model->detectPath();
+    }
 }

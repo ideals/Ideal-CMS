@@ -11,11 +11,14 @@
 return array(
     'params' => array (
         'in_structures' => array('Ideal_Part'), // в каких структурах можно создавать эту структуру
+        'structures' => array('Ideal_Tag'),
         'elements_cms'  => 10, // количество элементов в списке в CMS
         'elements_site' => 15, // количество элементов в списке на сайте
-        'field_name'    => '', // поле для входа в список потомков
-        'field_sort'    => 'name ASC', // поле, по которому проводится сортировка в CMS по умолчанию
-        'field_list'    => array('name', 'url', 'is_active', 'date_create')
+        'field_name'    => 'name', // поле для входа в список потомков
+        'field_sort'    => 'cid ASC', // поле, по которому проводится сортировка в CMS
+        'field_list'    => array('name', 'url', 'is_active', 'date_create'),
+        'levels' => 6, // количество уровней вложенности
+        'digits' => 3 // //кол-во разрядов
      ),
     'fields'   => array (
         'ID' => array(
@@ -27,6 +30,29 @@ return array(
             'label' => 'ID родительских структур',
             'sql'   => 'char(15)',
             'type'  => 'Ideal_Hidden'
+        ),
+        'template' => array(
+            'label' => 'Шаблон отображения',
+            'sql' => "varchar(255) default 'index.twig'",
+            'type' => 'Ideal_Template',
+            'medium' => '\\Ideal\\Medium\\TemplateList\\Model',
+            'default'   => 'index.twig',
+        ),
+        'cid' => array(
+            'label' => '№',
+            'sql' => 'char(' . (6 * 3) . ') not null',
+            'type' => 'Ideal_Cid'
+        ),
+        'lvl' => array(
+            'label' => 'Уровень вложенности объекта',
+            'sql' => 'int(1) unsigned not null',
+            'type' => 'Ideal_Hidden'
+        ),
+        'structure' => array(
+            'label' => 'Тип раздела',
+            'sql' => 'varchar(30) not null',
+            'type' => 'Ideal_Select',
+            'medium' => '\\Ideal\\Medium\\StructureList\\Model'
         ),
         'name' => array(
             'label' => 'Название',
@@ -75,6 +101,11 @@ return array(
         ),
         'is_not_menu' => array(
             'label' => 'Не выводить в меню',
+            'sql' => "bool DEFAULT '0' NOT NULL",
+            'type' => 'Ideal_Checkbox'
+        ),
+        'is_skip' => array(
+            'label' => 'Пропускать уровень',
             'sql' => "bool DEFAULT '0' NOT NULL",
             'type' => 'Ideal_Checkbox'
         ),

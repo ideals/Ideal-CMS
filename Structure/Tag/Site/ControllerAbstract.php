@@ -33,11 +33,12 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
 
         parent::indexAction();
 
-        $request = new Request();
-        $page = intval($request->page);
-        $this->view->parts = $this->model->getElementsByStructure($page, 'Ideal_News', '/news');
-        // $this->view->parts = $this->model->getElements($page);
+        // Получаем полный список тегов
+        $this->view->tags = $this->model->getList();
 
-        $this->view->pager = $this->model->getPager('page');
+        $request = new Request();
+        $page = (int)$request->page;
+        $this->view->elements = $this->model->getElements($page);
+        $this->view->pager = $this->model->getElementsPager('page');
     }
 }

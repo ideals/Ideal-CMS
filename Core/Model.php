@@ -154,7 +154,7 @@ abstract class Model
      *
      * Вызывается при копировании данных из одной модели в другую
      *
-     * @param array $model Массив переменных объекта
+     * @param object $model Массив переменных объекта
      * @return $this Либо ссылка на самого себя, либо новый объект модели
      */
     public function setVars($model)
@@ -318,9 +318,28 @@ abstract class Model
         $this->pageData = $pageData;
     }
 
+    /**
+     * Установка pageData по ID элемента
+     *
+     * @param int $id ID элемента
+     * @throws \Exception В случае, если нет элемента с указанным ID
+     */
+    public function initPageDataById($id)
+    {
+        $id = (int)$id;
+
+        $db = Db::getInstance();
+        $result = $db->select('SELECT * FROM ' . $this->_table . ' WHERE ID=:id', array('id' => $id));
+        if (empty($result[0])) {
+            throw new \Exception('Элемент не найден');
+        }
+
+        $this->initPageData($result[0]);
+    }
+
     public function initPageData($pageData = null)
     {
-        if (is_null($pageData)) {
+        if ($pageData === null) {
             $this->pageData = end($this->path);
         } else {
             $this->pageData = $pageData;

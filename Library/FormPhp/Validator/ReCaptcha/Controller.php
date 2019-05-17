@@ -48,7 +48,8 @@ class Controller extends AbstractValidator
         $msg = $this->getErrorMsg();
         return <<<JS
             function validateRecaptcha(e, messages) {
-                    return true;
+                    messages.validate = true;
+                    return messages;
                 }
 JS;
     }

@@ -75,8 +75,7 @@ class Sender
      */
     public function isEmail($mail)
     {
-        $filter = filter_var($mail, FILTER_VALIDATE_EMAIL);
-        return ($filter == $mail);
+        return filter_var($mail, FILTER_VALIDATE_EMAIL);
     }
 
     /**
@@ -103,11 +102,13 @@ class Sender
             }
             $this->body = implode("\n", $body);
         }
-        // Если есть все данные для отправки по SMTP, то используем его
         if ($this->isSmtp) {
+            // Если есть все данные для отправки по SMTP, то используем его
             $result = $this->mailSmtp($from, $to);
         } else {
-            $result = mail($to, $this->subj, $this->body, 'From: ' . $from . "\n" . $this->header);
+            // Иначе отправляем через стандартную функцию mail()
+            $fromClear = filter_var($a, FILTER_SANITIZE_EMAIL);
+            $result = mail($to, $this->subj, $this->body, 'From: ' . $from . "\n" . $this->header, '-f ' . $fromClear);
         }
         return $result;
     }

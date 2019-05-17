@@ -470,7 +470,7 @@ class Crawler
             $time = microtime(1);
         }
 
-        if ($this->config['is_radar'] && count($this->radarLinks) > 0) {
+        if ($this->config['is_radar'] && is_array($this->radarLinks) && count($this->radarLinks) > 0) {
             $this->saveParsedRadarLinks();
         }
 
@@ -876,10 +876,57 @@ XML;
             $content = $tmpContent;
         }
 
-        // Получение всех ссылок со страницы
-        preg_match_all(self::LINK, $content, $urls);
+        $links = $this->getLinksFromText($content);
 
-        return $urls[1];
+        return $links;
+    }
+
+    /**
+     * Получение всех ссылок из html-кода
+     *
+     * @param string $text html-код для парсинга
+     * @return array
+     */
+    protected function getLinksFromText($text)
+    {
+        // Получаем содержимое всех тегов <a>
+        preg_match_all('/<a (.*)>/iU', $text, $urls);
+
+        if (empty($urls[1])) {
+            return array();
+        }
+
+        // Выдёргиваем атрибуты
+        foreach ($urls[1] as $url) {
+            $url = ' ' . $url . ' ';
+            preg_match_all('/(\w+)=[\'"]([^"\']+)/', $url, $attributes);
+            $href = false;
+            foreach ($attributes[1] as $key => $name) {
+                if ($name === 'href') {
+                    $href = $attributes[2][$key];
+                    break;
+                }
+            }
+            if ($href === false) {
+                // Не удалось получить ссылку, возможно она не в кавычках
+                $a = '/(\w+)(=[\'"])([^"\']*)([\'"])/';
+                $url = preg_replace($a, '', $url);
+                preg_match_all('/(\w+)=([^\s]+)/', $url, $attributes);
+                foreach ($attributes[1] as $key => $name) {
+                    if ($name === 'href') {
+                        $href = $attributes[2][$key];
+                        break;
+                    }
+                }
+            }
+            if (empty($href) || strpos($href, '#') === 0 || stripos($href, 'javascript:') === 0) {
+                // Убираем пустые анкоры, а также анкоры без ссылок и js-код в ссылках
+                continue;
+            }
+            $links[] = $href;
+        }
+
+        return $links;
     }
 
     /**
@@ -898,9 +945,8 @@ XML;
         preg_match_all("/<!--start_content-->(.*)<!--end_content-->/iusU", $content, $radarContent);
         if ($radarContent && isset($radarContent[1]) && is_array($radarContent[1]) && !empty($radarContent[1])) {
             foreach ($radarContent[1] as $radarContentPart) {
-                $radarLinksPart = array();
-                preg_match_all(self::LINK, $radarContentPart, $radarLinksPart);
-                $radarLinks = array_merge($radarLinks, $radarLinksPart[1]);
+                $radarLinksPart = $this->getLinksFromText($radarContentPart);
+                $radarLinks = array_merge($radarLinks, $radarLinksPart);
             }
         }
         $radarLinks = array_count_values($radarLinks);
@@ -916,11 +962,6 @@ XML;
     private function addLinks($urls, $current)
     {
         foreach ($urls as $url) {
-            // Убираем анкоры без ссылок и js-код в ссылках
-            if (strpos($url, '#') === 0 || stripos($url, 'javascript:') === 0) {
-                continue;
-            }
-
             if ($this->isExternalLink($url, $current)) {
                 $this->external[$url] = $current;
                 // Пропускаем ссылки на другие сайты

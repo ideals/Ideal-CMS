@@ -129,6 +129,9 @@ class Resize
             case "image/png":
                 $src = imagecreatefrompng($this->fullNameOriginal);
                 break;
+            case 'image/gif':
+                $src = imagecreatefromgif($this->fullNameOriginal);
+                break;
         }
 
         // Если тип изображения не соответствует необходимому
@@ -228,6 +231,9 @@ class Resize
                 break;
             case "image/png":
                 imagepng($dest2, null, 1);
+                break;
+            case "image/gif":
+                imagegif($dest2);
                 break;
         }
         $image = ob_get_contents();
