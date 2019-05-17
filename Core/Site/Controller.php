@@ -42,6 +42,10 @@ class Controller
     public function error404Action()
     {
         $name = $title = 'Страница не найдена';
+        if (isset($this->view)) {
+            // Если шаблон был инициирован ранее, сбрасываем его, чтобы поставить шаблон 404-ой ошибки
+            unset($this->view);
+        }
         $this->templateInit('404.twig');
 
         // Добавляем в path пустой элемент
@@ -146,8 +150,10 @@ class Controller
         $this->view->header = $header;
 
         // Перенос данных страницы в шаблон
-        foreach ($pageData as $k => $v) {
-            $this->view->$k = $v;
+        if (is_array($pageData)) {
+            foreach ($pageData as $k => $v) {
+                $this->view->$k = $v;
+            }
         }
 
         $request = new Request();
@@ -241,6 +247,21 @@ class Controller
         }
 
         return $text;
+    }
+
+    /**
+     * Сеттер, необходимый для вызова экшенов контроллера из других контроллеров
+     *
+     * @param $model
+     */
+    public function setModel($model)
+    {
+        $this->model = $model;
+    }
+
+    public function getView()
+    {
+        return $this->view;
     }
 
     /**
