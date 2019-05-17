@@ -22,6 +22,13 @@ class ModelAbstract extends \Ideal\Core\Site\Model
 
     public function detectPageByUrl($path, $url)
     {
+        if (count($url) > 1) {
+            // URL новостей не может содержать вложенных элементов
+            $this->path = $path;
+            $this->is404 = true;
+            return $this;
+        }
+
         $db = Db::getInstance();
 
         // Для авторизированных в админку пользователей отображать скрытые страницы

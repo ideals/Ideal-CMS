@@ -82,6 +82,11 @@ class TurboClass
             . "Content-type: text/plain; charset=utf-8\r\n"
             . 'From: turbofeed@' . $this->host;
 
+        if (empty($to) && empty($this->config['error_email_notify'])) {
+            echo $text;
+            return;
+        }
+
         $to = empty($to) ? $this->config['error_email_notify'] : $to;
         $subject = empty($subject) ? $this->host . ' yandex turbo-pages' : $subject;
 
@@ -132,11 +137,22 @@ class TurboClass
                 $contentToFeed = $this->getContentToFeed($content);
             }
 
+            // Если нет контента страницы, то не добавляем её в фид
+            if (empty($contentToFeed)) {
+                unset($links[$url]);
+                continue;
+            }
+
             // Добавляем полученный контент к фиду
             $item = $this->rss->channel->addChild('item');
             $item->addAttribute('turbo', $includeUrl && $contentToFeed ? 'true' : 'false');
             $item->addChild('link', $url);
-            $item->addChild('xmlsn:turbo:content', "<![CDATA[\n{$contentToFeed}");
+
+            // Добавление контента страницы в CDATA
+            $child = $item->addChild('xmlsn:turbo:content');
+            $node = dom_import_simplexml($child);
+            $no = $node->ownerDocument;
+            $node->appendChild($no->createCDATASection($contentToFeed));
 
             // И удаляем из массива непройденных
             unset($links[$url]);
@@ -193,7 +209,7 @@ class TurboClass
         }
 
         $tmp = parse_url($this->config['website']);
-        $this->host = $tmp['host'];
+        $this->host = empty($tmp['host']) ? $this->config['website'] : $tmp['host'];
 
         // Массив значений по умолчанию
         $default = array(
@@ -239,28 +255,30 @@ class TurboClass
      */
     protected function prepareYandexRssFile()
     {
+        $rssFile = $this->config['pageroot'] . $this->config['yandexRssFile'];
+
         // Проверяем существует ли файл и доступен ли он для чтения и записи
-        if (file_exists($this->config['pageroot'] . $this->config['yandexRssFile'])) {
-            if (!is_readable($this->config['pageroot'] . $this->config['yandexRssFile'])) {
-                $this->stop("File {$this->config['yandexRssFile']} is not readable!");
+        if (file_exists($rssFile)) {
+            if (!is_readable($rssFile)) {
+                $this->stop("File {$rssFile} is not readable!");
             }
-            if (!is_writable($this->config['pageroot'] . $this->config['yandexRssFile'])) {
-                $this->stop("File {$this->config['yandexRssFile']} is not writable!");
+            if (!is_writable($rssFile)) {
+                $this->stop("File {$rssFile} is not writable!");
             }
         } else {
-            if ((file_put_contents($this->config['pageroot'] . $this->config['yandexRssFile'], '') === false)) {
+            if (file_put_contents($rssFile, '') === false) {
                 // Файла нет и создать его не удалось
                 $this->stop("Couldn't create file {$this->config['yandexRssFile']}!");
             } else {
                 // Удаляем пустой файл, т.к. пустого файла не должно быть
-                unlink($this->config['pageroot'] . $this->config['yandexRssFile']);
+                unlink($rssFile);
                 return;
             }
         }
 
         // Проверяем, обновлялся ли сегодня фид
-        if (date('d:m:Y', filemtime($this->config['pageroot'] . $this->config['yandexRssFile'])) == date('d:m:Y')) {
-            $this->stop("Feed {$this->config['yandexRssFile']} already created today! Everything it's alright.");
+        if (!$this->forceParse && date('d:m:Y', filemtime($rssFile)) === date('d:m:Y')) {
+            $this->stop("Feed {$rssFile} already created today! Everything it's alright.");
         }
     }
 
@@ -448,6 +466,11 @@ class TurboClass
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
         curl_close($ch);
         $res = substr($res, $header_size); // вырезаем html код страницы
+
+        // Заменяем в тексте страницы неподходящие символы на знаки вопроса
+        $res = htmlspecialchars($res, ENT_NOQUOTES | ENT_DISALLOWED);
+        $res = htmlspecialchars_decode($res, ENT_NOQUOTES | ENT_DISALLOWED);
+
         return $res;
     }
 
@@ -514,14 +537,7 @@ class TurboClass
         }
 
         // Оборачиваем заголовки страниц нужными тегами
-        $turboContent = preg_replace('/<h1.*?>(.*?)<\/h1>/i', '<header><h1>$1</h1></header>', $turboContent);
-
-        // Проверяем, наличие тегов перед '<header>', так как '<header>', почему-то не может идти первым
-        if (strpos(trim($turboContent), '<header>') === 0) {
-            $turboContent = '<!--start_content-->' . $turboContent . '<!--end_content-->';
-        }
-
-        $turboContent = htmlspecialchars($turboContent);
+        $turboContent = preg_replace('/<h1.*>(.*)<\/h1>/is', '<header><h1>$1</h1></header>', $turboContent);
 
         return $turboContent;
     }

@@ -328,6 +328,10 @@ class Forms
         // Если установлен флаг проверки по странице отправки формы, то проверяем по рефереру, иначе по токену.
         if ($this->locationValidation) {
             $location = $this->getValue('_location');
+            $pos = mb_strpos($location, '#');
+            if ($pos !== false) {
+                $location = mb_substr($location, 0, $pos);
+            }
             if (empty($location) || $_SERVER['HTTP_REFERER'] != $location) {
                 return false;
             }

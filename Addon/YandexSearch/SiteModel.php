@@ -34,6 +34,7 @@ class SiteModel extends Addon\AbstractSiteModel
      * Получение данных аддона с выполнением всех действий (в данном случае — запроса к Яндексу)
      *
      * @return array Все данные аддона и сгенерированное поле content с отображаемым html-кодом
+     * @throws YandexXmlException
      */
     public function getPageData()
     {
@@ -41,7 +42,7 @@ class SiteModel extends Addon\AbstractSiteModel
 
         $mode = explode('\\', get_class($this->parentModel));
 
-        if ($mode[3] != 'Site') {
+        if ($mode[3] !== 'Site') {
             // Отображение поиска нужно только для фронтенда, в бэкенде просто возвращаем данные из БД
             return $this->pageData;
         }
@@ -65,13 +66,14 @@ class SiteModel extends Addon\AbstractSiteModel
 
         // Номер отображаемой страницы
         $request = new Request();
-        $page = intval($request->num);
-        $page = ($page == 0) ? 1 : $page;
+        $page = (int)$request->num;
+        $page = ($page === 0) ? 1 : $page;
         $page--;
 
         // Поисковый запрос
         $request = new Request();
-        $query = trim(strval($request->query));
+        $query = trim((string)$request->query);
+        $view->query = $query;
 
         if (!empty($query)) {
             if (empty($yandexLogin) || empty($yandexKey)) {
@@ -89,10 +91,10 @@ class SiteModel extends Addon\AbstractSiteModel
 
                 try {
                     $yandexResponse = $yandexRequest
-                        ->query($query)// запрос к поисковику
+                        ->query($query) // запрос к поисковику
                         ->site($config->domain)// ограничиваемся поиском по сайту
-                        ->page($page)// начать со страницы. По умолчанию 0 (первая страница)
-                        ->limit($this->params['elements_site'])// Количество результатов на странице (макс 100)
+                        ->page($page) // начать со страницы. По умолчанию 0 (первая страница)
+                        ->limit($this->params['elements_site']) // Количество результатов на странице (макс 100)
                         ->proxyUrl($proxyUrl)
                         ->send() // Возвращает объект Response
                     ;
@@ -107,8 +109,9 @@ class SiteModel extends Addon\AbstractSiteModel
                     // Передаём данные в шаблон для рендера поиска
                     $view->total = $this->listCount = $yandexResponse->total();
                     $view->parts = $list;
-                    $view->query = $query;
                     $view->pager = $this->getPager('num');
+                    $page++;
+                    $view->startList = $page * $this->pageData['elements_site'] - $this->pageData['elements_site'] + 1;
                 }
             } else {
                 $view->message = 'Поле логин или ключ от яндекса имеет пустое значене';

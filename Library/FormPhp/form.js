@@ -208,6 +208,7 @@ jQuery.fn.form = function (options, messages, methods) {
         location: false,
         successMessage:  true,
         clearForm: true,
+        redirect: '',
         ajaxSend: true
     }, options);
     var messagesOrig = $.extend({
@@ -252,14 +253,16 @@ jQuery.fn.form = function (options, messages, methods) {
                         value = (typeof input.val() == 'undefined') ? '' : input.val();
                     }
                     messages = eval(fn)(value, messages);
-                    if (messages.validate == false) {
-                        isValid = false;
-                        input.addClass('error-' + check[field][k]);
-                        if (messages.errors[messages.errors.length - 1] != '') {
-                            input.parent().append("<div class='error-text'>" + messages.errors[messages.errors.length - 1] + "</div>");
-                        }
-                    } else {
+                    if (messages.validate) {
                         input.removeClass('error-' + check[field][k]);
+                    } else {
+                        isValid = false;
+                        if (input.parent().find('.error-text').length === 0) {
+                            input.addClass('error-' + check[field][k]);
+                            if (messages.errors[messages.errors.length - 1] != '') {
+                                input.parent().append("<div class='error-text'>" + messages.errors[messages.errors.length - 1] + "</div>");
+                            }
+                        }
                     }
                 }
             }
@@ -354,7 +357,6 @@ jQuery.fn.form = function (options, messages, methods) {
                     methods.errorSend.apply($form, [result]);
                 }
             });
-            return false;
         },
         // Обработка успешной отправки формы
         successSend: function (result) {
@@ -363,6 +365,8 @@ jQuery.fn.form = function (options, messages, methods) {
                     $(this)[0].reset();
                 }
                 $(this).trigger('form.successSend', [result]);
+            } else {
+                $(this).trigger('form.errorSend');
             }
             if (options.successMessage == true) {
                 if (options.ajaxDataType == 'text') {
@@ -378,24 +382,30 @@ jQuery.fn.form = function (options, messages, methods) {
             alert(messages.ajaxError);
         },
         // Вывод сообщений
-        alert: function ($message, $status) {
-            window.alert($message);
+        alert: function (message, status) {
+            window.alert(message);
+            // При успешной отправке формы запускаем редирект, если нужно
+            if (status === 'success' && options.redirect !== '') {
+                document.location.href = options.redirect;
+            }
         }
     }, methods);
 
-    if (options.ajaxSend === false){
-        methods = $.extend(methods, {submit: function() {}});
+    if (options.ajaxSend === false) {
+        methods = $.extend(methods, {submit: function () {}});
     }
 
     var make = function (form) {
         $(this)
-            .submit(function () {
-                // Условие истина, когда обработчик события срабатывает при выозове события из скрипта отправки
-                // через iframe
+            .submit(function (e) {
+                // Если идёт запрос на отправку через iframe, то просто отправляем форму
                 if (this.defaultSubmit === true) {
                     return true;
                 }
-                if (this.disableSubmit == true) {
+
+                e.preventDefault(); // Отключаем стандартную отправку формы
+
+                if (this.disableSubmit === true) {
                     return false;
                 }
                 this.disableSubmit = true;
