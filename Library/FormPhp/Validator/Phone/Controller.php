@@ -24,7 +24,8 @@ class Controller extends AbstractValidator
             return true;
         }
         preg_match_all('/[0-9]/i', $value, $result);
-        if (isset($result[0]) && (count($result[0]) < 7)) {
+        $count = count($result[0]);
+        if (isset($result[0]) && ($count < 7) && !($count == 1 && $result[0][0] == '7')) {
             return false;
         }
         return true;
@@ -39,13 +40,14 @@ class Controller extends AbstractValidator
         $msg = $this->getErrorMsg();
         return <<<JS
             function validatePhone(e, messages) {
+                var len = 0;
                 var r = e.match(/[0-9]/g);
                 if (r != null) {
-                    r = r.length;
+                    len = r.length;
                 } else {
-                    r = 0;
+                    len = 0;
                 }
-                if (r < 7 && e != '') {
+                if (len < 7 && e != '' && !(r.length === 1 && r[0] === '7')) {
                     messages.errors[messages.errors.length] = "{$msg}";
                     messages.validate = false;
                     return messages;
