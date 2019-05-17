@@ -10,21 +10,30 @@ namespace Ideal\Structure\Tag\Site;
 
 use Ideal\Core\Config;
 use Ideal\Core\Db;
+use Ideal\Core\Pagination;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
+use Ideal\Field;
 use Ideal\Structure\User;
 
 /**
  * Class ModelAbstract
  * @package Ideal\Structure\Tag\Site
  */
-class ModelAbstract extends \Ideal\Core\Site\Model
+class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
 {
     /** @var bool Флаг отображения списка тегов (false), или списка элементов, которым присвоен тег (true) */
     protected $countSql = false;
+    /**
+     * @var int
+     */
+    protected $countElements;
 
     /**
      * Определение страницы по URL
+     *
+     * Если передаётся один URL, то выводится только один тэг. Дополнительные тэги передаются через параметр tags,
+     * через запятую.
      *
      * @param array $path Разобранная часть URL
      * @param array $url Оставшаяся, неразобранная часть URL
@@ -32,61 +41,12 @@ class ModelAbstract extends \Ideal\Core\Site\Model
      */
     public function detectPageByUrl($path, $url)
     {
-        $db = Db::getInstance();
-
-        // Для авторизированных в админку пользователей отображать скрытые страницы
-        $user = new User\Model();
-        $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
-
-        $_sql = "SELECT * FROM {$this->_table} WHERE BINARY url=:url {$checkActive}";
-        $par = array();
-        $par['url'] = !empty($url) ? $url[0] : null;
-        $par['time'] = time();
-
-        $tags = $db->select($_sql, $par); // запрос на получение всех страниц, соответствующих частям url
-
-        // Страницу не нашли, возвращаем 404
-        if (!isset($tags[0]['ID'])) {
-            $this->path = $path;
-            $this->is404 = true;
-            return $this;
-        }
-
-        if (count($tags) > 1) {
-            $c = count($tags);
-            Util::addError("В базе несколько ({$c}) тегов с одинаковым url: " . implode('/', $url));
-            $tags = array($tags[0]); // оставляем для отображения первую новость
-        }
-
-        $tags[0]['structure'] = 'Ideal_Tag';
-        $tags[0]['url'] = $url[0];
-
-        $this->path = array_merge($path, $tags);
+        parent::detectPageByUrl($path, $url);
 
         $request = new Request();
         $request->action = 'detail';
 
         return $this;
-    }
-
-    /**
-     * Получение списка тегов
-     *
-     * @param int $page Номер отображаемой страницы
-     * @return array Полученный список элементов
-     */
-    public function getList($page = null)
-    {
-        $config = Config::getInstance();
-        $tags = parent::getList($page);
-
-        $parentUrl = $this->getParentUrl();
-        foreach ($tags as $k => $v) {
-            $tags[$k]['link'] = $parentUrl . '/' . $v['url'] . $config->urlSuffix;
-            $tags[$k]['date_create'] = Util::dateReach($v['date_create']);
-        }
-
-        return $tags;
     }
 
     /**
@@ -98,7 +58,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
      * @return array Список элементов, которым присвоен тег из $this->pageData
      * @throws \Exception
      */
-    public function getElements($page = null, $fieldNames = 'ID, name, url', $orderBy = 'date_create')
+    public function getElements($page = null, $fieldNames = 'ID,name,url', $orderBy = 'date_create')
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
@@ -112,48 +72,79 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         // Раскладываем айдишники элементов по разделам
         $tables = array();
         foreach ($listTag as $v) {
-            $tables[$v['prev_structure']][] = $v['part_id'];
+            $tables[$v['structure_id']][] = $v['part_id'];
         }
 
         // Построение запросов для извлечения данных из таблиц структур
-        $paths = array();
         $order = (empty($orderBy)) ? '' : ',' . $orderBy;
-        foreach ($tables as $prevStructure => $parts) {
-            list($structureId, $id) = explode('-', $prevStructure);
+        $elements = array();
+        foreach ($tables as $structureId => $parts) {
             $structure = $config->getStructureById($structureId);
+            $tableStructure = $config->getTableByName($structure['structure']);
             $structure = explode('_', $structure['structure']);
             $class = '\\' . $structure[0] . '\\Structure\\' . $structure[1] . '\\Site\\Model';
-            /** @var \Ideal\Core\Site\Model $model */
-            $model = new $class('');
-            $model->setPageDataById($id);
-            $path = $model->detectPath();
-            $paths[$prevStructure] = $path;
-            $data = $model->getPageData();
 
-            $tableStructure = $config->getTableByName($data['structure']);
-            $ids = '(' . implode(',', $parts) . ')';
-            $sql = "SELECT {$fieldNames}{$order}, '{$prevStructure}' as prev_structure, '{$class}' as class_name
-                      FROM {$tableStructure} WHERE is_active=1 AND ID IN {$ids}";
-            $tables[$prevStructure] = $sql;
+            // Проверяем нет ли у модели структуры метода для получения элементов привязанных к определённому тегу
+            if (method_exists($class, 'tagElementsList')) {
+                $classModel = new $class('');
+                $structureElementList = $classModel->tagElementsList($parts);
+                $elements = array_merge($elements, $structureElementList);
+                unset($tables[$structureId]);
+            } else {
+                $ids = '(' . implode(',', $parts) . ')';
+                $sql = "SELECT {$fieldNames}{$order}, '{$class}' as class_name
+                      FROM {$tableStructure} WHERE {$tableStructure}.is_active=1 AND {$tableStructure}.ID IN {$ids}";
+                $tables[$structureId] = $sql;
+            }
         }
 
-        $orderBy = ($orderBy == '') ? '' : 'ORDER BY ' . $orderBy;
-        $this->countSql = '(' . implode(') UNION (', $tables) . ')';
+        $this->countElements = count($elements);
 
-        $sql = $this->countSql . $orderBy . $this->getSqlLimit($page);
-
-        $result = $db->select($sql);
-
-        // Формируем правильные ссылки
-        // todo формирование правильных ссылок для разных структур
-        /**
-         * foreach ($result as $k => $v) {
-         * $url = new \Ideal\Field\Url\Model();
-         * $result[$k]['link'] = $url->getUrlWithPrefix($v, $prefix);
-         * }
-         **/
+        // Получаем часть массива для отображения на странице
+        $start = ($page > 1) ? ($page - 1) * $this->params['elements_site'] : 0;
+        $result = array_slice($elements, $start, $this->params['elements_site']);
 
         return $result;
+    }
+
+    /**
+     * Получение листалки для шаблона и стрелок вправо/влево
+     *
+     * @param string $pageName Название get-параметра, содержащего страницу
+     * @return mixed
+     */
+    public function getElementsPager($pageName)
+    {
+        // По заданному названию параметра страницы определяем номер активной страницы
+        $request = new Request();
+        $page = $this->setPageNum($request->{$pageName});
+
+        // Строка запроса без нашего параметра номера страницы
+        $query = $request->getQueryWithout($pageName);
+
+        // Определяем кол-во отображаемых элементов на основании названия класса
+        $class = strtolower(get_class($this));
+        $class = explode('\\', trim($class, '\\'));
+        $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
+        $onPage = $this->params[$nameParam];
+
+        $countList = $this->countElements;
+
+        if (($countList > 0) && (ceil($countList / $onPage) < $page)) {
+            // Если для запрошенного номера страницы нет элементов - выдать 404
+            $this->is404 = true;
+            return false;
+        }
+
+        $pagination = new Pagination();
+        // Номера и ссылки на доступные страницы
+        $pager['pages'] = $pagination->getPages($countList, $onPage, $page, $query, $pageName);
+        $pager['prev'] = $pagination->getPrev(); // ссылка на предыдущю страницу
+        $pager['next'] = $pagination->getNext(); // cсылка на следующую страницу
+        $pager['total'] = $countList; // общее количество элементов в списке
+        $pager['num'] = $onPage; // количество элементов на странице
+
+        return $pager;
     }
 
     /**
@@ -197,25 +188,6 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         }
 
         return $result;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getListCount()
-    {
-        if (empty($this->countSql)) {
-            // Нужно отобразить список тэгов, поэтому их количество считаем обычным способом
-            return parent::getListCount();
-        }
-
-        $db = Db::getInstance();
-
-        // Подсчитываем количество элементов
-        $_sql = 'SELECT COUNT(*) FROM (' . $this->countSql . ') as xyz';
-        $list = $db->select($_sql);
-
-        return $list[0]['COUNT(*)'];
     }
 
     /**
