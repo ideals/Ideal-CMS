@@ -15,7 +15,7 @@ return array(
         'dirMode' => "0755", // Режим доступа к папке "0755" | Ideal_Text
         'fileMode' => "0644", // Режим доступа к файлу "0644" | Ideal_Text
         'error404Notice' => "0", // Уведомление о 404ых ошибках | Ideal_Checkbox
-        'indexedOptions' => "page", // Индексируемые параметры (по одному через запятую) | Ideal_Text
+        'indexedOptions' => "", // Параметры, которые могут фигурировать в rel=canonical (по одному через запятую) | Ideal_Text
     ),
     'cache' => array( // Кэширование
         'jsAndCss' => "0", // Объединение и минификация css и js файлов | Ideal_Checkbox
