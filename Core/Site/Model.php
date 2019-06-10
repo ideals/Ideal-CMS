@@ -174,7 +174,7 @@ abstract class Model extends Core\Model
      */
     public function getCanonical()
     {
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         list($path) = explode('?', $_SERVER['REQUEST_URI']);
         $canonical = "{$protocol}{$_SERVER['HTTP_HOST']}{$path}";
         $config = Core\Config::getInstance();
