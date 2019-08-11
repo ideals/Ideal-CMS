@@ -166,8 +166,6 @@ class Controller
                     $this->view->addons[$i]['content'] = '';
                 }
             }
-            // Страницы листалки неиндексируются, но ссылки с них — индексируются
-            $this->model->metaTags['robots'] = 'follow, noindex';
         } elseif ($page === 1) {
             // Устраняем из адреса параметр с номером страницы
             $url = $this->model->getCanonical();
