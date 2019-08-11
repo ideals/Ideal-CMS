@@ -111,36 +111,42 @@ abstract class Model extends Core\Model
     public function extractHeader($text)
     {
         $header = '';
-        if (preg_match('/<h1.*>(.*)<\/h1>/isU', $text, $headerArray)) {
+        if (preg_match('/<h1.*>\s*(.*)<\/h1>/isU', $text, $headerArray)) {
             if ($this->isExtractHeader) {
-                $text = preg_replace('/<h1.*>(.*)<\/h1>/isU', '', $text, 1);
+                $text = preg_replace('/<h1.*>\s*(.*)<\/h1>/isU', '', $text, 1);
             }
             $header = $headerArray[1];
         }
         return array($header, $text);
     }
 
+    /**
+     * Формирование html-кода мета-тегов страницы
+     *
+     * @param bool $xhtml XHTML или не XHTML формат кода
+     * @return string Мета-теги страницы в html-формате
+     */
     public function getMetaTags($xhtml = false)
     {
         $meta = '';
-        $xhtml = ($xhtml) ? '/' : '';
+        $xhtmlChar = $xhtml ? '/' : '';
         $end = end($this->path);
 
         if (isset($end['description']) && $end['description'] != '' && (!isset($this->pageNum) || $this->pageNum === 1)) {
             $meta .= '<meta name="description" content="'
                 . str_replace('"', '&quot;', $end['description'])
-                . '" ' . $xhtml . '>';
+                . '" ' . $xhtmlChar . '>';
         }
 
         if (isset($end['keywords']) && $end['keywords'] != '' && (!isset($this->pageNum) || $this->pageNum === 1)) {
             $meta .= '<meta name="keywords" content="'
                 . str_replace('"', '&quot;', $end['keywords'])
-                . '" ' . $xhtml . '>';
+                . '" ' . $xhtmlChar . '>';
         }
 
         foreach ($this->metaTags as $tag => $value) {
             $meta .= '<meta name="' . $tag . '" content="'
-                . $value . '" ' . $xhtml . '>';
+                . $value . '" ' . $xhtmlChar . '>';
         }
 
         return $meta;
@@ -174,7 +180,7 @@ abstract class Model extends Core\Model
      */
     public function getCanonical()
     {
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         list($path) = explode('?', $_SERVER['REQUEST_URI']);
         $canonical = "{$protocol}{$_SERVER['HTTP_HOST']}{$path}";
         $config = Core\Config::getInstance();

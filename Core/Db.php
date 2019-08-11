@@ -241,6 +241,8 @@ class Db extends \mysqli
             $column = "`" . parent::escape_string($column) . "`";
             if (null === $value) {
                 $value = 'NULL';
+            } elseif (is_bool($value)) {
+                $value = (int)$value;
             } else {
                 $value = "'" . parent::escape_string($value) . "'";
             }
@@ -303,7 +305,7 @@ class Db extends \mysqli
         $this->deleteTableName = "`" . parent::escape_string($this->deleteTableName) . "`";
         $where = '';
 
-        if ($this->whereParams && $this->whereQuery) {
+        if ($this->whereQuery) {
             $where = 'WHERE ' . $this->prepareSql($this->whereQuery, $this->whereParams);
         }
 

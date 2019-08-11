@@ -74,6 +74,28 @@ class Model
     }
 
     /**
+     * Сплющиваем дерево в одноуровневый массив
+     *
+     * @param array $tree Дерево с вложенными ветками
+     * @return array Плоский массив всех элементов дерева
+     */
+    public function plainTree($tree)
+    {
+        $list = array();
+        foreach ($tree as $v) {
+            if (isset($v['subCategoryList'])) {
+                $arr = $this->plainTree($v['subCategoryList']);
+                unset($v['subCategoryList']);
+                $list[] = $v;
+                $list = array_merge($list, $arr);
+            } else {
+                $list[] = $v;
+            }
+        }
+        return $list;
+    }
+
+    /**
      * Возвращает родительский cid для указанного уровня $lvl
      *
      * @param string $cid     Cid из которого надо извлечь родителя

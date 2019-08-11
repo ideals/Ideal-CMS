@@ -273,16 +273,15 @@ class Resize
     protected function saveImage($rImage, $originalImagePath)
     {
         /** @var string $pathResizedImg Путь к новому изображению */
-        $pathResizedImg = $_SERVER['DOCUMENT_ROOT']
-            . '/images/resized/'
-            . str_replace('/' . basename($this->fullNameOriginal), '', $originalImagePath);
+        $resizedImgFile = $_SERVER['DOCUMENT_ROOT'] . '/images/resized/' . $originalImagePath;
+        $pathResizedImg = dirname($resizedImgFile);
 
         /** Добавляем структуру категорий */
         if (!is_dir($pathResizedImg)) {
             mkdir($pathResizedImg, 0777, true);
         }
 
-        $this->fullNameResized = $pathResizedImg . '/' . basename($this->fullNameOriginal);
+        $this->fullNameResized = $resizedImgFile;
 
         file_put_contents($this->fullNameResized, $rImage);
     }

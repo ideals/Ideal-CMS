@@ -400,6 +400,9 @@ class Model
         $model = new $class('');
         $model->initPageDataById($elementId);
 
-        return $model->detectPath();
+        $path = $model->detectPath();
+        $this->setParentUrl($path);
+
+        return $path;
     }
 }

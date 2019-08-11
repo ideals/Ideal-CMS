@@ -363,7 +363,7 @@ class ModelAbstract extends Site\Model
             }
             $lvlExit = false;
             if ($v['lvl'] > $lvl) {
-                if (($v['url'] != '/') && ($k > 0)) {
+                if (($v['url'] != '/') && ($k > 0) && isset($list[$k - 1])) {
                     $url[] = $list[$k - 1];
                 }
                 $urlModel->setParentUrl($url);
