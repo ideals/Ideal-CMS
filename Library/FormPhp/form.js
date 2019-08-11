@@ -209,7 +209,8 @@ jQuery.fn.form = function (options, messages, methods) {
         successMessage:  true,
         clearForm: true,
         redirect: '',
-        ajaxSend: true
+        ajaxSend: true,
+        iframeSend: false
     }, options);
     var messagesOrig = $.extend({
         ajaxError: 'Форма не отправилась. Попробуйте повторить отправку позже.',
@@ -430,7 +431,7 @@ jQuery.fn.form = function (options, messages, methods) {
                     $(this).trigger('form.valid');
                 }
 
-                if (typeof senderAjax == 'object' && options.ajaxSend === true) {
+                if (options.iframeSend) {
                     return senderAjax.send(this, options, methods.successSend);
                 } else {
                     return methods.submit.apply(this);

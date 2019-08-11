@@ -39,11 +39,11 @@ class Menu2 extends \Ideal\Core\Widget
         $category = $config->getStructureByName('Ideal_Part');
         $digits = $category['params']['digits'];
         $table = $config->db['prefix'] . 'ideal_structure_part';
-        $prevStructure = $this->model->getPrevStructure();
+        $prevStructure = empty($this->prevStructure) ? '' : "AND prev_structure='{$this->prevStructure}'";
 
         $db = Db::getInstance();
         $_sql = "SELECT * FROM {$table}
-                    WHERE (lvl = 1 OR lvl = 2) AND is_active=1 AND prev_structure='{$prevStructure}' AND is_not_menu=0 ORDER BY cid";
+                    WHERE (lvl = 1 OR lvl = 2) AND is_active=1 {$prevStructure} AND is_not_menu=0 ORDER BY cid";
         $menuList = $db->select($_sql);
 
         // Раскладываем считанное меню во вложенные массивы по cid и lvl

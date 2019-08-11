@@ -537,7 +537,7 @@ class TurboClass
         }
 
         // Оборачиваем заголовки страниц нужными тегами
-        $turboContent = preg_replace('/<h1.*>(.*)<\/h1>/is', '<header><h1>$1</h1></header>', $turboContent);
+        $turboContent = preg_replace('/<h1.*>\s*(.*)<\/h1>/isU', '<header><h1>$1</h1></header>', $turboContent);
 
         return $turboContent;
     }
