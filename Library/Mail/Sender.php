@@ -43,6 +43,9 @@ class Sender
     /** @var array Массив настроек подключения к SMTP */
     protected $smtp = array();
 
+    /** @var string Адреса почты для скрытой отправки */
+    protected $bcc = '';
+
     /**
      * Прикрепляем файл к письму, если файл существует
      *
@@ -111,6 +114,8 @@ class Sender
         // Если был указан Bcc отрезаем его от $from
         $froms = explode('Bcc:', $from);
         $from = trim($froms[0]);
+
+        $bcc = empty($bcc) ? $this->getBcc() : '';
 
         if ($this->isSmtp) {
             // Если есть все данные для отправки по SMTP, то используем его
@@ -432,5 +437,34 @@ class Sender
         }
 
         return implode(', ', $emails);
+    }
+
+    /**
+     * Установка адресов почты для скрытой отправки
+     *
+     * @param string $email Адреса почты через запятую
+     */
+    public function setBcc($email)
+    {
+        $this->bcc = $email;
+    }
+
+    /**
+     * Получение адресов почты для скрытой отправки
+     *
+     * @return string Адреса почты через запятую
+     */
+    public function getBcc()
+    {
+        if (class_exists('\Ideal\Core\Config')) {
+            // Получаем конфигурационные данные сайта
+            /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
+            $config = \Ideal\Core\Config::getInstance();
+            if (!empty($config->mailBcc)) {
+                return $config->mailBcc;
+            }
+        }
+
+        return $this->bcc;
     }
 }
