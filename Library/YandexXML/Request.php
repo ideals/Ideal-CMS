@@ -818,7 +818,7 @@ class Request
             if (is_array($this->site)) {
                 $site_query = '(site:"' . join('" | site:"', $this->site) . '")';
             } else {
-                $site_query = 'site:"' . $this->site . '"';
+                $site_query = 'site:' . $this->site;
             }
 
             if (!empty($query) && $this->site) {
