@@ -269,69 +269,28 @@ jQuery.fn.form = function (options, messages, methods) {
             }
             return isValid;
         },
-        // Инициализация yaCounter
-        initYaCounter: function () {
-            if (typeof this.yaCounter != 'undefined') {
+        // Отправка цели в сервисы аналитики
+        sendGoal: function (metka, forma) {
+            metka = forma.data(metka);
+            if (!metka) {
                 return;
             }
-            var yaCounterName = $(this).find('[name = "_yandex"]').val();
-            this.yaCounter = {};
-            eval('var yaCounterName = typeof ' + yaCounterName + ' == \'undefined\' ? false : yaCounterName');
-            if (yaCounterName !== false) {
-                this.yaCounter.reachGoal = function (metka) {
-                    eval('var yaCounter = ' + yaCounterName);
-                    yaCounter.reachGoal(metka);
-                }
-            } else {
-                this.yaCounter.reachGoal = function (opt) {}
+            if (typeof (ym) === "function") {
+                var counter = forma.find('[name = "_yandex"]').val();
+                ym(counter, 'reachGoal', metka);
             }
-        },
-        // Инициализация googleAnalytics
-        initGoogleAnalytics: function () {
-            if (typeof this.ga != 'undefined') {
-                return;
-            }
-            this.ga = {};
-            if (typeof ga === "function") {
-                this.ga = function (metka) {
-                    metka = '/' + metka.toLowerCase();
-                    ga('send', 'pageview', metka);
-                }
-            } else {
-                this.ga = function (opt) {}
-            }
-        },
-        // Инициализация Google Tag Manager
-        initGtm: function () {
-            if (typeof this.gtm != 'undefined') {
-                return;
-            }
-            var gtmName = $(this).find('[name = "_gtm"]').val();
-
-            if (typeof dataLayer == 'undefined' || typeof gtmName == 'undefined') {
-                this.gtm = {};
-                this.gtm.push = function (opt) {};
-            } else {
-                this.gtm = dataLayer;
+            if (typeof (dataLayer) !== 'undefined') {
+                var gtmName = forma.find('[name = "_gtm"]').val();
+                dataLayer.push({'event': metka});
             }
         },
         // Отправка метрики, при нажатии на кнопку отправки формы
         metrikaOnButtonClick: function () {
-            var metka = $(this).data('click');
-            if (metka) {
-                this.yaCounter.reachGoal(metka);
-                this.ga(metka);
-                this.gtm.push({'event': metka});
-            }
+            methods.sendGoal('click', $(this));
         },
         // Отправка метрики, при успешной отправке формы
         metrikaOnSuccessSend: function () {
-            var metka = $(this).data('send');
-            if (metka) {
-                this.yaCounter.reachGoal(metka);
-                this.ga(metka);
-                this.gtm.push({'event': metka});
-            }
+            methods.sendGoal('send', $(this));
         },
         // Добавление проверочного поля при нажатии на кнопку отправки формы
         locationOnButtonClick: function () {
@@ -410,10 +369,6 @@ jQuery.fn.form = function (options, messages, methods) {
                     return false;
                 }
                 this.disableSubmit = true;
-
-                methods.initYaCounter.apply(this);
-                methods.initGoogleAnalytics.apply(this);
-                methods.initGtm.apply(this);
 
                 $(this).trigger('form.buttonClick');
                 if (!methods.validate.apply(this)) {
