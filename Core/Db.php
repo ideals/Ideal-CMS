@@ -58,6 +58,9 @@ class Db extends \mysqli
     /** @var string Строка с where-частью запроса */
     protected $whereQuery = '';
 
+    /** @var bool Флаг необходимости логирования ошибок, который ставится в true после каждого запроса */
+    protected $logError = true;
+
     /**
      * Получение singleton-объекта подключённого к БД
      *
@@ -119,9 +122,12 @@ class Db extends \mysqli
     {
         $result = parent::query($query, $resultMode);
 
-        if ($error = $this->error) {
+        if ($this->logError && $error = $this->error) {
             Util::addError($error . PHP_EOL . 'Query: ' . $query);
         }
+
+        // После выполнения каждой операции - устанавливаем флаг логирования ошибок, чтобы случайно их не пропустить
+        $this->logError = true;
 
         return $result;
     }
@@ -586,5 +592,15 @@ class Db extends \mysqli
         $this->whereParams = $params;
 
         return $this;
+    }
+
+    /**
+     * Установка параметра логирования ошибок
+     *
+     * @param bool $bool
+     */
+    public function setLogError($bool)
+    {
+        $this->logError = $bool;
     }
 }
