@@ -36,6 +36,7 @@ return array(
         'token' => "", // Токен для авторизации в сервисе "Яндекс.Вебмастер" | Ideal_Text
     ),
     'smtp' => array( // SMTP
+        'isActive' => "", // Использовать этот SMTP при отправке | Ideal_Checkbox
         'server' => "", // Адрес SMTP-сервера | Ideal_Text
         'domain' => "", // Домен, с которого идёт отправка письма | Ideal_Text
         'port' => "", // Порт SMTP-сервера | Ideal_Text

@@ -47,6 +47,22 @@ class Sender
     protected $bcc = '';
 
     /**
+     * Инициализация настроек smtp, если класс вызывается в рамках Ideal CMS
+     *
+     * @throws \Exception
+     */
+    public function __construct()
+    {
+        if (class_exists('\Ideal\Core\Config')) {
+            // Если мы находимся в рамках Ideal CMS - пытаемся взять настройки smtp из конфига
+            $config = \Ideal\Core\Config::getInstance();
+            if (!empty($config->smtp['server']) && !empty($config->smtp['isActive'])) {
+                $this->setSmtp($config->smtp);
+            }
+        }
+    }
+
+    /**
      * Прикрепляем файл к письму, если файл существует
      *
      * @param string $path Путь к прикрепляемому файлу
@@ -400,6 +416,8 @@ class Sender
 
     /**
      * Определяет достаточность предоставленных параметров для использования SMTP
+     *
+     * @throws \Exception
      */
     public function setSmtp($params)
     {
