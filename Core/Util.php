@@ -272,10 +272,17 @@ class Util
     public static function shutDown()
     {
         $config = Config::getInstance();
-        if ($config->cms['errorLog'] == 'email' && count(self::$errorArray) > 0) {
-            $protocol = $config->getProtocol();
-            $text = "Здравствуйте!\n\nНа странице {$protocol}{$config->domain}{$_SERVER['REQUEST_URI']} "
-                . "произошли следующие ошибки.\n\n"
+        if ($config->cms['errorLog'] === 'email' && count(self::$errorArray) > 0) {
+            if (empty($_SERVER['REQUEST_URI'])) {
+                // Ошибка произошла при выполнении скрипта в консоли
+                $source = 'При выполнении скрипта ' . $_SERVER['PHP_SELF'];
+            } else {
+                // Ошибка произошла при выполнеии скрипта в браузере
+                $protocol = $config->getProtocol();
+                $source = 'На странице ' . $protocol . $config->domain . $_SERVER['REQUEST_URI'];
+            }
+
+            $text = "Здравствуйте!\n\n{$source} произошли следующие ошибки.\n\n"
                 . implode("\n\n", self::$errorArray) . "\n\n"
                 . '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
             if (isset($_GET)) {
