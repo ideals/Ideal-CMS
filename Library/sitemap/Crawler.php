@@ -890,7 +890,7 @@ XML;
     protected function getLinksFromText($text)
     {
         // Получаем содержимое всех тегов <a>
-        preg_match_all('/<a (.*)>/iU', $text, $urls);
+        preg_match_all('/<a (.*)>/isU', $text, $urls);
 
         if (empty($urls[1])) {
             return array();
@@ -899,7 +899,7 @@ XML;
         // Выдёргиваем атрибуты
         foreach ($urls[1] as $url) {
             $url = ' ' . $url . ' ';
-            preg_match_all('/(\w+)=[\'"]([^"\']+)/', $url, $attributes);
+            preg_match_all('/(\w+)=[\'"]([^"\']+)/s', $url, $attributes);
             $href = false;
             foreach ($attributes[1] as $key => $name) {
                 if ($name === 'href') {
@@ -924,6 +924,10 @@ XML;
                 continue;
             }
             $links[] = $href;
+        }
+
+        if (empty($links)) {
+            $links = array();
         }
 
         return $links;
