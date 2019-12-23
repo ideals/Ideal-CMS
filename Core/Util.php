@@ -22,42 +22,57 @@ class Util
      * Вывод сообщения об ошибке
      *
      * @param string $txt Текст сообщения об ошибке
+     * @param $isTrace
+     * @throws \Exception
      */
-    public static function addError($txt)
+    public static function addError($txt, $isTrace = true)
     {
         $config = Config::getInstance();
         if (empty($config->cms['errorLog'])) {
             return;
         }
+        $trace = [];
+        $traceStr = $traceStrBr = '';
+        if ($isTrace) {
+            // Если нужно вывести путь до места совершения ошибки, строим его
+            $traceList = debug_backtrace();
+            array_shift($traceList); // убираем информацию о методе добавления ошибки
+            foreach ($traceList as $item) {
+                $file = str_replace($_SERVER['DOCUMENT_ROOT'], '', $item['file']);
+                $trace[] = '#' . $item['line'] . ' in ' . $file . ' function ' . $item['function'] . PHP_EOL;
+            }
+
+            $traceStr = PHP_EOL . 'Trace:' . PHP_EOL . implode(PHP_EOL, $trace);
+            $traceStrBr = PHP_EOL . 'Trace:' . PHP_EOL . implode('<br>', $trace);
+        }
         switch ($config->cms['errorLog']) {
             case 'file':
                 // Вывод сообщения в текстовый файл
-                $ff = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/error.log';
-                $fp = fopen($ff, 'a');
-                $msg = Date('d.m.y H:i', time()) . '  ' . $_SERVER['REQUEST_URI'] . "\r\n";
-                $msg .= $txt . "\r\n\r\n";
-                fwrite($fp, $msg);
-                fclose($fp);
+                $msg = Date('d.m.y H:i', time()) . '  ' . $_SERVER['REQUEST_URI'] . PHP_EOL;
+                $msg .= $txt . $traceStr . PHP_EOL . PHP_EOL;
+                $file = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/error.log';
+                file_put_contents($file, $msg, FILE_APPEND);
                 break;
 
             case 'display':
                 // При возникновении ошибки, тут же её выводим на экран
-                print $txt . '<br />';
+                print $txt . $traceStrBr . '<br />';
                 break;
 
             case 'comment':
                 // При возникновении ошибки, выводим её закомментированно
-                print '<!-- ' . $txt . " -->\r\n";
+                print '<!-- ' . $txt . $traceStr . ' -->' . PHP_EOL;
                 break;
 
             case 'firebug':
                 // Отображаем ошибку для просмотра через FireBug
-                \FB::error($txt);
+                array_unshift($trace, $txt);
+                \FB::error($trace);
                 break;
 
             case 'email':
             case 'var':
-                self::$errorArray[] = $txt;
+                self::$errorArray[] = $txt . $traceStr;
                 break;
 
             default:
