@@ -40,11 +40,33 @@ class Sender
     /** @var bool Флаг, использовать/не использовать smtp при отправке сообщения */
     protected $isSmtp = false;
 
+    /** @var bool Нужно ли устанавливать дополнительный параметр From при отправке через Sendmail */
+    protected $isFromParameter = true;
+
     /** @var array Массив настроек подключения к SMTP */
     protected $smtp = array();
 
     /** @var string Адреса почты для скрытой отправки */
     protected $bcc = '';
+
+    /**
+     * Инициализация настроек smtp, если класс вызывается в рамках Ideal CMS
+     *
+     * @throws \Exception
+     */
+    public function __construct()
+    {
+        if (class_exists('\Ideal\Core\Config')) {
+            // Если мы находимся в рамках Ideal CMS - пытаемся взять настройки smtp из конфига
+            $config = \Ideal\Core\Config::getInstance();
+            if (!empty($config->smtp['server']) && !empty($config->smtp['isActive'])) {
+                $this->setSmtp($config->smtp);
+            }
+            if (isset($config->smtp['isFromParameter'])) {
+                $this->isFromParameter = $config->smtp['isFromParameter'];
+            }
+        }
+    }
 
     /**
      * Прикрепляем файл к письму, если файл существует
@@ -122,10 +144,14 @@ class Sender
             $result = $this->mailSmtp($from, $to, $bcc);
         } else {
             // Иначе отправляем через стандартную функцию mail()
-            $fromClear = filter_var($from, FILTER_SANITIZE_EMAIL);
             $bcc = empty($bcc) ? '' : 'Bcc: ' . $bcc . "\n";
             $headers = 'From: ' . $from . "\n" . $bcc . $this->header;
-            $result = mail($to, $this->subj, $this->body, $headers, '-f ' . $fromClear);
+            if ($this->isFromParameter) {
+                $fromClear = filter_var($from, FILTER_SANITIZE_EMAIL);
+                $result = mail($to, $this->subj, $this->body, $headers, '-f ' . $fromClear);
+            } else {
+                $result = mail($to, $this->subj, $this->body, $headers);
+            }
         }
         return $result;
     }
@@ -141,8 +167,8 @@ class Sender
         // Если выбрана отправка письма только в html-виде
         if (!empty($this->body_html) && ($this->body_plain === '')) {
             $body = "Content-type: text/html; charset=utf-8\n"
-                    . "Content-transfer-encoding: quoted-printable\n\n";
-            $body .= quoted_printable_encode($this->body_html) . "\n\n";
+                    . "Content-transfer-encoding: base64\n\n";
+            $body .= chunk_split(base64_encode($this->body_html)) . "\n\n";
             return $body;
         }
 
@@ -171,14 +197,14 @@ class Sender
         // Добавляем plain-версию
         $body .= '--' . $boundary . "\n";
         $body .= "Content-Type: text/plain; charset=utf-8\n";
-        $body .= "Content-Transfer-Encoding: quoted-printable\n\n";
-        $body .= quoted_printable_encode($this->body_plain) . "\n\n";
+        $body .= "Content-Transfer-Encoding: base64\n\n";
+        $body .= chunk_split(base64_encode($this->body_plain)) . "\n\n";
 
         // Добавляем html-версию
         $body .= '--' . $boundary . "\n";
         $body .= "Content-Type: text/html; charset=utf-8\n";
-        $body .= "Content-Transfer-Encoding: quoted-printable\n\n";
-        $body .= quoted_printable_encode($this->body_html) . "\n\n";
+        $body .= "Content-Transfer-Encoding: base64\n\n";
+        $body .= chunk_split(base64_encode($this->body_html) . "\n\n");
 
         // Завершение блока alternative
         $body .= '--' . $boundary . "--\n\n";
@@ -400,6 +426,8 @@ class Sender
 
     /**
      * Определяет достаточность предоставленных параметров для использования SMTP
+     *
+     * @throws \Exception
      */
     public function setSmtp($params)
     {

@@ -4,6 +4,7 @@ return array(
     'domain' => "[[SITENAME]]", // Домен | Ideal_Text
     'robotEmail' => "robot@[[SITENAME]]", // Почтовый ящик, с которого будут приходить письма с сайта | Ideal_Text
     'mailForm' => "info@[[SITENAME]]", // Почтовый ящик менеджера сайта | Ideal_Text
+    'mailBcc' => "", // Дополнительная копия для писем с сайта | Ideal_Text
     'phone' => "(495) 123-45-67", // Телефон в шапке сайта | Ideal_Text
     'urlSuffix' => ".html", // Стандартный суффикс URL | Ideal_Text
     'allowResize' => "", // Разрешённые размеры изображений (по одному на строку) | Ideal_Area
@@ -36,6 +37,8 @@ return array(
         'token' => "", // Токен для авторизации в сервисе "Яндекс.Вебмастер" | Ideal_Text
     ),
     'smtp' => array( // SMTP
+        'isFromParameter' => "1", // Дополнительное указание адреса получателя в sendmail | Ideal_Checkbox
+        'isActive' => "", // Использовать этот SMTP при отправке | Ideal_Checkbox
         'server' => "", // Адрес SMTP-сервера | Ideal_Text
         'domain' => "", // Домен, с которого идёт отправка письма | Ideal_Text
         'port' => "", // Порт SMTP-сервера | Ideal_Text
