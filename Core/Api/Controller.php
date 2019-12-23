@@ -11,6 +11,7 @@ namespace Ideal\Core\Api;
 
 use Ideal\Core\Config;
 use Ideal\Core\Request;
+use Ideal\Core\Site;
 use Ideal\Core\View;
 
 class Controller
@@ -26,11 +27,19 @@ class Controller
      */
     public function error404Action()
     {
-        $this->jsonResponse = false;
-        $this->templateInit('404.twig');
-        $this->view->title = 'Страница не найдена';
-        $text = $this->view->render();
-        return $text;
+        $router = new Site\Router();
+
+        // Определяем имя контроллера для отображения запрошенной страницы
+        $controllerName = $router->getControllerName();
+
+        // Запускаем нужный контроллер и передаём ему навигационную цепочку
+        /* @var $controller Site\Controller */
+        $controller = new $controllerName();
+
+        // Запускаем в работу контроллер структуры
+        $content = $controller->run($router);
+
+        return $content;
     }
 
     /**
