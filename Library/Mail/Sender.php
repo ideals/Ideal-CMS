@@ -40,6 +40,9 @@ class Sender
     /** @var bool Флаг, использовать/не использовать smtp при отправке сообщения */
     protected $isSmtp = false;
 
+    /** @var bool Нужно ли устанавливать дополнительный параметр From при отправке через Sendmail */
+    protected $isFromParameter = true;
+
     /** @var array Массив настроек подключения к SMTP */
     protected $smtp = array();
 
@@ -58,6 +61,9 @@ class Sender
             $config = \Ideal\Core\Config::getInstance();
             if (!empty($config->smtp['server']) && !empty($config->smtp['isActive'])) {
                 $this->setSmtp($config->smtp);
+            }
+            if (isset($config->smtp['isFromParameter'])) {
+                $this->isFromParameter = $config->smtp['isFromParameter'];
             }
         }
     }
@@ -138,10 +144,14 @@ class Sender
             $result = $this->mailSmtp($from, $to, $bcc);
         } else {
             // Иначе отправляем через стандартную функцию mail()
-            $fromClear = filter_var($from, FILTER_SANITIZE_EMAIL);
             $bcc = empty($bcc) ? '' : 'Bcc: ' . $bcc . "\n";
             $headers = 'From: ' . $from . "\n" . $bcc . $this->header;
-            $result = mail($to, $this->subj, $this->body, $headers, '-f ' . $fromClear);
+            if ($this->isFromParameter) {
+                $fromClear = filter_var($from, FILTER_SANITIZE_EMAIL);
+                $result = mail($to, $this->subj, $this->body, $headers, '-f ' . $fromClear);
+            } else {
+                $result = mail($to, $this->subj, $this->body, $headers);
+            }
         }
         return $result;
     }
