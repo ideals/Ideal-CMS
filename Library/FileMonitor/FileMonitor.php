@@ -14,8 +14,14 @@ class FileMonitor
     /** @var array Массив исключений каталогов и файлов. Требуется полный путь до файла/каталога. */
     protected $exclude;
 
+    /** @var string Электронный адрес с которого будут отправляться результаты работы */
+    private $from;
+
     /** @var string Электронные адреса на которые следует отсылать результат работы файла */
     private $to;
+
+    /** @var bool Нужно ли добавлять  */
+    private $isFromParameter = true;
 
     /** @var int Время, отведёное скрипту на выполнение работы в секундах */
     private $scriptTime = 50;
@@ -223,7 +229,7 @@ class FileMonitor
     private function sendMail()
     {
         $message = '';
-        $headers = "From: robot@" . $this->domain . "\n"
+        $headers = "From: " . $this->from . "\n"
             . "MIME-Version: 1.0\n"
             . "Content-type: text/plain; charset=UTF-8\n";
         if (count($this->updated) > 0 || count($this->added) > 0 || count($this->deleted) > 0) {
@@ -237,7 +243,8 @@ class FileMonitor
             if (count($this->deleted) > 0) {
                 $message .= "Удалённые файлы:\n" . implode("\n", $this->deleted) . "\n\n";
             }
-            mail($this->to, $this->domain . ': обнаружены изменения в файлах', $message, $headers);
+            $params = $this->isFromParameter ? '-f ' . $this->from : null;
+            mail($this->to, $this->domain . ': обнаружены изменения в файлах', $message, $headers, $params);
         }
         $this->saveChanges($message);
         $this->delTempFiles();
