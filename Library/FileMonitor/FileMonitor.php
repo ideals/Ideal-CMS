@@ -14,8 +14,14 @@ class FileMonitor
     /** @var array Массив исключений каталогов и файлов. Требуется полный путь до файла/каталога. */
     protected $exclude;
 
+    /** @var string Электронный адрес с которого будут отправляться результаты работы */
+    private $from;
+
     /** @var string Электронные адреса на которые следует отсылать результат работы файла */
     private $to;
+
+    /** @var bool Нужно ли добавлять  */
+    private $isFromParameter = true;
 
     /** @var int Время, отведёное скрипту на выполнение работы в секундах */
     private $scriptTime = 50;
@@ -45,7 +51,7 @@ class FileMonitor
      */
     public function __construct($settings)
     {
-        $this->startTime = microtime(1);
+        $this->startTime = microtime(true);
 
         $defaultValues = array(
             'scanDir' => null,
@@ -95,7 +101,7 @@ class FileMonitor
         // Проверка, создан ли файл с хэшами
         if (file_exists($this->fileMonitor)) {
             $time = filemtime($this->fileMonitor);
-            if (date('d.m.Y') == date('d.m.Y', $time)) {
+            if (date('d.m.Y') === date('d.m.Y', $time)) {
                 echo "Файлы сегодня уже проверялись.\n";
                 return;
             }
@@ -118,14 +124,16 @@ class FileMonitor
             $this->filesOld = unserialize($temp);
         }
 
-        //Собираем информацию по файлам
-        $this->parseFiles();
+        // Собираем информацию по файлам
+        if ($this->parseFiles()) {
+            $this->checkDeleted(); // Ищем удалённые файлы
+            $this->sendMail(); // Отправляем сообщения и сохраняем результат
+        }
 
-        // Ищем удалённые файлы
-        $this->checkDeleted();
-
-        // Отправляем сообщения и сохраняем результат
-        $this->sendMail();
+        echo 'files: ' . count($this->files) . "\n";
+        echo 'updated: ' . count($this->updated)  . "\n";
+        echo 'added: ' . count($this->added) . "\n";
+        echo 'deleted: ' . count($this->deleted) . "\n";
     }
 
     /**
@@ -164,7 +172,7 @@ class FileMonitor
         $countOld = count($this->filesOld);
 
         foreach ($this->files as $file => $hash) {
-            if ((microtime(1) - $this->startTime) > $this->scriptTime) {
+            if ((microtime(true) - $this->startTime) > $this->scriptTime) {
                 $isTimeOut = true;
                 break;
             }
@@ -179,7 +187,8 @@ class FileMonitor
                 continue;
             }
 
-            $hash = md5_file($file);
+            // todo проверка на наличие adler32, и если нет, то выбираем md5
+            $hash = hash_file('adler32', $file);
             $this->files[$file] = $hash;
 
             if ($countOld == 0) {
@@ -199,8 +208,9 @@ class FileMonitor
         if ($isTimeOut) {
             echo 'timeout';
             $this->saveTmpChanges();
-            exit;
         }
+
+        return !$isTimeOut;
     }
 
     /**
@@ -223,7 +233,7 @@ class FileMonitor
     private function sendMail()
     {
         $message = '';
-        $headers = "From: robot@" . $this->domain . "\n"
+        $headers = "From: " . $this->from . "\n"
             . "MIME-Version: 1.0\n"
             . "Content-type: text/plain; charset=UTF-8\n";
         if (count($this->updated) > 0 || count($this->added) > 0 || count($this->deleted) > 0) {
@@ -237,7 +247,8 @@ class FileMonitor
             if (count($this->deleted) > 0) {
                 $message .= "Удалённые файлы:\n" . implode("\n", $this->deleted) . "\n\n";
             }
-            mail($this->to, $this->domain . ': обнаружены изменения в файлах', $message, $headers);
+            $params = $this->isFromParameter ? '-f ' . $this->from : null;
+            mail($this->to, $this->domain . ': обнаружены изменения в файлах', $message, $headers, $params);
         }
         $this->saveChanges($message);
         $this->delTempFiles();

@@ -125,10 +125,12 @@ class Util
     /**
      * Возвращает отформатированную дату, с названием месяца на русском
      *
-     * @param $date - дата в формате timestamp
-     * @return string строка с отформатированной датой
+     * @param int $date Дата в формате timestamp
+     * @param string $year Окончание даты (по умолчанию добавляем " года"
+     *
+     * @return string Строка с отформатированной датой
      */
-    public static function dateReach($date)
+    public static function dateReach($date, $year = ' года')
     {
         $months = array(
             '',
@@ -146,7 +148,7 @@ class Util
             'декабря'
         );
         $date = date('j', $date) . ' ' . $months[date('n', $date)] . ' ' .
-            date('Y', $date) . ' года';
+            date('Y', $date) . $year;
         return $date;
     }
 
