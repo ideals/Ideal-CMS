@@ -11,11 +11,9 @@
  * Создаём дамп базы данных
  */
 use Ideal\Core\Config;
+use Ifsnop\Mysqldump\Mysqldump;
 
 if (isset($_POST['createMysqlDump'])) {
-    // Подключаем библиотеку
-    require_once 'Library/MySQLDump/mysqldump.php';
-
     $config = Config::getInstance();
 
     // Папка сохранения дампов
@@ -32,11 +30,9 @@ if (isset($_POST['createMysqlDump'])) {
         'extended-insert' => false
     );
     $dump = new Mysqldump(
-        $config->db['name'],
+        'mysql:host=' . $config->db['host'] . ';dbname=' . $config->db['name'],
         $config->db['login'],
         $config->db['password'],
-        $config->db['host'],
-        'mysql',
         $dumpSettings
     );
 

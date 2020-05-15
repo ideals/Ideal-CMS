@@ -82,8 +82,6 @@ switch ($ext) {
         break;
     // Перепаковываем из ZIP в GZIP
     case 'zip':
-        //Подключаем библиотеку
-        require_once 'Library/pclzip.lib.php';
         $archive = new PclZip($dumpNameFull);
 
         // Получаем список файлов в архиве

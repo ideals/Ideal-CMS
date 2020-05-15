@@ -2,8 +2,6 @@
 
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING); //| E_STRICT
 
-require_once 'Library/firephp/fb.php';
-
 setlocale(LC_ALL, 'ru_RU.UTF8');
 
 // Для PHP5 нужно установить часовой пояс

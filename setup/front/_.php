@@ -3,6 +3,8 @@ namespace Ideal;
 
 ini_set('display_errors', 'Off');
 
+require_once '../vendor/autoload.php';
+
 $cmsFolder = '[[CMS]]';
 $subFolder = '[[SUBFOLDER_START_SLASH]]';
 

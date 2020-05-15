@@ -33,9 +33,7 @@ class View
      */
     public function __construct($pathToTemplates, $isCache = false)
     {
-        // Подгружаем Twig
-        require_once 'Library/Twig/Autoloader.php';
-        \Twig_Autoloader::register();
+
 
         // Определяем корневую папку системы для подключение шаблонов из любой вложенной папки через их путь
         $config = Config::getInstance();
