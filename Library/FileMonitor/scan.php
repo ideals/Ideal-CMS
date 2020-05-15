@@ -9,6 +9,7 @@ $settings = array(
     'scriptTime' => 50,
     'from' => 'filemonitor@example.com',
     'to' => 'user@example.com',
+    'isFromParameter' => true,
     'domain' => 'example.com',
     'exclude' => '',
 );

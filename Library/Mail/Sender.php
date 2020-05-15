@@ -439,7 +439,7 @@ class Sender
             }
         }
         $this->smtp = $params;
-        $this->isSmtp = true;
+        $this->isSmtp = !isset($params['isActive']) || (isset($params['isActive']) && $params['isActive']);
     }
 
     /**

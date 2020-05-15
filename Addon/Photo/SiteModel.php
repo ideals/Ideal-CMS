@@ -22,11 +22,12 @@ class SiteModel extends AbstractSiteModel
         $config = Config::getInstance();
 
         $tplRoot = dirname(stream_resolve_include_path('Addon/Photo/index.twig'));
-        $View = new View($tplRoot, $config->cache['templateSite']);
-        $View->loadTemplate('index.twig');
-        $View->images = json_decode($this->pageData['images']);
-        $View->imagesRel = $this->fieldsGroup;
-        $photoContent = $View->render();
+        $view = new View($tplRoot, $config->cache['templateSite']);
+        $view->loadTemplate('index.twig');
+        $view->images = json_decode($this->pageData['images'], true);
+        $view->images = $view->images ?: [];
+        $view->imagesRel = $this->fieldsGroup;
+        $photoContent = $view->render();
         if (isset($this->pageData['content'])) {
             $this->pageData['content'] .= $photoContent;
         } else {

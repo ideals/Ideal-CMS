@@ -19,8 +19,7 @@
             js[]=#{startUrl}/js/jquery/jquery.min.js
             &js[]=#{startUrl}/js/bootstrap/js/bootstrap.min.js
             &js[]=#{startUrl}/js/fancybox/jquery.fancybox.pack.js
-            &js[]=#{startUrl}/js/jsFlashCookies/swfstore.min.js
-            &js[]=#{startUrl}/js/jsFlashCookies/refererDetector.js"
+            &js[]=#{startUrl}/js/refererDetector.js"
         | replace({'[':'%5B', ']':'%5D', "\n": '', ' ':''}) }}">
         </script>
     {% else %}
@@ -29,8 +28,7 @@
         <script type="text/javascript" src="js/jquery/jquery.min.js"></script>
         <script type="text/javascript" src="js/bootstrap/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="js/fancybox/jquery.fancybox.pack.js"></script>
-        <script type="text/javascript" src="js/jsFlashCookies/swfstore.min.js"></script>
-        <script type="text/javascript" src="js/jsFlashCookies/refererDetector.js"></script>
+        <script type="text/javascript" src="js/refererDetector.js"></script>
     {% endif %}
     <style type="text/css">
         .footer {position: absolute; top: 100%; height: 40px; margin-top: -40px;}

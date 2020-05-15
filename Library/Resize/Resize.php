@@ -24,6 +24,9 @@ class Resize
     /** @var string $fullNameResized Полное имя изображения с изменённым размером */
     protected $fullNameResized;
 
+    /** @var bool Флаг того, что происходит обработка локального файла или картинки с другого сервера */
+    protected $isLocal = true;
+
     /**
      * @param string $image Строка содержащая параметры требуемого изображения, а также путь к исходному изображению
      */
@@ -31,6 +34,7 @@ class Resize
     {
         $this->setImage($image);
         $rImage = $this->resizeImage();
+        $image = str_replace(':', '', $image); // заменяем двоеточие в адресе (если это адрес)
         $this->saveImage($rImage, $image);
         $this->echoImage($rImage);
     }
@@ -42,15 +46,25 @@ class Resize
      */
     protected function setImage($image)
     {
-        $imgInfo = explode('/', $image);
+        $matches = [];
+        preg_match('/http(s?)\/(.*)/i', $image, $matches);
+        if (!empty($matches[0])) {
+            // Если указана ссылка на картинку на другом ресурсе
+            $this->isLocal = false;
+            $this->fullNameOriginal = preg_replace('/\//', '://', $matches[0], 1);
+            $imgInfo = [str_replace('/' . $matches[0], '', $image)];
+        } else {
+            // Если указан путь к локальному файлу
+            $imgInfo = explode('/', $image);
+        }
 
         // Получаем требуемые размеры нового изображения
         $imgSize = explode($this->sizeDelimiter, $imgInfo[0]);
 
         // Проверяем существование необходимых параметров ширины и высоты
         if (isset($imgSize[0]) && isset($imgSize[1])) {
-            $this->width = intval($imgSize[0]);
-            $this->height = intval($imgSize[1]);
+            $this->width = (int)$imgSize[0];
+            $this->height = (int)$imgSize[1];
         } else {
             $this->exit404();
         }
@@ -72,6 +86,11 @@ class Resize
         }
 
         unset($imgInfo[0]);
+
+        if (!empty($this->fullNameOriginal)) {
+            return;
+        }
+
         /** @var string $imgPath Путь к исходнму изображению */
         $this->fullNameOriginal = $_SERVER['DOCUMENT_ROOT'] . '/' . implode('/', $imgInfo);
         // Проверяем, существует ли исходный файл
@@ -81,7 +100,7 @@ class Resize
     }
 
     /**
-     * Проверка, входит ли требуемый размер в списко разрешённых
+     * Проверка, входит ли требуемый размер в список разрешённых
      *
      * @return bool Истина, в случае наличия требуемого размера в списке разрешённых или отсутствия такого списка
      */
@@ -93,7 +112,7 @@ class Resize
         $path = $_SERVER['DOCUMENT_ROOT'] . $cmsFolder . '/site_data.php';
 
         if (is_file($path)) {
-            /** @var string $path Путь к исходнму изображению */
+            /** @var string $path Путь к исходному изображению */
             $config = include_once($path);
         } else {
             return false;
@@ -123,10 +142,10 @@ class Resize
         $src = null;
 
         switch ($imageInfo['mime']) {
-            case "image/jpeg":
+            case 'image/jpeg':
                 $src = imagecreatefromjpeg($this->fullNameOriginal);
                 break;
-            case "image/png":
+            case 'image/png':
                 $src = imagecreatefrompng($this->fullNameOriginal);
                 break;
             case 'image/gif':
@@ -135,7 +154,7 @@ class Resize
         }
 
         // Если тип изображения не соответствует необходимому
-        if (is_null($src)) {
+        if ($src === null) {
             $this->exit404();
         }
 
@@ -149,7 +168,7 @@ class Resize
 
         // Проверка цвета фона
         $isSetColor = false;
-        if (count($this->color) == 3) {
+        if (isset($this->color) && count($this->color) === 3) {
             $isSetColor = true;
         }
 
@@ -293,13 +312,16 @@ class Resize
      */
     protected function echoImage($image)
     {
+        $time = time();
+
         // Получение даты изменения оригинального файла
-        $time = filemtime($this->fullNameOriginal);
-        touch($this->fullNameResized, $time);
+        if ($this->isLocal) {
+            $time = filemtime($this->fullNameOriginal);
+            touch($this->fullNameResized, $time);
+        }
 
         // Вывод изображения
         $getInfo = getimagesize($this->fullNameResized);
-        $time = filemtime($this->fullNameResized);
 
         header('Content-type: ' . $getInfo['mime']);
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $time) . ' GMT');
