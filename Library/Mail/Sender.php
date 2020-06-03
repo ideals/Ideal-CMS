@@ -415,6 +415,7 @@ class Sender
     protected function getData($smtpConn)
     {
         $data = "";
+        // todo на fgets могут возникнуть ошибки, поэтому нужно их обработать
         while ($str = fgets($smtpConn, 515)) {
             $data .= $str;
             if (substr($str, 3, 1) == " ") {
