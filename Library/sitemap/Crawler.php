@@ -51,6 +51,8 @@ class Crawler
         CURLOPT_TIMEOUT => 4, // максимальное время выполнения функций cURL функций
         CURLOPT_FOLLOWLOCATION => false, // не идти за редиректами
         CURLOPT_MAXREDIRS => 0, // максимальное число редиректов
+        64 => false, // CURLOPT_SSL_VERIFYPEER не проверять ssl-сертификат
+        81 => 0, // CURLOPT_SSL_VERIFYHOST не проверять ssl-сертификат
     );
 
     /**
