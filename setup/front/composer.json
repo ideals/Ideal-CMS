@@ -1,0 +1,11 @@
+{
+    "require": {
+        "php": ">=5.6.*",
+        "firephp/firephp-core": "^0.5.3",
+        "twig/twig": "^1.42",
+        "mtdowling/cron-expression": "^1.2",
+        "ifsnop/mysqldump-php": "^2.9",
+        "pclzip/pclzip": "^2.8",
+        "matthiasmullie/minify": "^1.3"
+    }
+}

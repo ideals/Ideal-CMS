@@ -11,7 +11,7 @@ return array(
     'cms' => array( // CMS
         'startUrl' => "[[SUBFOLDER_START_SLASH]]", // Начальная папка CMS | Ideal_Text
         'tmpFolder' => "/../tmp", // Путь к папке с временными файлами | Ideal_Text
-        'errorLog' => "firebug", // Способ уведомления об ошибках | Ideal_Select | {"firebug":"FireBug","email":"отправлять на email менеджера","display":"отображать в браузере","comment":"комментарий в html-коде","file":"сохранять в файл notice.log"}
+        'errorLog' => "display", // Способ уведомления об ошибках | Ideal_Select | {"firebug":"FireBug","email":"отправлять на email менеджера","display":"отображать в браузере","comment":"комментарий в html-коде","file":"сохранять в файл notice.log"}
         'adminEmail' => "[[CMSLOGIN]]", // Почта, на которую будут отправляться сообщения об ошибках | Ideal_Text
         'dirMode' => "0755", // Режим доступа к папке "0755" | Ideal_Text
         'fileMode' => "0644", // Режим доступа к файлу "0644" | Ideal_Text

@@ -32,19 +32,19 @@ $formValue = initFormValue($_POST, $fields);
 $error = '';
 $errorText = checkPost($_POST);
 
-if ($error == '' && $errorText == 'Ok') {
+$allReady = false;
+if (empty($error) && $errorText === 'Ok') {
     installCopyRoot();
     installCopyFront();
     createConfig();
     createTables();
     installFinished();
-    header('Location: ../../index.php');
-    exit;
+    $allReady = true;
 }
 
 @ header('Content-Type: text/html; charset=utf-8');
 ?>
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -120,6 +120,12 @@ if ($error == '' && $errorText == 'Ok') {
     }
     if ($errorText != '') {
         echo '<div class="alert">' . $errorText . '</div>';
+    }
+    if ($allReady) {
+        echo '<p>В консоли выполните команду composer install в корне сервера и после этого '
+            . '<a href="../../index.php">перейдите в админку</a></p>';
+        echo '</div></body></html>';
+        exit;
     }
     ?>
 

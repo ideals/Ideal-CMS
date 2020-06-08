@@ -190,6 +190,10 @@ function copyDir($src, $dst)
 function installCopyRoot()
 {
     // Копируем файл _.php
+    $file = file_get_contents('front/composer.json');
+    file_put_contents(ROOT . '/../composer.json', $file);
+
+    // Копируем файл _.php
     $file = file_get_contents('front/_.php');
     $file = fillPlaceholders($file);
     file_put_contents(ROOT . '/_.php', $file);
