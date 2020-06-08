@@ -285,7 +285,7 @@ class TurboClass
     }
 
     /**
-     * Создание временного файла и получение из него инфорации
+     * Создание временного файла и получение из него информации
      *
      * @throws \Exception
      */
@@ -339,7 +339,7 @@ class TurboClass
             }
         }
         if ($links) {
-            $links = unserialize($links);
+            $links = unserialize($links, false);
         } else {
             // Если ссылок ещё нет, то парсим ссылки из карты сайта
 
@@ -469,9 +469,9 @@ class TurboClass
         curl_close($ch);
         $res = substr($res, $header_size); // вырезаем html код страницы
 
-        // Заменяем в тексте страницы неподходящие символы на знаки вопроса
-        $res = htmlspecialchars($res, ENT_NOQUOTES | ENT_DISALLOWED);
-        $res = htmlspecialchars_decode($res, ENT_NOQUOTES | ENT_DISALLOWED);
+        // Заменяем в тексте страницы неподходящие для XML символы на их числовое представление
+        $res = htmlentities($res, ENT_NOQUOTES | ENT_DISALLOWED);
+        $res = html_entity_decode($res, ENT_XML1);
 
         return $res;
     }
@@ -541,7 +541,7 @@ class TurboClass
         // Оборачиваем заголовки страниц нужными тегами
         $turboContent = preg_replace('/<h1.*>\s*(.*)<\/h1>/isU', '<header><h1>$1</h1></header>', $turboContent);
 
-        return $turboContent;
+        return trim($turboContent);
     }
 
     /**
