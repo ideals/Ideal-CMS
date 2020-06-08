@@ -15,7 +15,7 @@ use Ideal\Field\AbstractController;
 /**
  * Поле для хранения и редактирования пароля
  *
- * Пароль хранится в зашифрованном с помощью функции crypt() виде.
+ * Пароль хранится в зашифрованном с помощью функции password_hash() виде.
  *
  * Пример объявления в конфигурационном файле структуры:
  *     'password' => array(
@@ -64,9 +64,7 @@ class Controller extends AbstractController
         if ($this->newValue == '') {
             $item['value'] = null;
         } else {
-            $item['value'] = function_exists('password_hash')
-                ? password_hash($this->newValue, PASSWORD_DEFAULT)
-                : crypt($this->newValue);
+            $item['value'] = password_hash($this->newValue, PASSWORD_DEFAULT);
         }
 
         $item['message'] = '';

@@ -327,7 +327,7 @@ function createTables()
         array(
             'email' => $formValue['cmsLogin'],
             'reg_date' => time(),
-            'password' => crypt($formValue['cmsPass']),
+            'password' => password_hash($formValue['cmsPass'], PASSWORD_DEFAULT),
             'is_active' => 1,
             'prev_structure' => '0-2'
         )
