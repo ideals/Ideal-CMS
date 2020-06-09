@@ -126,7 +126,8 @@ class Controller extends AbstractController
     {
         // Выстраиваем ссылку к создаваемой странице
         $config = Config::getInstance();
-        $url = $_SERVER['HTTP_HOST'] . '/' . $config->cms['startUrl'] . '/' . $url;
+        $protocol = empty($_SERVER['HTTPS']) ? 'http://' : 'https://';
+        $url = $protocol . $_SERVER['HTTP_HOST'] . $config->cms['startUrl'] . $url;
 
         // Инициализируем curl
         $ch = curl_init();
