@@ -83,14 +83,15 @@ function autoLoad($className)
     //array_shift($end); // убираем первый элемент из имени файла — тип данных
     $file = implode('', $end);
     $fileName = $folder . DIRECTORY_SEPARATOR . $file . '.php';
+    $fileName = stream_resolve_include_path($fileName);
 
-    if (stream_resolve_include_path($fileName) !== false) {
+    if ($fileName !== false) {
         require_once $fileName;
         return true;
-    } else {
-        // Если файл не удалось подключить — обработка уйдёт дальше по стеку автозагрузки
-        return false;
     }
+
+    // Если файл не удалось подключить — обработка уйдёт дальше по стеку автозагрузки
+    return false;
 }
 
 spl_autoload_register('autoLoad', true);
