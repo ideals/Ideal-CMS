@@ -113,6 +113,11 @@ class TurboClass
         /** @var array Ссылки на страницы, которые нужно представить в турбо-фиде */
         $links = $this->getLinksFromSitemap();
 
+        // Проверка полученных ссылок для обхода
+        if (!is_array($links) || empty($links)) {
+            $this->stop('Не удалось получить ссылки для обхода из карты сайта.');
+        }
+
         // Подготавливаем RSS-файл, содержащий промежуточные значения между запуском скрипта
         $this->rss = $this->getTempFile();
 
@@ -141,7 +146,9 @@ class TurboClass
 
             // Если нет контента страницы, то не добавляем её в фид
             if (empty($contentToFeed)) {
+                print 'Пропускаем страницу ' . $url . "\n";
                 unset($links[$url]);
+                $time = microtime(1);
                 continue;
             }
 
@@ -339,7 +346,7 @@ class TurboClass
             }
         }
         if ($links) {
-            $links = unserialize($links, false);
+            $links = json_decode($links, true);
         } else {
             // Если ссылок ещё нет, то парсим ссылки из карты сайта
 
@@ -382,7 +389,7 @@ class TurboClass
     protected function saveParsedUrls($links)
     {
         // Записываем данные из карты сайта в файл со списком ссылок
-        file_put_contents($this->config['pageroot'] . $this->config['linksFile'], serialize($links));
+        file_put_contents($this->config['pageroot'] . $this->config['linksFile'], json_encode($links));
     }
 
     /**
@@ -469,9 +476,9 @@ class TurboClass
         curl_close($ch);
         $res = substr($res, $header_size); // вырезаем html код страницы
 
-        // Заменяем в тексте страницы неподходящие для XML символы на их числовое представление
-        $res = htmlentities($res, ENT_NOQUOTES | ENT_DISALLOWED);
-        $res = html_entity_decode($res, ENT_XML1);
+        // Заменяем в тексте страницы неподходящие символы на знаки вопроса
+        $res = htmlspecialchars($res, ENT_NOQUOTES | ENT_DISALLOWED);
+        $res = htmlspecialchars_decode($res, ENT_NOQUOTES | ENT_DISALLOWED);
 
         return $res;
     }
@@ -529,7 +536,10 @@ class TurboClass
             '<a>',
         );
 
-        $turboContent = html_entity_decode($turboContent);
+        // Заменяем в тексте страницы неподходящие для XML символы на их кодовое представление
+        $turboContent = htmlentities($turboContent, ENT_NOQUOTES | ENT_DISALLOWED, 'UTF-8');
+        $turboContent = html_entity_decode($turboContent, ENT_XML1, 'UTF-8');
+
         $turboContent = strip_tags($turboContent, implode('', $allowedTags));
 
         // Ищем картинки в тексте для турбостраниц
