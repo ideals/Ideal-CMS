@@ -6,6 +6,8 @@
         "mtdowling/cron-expression": "^1.2",
         "ifsnop/mysqldump-php": "^2.9",
         "pclzip/pclzip": "^2.8",
-        "matthiasmullie/minify": "^1.3"
+        "matthiasmullie/minify": "^1.3",
+        "idealcms/mailer": "^5.0",
+        "idealcms/formphp": "^5.0"
     }
 }

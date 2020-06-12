@@ -139,7 +139,7 @@ class FrontController
             }
             $message .= '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
             $subject = "Страница не найдена (404) на сайте " . $config->domain;
-            $mail = new \Mail\Sender();
+            $mail = new \Ideal\Mailer();
             $mail->setSubj($subject);
             $mail->setPlainBody($message);
             $mail->sent($config->robotEmail, $config->cms['adminEmail']);
