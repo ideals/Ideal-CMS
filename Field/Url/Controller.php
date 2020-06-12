@@ -126,7 +126,8 @@ class Controller extends AbstractController
     {
         // Выстраиваем ссылку к создаваемой странице
         $config = Config::getInstance();
-        $url = $_SERVER['HTTP_HOST'] . '/' . $config->cms['startUrl'] . '/' . $url;
+        $protocol = empty($_SERVER['HTTPS']) ? 'http://' : 'https://';
+        $url = $protocol . $_SERVER['HTTP_HOST'] . $config->cms['startUrl'] . $url;
 
         // Инициализируем curl
         $ch = curl_init();
@@ -136,11 +137,13 @@ class Controller extends AbstractController
             "Mozilla/4.0 (Windows; U; Windows NT 5.0; En; rv:1.8.0.2) Gecko/20070306 Firefox/1.0.0.4"
         );
 
-        // Устанавливаем значение url дял проверки
+        // Устанавливаем значение url для проверки
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
+        curl_setopt($ch, 64, false); // CURLOPT_SSL_VERIFYPEER
+        curl_setopt($ch, 81, 0); // CURLOPT_SSL_VERIFYHOST
         curl_exec($ch);
 
         // Получаем HTTP код

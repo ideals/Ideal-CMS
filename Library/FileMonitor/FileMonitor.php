@@ -41,6 +41,9 @@ class FileMonitor
     /** @var string Доменное имя */
     private $domain;
 
+    /** @var string Периодичность проверки. Варианты: daily, hourly */
+    private $period;
+
     private $fileMonitor = '/file-monitor.txt';
     private $fileMonitorTmp = '/file-monitor-tmp.txt';
     private $fileMonitorUpd = '/file-monitor-upd.txt';
@@ -61,6 +64,7 @@ class FileMonitor
             'from' => '',
             'to' => '',
             'exclude' => array(),
+            'period' => 'daily',
         );
 
         $settings = $this->loadCmsSetting($settings);
@@ -101,8 +105,12 @@ class FileMonitor
         // Проверка, создан ли файл с хэшами
         if (file_exists($this->fileMonitor)) {
             $time = filemtime($this->fileMonitor);
-            if (date('d.m.Y') === date('d.m.Y', $time)) {
+            if ($this->period === 'daily' && date('d.m.Y') === date('d.m.Y', $time)) {
                 echo "Файлы сегодня уже проверялись.\n";
+                return;
+            }
+            if ($this->period === 'hourly' && date('d.m.Y H') === date('d.m.Y H', $time)) {
+                echo "Файлы в этот час уже проверялись.\n";
                 return;
             }
         }
