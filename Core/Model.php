@@ -604,9 +604,9 @@ abstract class Model
     {
         $data = $this->getPageData();
         if (isset($data['prev_structure'])) {
-            $structure = explode('-', $data['prev_structure']);
-            $structure = $structure[1];
-            $prevStructure = $structure . '-' . $data['ID'];
+            $config = Config::getInstance();
+            $structure = $config->getStructureByClass(get_class($this));
+            $prevStructure = $structure['ID'] . '-' . $data['ID'];
         } else {
             throw new \Exception('No prev_structure in data');
         }

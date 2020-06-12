@@ -12,6 +12,7 @@ $settings = array(
     'isFromParameter' => true,
     'domain' => 'example.com',
     'exclude' => '',
+    'period' => 'daily',
 );
 
 // Запускаем мониторинг файлов
