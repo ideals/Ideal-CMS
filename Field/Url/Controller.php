@@ -41,7 +41,7 @@ class Controller extends AbstractController
         $link = $url->cutSuffix($link);
         // Проверяем, является ли url этого объекта частью пути
         $addOn = '';
-        if (($link{0} == '/') && ($value != $link)) {
+        if (($link{0} === '/') && ($value !== $link)) {
             // Выделяем из ссылки путь до этого объекта и выводим его перед полем input
             $path = substr($link, 0, strrpos($link, '/'));
             $addOn = '<span class="input-group-addon">' . $path . '/</span>';
@@ -86,6 +86,11 @@ class Controller extends AbstractController
         $url = new Model();
         $value = htmlspecialchars($this->newValue);
         $link = $url->getUrlWithPrefix(array('url' => $value), $this->model->getParentUrl());
+
+        if (empty($value)) {
+            $item['message'] = 'Поле url должно быть заполнено!';
+            return $item;
+        }
 
         if ($value{0} == '/' || parse_url($link, PHP_URL_SCHEME) != '') {
             // Если введённый url фактически является ссылкой, а не реальным URL,

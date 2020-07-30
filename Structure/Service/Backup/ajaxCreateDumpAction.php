@@ -44,12 +44,12 @@ if (isset($_POST['createMysqlDump'])) {
     $version = 'v' . $nowVersions['Ideal-CMS'];
 
     // Имя файла дампа
-    $dumpName = 'dump_' . date('Y.m.d_H.i.s', $time) . '_' . $version . '.sql';
+    $dumpName = 'dump_' . date('Y.m.d_H.i.s', $time) . '_' . $version . '.sql.gz';
 
     // Запускаем процесс выгрузки
     $tes = $dump->start($backupPart . DIRECTORY_SEPARATOR . $dumpName);
 
-    $dumpName = $backupPart . DIRECTORY_SEPARATOR . $dumpName . '.gz';
+    $dumpName = $backupPart . DIRECTORY_SEPARATOR . $dumpName;
 
     // Формируем строку с новым файлом
     echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' .
