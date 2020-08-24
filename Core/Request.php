@@ -67,6 +67,17 @@ class Request
     }
 
     /**
+     * Получение значения переменной из GET-параметра (без экранирования)
+     *
+     * @param string $name Название GET-параметра
+     * @return string Если параметр не задан, вернёт пустую строку
+     */
+    public function get($name)
+    {
+        return empty($_GET[$name]) ? '' : $_GET[$name];
+    }
+
+    /**
      * Получение из query string строки за исключением параметра $without и его значения
      *
      * @param string $without Параметр, который нужно исключить из query string
