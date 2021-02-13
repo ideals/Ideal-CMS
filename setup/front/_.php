@@ -3,8 +3,6 @@ namespace Ideal;
 
 ini_set('display_errors', 'Off');
 
-require_once '../vendor/autoload.php';
-
 $cmsFolder = '[[CMS]]';
 $subFolder = '[[SUBFOLDER_START_SLASH]]';
 
@@ -21,6 +19,9 @@ set_include_path(
     . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Mods/'
     . PATH_SEPARATOR . DOCUMENT_ROOT . $subFolder . '/' . $cmsFolder . '/Ideal/Library/'
 );
+
+// Подключаем Composer
+require_once __DIR__ . '/../vendor/autoload.php';
 
 // Подключаем автозагрузчик классов
 require_once 'Core/AutoLoader.php';

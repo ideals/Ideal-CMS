@@ -1,5 +1,7 @@
 <?php
-require __DIR__ . '/loader.php';
+// Подключаем Composer
+require_once __DIR__ .  '/../../../../../vendor/autoload.php';
+require_once __DIR__ . '/CronClass.php';
 
 $cron = new \Cron\CronClass();
 
