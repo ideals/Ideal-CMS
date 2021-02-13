@@ -691,39 +691,6 @@
         }
     </script>
     <script>
-        // Отправка оригинального текста в сервис "Яндекс.Вебмастер"
-        function sendYWT(field)
-        {
-            $.ajax({
-                type: "POST",
-                data: {text: $(field).val()},
-                dataType: 'json',
-                url: '/?mode=ajax&controller=Ideal\\Addon\\YandexWebmaster&action=addOriginalText',
-                cache: false,
-                success: function (data) {
-                    if ('to_config' in data) {
-                        if (confirm('Сбой в настройках связи с сервисом "Яндекс.Вебмастер". Перейти на страницу настроек?')) {
-                            window.location.href = data.to_config;
-                        }
-                    }
-                    if ('message' in data) {
-                        alert(data.message);
-                    }
-                }
-            });
-            return false;
-        }
-
-        // Перенаправление пользователя на страницу настроек Яндекса
-        function ywmservice(path)
-        {
-            if (confirm('Все не сохранённые данные редактируемого элемента будут потеряны. Продолжить?')) {
-                window.location.href = path;
-            }
-        }
-    </script>
-
-    <script>
         // Обеспечение работы сортировки при клике по заголовкам списка
         $(function() {
             $('th').on('click', '.sortable-field', function(){

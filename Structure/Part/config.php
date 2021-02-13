@@ -61,14 +61,12 @@ return array(
         ),
         'addon' => array(
             'label' => 'Аддоны',
-            'sql' => "varchar(255) not null default '[[\"1\",\"Ideal_Page\",\"Текст\"],"
-                . "[\"2\",\"Ideal_YandexWebmaster\",\"Я.Вебмастер\"]]'",
+            'sql' => "varchar(255) not null default '[[\"1\",\"Ideal_Page\",\"Текст\"]]'",
             'type' => 'Ideal_Addon',
             'medium'    => '\\Ideal\\Medium\\AddonList\\Model',
             'available' =>  array('Ideal_Page', 'Ideal_PhpFile', 'Ideal_Photo', 'Ideal_SiteMap',
-                'Ideal_YandexSearch', 'Ideal_YandexWebmaster'),
-            'default'   => '[["1","Ideal_Page","Текст"],["2","Ideal_YandexWebmaster","Я.Вебмастер"]]',
-            'webmaster' => array('index.twig' => array('annot', array('content'))),
+                'Ideal_YandexSearch'),
+            'default'   => '[["1","Ideal_Page","Текст"]]',
         ),
         'name' => array(
             'label' => 'Название',
