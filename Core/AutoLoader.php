@@ -34,7 +34,7 @@ function shutDownFunction()
 {
     $error = error_get_last();
     $errors = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING);
-    if (in_array($error['type'], $errors)) {
+    if (!is_null($error) && in_array($error['type'], $errors)) {
         $_err = 'Ошибка ' . $error['message'] . ', в строке ' . $error['line'] . ' файла ' . $error['file'];
         \Ideal\Core\Util::addError($_err, false);
     }
@@ -44,10 +44,6 @@ function shutDownFunction()
 register_shutdown_function('shutdownFunction');
 
 mb_internal_encoding('UTF-8'); // наша кодировка всегда UTF-8
-
-if (get_magic_quotes_gpc()) {
-    die('Включены magic_quotes! Отключите их в настройках хостинга, иначе система работать не будет.');
-}
 
 /**
  * Обработчик автозагрузки

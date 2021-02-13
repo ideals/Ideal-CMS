@@ -247,9 +247,9 @@ class Model
         $num = substr($cid, $current, $this->digits); // выцепляем номер
 
         // Изменяем на нужное число
-        if ($n{0} == '+') {
+        if ($n[0] == '+') {
             $num += intval(substr($n, 1));
-        } elseif ($n{0} == '-') {
+        } elseif ($n[0] == '-') {
             $num -= intval(substr($n, 1));
         } elseif ($n > 0) {
             $num = $n;
