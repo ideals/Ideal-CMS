@@ -278,7 +278,7 @@ class ModelAbstract extends Site\Model
      */
     public function getList($page = null)
     {
-        if ($this->pageData['is_self_menu']) {
+        if (isset($this->pageData['is_self_menu']) && $this->pageData['is_self_menu']) {
             return array();
         }
 
@@ -401,8 +401,8 @@ class ModelAbstract extends Site\Model
             }
         }
 
-        if (is_array($end) && $end['is_self_menu'] == 0) {
-            $where .= "AND lvl={$lvl} {$cid} AND is_active=1 AND is_not_menu=0";
+        if (is_array($end) && empty($end['is_self_menu'])) {
+            $where .= " AND lvl={$lvl} {$cid} AND is_active=1 AND is_not_menu=0";
         }
 
         if ($where != '') {
