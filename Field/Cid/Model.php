@@ -238,7 +238,7 @@ class Model
      *
      * @param string $cid Исходный cid-адрес
      * @param int    $lvl Уровень, на котором надо поменять число
-     * @param int    $n   Число, которое надо прибавить, к тому, что есть
+     * @param string|int $n   Число, которое надо прибавить, к тому, что есть
      * @return string Возвращает только блок из cid на указанном уровне
      */
     public function getBlock($cid, $lvl, $n = 0)
@@ -247,6 +247,7 @@ class Model
         $num = substr($cid, $current, $this->digits); // выцепляем номер
 
         // Изменяем на нужное число
+        $n = (string)$n;
         if ($n[0] == '+') {
             $num += intval(substr($n, 1));
         } elseif ($n[0] == '-') {

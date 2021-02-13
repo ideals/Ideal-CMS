@@ -43,7 +43,7 @@ class Controller extends Url\Controller
         $link = $url->cutSuffix($link);
         // Проверяем, является ли url этого объекта частью пути
         $addOn = '';
-        if (($link !== '') && ($link{0} == '/') && ($value != $link)) {
+        if (($link !== '') && ($link[0] == '/') && ($value != $link)) {
             // Выделяем из ссылки путь до этого объекта и выводим его перед полем input
             $path = substr($link, 0, strrpos($link, '/'));
             $addOn = '<span class="input-group-addon">' . $path . '/</span>';
