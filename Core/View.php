@@ -61,8 +61,12 @@ class View
             $cachePath = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/templates';
             $params['cache'] = stream_resolve_include_path($cachePath);
             if ($params['cache'] == false) {
-                Util::addError('Не удалось определить путь для кэша шаблонов: ' . $cachePath);
-                exit;
+                if (mkdir($cachePath, 0777, true)) {
+                    $params['cache'] = stream_resolve_include_path($cachePath);
+                } else {
+                    Util::addError('Не удалось определить путь для кэша шаблонов: ' . $cachePath);
+                    exit;
+                }
             }
         }
         $this->templater = new \Twig_Environment($loader, $params);
