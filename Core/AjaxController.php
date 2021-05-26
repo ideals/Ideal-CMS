@@ -46,7 +46,14 @@ class AjaxController
         }
 
         $actionName = $actionName . 'Action';
-        $text = $this->$actionName();
+        if (method_exists($this, $actionName)) {
+            // Вызываемый action существует, запускаем его
+            $text = $this->$actionName();
+        } else {
+            // Вызываемый action отсутствует, запускаем 404 ошибку
+            $text = $this->error404Action();
+            $this->model->is404 = true;
+        }
 
         return $text;
     }
