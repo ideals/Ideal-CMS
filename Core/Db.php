@@ -281,6 +281,7 @@ class Db extends \mysqli
     protected function prepareSql($sql, $params = null, $fields = null)
     {
         if (is_array($params)) {
+            uksort($params, function ($a, $b) {return mb_strlen($a) < mb_strlen($b) ? 1 : -1;});
             foreach ($params as $key => $value) {
                 if (null === $value) {
                     $value = 'NULL';
@@ -292,6 +293,7 @@ class Db extends \mysqli
         }
 
         if (is_array($fields)) {
+            uksort($fields, function ($a, $b) {return mb_strlen($a) < mb_strlen($b) ? 1 : -1;});
             foreach ($fields as $key => $value) {
                 $field = parent::escape_string($value);
                 $sql = str_replace("&{$key}", "`$field`", $sql);
