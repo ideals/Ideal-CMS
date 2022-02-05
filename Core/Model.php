@@ -440,7 +440,7 @@ abstract class Model
     /**
      * Получить общее количество элементов в списке
      *
-     * @return array Полученный список элементов
+     * @return int Количество элементов в списке
      */
     public function getListCount()
     {

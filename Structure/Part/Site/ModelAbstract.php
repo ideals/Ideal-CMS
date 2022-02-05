@@ -338,7 +338,7 @@ class ModelAbstract extends Site\Model
         $config = Config::getInstance();
         $urlModel = new Url\Model();
 
-        $_sql = "SELECT * FROM {$this->_table} ORDER BY cid";
+        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure='{$this->prevStructure}' ORDER BY cid";
         $list = $db->select($_sql);
 
         if (count($this->path) == 0) {
