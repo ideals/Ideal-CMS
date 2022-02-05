@@ -27,6 +27,9 @@ foreach ($request as $file) {
     if (strpos($file, 'http') !== 0) {
         // Убираем лишние пробелы из путей и добавляем путь к корню сайта на диске
         $file = $docRoot . '/' . ltrim($file, '/');
+    } else {
+        // Это ссылка на файл в интернете, получаем его сразу же
+        $file = file_get_contents($file);
     }
     $minifier->add($file);
 }
