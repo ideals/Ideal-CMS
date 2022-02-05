@@ -43,11 +43,12 @@ if (isset($isConsole)) {
 
 // Инициализируем фронт контроллер
 $page = new Core\FrontController();
+$uri = $_SERVER['REQUEST_URI'];
 
-if (strpos($_SERVER['REQUEST_URI'], 'api/') === 1) {
+if (strpos($uri, 'api/') === 1) {
     // Обращение к api
     $page->run('api');
-} elseif (strpos($_SERVER['REQUEST_URI'], $config->cmsFolder . '/') === 1) {
+} elseif (strpos($uri, $config->cmsFolder . '/') === 1 || strpos($uri, '\Admin') > 0) {
     // Обращение к административной части
 
     // Регистрируем плагин авторизации
