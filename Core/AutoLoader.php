@@ -12,15 +12,16 @@ if (function_exists('date_default_timezone_set')) {
 /**
  * Обработчик обычных ошибок скриптов. Реакция зависит от настроек $config->errorLog
  *
- * @param $errno   Номер ошибки
- * @param $errstr  Сообщение об ошибке
- * @param $errfile Имя файла, в котором была ошибка
- * @param $errline Номер строки на которой произошла ошибка
+ * @param int $errno Номер ошибки
+ * @param string $errstr Сообщение об ошибке
+ * @param string $errfile Имя файла, в котором была ошибка
+ * @param int $errline Номер строки на которой произошла ошибка
+ * @throws Exception
  */
 function myErrorHandler($errno, $errstr, $errfile, $errline)
 {
     $_err = 'Ошибка [' . $errno . '] ' . $errstr . ', в строке ' . $errline . ' файла ' . $errfile;
-    \Ideal\Core\Util::addError($_err, false);
+    \Ideal\Core\Util::addError($_err, true);
 }
 
 set_error_handler('myErrorHandler');
@@ -29,6 +30,7 @@ set_error_handler('myErrorHandler');
  * Обработчик, вызываемый при завершении работы скрипта.
  * Используется для обработки ошибок, которые не перехватывает set_error_handler()
  * Реакция зависит от настроек $config->errorLog
+ * @throws Exception
  */
 function shutDownFunction()
 {
@@ -51,7 +53,7 @@ mb_internal_encoding('UTF-8'); // наша кодировка всегда UTF-8
  * ModuleName/Class_Name
  * где ModuleName — это название модуля (и соответствующее пространство имён)
  *
- * @param $className Имя класса, которое не нашлось в пространстве имён
+ * @param string $className Имя класса, которое не нашлось в пространстве имён
  * @return bool Флаг успешного подключения файла класса
  */
 function autoLoad($className)
@@ -88,4 +90,4 @@ function autoLoad($className)
     return false;
 }
 
-spl_autoload_register('autoLoad', true);
+spl_autoload_register('autoLoad');
