@@ -341,8 +341,8 @@ class ModelAbstract extends Site\Model
         $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure='{$this->prevStructure}' ORDER BY cid";
         $list = $db->select($_sql);
 
-        if (count($this->path) == 0) {
-            $url = array('0' => array('url' => $config->structures[0]['url']));
+        if (count($this->path) === 0) {
+            $url = ['0' => ['url' => $config->structures[0]['url']]];
         } else {
             $url = $this->path;
         }
@@ -361,10 +361,11 @@ class ModelAbstract extends Site\Model
                 unset($list[$k]);
                 continue;
             }
+
             $lvlExit = false;
             if ($v['lvl'] > $lvl) {
-                if (($v['url'] != '/') && ($k > 0) && isset($list[$k - 1])) {
-                    $url[] = $list[$k - 1];
+                if (($v['url'] !== '/') && isset($prev)) {
+                    $url[] = $prev;
                 }
                 $urlModel->setParentUrl($url);
             } elseif ($v['lvl'] < $lvl) {
@@ -373,9 +374,11 @@ class ModelAbstract extends Site\Model
                 $url = array_slice($url, 0, -$c);
                 $urlModel->setParentUrl($url);
             }
+            $prev = $v;
             $lvl = $v['lvl'];
             $list[$k]['link'] = $urlModel->getUrl($v);
         }
+
         return $list;
     }
 
