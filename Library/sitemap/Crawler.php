@@ -1156,7 +1156,12 @@ XML;
 
         // До 5.4.7 в path выводится весь адрес
         if (!isset($url['host'])) {
-            list(, , $url['host']) = explode('/', $url);
+            $lnk = explode('/', $url);
+            if (empty($lnk[2])) {
+                throw new \Exception('Не удаётся разобрать ссылку: ' . $link . ' на странице '
+                    . $current . ' файл Ideal/Library/Crawler.php строка 1155');
+            }
+            $url['host'] = $lnk[2];
         }
 
         if ($this->host == $url['host']) {

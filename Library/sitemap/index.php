@@ -46,7 +46,7 @@ if ($crawler->ob) {
     echo $text;
 
     // Если нужно, отправляем письмо с выводом скрипта
-    if ($crawler->status == 'cron' && ($crawler->config['email_cron'] != '')) {
+    if ($crawler->status === 'cron' && ($crawler->config['email_cron'] !== '')) {
         $crawler->sendEmail($text, $crawler->config['email_cron']);
     }
 }
