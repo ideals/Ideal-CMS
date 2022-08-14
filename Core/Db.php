@@ -350,20 +350,23 @@ class Db extends \mysqli
     public function insert($table, $params)
     {
         $this->clearCache($table);
-        $columns = $values = array();
+        $values = [];
+        $columns = [];
 
         foreach ($params as $column => $value) {
-            $columns[] = "`" . parent::escape_string($column) . "`";
-            if (null === $value) {
+            $columns[] = '`' . $this->escape_string($column) . '`';
+            if ($value === null) {
                 $values[] = 'NULL';
+            } elseif (is_bool($value) || is_int($value)) {
+                $values[] = (int)$this->escape_string($value);
             } else {
-                $values[] = "'" . parent::escape_string($value) . "'";
+                $values[] = "'" . $this->escape_string($value) . "'";
             }
         }
 
         $columns = implode(', ', $columns);
         $values = implode(', ', $values);
-        $table = parent::escape_string($table);
+        $table = $this->escape_string($table);
         $sql = 'INSERT INTO `' . $table . '` (' . $columns . ') VALUES (' . $values . ');';
         $this->query($sql);
 
