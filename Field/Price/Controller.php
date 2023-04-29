@@ -35,8 +35,7 @@ class Controller extends \Ideal\Field\AbstractController
      */
     public function getValue()
     {
-        $value = intval(parent::getValue()) / 100;
-        return $value;
+        return (int)parent::getValue() / 100;
     }
 
     /**
@@ -44,7 +43,7 @@ class Controller extends \Ideal\Field\AbstractController
      */
     public function getValueForList($values, $fieldName)
     {
-        return number_format($values[$fieldName] / 100, 2, ',', ' ');
+        return number_format($values[$fieldName], 2, ',', '&nbsp;');
     }
 
     /**
