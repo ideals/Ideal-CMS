@@ -20,6 +20,12 @@
  * http://example.com/super/Ideal/Library/sitemap/index.php?w=1
  *
  */
+
+$fileAutoload = __DIR__ . '/../../../../../vendor/autoload.php';
+if (file_exists($fileAutoload)) {
+    require_once $fileAutoload;
+}
+
 require_once __DIR__ . '/Crawler.php';
 
 $crawler = new SiteMap\Crawler();

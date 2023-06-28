@@ -519,7 +519,16 @@ class Crawler
         $subject = (empty($subject)) ? $this->host . ' sitemap' : $subject;
 
         // Отправляем письма об изменениях
-        mail($to, $subject, $text, $header);
+        if (class_exists('\\Ideal\\Mailer')) {
+            $config = require __DIR__ . '/../../../site_data.php';
+            $sender = new \Ideal\Mailer();
+            $sender->setHtmlBody($text);
+            $sender->setSubj($subject);
+            $sender->setSmtp($config['smtp']);
+            $res = $sender->sent('shop@donjon.ru', $to);
+        } else {
+            mail($to, $subject, $text, $header);
+        }
     }
 
     /**
