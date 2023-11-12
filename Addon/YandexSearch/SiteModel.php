@@ -11,10 +11,10 @@ namespace Ideal\Addon\YandexSearch;
 
 use Ideal\Addon;
 use Ideal\Core\Config;
-use Ideal\Core\View;
 use Ideal\Core\Request;
-use YandexXML\Client;
-use YandexXML\Exceptions\YandexXmlException;
+use Ideal\Core\View;
+use YandexSiteSearch\Client;
+use YandexSiteSearch\Exceptions\YandexSiteSearchException;
 
 /**
  * Класс аддона, обеспечивающий поиск по сайту
@@ -27,14 +27,14 @@ use YandexXML\Exceptions\YandexXmlException;
 class SiteModel extends Addon\AbstractSiteModel
 {
 
-    /** @var int Общее количесвто результатов поиска */
+    /** @var int Общее количество результатов поиска */
     protected $listCount = 0;
 
     /**
      * Получение данных аддона с выполнением всех действий (в данном случае — запроса к Яндексу)
      *
      * @return array Все данные аддона и сгенерированное поле content с отображаемым html-кодом
-     * @throws YandexXmlException
+     * @throws YandexSiteSearchException
      */
     public function getPageData()
     {
@@ -55,8 +55,8 @@ class SiteModel extends Addon\AbstractSiteModel
         $view->loadTemplate('index.twig');
 
         // Логин и ключ от сервиса Яндекс
-        $yandexLogin = trim($this->pageData['yandexLogin']);
-        $yandexKey = trim($this->pageData['yandexKey']);
+        $yandexApiKey = trim($this->pageData['yandexLogin']);
+        $yandexFolderId = trim($this->pageData['yandexKey']);
 
         // Адрес прокси скрипта
         $proxyUrl = trim($this->pageData['proxyUrl']);
@@ -76,14 +76,17 @@ class SiteModel extends Addon\AbstractSiteModel
         $view->query = $query;
 
         if (!empty($query)) {
-            if (empty($yandexLogin) || empty($yandexKey)) {
-                $yandexLogin = trim($config->yandex['yandexLogin']);
-                $yandexKey = trim($config->yandex['yandexKey']);
+            if (empty($yandexApiKey) || empty($yandexFolderId)) {
+                $yandexApiKey = trim($config->yandex['yandexLogin']);
+                $yandexFolderId = trim($config->yandex['yandexKey']);
             }
 
+            $yandexApiKey = 'AQVN0lNzvhFynD1xsr9yyPR4UD6l9UE9T7ahdu0X';
+            $yandexFolderId = 'b1gb78iuq5riio55gdpo';
+
             // Для фронтенда рендерим результат поиска
-            if (!empty($yandexLogin) && !empty($yandexKey) && !empty($query)) {
-                $yandexRequest = Client::request($yandexLogin, $yandexKey);
+            if (!empty($yandexApiKey) && !empty($yandexFolderId) && !empty($query)) {
+                $yandexRequest = Client::request($yandexApiKey, $yandexFolderId);
 
                 // Параметр необходимый для получения листалки
                 $elementsSite = $this->pageData['elements_site'];
@@ -91,14 +94,13 @@ class SiteModel extends Addon\AbstractSiteModel
 
                 try {
                     $yandexResponse = $yandexRequest
-                        ->query($query) // запрос к поисковику
-                        ->site($config->domain)// ограничиваемся поиском по сайту
-                        ->page($page) // начать со страницы. По умолчанию 0 (первая страница)
-                        ->limit($this->params['elements_site']) // Количество результатов на странице (макс 100)
-                        ->proxyUrl($proxyUrl)
+                        ->setSite('donjon.ru') // сайт для поиска
+                        ->setQuery($query) // запрос к поисковику
+                        ->setPage($page) // начать со страницы. По умолчанию 0 (первая страница)
+                        ->setPerPage((int)$this->params['elements_site']) // Количество результатов на странице (макс 100)
                         ->send() // Возвращает объект Response
                     ;
-                } catch (YandexXmlException $e) {
+                } catch (YandexSiteSearchException $e) {
                     $view->message = $e->getMessage();
                 } catch (\Exception $e) {
                     $view->message = $e->getMessage();

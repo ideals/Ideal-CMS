@@ -1,15 +1,11 @@
 <?php
 
-namespace YandexXML\Exceptions;
+namespace YandexSiteSearch\Exceptions;
 
 /**
- * Class YandexXmlException for work with YandexXml
- *
- * @author   Mihail Bubnov <bubnov.mihail@gmail.com>
- *
- * @package  YandexXml
+ * Class YandexSiteSearchException for work with Yandex SiteSearch
  */
-class YandexXmlException extends \Exception
+class YandexSiteSearchException extends \Exception
 {
     const EMPTY_USER_OR_KEY = 'Не указан user и/или key';
     const EMPTY_QUERY = 'Задан пустой поисковый запрос — элемент query не содержит данных';
