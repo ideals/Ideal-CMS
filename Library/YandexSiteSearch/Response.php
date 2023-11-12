@@ -1,16 +1,11 @@
 <?php
 
-namespace YandexXML;
+namespace YandexSiteSearch;
 
 /**
- * Class YandexXml for work with Yandex.XML
+ * Class YandexSiteSearch for work with Yandex Site Search
  *
- * @author   Anton Shevchuk <AntonShevchuk@gmail.com>
- * @author   Mihail Bubnov <bubnov.mihail@gmail.com>
- * @link     http://anton.shevchuk.name
- * @link     http://yandex.hohli.com
- *
- * @package  YandexXml
+ * @package  YandexSiteSearch
  */
 class Response
 {
@@ -19,7 +14,7 @@ class Response
      *
      * @var array
      */
-    protected $results = array();
+    protected $results = [];
 
     /**
      * Total results

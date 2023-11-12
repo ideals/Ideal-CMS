@@ -1,36 +1,30 @@
 <?php
 
-namespace YandexXML;
+namespace YandexSiteSearch;
 
-use YandexXML\Exceptions\YandexXmlException;
+use YandexSiteSearch\Exceptions\YandexSiteSearchException;
 
 /**
- * Class YandexXml for work with Yandex.XML
- *
- * @author   Anton Shevchuk <AntonShevchuk@gmail.com>
- * @author   Mihail Bubnov <bubnov.mihail@gmail.com>
- * @link     http://anton.shevchuk.name
- * @link     http://yandex.hohli.com
- *
- * @package  YandexXml
+ * Class YandexSiteSearch for work with Yandex Site Search
  */
 class Client
 {
     /**
      * Request factory
      *
-     * @param  string $user
-     * @param  string $key
-     * @throws YandexXmlException
+     * @param string $user
+     * @param string $key
+     *
      * @return Request
+     * @throws YandexSiteSearchException
      */
-    public static function request($user, $key)
+    public static function request(string $apiKey, string $searchId): Request
     {
-        if (empty($user) or empty($key)) {
-            throw new YandexXmlException(YandexXmlException::EMPTY_USER_OR_KEY);
+        if (empty($apiKey) || empty($searchId)) {
+            throw new YandexSiteSearchException(YandexSiteSearchException::EMPTY_USER_OR_KEY);
         }
 
-        return new Request($user, $key);
+        return new Request($apiKey, $searchId);
     }
 
     /**
