@@ -120,6 +120,11 @@ class Db extends \mysqli
      */
     public function query($query, $resultMode = MYSQLI_STORE_RESULT)
     {
+        file_put_contents(
+            __DIR__ . '/../../../../tmp/log/query.log',
+            date('Y-m-d H:i:s ') . (string)session_id() . ' ' . mb_ereg_replace('\s+', ' ', $query) . "\n",
+            FILE_APPEND
+        );
         $result = parent::query($query, $resultMode);
 
         if ($this->logError && $error = $this->error) {
