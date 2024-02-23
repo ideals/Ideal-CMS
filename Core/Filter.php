@@ -72,4 +72,20 @@ abstract class Filter
     {
         $this->orderBy = '';
     }
+
+    /**
+     * Фильтр может сам посчитать кол-во элементов (если null - то подсчёт будет через sql-запрос)
+     */
+    public function getCount(): ?int
+    {
+        return null;
+    }
+
+    /**
+     * Сортировка считанного списка элементов после его получения, если это необходимо
+     */
+    public function sortList(array $list): array
+    {
+        return $list;
+    }
 }
