@@ -7,7 +7,7 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-namespace Ideal\Field\Date;
+namespace Ideal\Field\DateStr;
 
 use Ideal\Core\Request;
 use Ideal\Field\AbstractController;
