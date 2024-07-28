@@ -38,7 +38,7 @@ class Model
     {
         $nm = Model::translit($nm);
         $nm = mb_strtolower($nm);
-        $arr = array(
+        $arr = [
             '@' => '',
             '$' => '',
             '^' => '',
@@ -70,8 +70,10 @@ class Model
             ' ' => '-',
             '&' => '',
             ',' => '',
-            '%' => ''
-        );
+            '%' => '',
+            'ü' => 'u',
+            'ў' => 'y',
+        ];
         $nm = strtr($nm, $arr);
         return $nm;
     }
