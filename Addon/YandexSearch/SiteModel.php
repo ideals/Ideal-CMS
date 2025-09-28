@@ -9,12 +9,14 @@
 
 namespace Ideal\Addon\YandexSearch;
 
+use App\Core\Logger;
 use Ideal\Addon;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Core\View;
-use YandexSiteSearch\Client;
-use YandexSiteSearch\Exceptions\YandexSiteSearchException;
+use Ideal\YandexSearch\Client;
+use Ideal\YandexSearch\Exception\VeryLongQueryException;
+use Ideal\YandexSearch\WebSearchRequest;
 
 /**
  * Класс аддона, обеспечивающий поиск по сайту
@@ -34,7 +36,6 @@ class SiteModel extends Addon\AbstractSiteModel
      * Получение данных аддона с выполнением всех действий (в данном случае — запроса к Яндексу)
      *
      * @return array Все данные аддона и сгенерированное поле content с отображаемым html-кодом
-     * @throws YandexSiteSearchException
      */
     public function getPageData()
     {
@@ -54,16 +55,6 @@ class SiteModel extends Addon\AbstractSiteModel
         $view = new View($tplRoot, $config->cache['templateSite']);
         $view->loadTemplate('index.twig');
 
-        // Логин и ключ от сервиса Яндекс
-        $yandexApiKey = trim($this->pageData['yandexLogin']);
-        $yandexFolderId = trim($this->pageData['yandexKey']);
-
-        // Адрес прокси скрипта
-        $proxyUrl = trim($this->pageData['proxyUrl']);
-        if (empty($proxyUrl)) {
-            $proxyUrl = trim($config->yandex['proxyUrl']);
-        }
-
         // Номер отображаемой страницы
         $request = new Request();
         $page = (int)$request->num;
@@ -76,48 +67,35 @@ class SiteModel extends Addon\AbstractSiteModel
         $view->query = $query;
 
         if (!empty($query)) {
-            if (empty($yandexApiKey) || empty($yandexFolderId)) {
-                $yandexApiKey = trim($config->yandex['yandexLogin']);
-                $yandexFolderId = trim($config->yandex['yandexKey']);
+            // Параметр необходимый для получения листалки
+            $elementsSite = $this->pageData['elements_site'];
+            $this->params['elements_site'] = !empty($elementsSite) ? $elementsSite : 15;
+
+            try {
+                $request = (new WebSearchRequest(
+                    'site:' . $config->domain . ' "' . str_replace('"', '', $query) . '"'
+                ))
+                    ->setPerPage((int) $this->params['elements_site'])
+                    ->setPage($page);
+            } catch (VeryLongQueryException $e) {
+                return [];
             }
 
-            // Для фронтенда рендерим результат поиска
-            if (!empty($yandexApiKey) && !empty($yandexFolderId) && !empty($query)) {
-                $yandexRequest = Client::request($yandexApiKey, $yandexFolderId);
+            $client = new Client(
+                $_ENV['YANDEX_CLOUD_SEARCH_URL'],
+                $_ENV['YANDEX_CLOUD_SEARCH_API_KEY'],
+                Logger::getInstance()
+            );
+            $response = $client->send($request);
 
-                // Параметр необходимый для получения листалки
-                $elementsSite = $this->pageData['elements_site'];
-                $this->params['elements_site'] = !empty($elementsSite) ? $elementsSite : 15;
-
-                try {
-                    $yandexResponse = $yandexRequest
-                        ->setSite('donjon.ru') // сайт для поиска
-                        ->setQuery($query) // запрос к поисковику
-                        ->setPage($page) // начать со страницы. По умолчанию 0 (первая страница)
-                        ->setPerPage((int)$this->params['elements_site']) // Количество результатов на странице (макс 100)
-                        ->send() // Возвращает объект Response
-                    ;
-                } catch (YandexSiteSearchException $e) {
-                    $view->message = $e->getMessage();
-                } catch (\Exception $e) {
-                    $view->message = $e->getMessage();
-                }
-                if (isset($yandexResponse)) {
-                    $list = $yandexResponse->results();
-
-                    // Передаём данные в шаблон для рендера поиска
-                    $view->total = $this->listCount = $yandexResponse->total();
-                    $view->parts = $list;
-                    $view->pager = $this->getPager('num');
-                    $page++;
-                    $view->startList = $page * $this->pageData['elements_site'] - $this->pageData['elements_site'] + 1;
-                }
-            } else {
-                $view->message = 'Поле логин или ключ от яндекса имеет пустое значене';
-            }
-        } else {
-            $view->message = 'Пустой поисковый запрос';
+            // Передаём данные в шаблон для рендера поиска
+            $view->total = $this->listCount = $response->getDocsTotal();
+            $view->parts = $response->getDocuments();
+            $view->pager = $this->getPager('num');
+            $page++;
+            $view->startList = $page * $this->pageData['elements_site'] - $this->pageData['elements_site'] + 1;
         }
+
         $this->pageData['content'] .= $view->render();
 
         return $this->pageData;
@@ -126,7 +104,7 @@ class SiteModel extends Addon\AbstractSiteModel
     /**
      * Используется в методе "getPager"
      *
-     * @return int Общее количесвто результатов поиска
+     * @return int Общее количество результатов поиска
      */
     public function getListCount()
     {
