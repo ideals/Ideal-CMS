@@ -238,21 +238,18 @@ DONE;
     protected function parseStr($str)
     {
         if (strpos($str, "', // ")) {
-            list ($other, $label) = explode("', // ", $str);
+            [$other, $label] = explode("', // ", $str);
         } else {
-            list ($other, $label) = explode('", // ', $str);
+            [$other, $label] = explode('", // ', $str);
         }
         $label = chop($label);
         $fields = explode(' | ', $label);
         $label = $fields[0];
-        $type = $fields[1];
-        if ($type == '') {
-            $type = 'Ideal_Text';
-        }
+        $type = isset($fields[1]) && $fields[1] !== '' ? $fields[1] : 'Ideal_Text';
         if (strpos($other, " => '")) {
-            list ($name, $value) = explode(" => '", $other);
+            [$name, $value] = explode(" => '", $other);
         } else {
-            list ($name, $value) = explode(' => "', $other);
+            [$name, $value] = explode(' => "', $other);
         }
         $value = str_replace('\n', "\n", $value); // заменяем переводы строки на правильные символы
         $fieldName = trim($name, ' \''); // убираем стартовые пробелы и кавычку у названия поля
@@ -262,7 +259,7 @@ DONE;
             'type' => $type,
             'sql' => '',
         );
-        if ($type == 'Ideal_Select') {
+        if ($type === 'Ideal_Select') {
             $param[$fieldName]['values'] = json_decode($fields[2]);
         }
         return $param;
