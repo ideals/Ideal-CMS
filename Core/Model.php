@@ -384,6 +384,10 @@ abstract class Model
                     $modelName = ($class[3] == 'admin') ? '\\AdminModel' : '\\SiteModel';
                     $className = Util::getClassName($addonInfo[1], 'Addon') . $modelName;
                     $prevStructure = $structure['ID'] . '-' . $this->pageData['ID'];
+                    if (!class_exists($className)) {
+                        Util::addError('Отсутствует класс аддона: ' . $className);
+                        continue;
+                    }
                     $addon = new $className($prevStructure);
                     $addon->setParentModel($this);
                     list(, $fildsGroup) = explode('_', $addonInfo[1]);
