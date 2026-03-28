@@ -61,6 +61,8 @@ class Db extends \mysqli
     /** @var bool Флаг необходимости логирования ошибок, который ставится в true после каждого запроса */
     protected $logError = true;
 
+    public ?string $logFile = null;
+
     /**
      * Получение singleton-объекта подключённого к БД
      *
@@ -88,6 +90,8 @@ class Db extends \mysqli
         }
 
         $db = new Db($params['host'], $params['login'], $params['password'], $params['name']);
+
+        $db->logFile = $params['log_file'] ?? null;
 
         if ($db->connect_errno) {
             Util::addError("Не удалось подключиться к MySQL: " . $db->connect_error);
@@ -120,11 +124,14 @@ class Db extends \mysqli
      */
     public function query($query, $resultMode = MYSQLI_STORE_RESULT)
     {
-        file_put_contents(
-            __DIR__ . '/../../../../tmp/log/query.log',
-            date('Y-m-d H:i:s ') . (string)session_id() . ' ' . mb_ereg_replace('\s+', ' ', $query) . "\n",
-            FILE_APPEND
-        );
+        if ($this->logFile) {
+            file_put_contents(
+                $this->logFile,
+                date('Y-m-d H:i:s ') . (string)session_id() . ' ' . mb_ereg_replace('\s+', ' ', $query) . "\n",
+                FILE_APPEND
+            );
+        }
+
         $result = parent::query($query, $resultMode);
 
         if ($this->logError && $error = $this->error) {
