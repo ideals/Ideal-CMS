@@ -64,12 +64,6 @@ class Util
                 print '<!-- ' . $txt . $traceStr . ' -->' . PHP_EOL;
                 break;
 
-            case 'firebug':
-                // Отображаем ошибку для просмотра через FireBug
-                array_unshift($trace, $txt);
-                \FB::error($trace);
-                break;
-
             case 'email':
             case 'var':
                 self::$errorArray[] = $txt . $traceStr;

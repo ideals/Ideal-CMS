@@ -2,7 +2,6 @@
     "require": {
         "php": ">=5.6.*",
         "ext-curl": "*",
-        "firephp/firephp-core": "^0.5.3",
         "twig/twig": "^1.42",
         "mtdowling/cron-expression": "^1.2",
         "ifsnop/mysqldump-php": "^2.9",
