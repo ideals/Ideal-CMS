@@ -20,8 +20,8 @@ if (function_exists('date_default_timezone_set')) {
  */
 function myErrorHandler($errno, $errstr, $errfile, $errline)
 {
-    $_err = 'Ошибка [' . $errno . '] ' . $errstr . ', в строке ' . $errline . ' файла ' . $errfile;
-    \Ideal\Core\Util::addError($_err, true);
+    $err = 'Ошибка [' . $errno . '] ' . $errstr . ', в строке ' . $errline . ' файла ' . $errfile;
+    \Ideal\Core\Util::addError($err, true);
 }
 
 set_error_handler('myErrorHandler');
@@ -37,8 +37,8 @@ function shutDownFunction()
     $error = error_get_last();
     $errors = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING);
     if (!is_null($error) && in_array($error['type'], $errors)) {
-        $_err = 'Ошибка ' . $error['message'] . ', в строке ' . $error['line'] . ' файла ' . $error['file'];
-        \Ideal\Core\Util::addError($_err, false);
+        $err = 'Ошибка ' . $error['message'] . ', в строке ' . $error['line'] . ' файла ' . $error['file'];
+        \Ideal\Core\Util::addError($err, false);
     }
     \Ideal\Core\Util::shutDown();
 }

@@ -55,14 +55,14 @@ class Model
         $userTable = $config->db['prefix'] . 'ideal_structure_user';
         $userGroupTable = $config->db['prefix'] . 'ideal_structure_usergroup';
         $sql = "
-          SELECT 
-            {$userGroupTable}.ID, 
+          SELECT
+            {$userGroupTable}.ID,
             {$userGroupTable}.name
-          FROM 
-            {$userGroupTable} 
-          LEFT JOIN {$userTable} 
+          FROM
+            {$userGroupTable}
+          LEFT JOIN {$userTable}
           ON {$userGroupTable}.ID = {$userTable}.user_group
-          WHERE 
+          WHERE
             {$userTable}.ID NOT IN (:IDS)
             OR {$userTable}.ID IS NULL
           GROUP BY {$userGroupTable}.ID";
@@ -95,7 +95,7 @@ class Model
                 $res[$v['structure']] = $v;
             }
         }
-        
+
         // Проводим проверку прав пользователя на каждый элемент
         $result = array();
         foreach ($arr as $v) {
@@ -264,7 +264,7 @@ class Model
                         // то генерируем новое значение 'prev_structure'
                         $par['prev_structure'] = $structureID . '-' . $elementID;
                     }
-                    $prev_structure = $par['prev_structure'];
+                    $prevStructure = $par['prev_structure'];
                     $whereString .= ' prev_structure = :prev_structure';
                 }
 
@@ -355,7 +355,7 @@ class Model
 
                     $permission[$key] = $this->getDefaultPermissionArray();
                     $permission[$key]['name'] = $name;
-                    $permission[$key]['prev_structure'] = isset($prev_structure) ? $prev_structure : '';
+                    $permission[$key]['prev_structure'] = isset($prevStructure) ? $prevStructure : '';
                     $par = array(
                         'user_group_id' => $_POST['user_group_id'],
                         'structure' => $childrenStructure['ID'] . '-' . $structurePermission['ID']

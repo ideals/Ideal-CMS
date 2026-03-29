@@ -191,8 +191,8 @@ HTML;
         $request = new Request();
 
         // Вычисляем последний префикс с учётом того что поля выбора типа структуры может не существовать
-        if (isset($request->general_structure)) {
-            $lastPrefix = strtolower($request->general_structure);
+        if (isset($request->{'general_structure'})) {
+            $lastPrefix = strtolower($request->{'general_structure'});
         } else {
             $objClassName = get_class($this->model);
             $objClassNameSlice = explode('\\', $objClassName);

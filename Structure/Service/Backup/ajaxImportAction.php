@@ -23,10 +23,10 @@ if (!file_exists($dumpName)) {
 }
 
 // Получаем массив строк .sql файла из GZIP архива
-$str_list = gzfile($dumpName);
+$strList = gzfile($dumpName);
 
 // Строка с запросами, разделенными ";"
-$query = implode('', $str_list);
+$query = implode('', $strList);
 
 // Выполняем запросы
 if ($db->multi_query($query)) {

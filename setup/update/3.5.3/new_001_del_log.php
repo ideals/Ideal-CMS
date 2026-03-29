@@ -20,8 +20,8 @@ if (!empty($res)) {
 
 // 2. Удаляем Логи из списка справочников
 $dataListTable = $config->db['prefix'] . 'ideal_structure_datalist';
-$_sql = "SELECT * FROM {$dataListTable} WHERE structure='Ideal_Log';";
-$log = $db->select($_sql);
+$sql = "SELECT * FROM {$dataListTable} WHERE structure='Ideal_Log';";
+$log = $db->select($sql);
 if (!empty($log)) {
     $sql = "DELETE FROM {$dataListTable} WHERE structure='Ideal_Log';";
     $db->query($sql);

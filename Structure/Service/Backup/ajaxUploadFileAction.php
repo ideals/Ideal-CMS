@@ -85,15 +85,15 @@ switch ($ext) {
         $archive = new PclZip($dumpNameFull);
 
         // Получаем список файлов в архиве
-        $file_list = $archive->listContent();
+        $fileList = $archive->listContent();
 
-        if ($file_list == 0 || count($file_list) != 1) {
+        if ($fileList == 0 || count($fileList) != 1) {
             unlink($dumpNameFull);  // удаляем загруженный файл
             $exitScript('', 'Ошибка: в архиве должен быть один .sql файл');
         }
 
-        $file = $file_list[0];
-        if (!($file['status'] == 'ok' && $file['size'] > 0)) {
+        $file = $fileList[0];
+        if (!($file['status'] === 'ok' && $file['size'] > 0)) {
             unlink($dumpNameFull);  // удаляем загруженный файл
             $exitScript('', 'Ошибка: .sql файл в архиве поврежден или пустой');
         }

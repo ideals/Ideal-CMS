@@ -194,7 +194,7 @@ class Model
      */
     public static function getUrlWithPrefix($lastPart, $parentUrl = '')
     {
-        $lastUrlPart = $lastPart['url'];
+        $lastUrlPart = $lastPart['url'] ?? '';
 
         if ($parentUrl == '---') {
             // В случае, когда родительский url неопределён

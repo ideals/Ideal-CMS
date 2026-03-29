@@ -113,11 +113,11 @@ ADD;
 
 $dataListTable = $config->db['prefix'] . 'ideal_structure_datalist';
 
-$_sql = "SELECT * FROM {$dataListTable} WHERE structure='Ideal_Order'";
-$order = $db->select($_sql);
+$sql = "SELECT * FROM {$dataListTable} WHERE structure='Ideal_Order'";
+$order = $db->select($sql);
 if (empty($order)) {
-    $_sql = "SELECT MAX(pos) as maxPos FROM {$dataListTable}";
-    $max = $db->select($_sql);
+    $sql = "SELECT MAX(pos) as maxPos FROM {$dataListTable}";
+    $max = $db->select($sql);
 
     $newPos = intval($max[0]['maxPos']) + 1;
     // Создаем запись Заказы с сайта в Справочниках

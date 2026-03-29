@@ -248,17 +248,16 @@ class Model
 
         // Изменяем на нужное число
         $n = (string)$n;
-        if ($n[0] == '+') {
-            $num += intval(substr($n, 1));
-        } elseif ($n[0] == '-') {
-            $num -= intval(substr($n, 1));
+        if ($n[0] === '+') {
+            $num += (int)substr($n, 1);
+        } elseif ($n[0] === '-') {
+            $num -= (int)substr($n, 1);
         } elseif ($n > 0) {
             $num = $n;
         }
 
-        $c_block = $this->numToCid($num); // конвертация числа в блок cid адреса
-
-        return $c_block;
+        // конвертация числа в блок cid адреса
+        return $this->numToCid($num);
     }
 
     /**

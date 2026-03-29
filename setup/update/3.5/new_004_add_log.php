@@ -42,11 +42,11 @@ ADD;
 
 // 2. Если в таблице справочников отсутствует элемент со структурой Ideal_Log - создаем его
 $dataListTable = $config->db['prefix'] . 'ideal_structure_datalist';
-$_sql = "SELECT * FROM {$dataListTable} WHERE structure='Ideal_Log'";
-$log = $db->select($_sql);
+$sql = "SELECT * FROM {$dataListTable} WHERE structure='Ideal_Log'";
+$log = $db->select($sql);
 if (empty($log)) {
-    $_sql = "SELECT MAX(pos) as maxPos FROM {$dataListTable}";
-    $max = $db->select($_sql);
+    $sql = "SELECT MAX(pos) as maxPos FROM {$dataListTable}";
+    $max = $db->select($sql);
     $newPos = intval($max[0]['maxPos']) + 1;
 
     // Создаем запись Заказы с сайта в Справочниках

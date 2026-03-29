@@ -366,9 +366,9 @@ class Crawler
 
         $result = serialize($result);
 
-        $tmp_file = $this->config['pageroot'] . $this->config['tmp_file'];
+        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
 
-        $fp = fopen($tmp_file, 'w');
+        $fp = fopen($tmpFile, 'wb');
 
         fwrite($fp, $result);
 
@@ -381,8 +381,8 @@ class Crawler
     protected function saveParsedRadarLinks()
     {
         $result = serialize($this->radarLinks);
-        $tmp_radar_file = $this->config['pageroot'] . $this->config['tmp_radar_file'];
-        $fp = fopen($tmp_radar_file, 'w');
+        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+        $fp = fopen($tmpRadarFile, 'wb');
         fwrite($fp, $result);
         fclose($fp);
     }
@@ -854,13 +854,11 @@ XML;
             return '';
         }
 
-        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
-
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
         curl_close($ch);
 
-        $res = substr($res, $header_size); // вырезаем html код страницы
-
-        return $res;
+        // вырезаем html код страницы
+        return substr($res, $headerSize);
     }
 
     /**
