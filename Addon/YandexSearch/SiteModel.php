@@ -10,7 +10,7 @@
 
 namespace Ideal\Addon\YandexSearch;
 
-use App\Core\Logger;
+use Ideal\Core\Logger;
 use Ideal\Addon;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
