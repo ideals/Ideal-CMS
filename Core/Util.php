@@ -288,7 +288,7 @@ class Util
                 // Ошибка произошла при выполнении скрипта в консоли
                 $source = 'При выполнении скрипта ' . $_SERVER['PHP_SELF'];
             } else {
-                // Ошибка произошла при выполнеии скрипта в браузере
+                // Ошибка произошла при выполнении скрипта в браузере
                 $protocol = $config->getProtocol();
                 $source = 'На странице ' . $protocol . $config->domain . $_SERVER['REQUEST_URI'];
             }
@@ -296,16 +296,16 @@ class Util
             $text = "Здравствуйте!\n\n{$source} произошли следующие ошибки.\n\n"
                 . implode("\n\n", self::$errorArray) . "\n\n"
                 . '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
-            if (isset($_GET)) {
+            if (!empty($_GET)) {
                 $text .= '$_GET = ' . "\n" . print_r($_GET, true) . "\n\n";
             }
-            if (isset($_POST)) {
+            if (!empty($_POST)) {
                 $text .= '$_POST = ' . "\n" . print_r($_POST, true) . "\n\n";
             }
-            if (isset($_COOKIE)) {
+            if (!empty($_COOKIE)) {
                 $text .= '$_COOKIE = ' . "\n" . print_r($_COOKIE, true) . "\n\n";
             }
-            $subject = "Сообщение об ошибке на сайте " . $config->domain;
+            $subject = 'Сообщение об ошибке на сайте ' . $config->domain;
             $mail = new \Ideal\Mailer();
             $mail->setSubj($subject);
             $mail->setPlainBody($text);

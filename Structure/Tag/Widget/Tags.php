@@ -27,5 +27,8 @@ class Tags extends \Ideal\Core\Widget
         return $result;
     }
 
-    public function getData() {}
+    public function getData()
+    {
+        return [];
+    }
 }

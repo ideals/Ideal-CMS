@@ -110,10 +110,14 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         } elseif (empty($end['content']) && !empty($end['addon'])) {
             $text = '';
             $addons = json_decode($end['addon']);
-            foreach ($config->structures as $key => $value) {
-                if ($value['structure'] == $end['structure']) {
+            foreach ($config->structures as $value) {
+                if ($value['structure'] === $end['structure']) {
                     $prevStructure = $value['ID'] . '-' . $end['ID'];
                 }
+            }
+            if (!isset($prevStructure)) {
+                Util::addError('Не найдена prev_structure: ' . $end['structure']);
+                return '';
             }
             foreach ($addons as $addon) {
                 $addonGroupName = strtolower(end(explode('_', $addon[1])));
@@ -126,14 +130,6 @@ class ModelAbstract extends \Ideal\Core\Site\Model
             $text = '';
         }
 
-        $header = '';
-        if (preg_match('/<h1.*>(.*)<\/h1>/isU', $text, $header)) {
-            $text = preg_replace('/<h1>(.*)<\/h1>/isU', '', $text, 1);
-            $this->header = $header[1];
-        }
-        if (count($header) > 1) {
-            $text = str_replace($header[0], '', $text);
-        }
         return $text;
     }
 

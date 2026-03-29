@@ -9,9 +9,18 @@
  */
 
 // Инициализируем доступ к БД
+use Ideal\Core\Util;
+
 $db = Ideal\Core\Db::getInstance();
 
+$config = Ideal\Core\Config::getInstance();
+
 $cfg = $config->getStructureByName('Ideal_Acl');
+
+if (is_bool($cfg)) {
+    Util::addError('Не найдена структура Ideal_Acl');
+    return;
+}
 
 // Создание таблицы для структуры управления правами пользователя
 $db->create($config->db['prefix'] . 'ideal_structure_acl', $cfg['fields']);

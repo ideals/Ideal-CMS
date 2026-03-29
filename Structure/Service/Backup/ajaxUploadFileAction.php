@@ -29,7 +29,7 @@ $isOverride = false; // перезаписан ли файл
 $backupPart = stream_resolve_include_path($_GET['bf']);
 
 // Получаем версию админки
-$versions = new \Ideal\Structure\Service\UpdateCms\Versions();
+$versions = new \Ideal\Core\Versions();
 $nowVersions = $versions->getVersions();
 if ($nowVersions === false) {
     $exitScript('', $versions->getAnswer());

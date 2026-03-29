@@ -403,11 +403,11 @@ class ModelAbstract extends Site\Model
             }
         }
 
-        if (is_array($end) && empty($end['is_self_menu'])) {
+        if (isset($end) && is_array($end) && empty($end['is_self_menu'])) {
             $where .= " AND lvl={$lvl} {$cid} AND is_active=1 AND is_not_menu=0";
         }
 
-        if ($where != '') {
+        if ($where !== '') {
             $where = 'WHERE ' . $where;
         }
 

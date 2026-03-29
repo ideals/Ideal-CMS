@@ -283,10 +283,8 @@ class RewriteRule
 
     /**
      * Загрузка редиректов из .htaccess и redirect.txt
-     *
-     * @return bool Успешность выполнения
      */
-    public function loadRedirects()
+    public function loadRedirects(): void
     {
         // Загружаем редиректы из redirect.txt
         $redirectTxt = $this->loadFile($this->reFile);

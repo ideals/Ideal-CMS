@@ -96,7 +96,7 @@ class Controller extends AbstractController
      */
     public function getValueForList($values, $fieldName)
     {
-        $url = new Model($fieldName);
+        $url = new Model();
         $link = $url->getUrlWithPrefix($values, $this->model->getParentUrl());
         if ($link == '---') {
             // Если это страница внутри главной, то просто возвращаем поле url

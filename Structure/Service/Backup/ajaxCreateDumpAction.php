@@ -40,7 +40,7 @@ if (isset($_POST['createMysqlDump'])) {
     $time = time();
 
     // Получаем версию админки
-    $versions = new \Ideal\Structure\Service\UpdateCms\Versions();
+    $versions = new \Ideal\Core\Versions();
     $nowVersions = $versions->getVersions();
     $version = 'v' . $nowVersions['Ideal-CMS'];
 

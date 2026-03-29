@@ -44,6 +44,8 @@ class Model extends AbstractModel
             $modelStructures = array_unique($this->obj->params['structures']);
         }
 
+        $list = [];
+        $structures = [];
         // Получаем список структур, которые можно создавать в этой структуре
         foreach ($config->structures as $structure) {
             if (in_array($structure['structure'], $modelStructures)) {
@@ -52,18 +54,18 @@ class Model extends AbstractModel
         }
 
         // Проходим по списку всех возможных типов из этого раздела и ищем в них шаблоны для отображения
-        // TODO учесть вевроятность снижения производительности при наличии достстоно большого количества типов структур
+        // TODO учесть вероятность снижения производительности при наличии достаточно большого количества типов структур
         foreach ($structures as $value) {
             $folderName = str_replace('\\', '/', Util::getClassName($value, 'Structure'));
             $parts = explode('/', $folderName);
             $moduleName = $parts[1];
-            if ($moduleName == 'Ideal') {
+            if ($moduleName === 'Ideal') {
                 $folderPartNames = ['Ideal', 'Ideal.c'];
                 $moduleName = '';
                 $folderName = str_replace('/Ideal', '', $folderName);
             } else {
                 $folderPartNames = ['Mods', 'Mods.c'];
-                $moduleName = $moduleName . '/';
+                $moduleName .= '/';
             }
             $structureName = $parts[3];
             foreach ($folderPartNames as $folderPartName) {
@@ -84,6 +86,7 @@ class Model extends AbstractModel
                 }
             }
         }
+
         return $list;
     }
 }

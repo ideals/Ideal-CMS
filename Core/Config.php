@@ -11,14 +11,15 @@ namespace Ideal\Core;
 
 /**
  * Класс конфигурации, в котором хранятся все конфигурационные данные CMS
- * @property array db Массив с настройками подключения к БД
- * @property array cache Массив с настройками кэширования
- * @property string cmsFolder Название папки с CMS
- * @property array yandex Массив с настройками подключения к сервисам Яндекса
- * @property string domain Доменная часть адреса сайта на котором установлена CMS
- * @property string cms Массив настроек cms
- * @property string urlSuffix Стандартный суффикс url для страниц сайта (обычно .html)
- * @property array smtp Массив с настройками SMTP
+ *
+ * @property array $db Массив с настройками подключения к БД
+ * @property array $cache Массив с настройками кэширования
+ * @property string $cmsFolder Название папки с CMS
+ * @property array $yandex Массив с настройками подключения к сервисам Яндекса
+ * @property string $domain Доменная часть адреса сайта на котором установлена CMS
+ * @property array $cms Массив настроек cms
+ * @property string $urlSuffix Стандартный суффикс url для страниц сайта (обычно .html)
+ * @property array $smtp Массив с настройками SMTP
  */
 class Config
 {
@@ -26,10 +27,12 @@ class Config
     private static $instance;
 
     /** @var array Список всех подключённых к проекту структур */
-    public $structures = [];
+    public array $structures = [];
 
     /** @var array Содержит все конфигурационные переменные проекта */
-    private $array = [];
+    private array $array = [];
+
+    private string $protocol;
 
     /**
      * Магический метод, возвращающий по запросу $config->varName переменную varName из массива $this->array

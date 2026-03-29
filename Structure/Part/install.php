@@ -9,9 +9,16 @@
  */
 
 // Инициализируем доступ к БД
+use Ideal\Core\Util;
+
 $db = \Ideal\Core\Db::getInstance();
+$config = \Ideal\Core\Config::getInstance();
 
 $cfg = $config->getStructureByName('Ideal_Part');
+if (is_bool($cfg)) {
+    Util::addError('Не найдена структура Ideal_Part');
+    return;
+}
 
 $table = $config->db['prefix'] . 'ideal_structure_part';
 $tableAddon = $config->db['prefix'] . 'ideal_addon_page';

@@ -47,6 +47,7 @@ class FileMonitor
     private $fileMonitor = '/file-monitor.txt';
     private $fileMonitorTmp = '/file-monitor-tmp.txt';
     private $fileMonitorUpd = '/file-monitor-upd.txt';
+    private string $tmpDir;
 
     /**
      * Устанавливает время начала работы скрипта и список файлов/каталогов для исключения из сбора.

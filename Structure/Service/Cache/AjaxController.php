@@ -65,7 +65,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     {
         $config = Config::getInstance();
         $delPages = [];
-        $pageList = new SiteMap\Model('0-1');
+        $pageList = new SiteMap\SiteModel('0-1');
         $pages = $pageList->getList();
         foreach ($pages as $page) {
             $path = $config->cms['tmpFolder'] . '/cache/fileCache' . $page['link'];

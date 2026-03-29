@@ -24,7 +24,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         // Ищем всех заказчиков для составления фильтра
         $_table = $config->db['prefix'] . 'ideal_structure_order';
         $_sql = "SELECT DISTINCT order_type FROM {$_table} ORDER BY order_type";
-        $this->types = $db->select($_sql);
+        $types = $db->select($_sql);
 
         $request = new Request();
         $currentType = '';
@@ -33,7 +33,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         }
 
         $select = '<select class="form-control" name="toolbar[types]"><option value="">Не фильтровать</option>';
-        foreach ($this->types as $type) {
+        foreach ($types as $type) {
             $selected = '';
             if ($type['order_type'] === $currentType) {
                 $selected = 'selected="selected"';

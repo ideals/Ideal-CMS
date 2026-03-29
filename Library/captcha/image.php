@@ -270,28 +270,34 @@ imagedestroy($imgtmp);
 // Cr�ation du fond
 $img = imagecreatetruecolor($cryptwidth, $cryptheight);
 
-if ($bgimg and is_dir($bgimg)) {
+if ($bgimg && is_dir($bgimg)) {
     $dh = opendir($bgimg);
+    $files = [];
     while (false !== ($filename = readdir($dh))) {
-        if (eregi(".[gif|jpg|png]$", $filename)) {
+        if (preg_match("/\.(gif|jpg|png)$/i", $filename)) {
             $files[] = $filename;
         }
     }
     closedir($dh);
-    $bgimg = $bgimg . '/' . $files[array_rand($files, 1)];
+    if (count($files) > 0) {
+        $bgimg .= '/' . $files[array_rand($files)];
+    }
 }
 if ($bgimg) {
     [$getwidth, $getheight, $gettype, $getattr] = getimagesize($bgimg);
     switch ($gettype) {
-        case "1":
+        case '1':
             $imgread = imagecreatefromgif($bgimg);
             break;
-        case "2":
+        case '2':
             $imgread = imagecreatefromjpeg($bgimg);
             break;
-        case "3":
+        case '3':
             $imgread = imagecreatefrompng($bgimg);
             break;
+        default:
+            echo 'Invalid image type = ' . $gettype;
+            exit;
     }
     imagecopyresized($img, $imgread, 0, 0, 0, 0, $cryptwidth, $cryptheight, $getwidth, $getheight);
     imagedestroy($imgread);

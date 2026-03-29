@@ -195,6 +195,14 @@ abstract class Model extends Core\Model
             $groups[$group][$field] = $v['value'];
         }
 
+        if (!isset($groups[$groupName])) {
+            Util::addError('Не могу сохранить элемент группы ' . $groupName);
+            return [
+                'isCorrect' => false,
+                'errorText' => 'Не могу сохранить элемент группы ' . $groupName,
+            ];
+        }
+
         $db = Db::getInstance();
 
         $db->update($this->_table)->set($groups[$groupName]);

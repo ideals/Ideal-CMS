@@ -48,7 +48,7 @@ abstract class Filter
      */
     public function setParams($params)
     {
-        $db = DB::getInstance();
+        $db = Db::getInstance();
         foreach ($params as $key => $value) {
             $params[$key] = $db->escape_string($value);
         }
