@@ -25,7 +25,7 @@ class AjaxController extends \Ideal\Core\AjaxController
      * @param string $cmsFolder Путь до корневой папки системы
      * @return array Массив где ключами являются пути до файлов, а значениями их хэши
      */
-    public static function getAllSystemFiles($folder, $cmsFolder)
+    public static function getAllSystemFiles(string $folder, $cmsFolder): array
     {
         $systemFiles = [];
         $files = scandir($folder);
@@ -34,6 +34,7 @@ class AjaxController extends \Ideal\Core\AjaxController
             if (preg_match('/^\..*?|hash_files$/isU', $file)) {
                 continue;
             }
+
             // Если директория, то запускаем сбор внутри директории
             if (is_dir($folder . '/' . $file)) {
                 $systemFiles = array_merge($systemFiles, self::getAllSystemFiles($folder . '/' . $file, $cmsFolder));
@@ -42,13 +43,14 @@ class AjaxController extends \Ideal\Core\AjaxController
                 $systemFiles[$fileKeyArray] = hash_file('crc32b', $folder . '/' . $file);
             }
         }
+
         return $systemFiles;
     }
 
     /**
      * Действие срабатывающее при нажатии на кнопку "Проверка целостности файлов"
      */
-    public function checkCmsFilesAction()
+    public function checkCmsFilesAction(): void
     {
         $config = Config::getInstance();
         $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Ideal';
@@ -71,6 +73,7 @@ class AjaxController extends \Ideal\Core\AjaxController
 
         // Получаем строковое представление всех различий
         $changeFiles = implode('<br />', array_keys($changeFiles));
+
         $delFiles = implode('<br />', array_keys($delFiles));
         $newFiles = implode('<br />', array_keys($newFiles));
 

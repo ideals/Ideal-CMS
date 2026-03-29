@@ -21,8 +21,9 @@ class Model extends AbstractModel
 {
     /**
      * {@inheritdoc}
+     * @return mixed[]
      */
-    public function getList()
+    public function getList(): array
     {
         $list = [0 => '---'];
         $db = Db::getInstance();
@@ -33,6 +34,7 @@ class Model extends AbstractModel
         foreach ($arr as $item) {
             $list[$item['ID']] = $item['email'];
         }
+
         return $list;
     }
 }

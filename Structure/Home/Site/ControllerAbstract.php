@@ -10,4 +10,6 @@
 
 namespace Ideal\Structure\Home\Site;
 
-class ControllerAbstract extends \Ideal\Core\Site\Controller {}
+use Ideal\Core\Site\Controller;
+
+class ControllerAbstract extends Controller {}

@@ -7,12 +7,13 @@
  * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-
 // Инициализируем доступ к БД
+use Ideal\Core\Db;
+use Ideal\Core\Config;
 use Ideal\Core\Util;
 
-$db = \Ideal\Core\Db::getInstance();
-$config = \Ideal\Core\Config::getInstance();
+$db = Db::getInstance();
+$config = Config::getInstance();
 
 $cfg = $config->getStructureByName('Ideal_Part');
 if (is_bool($cfg)) {

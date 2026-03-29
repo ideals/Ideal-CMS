@@ -22,7 +22,7 @@ use Ideal\Structure\Service\Admin\Model as ServiceModel;
 class Model
 {
     /** @var string Название таблицы со списком прав доступа */
-    protected $table;
+    protected string $table;
 
     /** @var User Объект авторизованного пользователя */
     protected $user;
@@ -87,10 +87,11 @@ class Model
             $str = $config->getStructureByName($structureName);
             $prefix = $str['ID'] . '-';
         }
+
         // Считываем права пользователя
         $res = [];
-        if (isset($this->user->data) && isset($this->user->data['user_group']) && $this->user->data['user_group']) {
-            $sql = "SELECT * FROM {$this->table} WHERE user_group_id={$this->user->data['user_group']}";
+        if ($this->user->data !== null && isset($this->user->data['user_group']) && $this->user->data['user_group']) {
+            $sql = sprintf('SELECT * FROM %s WHERE user_group_id=%s', $this->table, $this->user->data['user_group']);
             $result = $db->select($sql);
             foreach ($result as $v) {
                 $res[$v['structure']] = $v;
@@ -104,8 +105,10 @@ class Model
             if (!empty($res[$structure]) && !$res[$structure]['show']) {
                 continue;
             }
+
             $result[] = $v;
         }
+
         return $result;
     }
 
@@ -115,14 +118,14 @@ class Model
      * @param array $structures Список структур, для которых нужно получить права доступа
      * @return array Права доступа для структур
      */
-    public function getAcl($structures)
+    public function getAcl($structures): array
     {
         $aclStructure = [];
         if ($this->user->data['user_group']) {
             $db = Db::getInstance();
-            $sql = "SELECT * FROM {$this->table} "
+            $sql = sprintf('SELECT * FROM %s ', $this->table)
                 . "WHERE structure IN ('" . implode("','", $structures) . "') "
-                . "AND user_group_id={$this->user->data['user_group']}";
+                . ('AND user_group_id=' . $this->user->data['user_group']);
             $acl = $db->select($sql);
             // Распределяем считанные права доступа по структурам
             $aclStructure = [];
@@ -130,6 +133,7 @@ class Model
                 $aclStructure[$v['structure']] = $v;
             }
         }
+
         return $aclStructure;
     }
 
@@ -143,7 +147,7 @@ class Model
     public function checkAccess($model, $action = 'access')
     {
         $access = true;
-        if (isset($this->user->data) && isset($this->user->data['user_group']) && $this->user->data['user_group']) {
+        if ($this->user->data !== null && isset($this->user->data['user_group']) && $this->user->data['user_group']) {
             $data = $model->getPageData();
             if (empty($data['prev_structure'])) {
                 $structure = '0-' . $data['ID'];
@@ -155,8 +159,8 @@ class Model
 
             // Получаем права на структуру из БД
             $db = Db::getInstance();
-            $sql = "SELECT * FROM {$this->table}"
-                . " WHERE structure='{$structure}' AND user_group_id={$this->user->data['user_group']}";
+            $sql = 'SELECT * FROM ' . $this->table
+                . sprintf(" WHERE structure='%s' AND user_group_id=%s", $structure, $this->user->data['user_group']);
             $acl = $db->select($sql);
 
             if (isset($acl[0])) {
@@ -174,8 +178,9 @@ class Model
 
     /**
      * Формирование списка первого уровня для управления правами
+     * @return mixed[]
      */
-    public function getMainUserGroupPermission()
+    public function getMainUserGroupPermission(): array
     {
         $permission = [];
         $config = Config::getInstance();
@@ -191,7 +196,7 @@ class Model
 
         // Получаем все права группы пользователя на основные пункты меню админки
         $par = ['user_group_id' => $_POST['user_group_id']];
-        $whereString = ' WHERE user_group_id = :user_group_id AND structure LIKE \'0-%\'';
+        $whereString = " WHERE user_group_id = :user_group_id AND structure LIKE '0-%'";
         $userPermissions = $this->getExistingAccessRules($par, $whereString);
 
         // Заменяем правила по умолчанию на уже известные правила для каждого пункта
@@ -202,8 +207,9 @@ class Model
 
     /**
      * Формирование списка дочерних пунктов для управления правами
+     * @return mixed[]
      */
-    public function getChildrenPermission()
+    public function getChildrenPermission(): array
     {
         $permission = [];
         $db = Db::getInstance();
@@ -228,7 +234,7 @@ class Model
             // Для дочерних элементов пункта "Сервис" не нужно пытаться получать информацию о структуре
             if (strpos($structureTable, 'ideal_structure_service') === false) {
                 $partitionType = $db->select(
-                    "SELECT * FROM {$structureTable} WHERE ID = :ID",
+                    sprintf('SELECT * FROM %s WHERE ID = :ID', $structureTable),
                     [
                         'ID' => $elementID,
                     ],
@@ -265,6 +271,7 @@ class Model
                         // то генерируем новое значение 'prev_structure'
                         $par['prev_structure'] = $structureID . '-' . $elementID;
                     }
+
                     $prevStructure = $par['prev_structure'];
                     $whereString .= ' prev_structure = :prev_structure';
                 }
@@ -277,9 +284,10 @@ class Model
                         $structureID == 0 || !isset($structure['structure'])
                         || $childrenStructure['structure'] != $structure['structure']
                     )) {
-                    if (!empty($whereString)) {
+                    if ($whereString !== '' && $whereString !== '0') {
                         $whereString .= ' AND';
                     }
+
                     $par['lvl'] = 1;
                     $whereString .= " lvl = :lvl";
                 }
@@ -291,7 +299,7 @@ class Model
                 if (isset($childrenStructure['fields']['cid']) && $structureID != 0
                     && isset($structure['structure']) && $childrenStructure['structure'] == $structure['structure']) {
 
-                    if (!empty($whereString)) {
+                    if ($whereString !== '' && $whereString !== '0') {
                         $whereString .= ' AND';
                     }
 
@@ -301,32 +309,31 @@ class Model
 
                     // Получаем cid родительского элемента
                     $cid = $db->select(
-                        "SELECT cid FROM {$childrenStructure['tableName']} WHERE ID = :ID",
+                        sprintf('SELECT cid FROM %s WHERE ID = :ID', $childrenStructure['tableName']),
                         ['ID' => $elementID],
                     );
 
                     // Формируем cid для WHERE-части запроса на выборку дочерних элементов
                     $cid = str_split($cid[0]['cid'], $digits);
-                    $cid = array_filter($cid, function ($v) {
-                        return intval($v);
-                    });
+                    $cid = array_filter($cid, fn($v): int => intval($v));
                     $cid = implode('', $cid);
                     $cidRegexpString = '^' . $cid . '(.){' . $digits . '}';
                     if (strlen($cidRegexpString) < $digits * $levels) {
                         $cidRegexpString .= str_repeat('0', $digits);
                     }
+
                     $par['ID'] = $elementID;
-                    $whereString .= " cid REGEXP '{$cidRegexpString }' AND ID != :ID";
+                    $whereString .= sprintf(" cid REGEXP '%s' AND ID != :ID", $cidRegexpString);
                 }
 
                 // Завершаем формирование WHERE-части запроса
-                if (!empty($whereString)) {
+                if ($whereString !== '' && $whereString !== '0') {
                     $whereString = ' WHERE' . $whereString;
                 }
 
                 // Получаем дочерние элементы текущего пункта
                 $structurePermissions = $db->select(
-                    "SELECT * FROM {$childrenStructure['tableName']}{$whereString}",
+                    sprintf('SELECT * FROM %s%s', $childrenStructure['tableName'], $whereString),
                     $par,
                 );
             } elseif (strpos($elementID, '_') === false) {
@@ -369,13 +376,14 @@ class Model
                 }
             }
         }
+
         return $permission;
     }
 
     /**
      * Занесение в базу изменённого правила для соответствующего пункта
      */
-    public function changePermission()
+    public function changePermission(): void
     {
         $permission = $this->getDefaultPermissionArray();
         $permission['user_group_id'] = $_POST['user_group_id'];
@@ -405,9 +413,9 @@ class Model
     /**
      * Генерирует массив прав по умолчанию для элемента предполагаемого элемента
      *
-     * @return array Массив прав
+     * @return array<string, int> Массив прав
      */
-    private function getDefaultPermissionArray()
+    private function getDefaultPermissionArray(): array
     {
         return [
             'show' => 1,
@@ -424,11 +432,11 @@ class Model
      * @param string $whereString Строка с WHERE-частью запроса
      * @return array Массив выборки правил
      */
-    private function getExistingAccessRules($par, $whereString)
+    private function getExistingAccessRules(array $par, string $whereString)
     {
         $db = Db::getInstance();
         return $db->select(
-            "SELECT * FROM {$this->table}{$whereString}",
+            sprintf('SELECT * FROM %s%s', $this->table, $whereString),
             $par,
         );
     }
@@ -437,9 +445,9 @@ class Model
      * Замена правил по умолчанию на уже установленные правила для соответствующих пунктов
      *
      * @param array $existingRules Существующие правила для пунктов
-     * @param array $defaultRules Правила по умолчанию
+     * @param array<string, non-empty-array> $defaultRules Правила по умолчанию
      */
-    private function applyKnownRules($existingRules, &$defaultRules)
+    private function applyKnownRules($existingRules, array &$defaultRules): void
     {
         if (!empty($existingRules)) {
             foreach ($existingRules as $rule) {

@@ -10,20 +10,20 @@
 
 namespace Ideal\Structure\User\Admin;
 
+use Ideal\Core\Admin\Model;
 use Ideal\Core\Db;
 
-class ModelAbstract extends \Ideal\Core\Admin\Model
+class ModelAbstract extends Model
 {
-    public function delete()
+    public function delete(): void
     {
         parent::delete();
         $db = Db::getInstance();
         $db->delete($this->_table)->where('ID=:id', ['id' => $this->pageData['ID']])->exec();
         // TODO сделать проверку успешности удаления
-        return 1;
     }
 
-    public function detectPageByIds($path, $par)
+    public function detectPageByIds($path, $par): self
     {
         $this->path = $path;
         return $this;

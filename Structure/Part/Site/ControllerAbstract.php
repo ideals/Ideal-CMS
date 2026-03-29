@@ -10,15 +10,15 @@
 
 namespace Ideal\Structure\Part\Site;
 
-use Ideal\Core;
+use Ideal\Core\Site\Controller;
 use Ideal\Core\Request;
 
-class ControllerAbstract extends Core\Site\Controller
+class ControllerAbstract extends Controller
 {
     /** @var bool Включение листалки (пагинации) */
     protected $isPager = false;
 
-    public function indexAction()
+    public function indexAction(): void
     {
         parent::indexAction();
 

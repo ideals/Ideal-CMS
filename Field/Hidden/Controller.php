@@ -32,17 +32,16 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function showEdit()
+    public function showEdit(): string
     {
         $this->htmlName = $this->groupName . '_' . $this->name;
-        $input = $this->getInputText();
-        return $input;
+        return $this->getInputText();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         return '<input type="hidden" id="' . $this->htmlName
         . '" name="' . $this->htmlName

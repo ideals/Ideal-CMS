@@ -37,7 +37,7 @@ class Controller extends Date\Controller
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $this->getNow = true;
         $html = parent::getInputText();

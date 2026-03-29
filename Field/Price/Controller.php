@@ -10,19 +10,20 @@
 
 namespace Ideal\Field\Price;
 
+use Ideal\Field\AbstractController;
 use Ideal\Core\Request;
 
 /**
  * Class Controller
  */
-class Controller extends \Ideal\Field\AbstractController
+class Controller extends AbstractController
 {
     protected static $instance;
 
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = str_replace(',', '.', htmlspecialchars($this->getValue()));
         return '<input type="number" step="0.01" class="form-control '
@@ -42,7 +43,7 @@ class Controller extends \Ideal\Field\AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getValueForList($values, $fieldName)
+    public function getValueForList($values, $fieldName): string
     {
         return number_format($values[$fieldName], 2, ',', '&nbsp;');
     }

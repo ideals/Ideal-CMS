@@ -10,7 +10,7 @@
 
 namespace Ideal\Structure\Service\Cache;
 
-use Ideal\Addon\SiteMap;
+use Ideal\Addon\SiteMap\SiteModel;
 use Ideal\Core\FileCache;
 use Ideal\Core\Memcache;
 use Ideal\Core\View;
@@ -25,7 +25,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     /**
      * Действие срабатывающее при нажатии на кнопку "Очистить кэш"
      */
-    public function clearCacheAction()
+    public function clearCacheAction(): void
     {
         $config = Config::getInstance();
         $configCache = $config->cache;
@@ -61,11 +61,11 @@ class AjaxController extends \Ideal\Core\AjaxController
     /**
      * Действие срабатывающее при нажатии на кнопку "Очистить кэш"
      */
-    public function dellCacheFilesAction()
+    public function dellCacheFilesAction(): void
     {
         $config = Config::getInstance();
         $delPages = [];
-        $pageList = new SiteMap\SiteModel('0-1');
+        $pageList = new SiteModel('0-1');
         $pages = $pageList->getList();
         foreach ($pages as $page) {
             $path = $config->cms['tmpFolder'] . '/cache/fileCache' . $page['link'];
@@ -73,6 +73,7 @@ class AjaxController extends \Ideal\Core\AjaxController
                 $delPages[] = $page['link'];
             }
         }
+
         $delPages = implode("<br />", $delPages);
         print json_encode(['text' => $delPages]);
         exit;

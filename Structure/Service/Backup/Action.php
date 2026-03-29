@@ -30,41 +30,37 @@ try {
     $tmpFull = stream_resolve_include_path($tmpFolder);
 
     // Проверяем существует ли временная папка и если нет, то пытаемся её создать
-    if ($tmpFull === false) {
-        if (mkdir($tmpFolder, 0755)) {
-            $tmpFull = stream_resolve_include_path($tmpFolder);
-        }
+    if ($tmpFull === false && mkdir($tmpFolder, 0755)) {
+        $tmpFull = stream_resolve_include_path($tmpFolder);
     }
 
     if ($tmpFull === false) {
-        throw new Exception("Не удалось создать папку $tmpFolder для сохранения дампа базы");
+        throw new Exception(sprintf('Не удалось создать папку %s для сохранения дампа базы', $tmpFolder));
     }
 
     if (!is_writable($tmpFull)) {
-        throw new Exception("Папка $tmpFull недоступна для записи");
+        throw new Exception(sprintf('Папка %s недоступна для записи', $tmpFull));
     }
 
     // Проверяем существует ли папка для создания бэкапов и если нет, то пытаемся её создать
     $backupFolder = $tmpFull . $backupFolder;
     $backupPart = stream_resolve_include_path($backupFolder);
-    if ($backupPart === false) {
-        if (mkdir($backupFolder, 0755)) {
-            $backupPart = stream_resolve_include_path($backupFolder);
-        }
+    if ($backupPart === false && mkdir($backupFolder, 0755)) {
+        $backupPart = stream_resolve_include_path($backupFolder);
     }
 
     if ($backupPart === false) {
-        throw new Exception("Не удалось создать папку $backupFolder для сохранения дампа базы");
+        throw new Exception(sprintf('Не удалось создать папку %s для сохранения дампа базы', $backupFolder));
     }
 
     if (!is_writable($backupPart)) {
-        throw new Exception("Папка $backupPart недоступна для записи");
+        throw new Exception(sprintf('Папка %s недоступна для записи', $backupPart));
     }
 
     // В результате $backupPart содержит полный путь к папке бэкапа
 
-} catch (Exception $e) {
-    echo '<div class="alert">' . $e->getMessage() . '</div>';
+} catch (Exception $exception) {
+    echo '<div class="alert">' . $exception->getMessage() . '</div>';
     return;
 }
 ?>
@@ -148,8 +144,8 @@ if (is_dir($backupPart)) {
 
         echo '<tr id="' . $file . '"><td>';
         echo '<a href="" onClick="return downloadDump(\'' . addslashes($file) . '\')"> ';
-        echo "$day.$month.$year - $hour:$minute:$second";
-        if (!empty($ver[1])) {
+        echo sprintf('%s.%s.%s - %s:%s:%s', $day, $month, $year, $hour, $minute, $second);
+        if (isset($ver[1]) && ($ver[1] !== '' && $ver[1] !== '0')) {
             echo ' - ' . $ver[1];
         }
         // если загруженный сторонний файл, дописываем в названии "(upload)"

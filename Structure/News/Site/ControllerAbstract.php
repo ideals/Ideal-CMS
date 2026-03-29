@@ -10,15 +10,16 @@
 
 namespace Ideal\Structure\News\Site;
 
+use Ideal\Core\Site\Controller;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 
-class ControllerAbstract extends \Ideal\Core\Site\Controller
+class ControllerAbstract extends Controller
 {
     /** @var $model Model */
     protected $model;
 
-    public function detailAction()
+    public function detailAction(): void
     {
         $this->templateInit('Structure/News/Site/detail.twig');
 
@@ -30,7 +31,7 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
         $this->view->allNewsUrl = substr($parentUrl, 0, strrpos($parentUrl, '/')) . $config->urlSuffix;
     }
 
-    public function indexAction()
+    public function indexAction(): void
     {
         parent::indexAction();
 

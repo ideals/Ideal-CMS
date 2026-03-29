@@ -31,7 +31,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = $this->getValue();
         return
@@ -49,6 +49,7 @@ class Controller extends AbstractController
         if (!empty($value) && is_array($value)) {
             $value = implode("\n", $value);
         }
+
         return $value;
     }
 
@@ -63,6 +64,7 @@ class Controller extends AbstractController
             $value = array_filter($value);
             $value = json_encode(array_values($value));
         }
+
         return $value;
     }
 }

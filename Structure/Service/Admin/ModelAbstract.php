@@ -10,12 +10,13 @@
 
 namespace Ideal\Structure\Service\Admin;
 
+use Ideal\Core\Admin\Model;
 use Ideal\Core\Config;
 
 /**
  * Класс для построение бокового меню в разделе Сервис и запуска скриптов выбранного пункта
  */
-class ModelAbstract extends \Ideal\Core\Admin\Model
+class ModelAbstract extends Model
 {
     /** @var array Массив с пунктами бокового меню */
     protected $menu = [];
@@ -23,7 +24,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     /**
      * {@inheritdoc}
      */
-    public function detectPageByIds($path, $par)
+    public function detectPageByIds($path, $par): self
     {
         $menu = $this->getMenu();
         // Если par не указан, то активен первый пункт бокового меню
@@ -40,7 +41,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         }
 
         $this->setPageData($item);
-        array_push($path, $item);
+        $path[] = $item;
         $this->path = $path;
 
         return $this;
@@ -51,7 +52,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
      *
      * @return array Массив с пунктами бокового меню
      */
-    public function getMenu()
+    public function getMenu(): array
     {
         if (count($this->menu) > 0) {
             return $this->menu;
@@ -68,9 +69,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         // Сортируем экшены по полю pos
         usort(
             $actions,
-            function ($a, $b) {
-                return ($a['pos'] - $b['pos']);
-            },
+            fn(array $a, array $b) => $a['pos'] - $b['pos'],
         );
 
         $this->menu = $actions;
@@ -83,16 +82,17 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
      * @param string $folder Путь к папке в которой ищем вложенные папки с экшенами пункта Сервис
      * @return array Массив с пунктами бокового меню
      */
-    protected function getActions($folder)
+    protected function getActions(string $folder): array
     {
         $config = Config::getInstance();
         $actions = [];
         $dir = stream_resolve_include_path($config->cmsFolder . '/' . $folder);
         if ($handle = opendir($dir)) {
             while (false !== ($file = readdir($handle))) {
-                if ($file == '.' || $file == '..' || $file == 'Admin') {
+                if (in_array($file, ['.', '..', 'Admin'], true)) {
                     continue;
                 }
+
                 if (!is_dir($dir . '/' . $file)) {
                     continue;
                 } // пропускаем файлы, работаем только с папками
@@ -102,10 +102,12 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
                     // Если конфигурационного файла нет, то никакого пункта в меню Сервис не добавляем
                     continue;
                 }
+
                 $action = include($file);
                 $actions[$action['ID']] = $action;
             }
         }
+
         return $actions;
     }
 
@@ -115,16 +117,17 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
      * @param string $folder Путь к папке в которой ищем вложенные папки с экшенами пункта Сервис
      * @return array Массив с пунктами бокового меню
      */
-    protected function getModulesActions($folder)
+    protected function getModulesActions(string $folder): array
     {
         $config = Config::getInstance();
         $actions = [];
         $dir = stream_resolve_include_path($config->cmsFolder . '/' . $folder);
         if ($handle = opendir($dir)) {
             while (false !== ($file = readdir($handle))) {
-                if ($file == '.' || $file == '..' || $file == '.hg') {
+                if (in_array($file, ['.', '..', '.hg'], true)) {
                     continue;
                 }
+
                 if (!is_dir($dir . '/' . $file)) {
                     continue;
                 } // пропускаем файлы, работаем только с папками
@@ -135,6 +138,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
                 );
             }
         }
+
         return $actions;
     }
 }

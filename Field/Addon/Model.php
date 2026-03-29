@@ -10,6 +10,7 @@
 
 namespace Ideal\Field\Addon;
 
+use Ideal\Medium\AbstractModel;
 use Ideal\Core\Config;
 use Ideal\Core\Util;
 
@@ -32,10 +33,8 @@ class Model
 
     /**
      * Получение списка подключённых аддонов для их редактирования
-     *
-     * @return string
      */
-    public function getAvailableAddonsList()
+    public function getAvailableAddonsList(): string
     {
         // Скрываем выбор добавляемого аддона за кнопкой +
         $html = '<button id="add-addon-button" class="btn btn-info">Добавить аддон</button>'
@@ -44,13 +43,14 @@ class Model
 
         // Получаем список доступных для добавления аддонов для этого элемента
         $className = $this->field['medium'];
-        /** @var \Ideal\Medium\AbstractModel $medium */
+        /** @var AbstractModel $medium */
         $medium = new $className($this->model, $this->name);
         $list = $medium->getList();
 
         foreach ($list as $k => $v) {
             $html .= '<option value="' . $k . '">' . $v . '</option>';
         }
+
         $html .= '</select>';
 
         // Кнопка добавления аддона, после его выбора в select
@@ -66,9 +66,9 @@ class Model
     /**
      * Получения содержимого всех вкладок для первоначального отображения
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getTabs($json)
+    public function getTabs($json): array
     {
         $arr = json_decode($json);
         $result = [
@@ -109,9 +109,9 @@ class Model
      * @param integer $id Идентификатор вкладки
      * @param string $addonVar Название аддона
      * @param string $addonName Наименование вкладки аддона
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getTab($id, $addonVar, $addonName = '')
+    public function getTab($id, string $addonVar, $addonName = ''): array
     {
         $class = Util::getClassName($addonVar, 'Addon') . '\\AdminModel';
         /** @var \Ideal\Core\Admin\Model $model */
@@ -120,6 +120,7 @@ class Model
         // Получаем тип аддона для формирования правильного groupName
         $groupName = explode('_', $addonVar);
         $groupName = strtolower(end($groupName));
+
         $model->setFieldsGroup($groupName . '-' . $id);
 
         // Если создаётся новая вкладка то данные из связанного объекта не нужны
@@ -144,22 +145,20 @@ class Model
         $addonName = ($addonName == '') ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
 
         $tab = "<!--suppress HtmlUnknownAnchorTarget -->" // это чтобы PhpStorm не ругался на href='#tab{$addonVar}'
-            . "<li><a data-toggle=\"tab\" id=\"tab{$addonVar}Head\" href=\"#tab{$addonVar}\">{$addonName}</a>"
+            . sprintf('<li><a data-toggle="tab" id="tab%sHead" href="#tab%s">%s</a>', $addonVar, $addonVar, $addonName)
             . "</li>";
 
         // Получение содержимого вкладки
         $tabContent = $model->getFieldsList($model->fields);
 
         // Оборачиваем в div вкладки
-        $tabContent = "<div id=\"tab{$addonVar}\" class=\"tab-pane\">{$tabContent}</div>";
+        $tabContent = sprintf('<div id="tab%s" class="tab-pane">%s</div>', $addonVar, $tabContent);
 
-        $result = [
+        return [
             'name' => $addonName,
             'header' => $tab,
             'content' => $tabContent,
         ];
-
-        return $result;
     }
 
     /**
@@ -172,7 +171,7 @@ class Model
      * @param string $fieldName Редактируемое поле
      * @param string $groupName Вкладка, к которой принадлежит редактируемое поле
      */
-    public function setModel($model, $fieldName, $groupName = 'general')
+    public function setModel($model, $fieldName, $groupName = 'general'): void
     {
         $this->name = $fieldName;
         $this->model = $model;

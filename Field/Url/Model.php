@@ -35,10 +35,11 @@ class Model
      * @param string $nm исходная ссылка
      * @return string преобразованная ссылка
      */
-    public static function translitUrl($nm)
+    public static function translitUrl($nm): string
     {
         $nm = Model::translit($nm);
         $nm = mb_strtolower($nm);
+
         $arr = [
             '@' => '',
             '$' => '',
@@ -75,8 +76,7 @@ class Model
             'ü' => 'u',
             'ў' => 'y',
         ];
-        $nm = strtr($nm, $arr);
-        return $nm;
+        return strtr($nm, $arr);
     }
 
     /**
@@ -85,7 +85,7 @@ class Model
      * @param string $nm - исходная строка
      * @return string преобразованная строка
      */
-    public static function translit($nm)
+    public static function translit($nm): string
     {
         $arr = [
             'а' => 'a',
@@ -155,8 +155,7 @@ class Model
             'Ь' => '',
             'Ъ' => '',
         ];
-        $nm = strtr($nm, $arr);
-        return $nm;
+        return strtr($nm, $arr);
     }
 
     /**
@@ -165,11 +164,11 @@ class Model
      * Метод генерирует событие onGetUrl, которое могут перехватывать плагины ддя создания специальных правил
      * получения URL.
      *
-     * @param array $lastPart Массив с основными данными об элементе
+     * @param array<string, mixed> $lastPart Массив с основными данными об элементе
      * @param string $parentUrl
      * @return string Сгенерированный URL этого элемента
      */
-    public static function getUrlWithPrefix($lastPart, $parentUrl = '')
+    public static function getUrlWithPrefix(array $lastPart, $parentUrl = '')
     {
         $lastUrlPart = $lastPart['url'] ?? '';
 
@@ -185,12 +184,14 @@ class Model
             if ($config->cms['startUrl'] != '') {
                 $lastUrlPart = $config->cms['startUrl'] . '/';
             }
+
             return $lastUrlPart;
         }
 
         $pluginBroker = PluginBroker::getInstance();
         $arr = ['last' => $lastPart, 'parent' => $parentUrl];
         $arr = $pluginBroker->makeEvent('onGetUrl', $arr);
+
         $lastUrlPart = $arr['last']['url'];
 
         if (strpos($lastUrlPart, 'http:') === 0
@@ -234,8 +235,7 @@ class Model
     public function cutSuffix($link)
     {
         $config = Config::getInstance();
-        $link = substr($link, 0, -strlen($config->urlSuffix));
-        return $link;
+        return substr($link, 0, -strlen($config->urlSuffix));
     }
 
     /**
@@ -244,18 +244,18 @@ class Model
      * @param array $lastPart Массив с основными данными об элементе
      * @return string Сгенерированный URL этого элемента
      */
-    public function getUrl($lastPart)
+    public function getUrl(array $lastPart)
     {
-        return $this->getUrlWithPrefix($lastPart, $this->parentUrl);
+        return static::getUrlWithPrefix($lastPart, $this->parentUrl);
     }
 
     /**
      * Установка родительского URL ($this->parentUrl) на основании $path
      *
-     * @param array $path Путь до элемента, для которого нужно определить URL
+     * @param array<int, mixed> $path Путь до элемента, для которого нужно определить URL
      * @return string Родительский URL, который можно использовать для построения URL
      */
-    public function setParentUrl($path)
+    public function setParentUrl(array $path): string
     {
         // Обратиться к модели для получения своей части url, затем обратиться
         // к более старшим структурам пока не доберёмся до конца
@@ -275,13 +275,15 @@ class Model
             return '';
         }
 
-        $prefix = $url = '';
+        $prefix = '';
+        $url = '';
 
         // Объединяем все участки пути
         foreach ($path as $v) {
             if (isset($v['is_skip']) && $v['is_skip']) {
                 continue;
             }
+
             if (strpos($v['url'], 'http:') === 0
                 || strpos($v['url'], 'https:') === 0
                 || strpos($v['url'], '/') === 0
@@ -289,6 +291,7 @@ class Model
                 // Если в одном из элементов пути есть ссылки на другие страницы, то путь построить нельзя
                 return '---';
             }
+
             $url .= $prefix . $v['url'];
             $prefix = '/';
         }
@@ -304,7 +307,7 @@ class Model
      * @param string $name Исходное название файла
      * @return string Преобразованное название файла
      */
-    public function translitFileName($name)
+    public function translitFileName($name): string
     {
         $ext = '';
         $posDot = mb_strrpos($name, '.');
@@ -312,8 +315,10 @@ class Model
             $name = mb_substr($name, 0, $posDot);
             $ext = '.' . mb_substr($name, $posDot + 1);
         }
+
         $name = Model::translit($name);
         $name = strtolower($name);
+
         $arr = [
             '@' => '',
             '$' => '',
@@ -341,7 +346,7 @@ class Model
             '.' => '',
             '№' => 'N',
             '"' => '',
-            '\'' => '',
+            "'" => '',
             '?' => '',
             ' ' => '-',
             '&' => '',
@@ -355,11 +360,11 @@ class Model
     /**
      * Построение url на основе cid элемета $part
      *
-     * @param array $part Массив с данными элемента, для которого нужно построить url по cid
+     * @param array<string, mixed> $part Массив с данными элемента, для которого нужно построить url по cid
      * @param string $structureName Название структуры, в которой находится элемент
      * @return string
      */
-    public function getUrlByCid($part, $structureName)
+    public function getUrlByCid(array $part, $structureName)
     {
         $structureClass = explode('_', $structureName);
         $structureClass = '\\' . $structureClass[0] . '\\Structure\\' . $structureClass[1] . '\\Site\\Model';
@@ -368,6 +373,7 @@ class Model
         $structureModel = new $structureClass($part['prev_structure']);
 
         $structureModel->setPageData($part);
+
         $path = $structureModel->getLocalPath();
         array_pop($path);
 

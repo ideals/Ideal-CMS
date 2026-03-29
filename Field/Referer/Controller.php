@@ -30,7 +30,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = htmlspecialchars($this->getValue());
         return
@@ -42,7 +42,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getValueForList($values, $fieldName)
+    public function getValueForList(array $values, string $fieldName): string
     {
         $value = parent::getValueForList($values, $fieldName);
         // Отлавливаем прямой переход
@@ -55,6 +55,7 @@ class Controller extends AbstractController
         } else { // Отлавливаем другие сайты
             $value = 'Другие сайты';
         }
+
         return $value;
     }
 }

@@ -27,7 +27,7 @@ class MemcacheWrapper extends \Memcache
      * @param string|array $tagsKeys Строка или массив с тегами для ключа $key
      * @return bool Возвращает true при успешном выполнении и false в случае ошибки
      */
-    public function addWithTags($key, $value, $ttl = false, $tagsKeys = 'default')
+    public function addWithTags($key, $value, $ttl = false, $tagsKeys = 'default'): bool
     {
         $value = $this->createTagsContainer($value, $tagsKeys);
 
@@ -133,7 +133,7 @@ class MemcacheWrapper extends \Memcache
      * @param string|array $tagsKeys Строка или массив с тегами для ключа $key
      * @return bool Возвращает true при успешном выполнении и false в случае ошибки
      */
-    public function setWithTags($key, $value, $ttl = false, $tagsKeys = 'default')
+    public function setWithTags($key, $value, $ttl = false, $tagsKeys = 'default'): bool
     {
         $value = $this->createTagsContainer($value, $tagsKeys);
 
@@ -158,9 +158,9 @@ class MemcacheWrapper extends \Memcache
      *
      * @param $value mixed Кэшируемое значение
      * @param $tags string|array Строка или массив тегов
-     * @return array Контейнер для помещения в кэш
+     * @return array<string, mixed> Контейнер для помещения в кэш
      */
-    private function createTagsContainer($value, $tags)
+    private function createTagsContainer($value, $tags): array
     {
         if (!is_array($tags)) {
             $tags = [$tags];
@@ -187,12 +187,14 @@ class MemcacheWrapper extends \Memcache
      * @param $key string Ключ кэше
      * @param $container array Контейнер с тегами и значением из кэша
      * @return mixed Значение по ключу $key или null
+     * @param array<string, mixed> $container
      */
-    private function getFromTagsContainer($key, $container)
+    private function getFromTagsContainer($key, array $container)
     {
         if ($this->isTagsValid($container['tags'])) {
             return $container['value'];
         }
+
         $this->delete($key);
 
         return null;
@@ -201,10 +203,8 @@ class MemcacheWrapper extends \Memcache
 
     /**
      * Проверка валидности тегов контейнера
-     *
-     * @return bool
      */
-    private function isTagsValid($tags)
+    private function isTagsValid(array $tags): bool
     {
         // Версии тегов из кэша сравниваются с версиями, полученными из контейнера
 

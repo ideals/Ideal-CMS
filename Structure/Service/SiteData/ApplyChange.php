@@ -23,7 +23,7 @@ class ApplyChange
     /**
      * @param mixed $value
      */
-    public function setValue($value)
+    public function setValue($value): void
     {
         $this->value = $value;
     }
@@ -31,14 +31,14 @@ class ApplyChange
     /**
      *  Добаляет/убирает строки в .htaccess отвечающие за браузерное кэширование
      */
-    public function browserCacheChange()
+    public function browserCacheChange(): void
     {
         $filePath = DOCUMENT_ROOT . '/.htaccess';
         if (file_exists($filePath)) {
             $fileContent = file_get_contents($filePath);
             if ($this->value) {
                 $addString = <<<string
-                                    
+
                     FileETag MTime Size
 
                     <IfModule headers_module.c>
@@ -62,6 +62,7 @@ class ApplyChange
             } else {
                 $addString = "\n";
             }
+
             $pattern = '/(# browser cache)(.*)(# end browser cache)/isU';
             $fileContent = preg_replace($pattern, '$1' . $addString . '$3', $fileContent);
             file_put_contents($filePath, $fileContent);

@@ -10,22 +10,23 @@
 
 namespace Ideal\Core\Admin;
 
+use Ideal\Structure\Error404\Model;
+use Ideal\Structure\User\Admin\Controller;
 use Ideal\Core\Config;
 use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
-use Ideal\Structure\Error404;
 
 class Router
 {
     /** @var string Название контроллера активной страницы */
-    protected $controllerName = '';
+    protected string $controllerName = '';
 
     /** @var Model Модель активной страницы */
-    protected $model = null;
+    protected $model;
 
     /** @var Model Модель для обработки 404-ых ошибок */
-    protected $error404 = null;
+    protected Model $error404;
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -40,19 +41,17 @@ class Router
         $request = new Request();
         if ($request->mode == 'ajax' && $request->controller != '') {
             $controllerName = $request->controller . '\\AjaxController';
-            if (class_exists($controllerName)) {
-                // Если контроллер в запросе указан и запрошенный класс существует
-                // то устанавливаем контроллер и завершаем роутинг
-                if (!empty($request->action) && method_exists($controllerName, $request->action . 'Action')) {
-                    $this->controllerName = $controllerName;
-                }
+            // Если контроллер в запросе указан и запрошенный класс существует
+            // то устанавливаем контроллер и завершаем роутинг
+            if (class_exists($controllerName) && (!empty($request->action) && method_exists($controllerName, $request->action . 'Action'))) {
+                $this->controllerName = $controllerName;
             }
         }
 
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
 
-        $this->error404 = new Error404\Model();
+        $this->error404 = new Model();
 
         if (is_null($this->model)) {
             $this->model = $this->routeByPar();
@@ -67,7 +66,7 @@ class Router
         $aclModel = new \Ideal\Structure\Acl\Admin\Model();
         if (!$aclModel->checkAccess($this->model)) {
             // Если доступ запрещён, перебрасываем на соответствующий контроллер
-            $this->controllerName = '\\Ideal\\Structure\\User\\Admin\\Controller';
+            $this->controllerName = Controller::class;
             $request->action = 'accessDenied';
         }
 
@@ -82,13 +81,14 @@ class Router
      */
     public function getControllerName()
     {
-        if ($this->controllerName != '') {
+        if ($this->controllerName !== '') {
             return $this->controllerName;
         }
 
         if (method_exists($this->model, 'getControllerName')) {
             return $this->model->getControllerName();
         }
+
         $request = new Request();
         if ($request->mode == 'ajax' && $request->controller != '') {
             // Если это ajax-вызов с явно указанным namespace класса ajax-контроллера
@@ -104,9 +104,7 @@ class Router
             return Util::getClassName($end['structure'], 'Structure') . '\\Admin\\AjaxController';
         }
 
-        $controllerName = Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Controller';
-
-        return $controllerName;
+        return Util::getClassName($end['structure'], 'Structure') . '\\Admin\\Controller';
     }
 
     /**
@@ -116,7 +114,7 @@ class Router
      *
      * @param $name string Название контроллера
      */
-    public function setControllerName($name)
+    public function setControllerName(string $name): void
     {
         $this->controllerName = $name;
     }

@@ -1,5 +1,7 @@
 <?php
 
+use Ideal\Core\Versions;
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -13,7 +15,7 @@
  */
 
 // Функция для выхода из скрипта
-$exitScript = function ($html, $error) {
+$exitScript = function ($html, $error): void {
     echo json_encode(['html' => $html, 'error' => $error]);
     exit;
 };
@@ -29,7 +31,7 @@ $isOverride = false; // перезаписан ли файл
 $backupPart = stream_resolve_include_path($_GET['bf']);
 
 // Получаем версию админки
-$versions = new \Ideal\Core\Versions();
+$versions = new Versions();
 $nowVersions = $versions->getVersions();
 if ($nowVersions === false) {
     $exitScript('', $versions->getAnswer());
@@ -47,7 +49,7 @@ $ext = substr($srcName, strrpos($srcName, '.') + 1);
 preg_match("/dump_([0-9]{4}\.[0-9]{2}\.[0-9]{2}_[0-9]{2}\.[0-9]{2}\.[0-9]{2}_v[0-9a-z\.]{3,})[\._]/Usmi", $srcName, $m);
 
 // Имя файла дампа
-$timeName = (!empty($m[1])) ? $m[1] : date('Y.m.d_H.i.s', $time) . '_' . $version;
+$timeName = (empty($m[1])) ? date('Y.m.d_H.i.s', $time) . '_' . $version : $m[1];
 $dumpName = 'dump_' . $timeName . '_upload.sql';
 
 // Полный путь до дампа
@@ -56,7 +58,7 @@ $dumpNameFull = $backupPart . DIRECTORY_SEPARATOR . $dumpName;
 // Полный путь до архива .gz
 $dumpNameGz = $dumpNameFull . '.gz';
 
-if (!in_array($ext, ['gz', 'zip', 'sql'])) {
+if (!in_array($ext, ['gz', 'zip', 'sql'], true)) {
     $exitScript('', 'Ошибка: расширение файла должно быть .gz, .sql или .zip');
 }
 
@@ -88,7 +90,7 @@ switch ($ext) {
         // Получаем список файлов в архиве
         $fileList = $archive->listContent();
 
-        if ($fileList == 0 || count($fileList) != 1) {
+        if ($fileList == 0 || count($fileList) !== 1) {
             unlink($dumpNameFull);  // удаляем загруженный файл
             $exitScript('', 'Ошибка: в архиве должен быть один .sql файл');
         }

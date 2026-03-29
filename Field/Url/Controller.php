@@ -30,13 +30,105 @@ class Controller extends AbstractController
     protected static $instance;
 
     /**
+     * {@inheritdoc}
+     */
+    public function getInputText(): string
+    {
+        $url = new Model();
+        $value = ['url' => htmlspecialchars($this->getValue())];
+        $link = $url->getUrlWithPrefix($value, $this->model->getParentUrl());
+        $link = $url->cutSuffix($link);
+        // Проверяем, является ли url этого объекта частью пути
+        $addOn = '';
+        if (($link[0] === '/') && ($value !== $link)) {
+            // Выделяем из ссылки путь до этого объекта и выводим его перед полем input
+            $path = substr($link, 0, strrpos($link, '/'));
+            $addOn = '<span class="input-group-addon">' . $path . '/</span>';
+        }
+
+        return
+            '<div class="input-group">' . $addOn
+            . '<input type="text" class="form-control" name="' . $this->htmlName . '" id="' . $this->htmlName
+            . '" value="' . $value['url'] . '">'
+            . '</div>';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getValueForList($values, $fieldName)
+    {
+        $url = new Model();
+        $link = $url->getUrlWithPrefix($values, $this->model->getParentUrl());
+        if ($link == '---') {
+            // Если это страница внутри главной, то просто возвращаем поле url
+            $link = $values[$fieldName];
+        } else {
+            // Если это не страница внутри Главной, то делаем ссылку
+            $link = '<a href="' . $link . '" target="_blank">' . $link . '</a>';
+        }
+
+        return $link;
+    }
+
+    public function parseInputValue($isCreate)
+    {
+        $item = parent::parseInputValue($isCreate);
+
+        // Если редактируется материал и ссылка не изменилась, ошибок нет
+        if (!$isCreate && $this->getValue() == $this->newValue) {
+            return $item;
+        }
+
+        // Если создается новый материал или изменилась ссылка при редактировании,
+        // проверяем нет используется ли уже такой URL
+
+        // Получаем SEO ссылку на создаваемый/редактируемый материал
+        $url = new Model();
+        $value = htmlspecialchars($this->newValue);
+        $link = $url->getUrlWithPrefix(['url' => $value], $this->model->getParentUrl());
+
+        if ($value === '' || $value === '0') {
+            $item['message'] = 'Поле url должно быть заполнено!';
+            return $item;
+        }
+
+        if ($value[0] == '/' || parse_url($link, PHP_URL_SCHEME) != '') {
+            // Если введённый url фактически является ссылкой, а не реальным URL,
+            // то проверять его существование не надо
+            return $item;
+        }
+
+        // Проверяем url на существование
+        $httpCode = $this->checkUrl($link);
+        if ($httpCode == 200) {
+            $item['message'] = 'URL: ' . $link . ' уже используется!';
+        } elseif ($httpCode != 404) {
+            // Если не 404 ошибка, то уведомляем об этом польлзователя и не создаём страницу
+            $item['message'] = 'URL: ' . $link . ' выдаёт ошибку с HTTP-кодом ' . $httpCode;
+        }
+
+        return $item;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function pickupNewValue(): string
+    {
+        // В url не нужны пробелы ни спереди, ни сзади
+        $value = trim(parent::pickupNewValue());
+        return $value;
+    }
+
+    /**
      * Проверяет url на существование
      * TODO проверка должна учитывать залогиненого пользователя
      *
      * @param string $url SEO ссылка на создаваемый/редактируемый материал
      * @return mixed HTTP-код ответа сервера
      */
-    private static function checkUrl($url)
+    private function checkUrl($url)
     {
         // Выстраиваем ссылку к создаваемой странице
         $config = Config::getInstance();
@@ -66,95 +158,5 @@ class Controller extends AbstractController
         curl_close($ch);
 
         return $httpCode;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getInputText()
-    {
-        $url = new Model();
-        $value = ['url' => htmlspecialchars($this->getValue())];
-        $link = $url->getUrlWithPrefix($value, $this->model->getParentUrl());
-        $link = $url->cutSuffix($link);
-        // Проверяем, является ли url этого объекта частью пути
-        $addOn = '';
-        if (($link[0] === '/') && ($value !== $link)) {
-            // Выделяем из ссылки путь до этого объекта и выводим его перед полем input
-            $path = substr($link, 0, strrpos($link, '/'));
-            $addOn = '<span class="input-group-addon">' . $path . '/</span>';
-        }
-        return
-            '<div class="input-group">' . $addOn
-            . '<input type="text" class="form-control" name="' . $this->htmlName . '" id="' . $this->htmlName
-            . '" value="' . $value['url'] . '">'
-            . '</div>';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getValueForList($values, $fieldName)
-    {
-        $url = new Model();
-        $link = $url->getUrlWithPrefix($values, $this->model->getParentUrl());
-        if ($link == '---') {
-            // Если это страница внутри главной, то просто возвращаем поле url
-            $link = $values[$fieldName];
-        } else {
-            // Если это не страница внутри Главной, то делаем ссылку
-            $link = '<a href="' . $link . '" target="_blank">' . $link . '</a>';
-        }
-        return $link;
-    }
-
-    public function parseInputValue($isCreate)
-    {
-        $item = parent::parseInputValue($isCreate);
-
-        // Если редактируется материал и ссылка не изменилась, ошибок нет
-        if (!$isCreate && $this->getValue() == $this->newValue) {
-            return $item;
-        }
-
-        // Если создается новый материал или изменилась ссылка при редактировании,
-        // проверяем нет используется ли уже такой URL
-
-        // Получаем SEO ссылку на создаваемый/редактируемый материал
-        $url = new Model();
-        $value = htmlspecialchars($this->newValue);
-        $link = $url->getUrlWithPrefix(['url' => $value], $this->model->getParentUrl());
-
-        if (empty($value)) {
-            $item['message'] = 'Поле url должно быть заполнено!';
-            return $item;
-        }
-
-        if ($value[0] == '/' || parse_url($link, PHP_URL_SCHEME) != '') {
-            // Если введённый url фактически является ссылкой, а не реальным URL,
-            // то проверять его существование не надо
-            return $item;
-        }
-
-        // Проверяем url на существование
-        $httpCode = self::checkUrl($link);
-        if ($httpCode == 200) {
-            $item['message'] = 'URL: ' . $link . ' уже используется!';
-        } elseif ($httpCode != 404) {
-            // Если не 404 ошибка, то уведомляем об этом польлзователя и не создаём страницу
-            $item['message'] = 'URL: ' . $link . ' выдаёт ошибку с HTTP-кодом ' . $httpCode;
-        }
-
-        return $item;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function pickupNewValue()
-    {
-        // В url не нужны пробелы ни спереди, ни сзади
-        $value = trim(parent::pickupNewValue());
-        return $value;
     }
 }

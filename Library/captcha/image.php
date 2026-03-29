@@ -11,7 +11,7 @@
 // => Voir fichier Licence_CeCILL_V2-fr.txt)
 // -----------------------------------------------
 if (!defined('DOCUMENT_ROOT')) {
-    define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT']);
+    define('DOCUMENT_ROOT', getenv('SITE_ROOT') ?: $_SERVER['DOCUMENT_ROOT']);
 }
 
 // -------------------------------------
@@ -163,7 +163,7 @@ $cryptoneuse = false; // Si vous souhaitez que la page de verification ne valide
 // Sinon, le rechargement de la page confirmera toujours la saisie.
 
 error_reporting(E_ALL ^ E_NOTICE);
-srand((float) microtime() * 1000000);
+mt_srand((float) microtime() * 1000000);
 
 session_start();
 
@@ -201,24 +201,24 @@ imagefill($imgtmp, 0, 0, $blank);
 
 $word = '';
 $x = 10;
-$pair = rand(0, 1);
-$charnb = rand($charnbmin, $charnbmax);
+$pair = random_int(0, 1);
+$charnb = random_int($charnbmin, $charnbmax);
 for ($i = 1; $i <= $charnb; $i++) {
     $tword[$i]['font'] = $tfont[array_rand($tfont, 1)];
-    $tword[$i]['angle'] = (rand(1, 2) == 1) ? rand(0, $charanglemax) : rand(360 - $charanglemax, 360);
+    $tword[$i]['angle'] = (random_int(1, 2) === 1) ? random_int(0, $charanglemax) : random_int(360 - $charanglemax, 360);
 
     if ($crypteasy) {
-        $tword[$i]['element'] = (!$pair) ? $charelc[rand(0, strlen($charelc) - 1)] : $charelv[rand(
+        $tword[$i]['element'] = ($pair) ? $charelv[random_int(
             0,
             strlen($charelv) - 1,
-        )];
+        )] : $charelc[random_int(0, strlen($charelc) - 1)];
     } else {
-        $tword[$i]['element'] = $charel[rand(0, strlen($charel) - 1)];
+        $tword[$i]['element'] = $charel[random_int(0, strlen($charel) - 1)];
     }
 
     $pair = !$pair;
-    $tword[$i]['size'] = rand($charsizemin, $charsizemax);
-    $tword[$i]['y'] = ($charup ? ($cryptheight / 2) + rand(0, ($cryptheight / 5)) : ($cryptheight / 1.5));
+    $tword[$i]['size'] = random_int($charsizemin, $charsizemax);
+    $tword[$i]['y'] = ($charup ? ($cryptheight / 2) + random_int(0, ($cryptheight / 5)) : ($cryptheight / 1.5));
     $word .= $tword[$i]['element'];
 
     $lafont = $folder . "fonts/" . $tword[$i]['font'];
@@ -239,27 +239,31 @@ for ($i = 1; $i <= $charnb; $i++) {
 // Calcul du racadrage horizontal du cryptogramme temporaire
 $xbegin = 0;
 $x = 0;
-while (($x < $cryptwidth) and (!$xbegin)) {
+while ($x < $cryptwidth && !$xbegin) {
     $y = 0;
-    while (($y < $cryptheight) and (!$xbegin)) {
-        if (imagecolorat($imgtmp, $x, $y) != $blank) {
+    while ($y < $cryptheight && !$xbegin) {
+        if (imagecolorat($imgtmp, $x, $y) !== $blank) {
             $xbegin = $x;
         }
+
         $y++;
     }
+
     $x++;
 }
 
 $xend = 0;
 $x = $cryptwidth - 1;
-while (($x > 0) and (!$xend)) {
+while ($x > 0 && !$xend) {
     $y = 0;
-    while (($y < $cryptheight) and (!$xend)) {
-        if (imagecolorat($imgtmp, $x, $y) != $blank) {
+    while ($y < $cryptheight && !$xend) {
+        if (imagecolorat($imgtmp, $x, $y) !== $blank) {
             $xend = $x;
         }
+
         $y++;
     }
+
     $x--;
 }
 
@@ -278,12 +282,14 @@ if ($bgimg && is_dir($bgimg)) {
             $files[] = $filename;
         }
     }
+
     closedir($dh);
-    if (count($files) > 0) {
+    if ($files !== []) {
         $bgimg .= '/' . $files[array_rand($files)];
     }
 }
-if ($bgimg) {
+
+if ($bgimg !== '') {
     [$getwidth, $getheight, $gettype, $getattr] = getimagesize($bgimg);
     switch ($gettype) {
         case '1':
@@ -299,6 +305,7 @@ if ($bgimg) {
             echo 'Invalid image type = ' . $gettype;
             exit;
     }
+
     imagecopyresized($img, $imgread, 0, 0, 0, 0, $cryptwidth, $cryptheight, $getwidth, $getheight);
     imagedestroy($imgread);
 } else {
@@ -309,7 +316,7 @@ if ($bgimg) {
     }
 }
 
-function ecriture()
+function ecriture(): void
 {
     global $folder;
     // Cr�ation de l'�criture
@@ -332,30 +339,34 @@ function ecriture()
         if ($charcolorrnd) { // Choisit des couleurs au hasard
             $ok = false;
             do {
-                $rndR = rand(0, 255);
-                $rndG = rand(0, 255);
-                $rndB = rand(0, 255);
+                $rndR = random_int(0, 255);
+                $rndG = random_int(0, 255);
+                $rndB = random_int(0, 255);
                 $rndcolor = $rndR + $rndG + $rndB;
                 switch ($charcolorrndlevel) {
                     case 1:
                         if ($rndcolor < 200) {
                             $ok = true;
                         }
+
                         break; // tres sombre
                     case 2:
                         if ($rndcolor < 400) {
                             $ok = true;
                         }
+
                         break; // sombre
                     case 3:
                         if ($rndcolor > 500) {
                             $ok = true;
                         }
+
                         break; // claires
                     case 4:
                         if ($rndcolor > 650) {
                             $ok = true;
                         }
+
                         break; // tr�s claires
                     default:
                         $ok = true;
@@ -404,49 +415,53 @@ function noisecolor()
             break;
         case 3:
         default:
-            $noisecol = imagecolorallocate($img, rand(0, 255), rand(0, 255), rand(0, 255));
+            $noisecol = imagecolorallocate($img, random_int(0, 255), random_int(0, 255), random_int(0, 255));
             break;
     }
-    if ($brushsize and $brushsize > 1 and function_exists('imagesetbrush')) {
+
+    if ($brushsize && $brushsize > 1 && function_exists('imagesetbrush')) {
         $brush = imagecreatetruecolor($brushsize, $brushsize);
         imagefill($brush, 0, 0, $noisecol);
         imagesetbrush($img, $brush);
         $noisecol = IMG_COLOR_BRUSHED;
     }
+
     return $noisecol;
 }
 
-function bruit()
+function bruit(): void
 // Ajout de bruits: point, lignes et cercles al�atoires
 {
     global $noisepxmin, $noisepxmax, $noiselinemin, $noiselinemax, $nbcirclemin, $nbcirclemax, $img, $cryptwidth, $cryptheight;
-    $nbpx = rand($noisepxmin, $noisepxmax);
-    $nbline = rand($noiselinemin, $noiselinemax);
-    $nbcircle = rand($nbcirclemin, $nbcirclemax);
+    $nbpx = random_int($noisepxmin, $noisepxmax);
+    $nbline = random_int($noiselinemin, $noiselinemax);
+    $nbcircle = random_int($nbcirclemin, $nbcirclemax);
     for ($i = 1; $i < $nbpx; $i++) {
         imagesetpixel(
             $img,
-            rand(0, $cryptwidth - 1),
-            rand(0, $cryptheight - 1),
+            random_int(0, $cryptwidth - 1),
+            random_int(0, $cryptheight - 1),
             noisecolor(),
         );
     }
+
     for ($i = 1; $i <= $nbline; $i++) {
         imageline(
             $img,
-            rand(0, $cryptwidth - 1),
-            rand(0, $cryptheight - 1),
-            rand(0, $cryptwidth - 1),
-            rand(0, $cryptheight - 1),
+            random_int(0, $cryptwidth - 1),
+            random_int(0, $cryptheight - 1),
+            random_int(0, $cryptwidth - 1),
+            random_int(0, $cryptheight - 1),
             noisecolor(),
         );
     }
+
     for ($i = 1; $i <= $nbcircle; $i++) {
         imagearc(
             $img,
-            rand(0, $cryptwidth - 1),
-            rand(0, $cryptheight - 1),
-            $rayon = rand(5, $cryptwidth / 3),
+            random_int(0, $cryptwidth - 1),
+            random_int(0, $cryptheight - 1),
+            $rayon = random_int(5, $cryptwidth / 3),
             $rayon,
             0,
             360,
@@ -464,10 +479,8 @@ if ($noiseup) {
 }
 
 // Cr�ation du cadre
-if ($bgframe) {
-    $framecol = imagecolorallocate($img, ($bgR * 3 + $charR) / 4, ($bgG * 3 + $charG) / 4, ($bgB * 3 + $charB) / 4);
-    imagerectangle($img, 0, 0, $cryptwidth - 1, $cryptheight - 1, $framecol);
-}
+$framecol = imagecolorallocate($img, ($bgR * 3 + $charR) / 4, ($bgG * 3 + $charG) / 4, ($bgB * 3 + $charB) / 4);
+imagerectangle($img, 0, 0, $cryptwidth - 1, $cryptheight - 1, $framecol);
 
 // Transformations suppl�mentaires: Grayscale et Brouillage
 // V�rifie si la fonction existe dans la version PHP install�e
@@ -475,6 +488,7 @@ if (function_exists('imagefilter')) {
     if ($cryptgrayscal) {
         imagefilter($img, IMG_FILTER_GRAYSCALE);
     }
+
     if ($cryptgaussianblur) {
         imagefilter($img, IMG_FILTER_GAUSSIAN_BLUR);
     }
@@ -497,6 +511,7 @@ switch (strtoupper($cryptsecure)) {
         $_SESSION['cryptcode'] = $word;
         break;
 }
+
 $_SESSION['crypttime'] = time();
 $_SESSION['cryptcptuse']++;
 
@@ -504,20 +519,22 @@ $_SESSION['cryptcptuse']++;
 switch (strtoupper($cryptformat)) {
     case "JPG":
     case "JPEG":
-        if (imagetypes() & IMG_JPG) {
+        if ((imagetypes() & IMG_JPG) !== 0) {
             header("Content-type: image/jpeg");
             imagejpeg($img, null, 80);
         }
+
         break;
     case "GIF":
-        if (imagetypes() & IMG_GIF) {
+        if ((imagetypes() & IMG_GIF) !== 0) {
             header("Content-type: image/gif");
             imagegif($img);
         }
+
         break;
     case "PNG":
     default:
-        if (imagetypes() & IMG_PNG) {
+        if ((imagetypes() & IMG_PNG) !== 0) {
             header("Content-type: image/png");
             imagepng($img);
         }

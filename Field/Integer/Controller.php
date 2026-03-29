@@ -30,7 +30,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = intval($this->getValue());
         return
@@ -42,18 +42,16 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getValue()
+    public function getValue(): int
     {
-        $value = intval(parent::getValue());
-        return $value;
+        return intval(parent::getValue());
     }
 
     /**
      * {@inheritdoc}
      */
-    public function pickupNewValue()
+    public function pickupNewValue(): int
     {
-        $value = intval(parent::pickupNewValue());
-        return $value;
+        return intval(parent::pickupNewValue());
     }
 }

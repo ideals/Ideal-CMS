@@ -9,17 +9,18 @@
 
 namespace Ideal\Structure\Tag\Site;
 
+use Ideal\Core\Site\Controller;
 use Ideal\Core\Request;
 
 /**
  * Класс отвечающий за отображение списка тегов indexAction() и списка элементов в теге detailAction()
  */
-class ControllerAbstract extends \Ideal\Core\Site\Controller
+class ControllerAbstract extends Controller
 {
     /** @var Model */
     protected $model;
 
-    public function indexAction()
+    public function indexAction(): void
     {
         parent::indexAction();
 
@@ -27,7 +28,7 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
         $this->view->tags = $this->model->getList();
     }
 
-    public function detailAction()
+    public function detailAction(): void
     {
         $this->templateInit('Structure/Tag/Site/detail.twig');
 

@@ -10,6 +10,7 @@
 
 namespace Ideal\Medium;
 
+use Ideal\Core\Admin\Model;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 
@@ -28,17 +29,17 @@ class AbstractModel
     /** @var array Список полей в медиум-таблице, если она есть */
     protected $fields;
 
-    /** @var  \Ideal\Core\Admin\Model Модель редактируемого элемента */
+    /** @var Model Модель редактируемого элемента */
     protected $obj;
 
     /** @var array Настройки медиума из конфигурационного файла */
     protected $params;
 
     /** @var string Название промежуточной таблицы, которая связывает владельца и список элементов */
-    protected $table;
+    protected string $table;
 
     /**
-     * @param \Ideal\Core\Admin\Model $obj
+     * @param Model $obj
      * @param string $fieldName
      * @throws \Exception
      */
@@ -53,6 +54,7 @@ class AbstractModel
         $this->table = strtolower($config->db['prefix'] . $parts[0] . '_' . $parts[1] . '_' . $parts[2]);
         $module = $parts[0];
         $module = ($module == 'Ideal') ? '' : $module . '/';
+
         $structureName = $parts[2];
 
         $includeFile = $module . 'Medium/' . $structureName . '/config.php';
@@ -81,25 +83,24 @@ class AbstractModel
      * Получение дополнительных sql-запросов для сохранения списка выбранных элементов для владельца
      *
      * @param mixed $newValue
-     * @return string
      */
-    public function getSqlAdd($newValue)
+    public function getSqlAdd($newValue): string
     {
         $fieldNames = array_keys($this->fields);
         $ownerField = $fieldNames[0];
         $elementsField = $fieldNames[1];
 
         // Удаляем все существующие связи владельца и элементов
-        $_sql = "DELETE FROM {$this->table} WHERE {$ownerField}='{{ objectId }}';";
+        $_sql = sprintf("DELETE FROM %s WHERE %s='{{ objectId }}';", $this->table, $ownerField);
 
-        if (!is_array($newValue) || (count($newValue) == 0)) {
+        if (!is_array($newValue) || ($newValue === [])) {
             // Если $newValue не массив, значит ни один элемент не задан
             return $_sql;
         }
 
         // Добавляем связи владельца и элементов сделанные пользователем
         foreach ($newValue as $v) {
-            $_sql .= "INSERT INTO {$this->table} SET {$ownerField}='{{ objectId }}', {$elementsField}='{$v}';";
+            $_sql .= sprintf("INSERT INTO %s SET %s='{{ objectId }}', %s='%s';", $this->table, $ownerField, $elementsField, $v);
         }
 
         return $_sql;
@@ -110,7 +111,7 @@ class AbstractModel
      *
      * @return array Список выбранных элементов
      */
-    public function getValues()
+    public function getValues(): array
     {
         $fieldNames = array_keys($this->fields);
         $ownerField = $fieldNames[0];
@@ -122,12 +123,12 @@ class AbstractModel
         $owner = $this->obj->getPageData();
 
         // Если владельца нет (он только создаётся), то и связей нет
-        if (count($owner) == 0) {
+        if (count($owner) === 0) {
             return $list;
         }
 
         // Находим все медиумные связи между владельцем и выбранными элементами в SelectMulti
-        $_sql = "SELECT {$elementsField} FROM {$this->table} WHERE {$ownerField}='{$owner['ID']}'";
+        $_sql = sprintf("SELECT %s FROM %s WHERE %s='%s'", $elementsField, $this->table, $ownerField, $owner['ID']);
         $arr = $db->select($_sql);
 
         foreach ($arr as $v) {

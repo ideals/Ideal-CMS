@@ -40,12 +40,9 @@ class Config
      * @param string $name Название запрашиваемой переменной
      * @return string Значение запрашиваемой переменной
      */
-    public function __get($name)
+    public function __get(string $name)
     {
-        if (isset($this->array[$name])) {
-            return $this->array[$name];
-        }
-        return '';
+        return $this->array[$name] ?? '';
     }
 
     /**
@@ -54,12 +51,12 @@ class Config
      * @param string $name Название переменной
      * @param mixed $value Значение переменной
      */
-    public function __set($name, $value)
+    public function __set(string $name, $value)
     {
         $this->array[$name] = $value;
     }
 
-    public function __isset($name)
+    public function __isset(string $name)
     {
         return isset($this->array[$name]);
     }
@@ -76,6 +73,7 @@ class Config
         if (empty(self::$instance)) {
             self::$instance = new Config();
         }
+
         return self::$instance;
     }
 
@@ -92,6 +90,7 @@ class Config
                 return $structure;
             }
         }
+
         return false;
     }
 
@@ -108,9 +107,7 @@ class Config
         $className = explode('\\', $className);
         $className = $className[0] . '_' . $className[2];
 
-        $structure = $this->getStructureByName($className);
-
-        return $structure;
+        return $this->getStructureByName($className);
     }
 
     /**
@@ -129,6 +126,7 @@ class Config
                 return $structure;
             }
         }
+
         return false;
     }
 
@@ -142,14 +140,9 @@ class Config
     public function getStructureByPrev($prevStructure)
     {
         $prev = explode('-', $prevStructure);
-        if ($prev[0] == 0) {
-            $structureId = $prev[1];
-        } else {
-            $structureId = $prev[0];
-        }
-        $structure = $this->getStructureById($structureId);
+        $structureId = $prev[0] == 0 ? $prev[1] : $prev[0];
 
-        return $structure;
+        return $this->getStructureById($structureId);
     }
 
     /**
@@ -167,6 +160,7 @@ class Config
                 return $structure;
             }
         }
+
         return false;
     }
 
@@ -178,22 +172,22 @@ class Config
      * @return string Название таблицы
      * @throws \Exception
      */
-    public function getTableByName($name, $type = 'Structure')
+    public function getTableByName($name, $type = 'Structure'): string
     {
         $name = strtolower($name);
         $name = explode('_', $name);
-        if (count($name) != 2) {
+        if (count($name) !== 2) {
             throw new \Exception('Передано неправильное значение названия структуры: ' . $name);
         }
-        $table = $this->db['prefix'] . $name[0] . '_' . strtolower($type) . '_' . $name[1];
-        return $table;
+
+        return $this->db['prefix'] . $name[0] . '_' . strtolower($type) . '_' . $name[1];
     }
 
     /**
      * Загружает все конфигурационные переменные из файлов config.php и site_data.php
      * В дальнейшем доступ к ним осуществляется через __get этого класса
      */
-    public function loadSettings()
+    public function loadSettings(): void
     {
         // Подключаем описание данных для БД
         /** @noinspection PhpIncludeInspection */
@@ -212,9 +206,9 @@ class Config
      *
      * @return string Протокол сайта (http:// или https://)
      */
-    public function getProtocol()
+    public function getProtocol(): string
     {
-        if (!empty($this->protocol)) {
+        if (isset($this->protocol) && ($this->protocol !== '' && $this->protocol !== '0')) {
             return $this->protocol;
         }
 
@@ -251,7 +245,7 @@ class Config
      *
      * @param array $arr Массив значений для импорта
      */
-    protected function import($arr)
+    protected function import(array $arr)
     {
         // Проверяем, не объявлены ли переменные из импортируемого массива в этом классе
         foreach ($arr as $k => $v) {
@@ -260,6 +254,7 @@ class Config
                 unset($arr[$k]);
             }
         }
+
         // Объединяем импортируемый массив с основным массивом переменных конфига
         $this->array = array_merge($this->array, $arr);
     }
@@ -273,7 +268,7 @@ class Config
         $structures = $this->structures;
         foreach ($structures as $k => $structureName) {
             [$module, $structure] = explode('_', $structureName['structure'], 2);
-            $module = ($module == 'Ideal') ? '' : $module . '/';
+            $module = ($module === 'Ideal') ? '' : $module . '/';
             $fileName = $module . 'Structure/' . $structure . '/config.php';
             /** @noinspection PhpIncludeInspection */
             $arr = require_once($fileName);
@@ -289,6 +284,7 @@ class Config
             if (isset($structuresNum[$structureName])) {
                 Util::addError('Повторяющееся наименование структуры; ' . $structureName);
             }
+
             $structuresNum[$structureName] = $num;
         }
 
@@ -298,11 +294,13 @@ class Config
                 // Пропускаем структуры, в которых не заданы инъекции
                 continue;
             }
+
             foreach ($structure['params']['in_structures'] as $structureName) {
                 $num = $structuresNum[$structureName];
                 $structures[$num]['params']['structures'][] = $structure['structure'];
             }
         }
+
         $this->structures = $structures;
     }
 }

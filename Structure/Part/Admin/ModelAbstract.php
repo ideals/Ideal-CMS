@@ -10,31 +10,33 @@
 
 namespace Ideal\Structure\Part\Admin;
 
+use Ideal\Core\Admin\Model;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Util;
 use Ideal\Field\Cid;
 
-class ModelAbstract extends \Ideal\Core\Admin\Model
+class ModelAbstract extends Model
 {
     public $cid;
 
-    public function delete()
+    public function delete(): void
     {
         parent::delete();
         $lvl = $this->pageData['lvl'] + 1;
         $cid = new Cid\Model($this->params['levels'], $this->params['digits']);
         $cid = $cid->getCidByLevel($this->pageData['cid'], $this->pageData['lvl'], false);
-        $_sql = "SELECT ID FROM {$this->_table} WHERE lvl={$lvl} AND cid LIKE '{$cid}%'";
+
+        $_sql = sprintf("SELECT ID FROM %s WHERE lvl=%s AND cid LIKE '%s%%'", $this->_table, $lvl, $cid);
         $db = Db::getInstance();
         $res = $db->select($_sql);
         if (count($res) > 0) {
-            return 2;
+            throw new \RuntimeException('Есть несколько элементов с lvl=' . $lvl . ' и cid=' . $cid);
         }
+
         $db->delete($this->_table)->where('ID=:id', ['id' => $this->pageData['ID']]);
         $db->exec();
         // TODO сделать проверку успешности удаления
-        return 1;
     }
 
     /**
@@ -48,7 +50,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         /* @var Db $db */
         $db = Db::getInstance();
 
-        if (count($par) == 0) {
+        if (count($par) === 0) {
             $this->path = $path;
             return $this;
         }
@@ -71,11 +73,13 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
                 // Если ID найденного элемента не сооветствует ID в переданной строке par
                 continue;
             }
+
             $cidCurr = $cidModel->getBlock($v['cid'], $v['lvl'] - 1); // находим блок cid предыдущего уровня
-            if ($cidPrev != $cidCurr) {
+            if ($cidPrev !== $cidCurr) {
                 // Если предыдущий блок cid не равен предыдущему блоку этого cid
                 continue;
             }
+
             $trueResult[] = $v;
             $parElement = next($par);
             $cidPrev = $cidModel->getBlock($v['cid'], $v['lvl']); // запоминаем блок cid пройденного уровня
@@ -86,7 +90,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $this->path = array_merge($path, $trueResult);
 
         $config = Config::getInstance();
-        if (count($par) != 0) {
+        if ($par !== []) {
             // Ещё остались неопределённые элементы пути. Запускаем вложенную структуру.
             $trueResult = $this->path;
             $end = array_pop($trueResult);
@@ -110,7 +114,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
      * @param int $lvl Уровень, на котором нужно получить макс. cid
      * @return string Максимальный cid на уровне $lvl
      */
-    public function getNewCid($cid, $lvl)
+    public function getNewCid($cid, $lvl): string
     {
         /* @var Db $db */
         $db = Db::getInstance();
@@ -121,12 +125,13 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             'parentCid' => $parentCid . '%',
             'lvl' => $lvl,
         ];
-        $_sql = "SELECT cid FROM {$this->_table} WHERE cid LIKE :parentCid AND lvl=:lvl ORDER BY cid DESC LIMIT 1";
+        $_sql = sprintf('SELECT cid FROM %s WHERE cid LIKE :parentCid AND lvl=:lvl ORDER BY cid DESC LIMIT 1', $this->_table);
         $cidArr = $db->select($_sql, $par);
         if (count($cidArr) > 0) {
             // Если элементы на этом уровне есть, берём cid последнего
             $cid = $cidArr[0]['cid'];
         }
+
         // Если элементов на этом уровне нет, берём id родителя
 
         // Прибавляем единицу в cid на нашем уровне
@@ -136,7 +141,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     /**
      * Инициализирует переменную $pageData данными по умолчанию для нового элемента
      */
-    public function setPageDataNew()
+    public function setPageDataNew(): void
     {
         parent::setPageDataNew();
         $path = $this->getPath();
@@ -150,6 +155,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $lvl = $end['lvl'] + 1;
             $prevStructure = $end['prev_structure'];
         }
+
         $pageData['lvl'] = $lvl;
         $pageData['prev_structure'] = $prevStructure;
         $this->setPageData($pageData);
@@ -160,7 +166,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $path = $this->getPath();
         $c = count($path);
         $end = end($path);
-        if ($c == 1 || ($c > 1 && $end['structure'] != $path[$c - 2]['structure'])) {
+        if ($c === 1 || ($c > 1 && $end['structure'] != $path[$c - 2]['structure'])) {
             // Считываем все элементы первого уровня
             $where .= " AND lvl=1";
         } else {
@@ -168,11 +174,9 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $lvl = $end['lvl'] + 1;
             $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
             $cid = $cidModel->getCidByLevel($end['cid'], $end['lvl'], false);
-            $where .= "AND lvl={$lvl} AND cid LIKE '{$cid}%'";
+            $where .= sprintf("AND lvl=%s AND cid LIKE '%s%%'", $lvl, $cid);
         }
 
-        $where = parent::getWhere($where);
-
-        return $where;
+        return parent::getWhere($where);
     }
 }

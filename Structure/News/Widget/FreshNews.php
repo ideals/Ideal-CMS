@@ -23,9 +23,8 @@ class FreshNews
      * Получение последних новостей
      *
      * @param int $num Кол-во новостей
-     * @return array
      */
-    public function getFreshNews($num = 3)
+    public function getFreshNews($num = 3): array
     {
         $db = Db::getInstance();
         $config = Config::getInstance();

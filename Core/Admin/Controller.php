@@ -10,6 +10,7 @@
 
 namespace Ideal\Core\Admin;
 
+use Ideal\Structure\Acl\Admin\Model;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
@@ -28,7 +29,7 @@ class Controller
     /** @var View Объект вида — twig-шаблонизатор */
     protected $view;
 
-    public function createAction()
+    public function createAction(): void
     {
         $this->model->setPageDataNew();
 
@@ -47,7 +48,7 @@ class Controller
         exit;
     }
 
-    public function deleteAction()
+    public function deleteAction(): void
     {
         $request = new Request();
 
@@ -57,7 +58,7 @@ class Controller
 
         $this->model->setPageDataById($result['ID']);
 
-        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        $aclModel = new Model();
         // Проверяем, есть ли право удаления элемента
         if ($aclModel->checkAccess($this->model, 'delete')) {
             $result['isCorrect'] = $this->model->delete();
@@ -72,7 +73,7 @@ class Controller
         exit;
     }
 
-    public function editAction()
+    public function editAction(): void
     {
         $request = new Request();
         $this->model->setPageDataById($request->id);
@@ -80,7 +81,7 @@ class Controller
         // Проверка ввода - если ок - сохраняем, если нет - сообщаем об ошибках
         $result = $this->model->parseInputParams();
 
-        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        $aclModel = new Model();
         // Проверяем, есть ли право редактирования элемента
         if ($result['isCorrect'] == 1) {
             $result['isCorrect'] = $aclModel->checkAccess($this->model, 'edit');
@@ -99,9 +100,10 @@ class Controller
     /**
      * Действие для отсутствующей страницы сайта (обработка ошибки 404)
      */
-    public function error404Action()
+    public function error404Action(): void
     {
-        $name = $title = 'Страница не найдена';
+        $name = 'Страница не найдена';
+        $title = 'Страница не найдена';
         $this->templateInit('404.twig');
 
         // Добавляем в path пустой элемент
@@ -120,35 +122,39 @@ class Controller
      *
      * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
      */
-    public function templateInit($tplName = '')
+    public function templateInit($tplName = ''): void
     {
         // Инициализация общего шаблона страницы
         $gblName = 'admin.twig';
         if (!stream_resolve_include_path($gblName)) {
             echo 'Нет файла основного шаблона ' . $gblName;
         }
+
         $gblRoot = dirname(stream_resolve_include_path($gblName));
 
         // Определение названия модуля из названия класса контроллера
         $parts = explode('\\', get_class($this));
         $moduleName = $parts[0];
-        $moduleName = ($moduleName == 'Ideal') ? '' : $moduleName . '/';
+        $moduleName = ($moduleName === 'Ideal') ? '' : $moduleName . '/';
+
         $structureName = $parts[2];
 
         // Инициализация шаблона страницы
         if ($tplName == '') {
             $tplName = $moduleName . 'Structure/' . $structureName . '/Admin/index.twig';
         }
+
         $tplRoot = dirname(stream_resolve_include_path($tplName));
         $tplName = basename($tplName);
 
-        if ($tplRoot == '') {
+        if ($tplRoot === '') {
             // Если в структуре нет файла шаблона, пытаемся его найти в модуле
             $tplName = $moduleName . 'Structure/' . $structureName . '/Admin/index.twig';
             if (!stream_resolve_include_path($tplName)) {
                 echo 'Нет файла шаблона ' . $tplName;
                 exit;
             }
+
             $tplRoot = dirname(stream_resolve_include_path($tplName));
             $tplName = basename($tplName);
         }
@@ -164,9 +170,9 @@ class Controller
      * По умолчанию система ставит только заголовок Content-Type, но и его можно
      * переопределить в этом методе.
      *
-     * @return array Массив где ключи - названия заголовков, а значения - содержание заголовков
+     * @return array<string, string> Массив где ключи - названия заголовков, а значения - содержание заголовков
      */
-    public function getHttpHeaders()
+    public function getHttpHeaders(): array
     {
         return [
             'X-Robots-Tag' => 'noindex, nofollow',
@@ -175,7 +181,7 @@ class Controller
 
     // TODO перенести в контроллер юзера
 
-    public function logoutAction()
+    public function logoutAction(): void
     {
         $user = Structure\User\Model::getInstance();
         $user->logout();
@@ -183,7 +189,7 @@ class Controller
         exit;
     }
 
-    public function parseList($headers, $list)
+    public function parseList($headers, $list): void
     {
         // Инициализируем объект запроса
         $request = new Request();
@@ -194,11 +200,12 @@ class Controller
         if ($request->par == '') {
             $request->par = 1;
         }
+
         $this->view->par = $request->par;
 
         // Отображение списка элементов
         $rows = [];
-        foreach ($list as $k => $v) {
+        foreach ($list as $v) {
             $fields = '';
             foreach ($headers as $key => $v2) {
                 $type = $this->model->fields[$key]['type'];
@@ -212,18 +219,21 @@ class Controller
                     $par = $request->par . '-' . $v['ID'];
                     $value = '<a href="index.php?par=' . $par . '">' . $value . '</a>';
                 }
+
                 $fields .= '<td>' . $value . '</td>';
             }
+
             $rows[] = [
                 'ID' => $v['ID'],
                 'row' => $fields,
-                'is_active' => (isset($v['is_active'])) ? $v['is_active'] : 1,
-                'is_not_menu' => (isset($v['is_not_menu'])) ? $v['is_not_menu'] : 0,
+                'is_active' => $v['is_active'] ?? 1,
+                'is_not_menu' => $v['is_not_menu'] ?? 0,
                 'acl_edit' => (isset($v['acl'])) ? $v['acl']['edit'] : 1,
                 'acl_delete' => (isset($v['acl'])) ? $v['acl']['delete'] : 1,
                 'acl_enter' => (isset($v['acl'])) ? $v['acl']['enter'] : 1,
             ];
         }
+
         $this->view->rows = $rows;
     }
 
@@ -242,7 +252,8 @@ class Controller
         if ($actionName == '') {
             $actionName = 'index';
         }
-        $actionName = $actionName . 'Action';
+
+        $actionName .= 'Action';
         $this->$actionName();
 
         $config = Config::getInstance();
@@ -260,17 +271,17 @@ class Controller
             // todo обычно юзеры всегда на первом уровне, но нужно доделать чтобы работало не только для первого уровня
             $user->data['par'] = substr($prev, strrpos($prev, '-') + 1);
         }
+
         $this->view->user = $user->data;
 
 
         // Отображение верхнего меню структур
-        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        $aclModel = new Model();
         $this->view->structures = $aclModel->filterShow(0, $config->structures);
         $path = $this->model->getPath();
         $this->view->activeStructureId = $path[0]['ID'];
-
-        // Отображение хлебных крошек
-        $pars = $breadCrumbs = [];
+        $pars = [];
+        $breadCrumbs = [];
         foreach ($path as $v) {
             $pars[] = $v['ID'];
             $breadCrumbs[] = [
@@ -278,11 +289,12 @@ class Controller
                 'name' => $v['name'],
             ];
         }
+
         $this->view->breadCrumbs = $breadCrumbs;
 
         $this->view->toolbar = $this->model->getToolbar();
 
-        $this->view->hideToolbarForm = !is_array($request->toolbar) || (count($request->toolbar) == 0);
+        $this->view->hideToolbarForm = !is_array($request->toolbar) || ($request->toolbar === []);
 
         // Определение места выполнения скрипта (на сайте в production, или локально в development)
         $this->view->isProduction = $config->domain == str_replace('www.', '', $_SERVER['HTTP_HOST']);
@@ -299,7 +311,7 @@ class Controller
      */
     public function finishMod($actionName) {}
 
-    public function showCreateAction()
+    public function showCreateAction(): void
     {
         $this->model->setPageDataNew();
         // Отображаем список полей структуры part
@@ -307,7 +319,7 @@ class Controller
         exit;
     }
 
-    public function showEditAction()
+    public function showEditAction(): void
     {
         $request = new Request();
         $this->model->setPageDataById($request->id);
@@ -319,7 +331,7 @@ class Controller
     /**
      * Запуск очищения файлового кэша.
      */
-    public function runClearFileCache()
+    public function runClearFileCache(): void
     {
         $config = Config::getInstance();
         $configCache = $config->cache;
@@ -344,6 +356,7 @@ class Controller
                 $tabs[$defaultName][$fieldName] = $field;
             }
         }
+
         $tabLine = '<ul class="nav nav-tabs" id="tabs">';
         $tabsContent = '<div class="tab-content" id="tabs-content">';
         $isActive = ' active';
@@ -357,6 +370,7 @@ class Controller
             $tabsContent .= '</div>';
             $isActive = '';
         }
+
         $tabLine .= '</ul>';
         $tabsContent .= '</div>';
         echo json_encode(

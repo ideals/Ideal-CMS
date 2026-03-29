@@ -28,6 +28,7 @@ class SiteModel extends AbstractSiteModel
         $view->images = json_decode($this->pageData['images'], true);
         $view->images = $view->images ?: [];
         $view->imagesRel = $this->fieldsGroup;
+
         $photoContent = $view->render();
         if (isset($this->pageData['content'])) {
             $this->pageData['content'] .= $photoContent;

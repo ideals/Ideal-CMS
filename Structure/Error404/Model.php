@@ -10,6 +10,7 @@
 
 namespace Ideal\Structure\Error404;
 
+use Ideal\Structure\Service\SiteData\ConfigPhp;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Structure\User;
@@ -34,7 +35,7 @@ class Model
      *
      * @param string $url Адрес запрошенной страницы
      */
-    public function setUrl($url)
+    public function setUrl($url): void
     {
         $this->url = $url;
     }
@@ -70,12 +71,13 @@ class Model
         }
 
         // Инициируем процесс обработки 404-ых ошибок
-        $this->known404 = new \Ideal\Structure\Service\SiteData\ConfigPhp();
+        $this->known404 = new ConfigPhp();
         $this->known404->loadFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
+
         $known404Params = $this->known404->getParams();
         $known404List = array_filter(explode("\n", $known404Params['known']['arr']['known404']['value']));
         $matchesRules = self::matchesRules($known404List, $this->url);
-        if (empty($matchesRules)) {
+        if ($matchesRules === []) {
             return false;
         }
 
@@ -83,10 +85,11 @@ class Model
         $this->send404 = false;
         // Если пользователь залогинен, то удаляем данный адрес из известных 404-ых
         $user = new User\Model();
-        if ($user->checkLogin() !== false) {
-            foreach ($matchesRules as $key => $value) {
+        if ($user->checkLogin()) {
+            foreach (array_keys($matchesRules) as $key) {
                 unset($known404List[$key]);
             }
+
             $known404Params['known']['arr']['known404']['value'] = implode("\n", $known404List);
             $this->known404->setParams($known404Params);
             $this->known404->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
@@ -99,7 +102,7 @@ class Model
     /**
      * Сохраняет информацию о 404 ошибке в справочник/файл
      */
-    public function save404()
+    public function save404(): void
     {
         $db = DB::getInstance();
         $config = Config::getInstance();
@@ -119,12 +122,12 @@ class Model
             // Прверяем есть ли запрошенный url среди исключений
             $rules404List = array_filter(explode("\n", $known404Params['rules']['arr']['rulesExclude404']['value']));
             $matchesRules = self::matchesRules($rules404List, $this->url);
-            if (empty($matchesRules)) {
+            if ($matchesRules === []) {
                 // Получаем данные о рассматриваемом url в справочнике "Ошибки 404"
                 $par = ['url' => $this->url];
                 $fields = ['table' => $error404Table];
                 $rows = $db->select('SELECT * FROM &table WHERE BINARY url = :url LIMIT 1', $par, $fields);
-                if (count($rows) == 0) {
+                if (count($rows) === 0) {
                     // Добавляем запись в справочник
                     $dataList = $config->getStructureByName('Ideal_DataList');
                     $prevStructure = $dataList['ID'] . '-';
@@ -169,20 +172,18 @@ class Model
     /**
      * Фильтрует массив известных 404-ых или правил игнорирования по совпадению с запрошенным адресом
      *
-     * @param array $rules Список правил с которыми сравнивается $url
+     * @param string[] $rules Список правил с которыми сравнивается $url
      * @param string $url Запрошенный адрес
      * @return array Массив совпадений запрошенного адреса и извесных 404-ых
      */
-    private function matchesRules($rules, $url)
+    private function matchesRules(array $rules, $url): array
     {
-        return array_filter($rules, function ($rule) use ($url) {
+        return array_filter($rules, function (string $rule) use ($url): bool {
             if (strpos($rule, '/') !== 0) {
                 $rule = '/^' . addcslashes($rule, '/\\^$.[]|()?*+{}') . '$/';
             }
-            if (!empty($rule) && (preg_match($rule, $url))) {
-                return true;
-            }
-            return false;
+
+            return $rule !== '' && $rule !== '0' && (preg_match($rule, $url));
         });
     }
 }

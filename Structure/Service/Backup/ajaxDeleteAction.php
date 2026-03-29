@@ -22,6 +22,7 @@ $cmtName = str_replace('.gz', '.txt', $dumpName);
 if (file_exists($dumpName)) {
     unlink($dumpName);
 }
+
 // Удаляем файл комментария
 if (file_exists($cmtName)) {
     unlink($cmtName);

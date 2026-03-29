@@ -10,6 +10,7 @@
 
 namespace Ideal\Field\Set;
 
+use Ideal\Medium\AbstractModel;
 use Ideal\Core\Request;
 use Ideal\Field\AbstractController;
 
@@ -42,7 +43,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $html = '<div class="col-xs-12"'
             . ' style="max-height:120px; overflow-y: scroll; border: 1px solid #C0C0C0; border-radius: 5px;"'
@@ -50,24 +51,24 @@ class Controller extends AbstractController
         $value = $this->getValue();
         foreach ($this->list as $v) {
             $checked = '';
-            if (array_search($v, $value) !== false) {
+            if (in_array($v, $value)) {
                 $checked = ' checked="checked"';
             }
+
             $html .= '<label class="checkbox"><input type="checkbox" value="' . $v . '" '
                 . $checked . ' name="' . $this->htmlName . '[]">' . $v . '</label>';
         }
-        $html .= '</div>';
-        return $html;
+
+        return $html . '</div>';
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getValue()
+    public function getValue(): array
     {
         $value = parent::getValue();
-        $value = explode(',', $value);
-        return $value;
+        return explode(',', $value);
     }
 
     /**
@@ -81,13 +82,14 @@ class Controller extends AbstractController
         if (is_array($this->newValue)) {
             $this->newValue = implode(',', $this->newValue);
         }
+
         return $this->newValue;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setModel($model, $fieldName, $groupName = 'general')
+    public function setModel($model, $fieldName, $groupName = 'general'): void
     {
         parent::setModel($model, $fieldName, $groupName);
 
@@ -99,8 +101,8 @@ class Controller extends AbstractController
 
         // Загоняем в $this->list список значений select
         $className = $this->field['medium'];
-        /** @var \Ideal\Medium\AbstractModel $medium */
+        /** @var AbstractModel $medium */
         $medium = new $className();
-        $this->list = $medium->getList($this->model, $fieldName);
+        $this->list = $medium->getList();
     }
 }

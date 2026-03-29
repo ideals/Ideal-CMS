@@ -27,9 +27,11 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         foreach ($arr as $item) {
             $arr[$item['ID']] = $item['email'];
         }
+
         foreach ($logList as &$logListItem) {
             $logListItem['user_id'] = $arr[$logListItem['user_id']];
         }
+
         return $logList;
     }
 }

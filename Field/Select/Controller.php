@@ -10,6 +10,7 @@
 
 namespace Ideal\Field\Select;
 
+use Ideal\Medium\AbstractModel;
 use Ideal\Field\AbstractController;
 
 /**
@@ -43,7 +44,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $html = '<select class="form-control" name="' . $this->htmlName . '" id="' . $this->htmlName . '">';
         $value = $this->getValue();
@@ -52,10 +53,11 @@ class Controller extends AbstractController
             if ($k == $value) {
                 $selected = ' selected="selected"';
             }
+
             $html .= '<option value="' . $k . '"' . $selected . '>' . $v . '</option>';
         }
-        $html .= '</select>';
-        return $html;
+
+        return $html . '</select>';
     }
 
     /**
@@ -69,6 +71,7 @@ class Controller extends AbstractController
             $keys = array_keys($this->list);
             $value = $keys[0];
         }
+
         return $value;
     }
 
@@ -90,7 +93,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function setModel($model, $fieldName, $groupName = 'general')
+    public function setModel($model, $fieldName, $groupName = 'general'): void
     {
         parent::setModel($model, $fieldName, $groupName);
 
@@ -102,7 +105,7 @@ class Controller extends AbstractController
 
         // Загоняем в $this->list список значений select
         $className = $this->field['medium'];
-        /** @var \Ideal\Medium\AbstractModel $medium */
+        /** @var AbstractModel $medium */
         $medium = new $className($this->model, $fieldName);
         $this->list = $medium->getList();
     }

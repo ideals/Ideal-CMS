@@ -10,4 +10,6 @@
 
 namespace Ideal\Structure\News\Admin;
 
-class Model extends \Ideal\Structure\Roster\Admin\ModelAbstract {}
+use Ideal\Structure\Roster\Admin\ModelAbstract;
+
+class Model extends ModelAbstract {}

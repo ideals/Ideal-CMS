@@ -31,15 +31,13 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = $this->getValue();
 
-        $input = '<input type="text" class="form-control" name="' . $this->htmlName
+        return '<input type="text" class="form-control" name="' . $this->htmlName
             . '" id="' . $this->htmlName
             . '" value="' . $value . '">';
-
-        return $input;
     }
 
     /**
@@ -54,11 +52,11 @@ class Controller extends AbstractController
 
         $newPos = $this->newValue;
         $pageData = $this->model->getPageData();
-        $oldPos = (isset($pageData['pos'])) ? $pageData['pos'] : 0;
+        $oldPos = $pageData['pos'] ?? 0;
 
         // Если был указан и не изменился, то оставляем как есть
         // Если был указан и изменился, перенумеруем список
-        if ($this->newValue == '') {
+        if ($this->newValue === 0) {
             // Если pos не был указан, надо поставить максимальный
             $posModel = new Model();
             $this->newValue = $posModel->getNewPos($model);
@@ -86,6 +84,7 @@ class Controller extends AbstractController
         } else {
             $html = parent::showEdit();
         }
+
         return $html;
     }
 }

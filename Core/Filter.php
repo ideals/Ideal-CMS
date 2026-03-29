@@ -46,12 +46,13 @@ abstract class Filter
      *
      * @param $params array список параметров для фильтрации
      */
-    public function setParams($params)
+    public function setParams(array $params): void
     {
         $db = Db::getInstance();
         foreach ($params as $key => $value) {
             $params[$key] = $db->escape_string($value);
         }
+
         $this->params = $params;
     }
 

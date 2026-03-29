@@ -1,5 +1,7 @@
 <?php
 
+use Ideal\Core\Util;
+
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING); //| E_STRICT
 
 setlocale(LC_ALL, 'ru_RU.UTF8');
@@ -18,10 +20,10 @@ if (function_exists('date_default_timezone_set')) {
  * @param int $errline Номер строки на которой произошла ошибка
  * @throws Exception
  */
-function myErrorHandler($errno, $errstr, $errfile, $errline)
+function myErrorHandler($errno, string $errstr, string $errfile, $errline): void
 {
     $err = 'Ошибка [' . $errno . '] ' . $errstr . ', в строке ' . $errline . ' файла ' . $errfile;
-    \Ideal\Core\Util::addError($err, true);
+    Util::addError($err, true);
 }
 
 set_error_handler('myErrorHandler');
@@ -32,15 +34,16 @@ set_error_handler('myErrorHandler');
  * Реакция зависит от настроек $config->errorLog
  * @throws Exception
  */
-function shutDownFunction()
+function shutDownFunction(): void
 {
     $error = error_get_last();
     $errors = [E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING];
-    if (!is_null($error) && in_array($error['type'], $errors)) {
+    if (!is_null($error) && in_array($error['type'], $errors, true)) {
         $err = 'Ошибка ' . $error['message'] . ', в строке ' . $error['line'] . ' файла ' . $error['file'];
-        \Ideal\Core\Util::addError($err, false);
+        Util::addError($err, false);
     }
-    \Ideal\Core\Util::shutDown();
+
+    Util::shutDown();
 }
 
 register_shutdown_function('shutdownFunction');
@@ -56,7 +59,7 @@ mb_internal_encoding('UTF-8'); // наша кодировка всегда UTF-8
  * @param string $className Имя класса, которое не нашлось в пространстве имён
  * @return bool Флаг успешного подключения файла класса
  */
-function autoLoad($className)
+function autoLoad($className): bool
 {
     $className = ltrim($className, '\\');
 
@@ -73,6 +76,7 @@ function autoLoad($className)
         // Если нэймспейс Ideal - убираем его из массива
         array_shift($elements);
     }
+
     array_pop($elements); // убираем последний элемент массива — имя файла
 
     $folder = implode(DIRECTORY_SEPARATOR, $elements);

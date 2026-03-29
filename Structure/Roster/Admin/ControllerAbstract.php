@@ -10,14 +10,15 @@
 
 namespace Ideal\Structure\Roster\Admin;
 
+use Ideal\Core\Admin\Controller;
 use Ideal\Core\Request;
 
-class ControllerAbstract extends \Ideal\Core\Admin\Controller
+class ControllerAbstract extends Controller
 {
     /* @var $model ModelAbstract */
     protected $model;
 
-    public function indexAction()
+    public function indexAction(): void
     {
         $this->templateInit();
 

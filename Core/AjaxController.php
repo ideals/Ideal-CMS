@@ -10,6 +10,8 @@
 
 namespace Ideal\Core;
 
+use Ideal\Core\Site\Router;
+
 /**
  * Контроллер, вызываемый при работе с ajax-вызовами
  */
@@ -27,7 +29,7 @@ class AjaxController
     /**
      * Генерация контента страницы для отображения в браузере
      *
-     * @param \Ideal\Core\Site\Router | \Ideal\Core\Admin\Router $router
+     * @param Router|\Ideal\Core\Admin\Router $router
      * @return string Содержимое отображаемой страницы
      */
     public function run($router)
@@ -46,7 +48,7 @@ class AjaxController
             $actionName = 'index';
         }
 
-        $actionName = $actionName . 'Action';
+        $actionName .= 'Action';
         if (method_exists($this, $actionName)) {
             // Вызываемый action существует, запускаем его
             $text = $this->$actionName();
@@ -76,12 +78,13 @@ class AjaxController
      *
      * @param string $tplName
      */
-    public function templateInit($tplName = '')
+    public function templateInit($tplName = ''): void
     {
         if (!stream_resolve_include_path($tplName)) {
             echo 'Нет файла шаблона ' . $tplName;
             exit;
         }
+
         $tplRoot = dirname(stream_resolve_include_path($tplName));
         $tplName = basename($tplName);
 
@@ -89,7 +92,7 @@ class AjaxController
         $config = Config::getInstance();
         $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
 
-        $folders = array_merge([$tplRoot, $cmsFolder]);
+        $folders = [$tplRoot, $cmsFolder];
         $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
@@ -99,7 +102,8 @@ class AjaxController
      */
     public function error404Action()
     {
-        $name = $title = 'Страница не найдена';
+        $name = 'Страница не найдена';
+        $title = 'Страница не найдена';
         $this->templateInit('404.twig');
 
         // Добавляем в path пустой элемент
@@ -111,8 +115,6 @@ class AjaxController
         $pageData = $this->model->getPageData();
         $pageData['title'] = $title;
         $this->model->setPageData($pageData);
-
-        $text = $this->view->render();
-        return $text;
+        return $this->view->render();
     }
 }

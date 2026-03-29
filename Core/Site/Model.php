@@ -10,6 +10,7 @@
 
 namespace Ideal\Core\Site;
 
+use Ideal\Core\Config;
 use Ideal\Core;
 use Ideal\Field;
 
@@ -29,7 +30,7 @@ abstract class Model extends Core\Model
      *
      * Этот метод используется в построении на основе БД html-карты сайта
      *
-     * @return array Список вложенных элементов
+     * @return array{} Список вложенных элементов
      */
     public function getStructureElements()
     {
@@ -41,7 +42,7 @@ abstract class Model extends Core\Model
         $path = $this->path;
         $path[0]['name'] = $path[0]['startName'];
 
-        if (isset($this->path[1]['url']) && ($this->path[1]['url'] == '/') && count($path) == 2) {
+        if (isset($this->path[1]['url']) && ($this->path[1]['url'] == '/') && count($path) === 2) {
             // На главной странице хлебные крошки отображать не надо
             return '';
         }
@@ -54,6 +55,7 @@ abstract class Model extends Core\Model
             if (isset($v['is_skip']) && $v['is_skip'] && isset($v['is_not_menu']) && $v['is_not_menu']) {
                 continue;
             }
+
             $url->setParentUrl($pars);
             $link = $url->getUrl($v);
             $pars[] = $v;
@@ -74,6 +76,7 @@ abstract class Model extends Core\Model
                 ];
             }
         }
+
         return $breadCrumbs;
     }
 
@@ -87,7 +90,8 @@ abstract class Model extends Core\Model
         } elseif (!empty($this->pageData['addon'])) {
             // Последовательно пытаемся получить заголовок из всех аддонов до первого найденного
             if (isset($this->pageData['addons'])) {
-                for ($i = 0; $i < count($this->pageData['addons']); $i++) {
+                $counter = count($this->pageData['addons']);
+                for ($i = 0; $i < $counter; $i++) {
                     if (isset($this->pageData['addons'][$i]['content'])
                         && $this->pageData['addons'][$i]['content'] !== ''
                     ) {
@@ -105,9 +109,13 @@ abstract class Model extends Core\Model
             // Если заголовка H1 в тексте нет, берём его из названия name
             $header = $this->pageData['name'];
         }
+
         return $header;
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     public function extractHeader($text)
     {
         $header = '';
@@ -115,8 +123,10 @@ abstract class Model extends Core\Model
             if ($this->isExtractHeader) {
                 $text = preg_replace('/<h1.*>\s*(.*)<\/h1>/isU', '', $text, 1);
             }
+
             $header = $headerArray[1];
         }
+
         return [$header, $text];
     }
 
@@ -132,13 +142,13 @@ abstract class Model extends Core\Model
         $xhtmlChar = $xhtml ? '/' : '';
         $end = end($this->path);
 
-        if (isset($end['description']) && $end['description'] != '' && (!isset($this->pageNum) || $this->pageNum === 1)) {
+        if (isset($end['description']) && $end['description'] != '' && ($this->pageNum === null || $this->pageNum === 1)) {
             $meta .= '<meta name="description" content="'
                 . str_replace('"', '&quot;', $end['description'])
                 . '" ' . $xhtmlChar . '>';
         }
 
-        if (isset($end['keywords']) && $end['keywords'] != '' && (!isset($this->pageNum) || $this->pageNum === 1)) {
+        if (isset($end['keywords']) && $end['keywords'] != '' && ($this->pageNum === null || $this->pageNum === 1)) {
             $meta .= '<meta name="keywords" content="'
                 . str_replace('"', '&quot;', $end['keywords'])
                 . '" ' . $xhtmlChar . '>';
@@ -169,6 +179,7 @@ abstract class Model extends Core\Model
         if (isset($end['title']) && $end['title'] != '') {
             return $end['title'] . $concat;
         }
+
         return $end['name'] . $concat;
 
     }
@@ -182,13 +193,14 @@ abstract class Model extends Core\Model
     {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         [$path] = explode('?', $_SERVER['REQUEST_URI']);
-        $canonical = "{$protocol}{$_SERVER['HTTP_HOST']}{$path}";
-        $config = Core\Config::getInstance();
+        $canonical = $protocol . $_SERVER['HTTP_HOST'] . $path;
+        $config = Config::getInstance();
         $indexedOptions = explode(',', $config->cms['indexedOptions']);
         $params = array_intersect_key($_GET, array_flip($indexedOptions));
-        if ($params) {
+        if ($params !== []) {
             $canonical .= '?' . http_build_query($params);
         }
+
         return $canonical;
     }
 }

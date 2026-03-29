@@ -1,5 +1,7 @@
 <?php
 
+use Ideal\Medium\TemplateList\Model;
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -7,7 +9,6 @@
  * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-
 // Страницы сайта
 return [
     'params' => [
@@ -41,7 +42,7 @@ return [
             'label' => 'Шаблон отображения',
             'sql' => "varchar(255) default 'index.twig'",
             'type' => 'Ideal_Template',
-            'medium' => '\\Ideal\\Medium\\TemplateList\\Model',
+            'medium' => Model::class,
             'default'   => 'index.twig',
         ],
         'cid' => [
@@ -58,13 +59,13 @@ return [
             'label' => 'Тип раздела',
             'sql' => 'varchar(30) not null',
             'type' => 'Ideal_Select',
-            'medium' => '\\Ideal\\Medium\\StructureList\\Model',
+            'medium' => \Ideal\Medium\StructureList\Model::class,
         ],
         'addon' => [
             'label' => 'Аддоны',
             'sql' => "varchar(255) not null default '[[\"1\",\"Ideal_Page\",\"Текст\"]]'",
             'type' => 'Ideal_Addon',
-            'medium'    => '\\Ideal\\Medium\\AddonList\\Model',
+            'medium'    => \Ideal\Medium\AddonList\Model::class,
             'available' =>  ['Ideal_Page', 'Ideal_PhpFile', 'Ideal_Photo', 'Ideal_SiteMap',
                 'Ideal_YandexSearch'],
             'default'   => '[["1","Ideal_Page","Текст"]]',

@@ -10,19 +10,20 @@
 
 namespace Ideal\Structure\User\Admin;
 
+use Ideal\Core\Admin\Controller;
+use Ideal\Structure\User\Model;
 use Ideal\Core\Request;
-use Ideal\Structure\User;
 
 /**
  * Класс, отвечающий за отображение списка пользователей в админке, а также
  * за отображение формы авторизации и её обработку
  */
-class ControllerAbstract extends \Ideal\Core\Admin\Controller
+class ControllerAbstract extends Controller
 {
     /**
      * {@inheritdoc}
      */
-    public function finishMod($actionName)
+    public function finishMod($actionName): void
     {
         if ($actionName == 'loginAction') {
             $this->view->header = '';
@@ -35,7 +36,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
     /**
      * Отображение списка пользователей
      */
-    public function indexAction()
+    public function indexAction(): void
     {
         $this->templateInit();
 
@@ -54,7 +55,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
     /**
      * Отображение формы авторизации, если пользователь не авторизован
      */
-    public function loginAction()
+    public function loginAction(): void
     {
         // Проверяем что запрашивается json
         $jsonResponse = false;
@@ -68,7 +69,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
             throw new \Exception('Какой-то робот пытается зайти на страницу админки.');
         }
 
-        $user = User\Model::getInstance();
+        $user = Model::getInstance();
 
         // Проверяем правильность логина и пароля
         if (isset($_POST['user']) && isset($_POST['pass'])) {
@@ -82,8 +83,10 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
                         'login' => 'false',
                     ]);
                 }
+
                 exit;
             }
+
             if ($user->login($_POST['user'], $_POST['pass'])) {
                 header('Location: ' . $_SERVER['REQUEST_URI']);
             }
@@ -111,7 +114,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
     /**
      * Экшен для вывода уведомления о запрещённом доступе к странице
      */
-    public function accessDeniedAction()
+    public function accessDeniedAction(): void
     {
         $this->templateInit('Structure/User/Admin/access-denied.twig');
         $this->view->header = 'Доступ запрещён';

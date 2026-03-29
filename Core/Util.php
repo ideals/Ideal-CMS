@@ -10,6 +10,8 @@
 
 namespace Ideal\Core;
 
+use Ideal\Mailer;
+
 /**
  * Класс полезных функций
  *
@@ -25,14 +27,16 @@ class Util
      * @param string $txt Текст сообщения об ошибке
      * @throws \Exception
      */
-    public static function addError($txt, $isTrace = true)
+    public static function addError(string $txt, $isTrace = true): void
     {
         $config = Config::getInstance();
         if (empty($config->cms['errorLog'])) {
             return;
         }
+
         $trace = [];
-        $traceStr = $traceStrBr = '';
+        $traceStr = '';
+        $traceStrBr = '';
         if ($isTrace) {
             // Если нужно вывести путь до места совершения ошибки, строим его
             $traceList = debug_backtrace();
@@ -45,6 +49,7 @@ class Util
             $traceStr = PHP_EOL . 'Trace:' . PHP_EOL . implode(PHP_EOL, $trace);
             $traceStrBr = PHP_EOL . 'Trace:' . PHP_EOL . implode('<br>', $trace);
         }
+
         switch ($config->cms['errorLog']) {
             case 'file':
                 // Вывод сообщения в текстовый файл
@@ -87,11 +92,10 @@ class Util
 
         if (function_exists('mb_convert_encoding')) {
             $text = mb_convert_encoding($text, $siteCharset, $config->db['charset']);
-        } else {
-            if (function_exists('iconv')) {
-                $text = iconv($config->db['charset'], $siteCharset, $text);
-            }
+        } elseif (function_exists('iconv')) {
+            $text = iconv($config->db['charset'], $siteCharset, $text);
         }
+
         return $text;
     }
 
@@ -108,11 +112,10 @@ class Util
 
         if (function_exists('mb_convert_encoding')) {
             $text = mb_convert_encoding($text, $config->db['charset'], $siteCharset);
-        } else {
-            if (function_exists('iconv')) {
-                $text = iconv($siteCharset, $config->db['charset'], $text);
-            }
+        } elseif (function_exists('iconv')) {
+            $text = iconv($siteCharset, $config->db['charset'], $text);
         }
+
         return $text;
     }
 
@@ -124,7 +127,7 @@ class Util
      *
      * @return string Строка с отформатированной датой
      */
-    public static function dateReach($date, $year = ' года')
+    public static function dateReach($date, string $year = ' года'): string
     {
         $months = [
             '',
@@ -141,9 +144,8 @@ class Util
             'ноября',
             'декабря',
         ];
-        $date = date('j', $date) . ' ' . $months[date('n', $date)] . ' '
+        return date('j', $date) . ' ' . $months[date('n', $date)] . ' '
             . date('Y', $date) . $year;
-        return $date;
     }
 
     /**
@@ -152,7 +154,7 @@ class Util
      * @param $date - дата в текстовом формате
      * @return string строка с отформатированной датой
      */
-    public static function dateStrReach($date)
+    public static function dateStrReach($date): string
     {
         $months = [
             '',
@@ -171,9 +173,9 @@ class Util
         ];
         $date = explode(' ', $date);
         $date = explode('-', $date[0]);
+
         $day = (int) $date[1];
-        $date = $date[2] . ' ' . $months[$day] . ' ' . $date[0] . ' года';
-        return $date;
+        return $date[2] . ' ' . $months[$day] . ' ' . $date[0] . ' года';
     }
 
     /**
@@ -181,13 +183,11 @@ class Util
      *
      * @param string $module Краткое название класса (например, Ideal_Part)
      * @param string $type Тип класса (например, Structure или Field)
-     * @return string
      */
-    public static function getClassName($module, $type)
+    public static function getClassName($module, string $type): string
     {
         [$module, $structure] = explode('_', $module);
-        $name = '\\' . $module . '\\' . $type . '\\' . $structure;
-        return $name;
+        return '\\' . $module . '\\' . $type . '\\' . $structure;
     }
 
     /**
@@ -196,12 +196,12 @@ class Util
      * @param string $mail - адрес электронной почты
      * @return bool - истина, если ящик написан правильно
      */
-    public static function isEmail($mail)
+    public static function isEmail($mail): bool
     {
         // Проверяем правильно ли в мыле поставлены знаки @ и .
         $posAT = strpos($mail, '@');
         $posDOT = strrpos($mail, '.');
-        if (($posAT < 1) or ($posDOT < 3) or ($posAT > $posDOT)) {
+        if ($posAT < 1 || $posDOT < 3 || $posAT > $posDOT) {
             return false;
         }
 
@@ -261,7 +261,7 @@ class Util
      * @param int $len Максимальная длина строки (по умолчанию 255)
      * @return string Безопасный и валидный адрес
      */
-    public static function parseWebMail($str, $len = 255)
+    public static function parseWebMail($str, $len = 255): string
     {
         // Cчитается, что передаётся одна строка, поэтому всё,
         // Что идёт за переводом строки - это хакеры
@@ -280,7 +280,7 @@ class Util
     /**
      * Метод, вызываемый после всех действий при завершении выполнения скрипта
      */
-    public static function shutDown()
+    public static function shutDown(): void
     {
         $config = Config::getInstance();
         if ($config->cms['errorLog'] === 'email' && count(self::$errorArray) > 0) {
@@ -296,17 +296,20 @@ class Util
             $text = "Здравствуйте!\n\n{$source} произошли следующие ошибки.\n\n"
                 . implode("\n\n", self::$errorArray) . "\n\n"
                 . '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
-            if (!empty($_GET)) {
+            if ($_GET !== []) {
                 $text .= '$_GET = ' . "\n" . print_r($_GET, true) . "\n\n";
             }
-            if (!empty($_POST)) {
+
+            if ($_POST !== []) {
                 $text .= '$_POST = ' . "\n" . print_r($_POST, true) . "\n\n";
             }
-            if (!empty($_COOKIE)) {
+
+            if ($_COOKIE !== []) {
                 $text .= '$_COOKIE = ' . "\n" . print_r($_COOKIE, true) . "\n\n";
             }
+
             $subject = 'Сообщение об ошибке на сайте ' . $config->domain;
-            $mail = new \Ideal\Mailer();
+            $mail = new Mailer();
             $mail->setSubj($subject);
             $mail->setPlainBody($text);
             $mail->sent($config->robotEmail, $config->cms['adminEmail']);
@@ -319,15 +322,15 @@ class Util
      *
      * @param string $str исходная строка
      * @param int $len максимальное количество символов в строке
-     * @return string
      */
-    public static function smartTrim($str, $len)
+    public static function smartTrim($str, $len): string
     {
         $firstLen = mb_strlen($str);
         $str = mb_substr($str, 0, $len);
         if ($firstLen !== mb_strlen($str)) {
             $str = mb_substr($str, 0, mb_strrpos($str, ' '));
         }
+
         return $str;
     }
 
@@ -338,19 +341,20 @@ class Util
      *
      * @return string Латинская буква - большая или маленькая
      */
-    public static function randomChar($len = 1)
+    public static function randomChar($len = 1): string
     {
         $str = '';
         for ($i = 0; $i < $len; $i++) {
-            $chr1 = chr(rand(65, 90));
-            $chr2 = chr(rand(97, 122));
-            $is = rand(0, 1);
-            if ($is == 0) {
+            $chr1 = chr(random_int(65, 90));
+            $chr2 = chr(random_int(97, 122));
+            $is = random_int(0, 1);
+            if ($is === 0) {
                 $str .= $chr1;
             } else {
                 $str .= $chr2;
             }
         }
+
         return $str;
     }
 
@@ -362,7 +366,7 @@ class Util
      * @param string $fileMode Права доступа к файлу "0644"
      * @return array Содержит информацию о неудачных попытках изменения прав доступа
      */
-    public static function chmod($path, $dirMode, $fileMode)
+    public static function chmod(string $path, $dirMode, $fileMode): array
     {
         $resultInfo = [];
 
@@ -370,6 +374,7 @@ class Util
             if (!chmod($path, intval($dirMode, 8))) {
                 return ['path' => $path, 'mode' => $dirMode, 'is_dir' => true];
             }
+
             $files = array_diff(scandir($path), ['.', '..']);
             foreach ($files as $file) {
                 $fullPath = $path . '/' . $file;
@@ -380,10 +385,12 @@ class Util
             if (is_link($path)) {
                 return [];
             }
+
             if (!chmod($path, intval($fileMode, 8))) {
                 $resultInfo[] = ['path' => $path, 'mode' => $fileMode, 'is_dir' => false];
             }
         }
+
         return $resultInfo;
     }
 
@@ -400,6 +407,7 @@ class Util
             $contents = ['version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1 . '.' . $cid2];
             $GACid = $contents['cid'];
         }
+
         return $GACid;
     }
 
@@ -408,7 +416,7 @@ class Util
      *
      * @param string $link Ссылка на страницу авторизации
      */
-    public function goUrl($link)
+    public function goUrl(string $link): void
     {
         $_SESSION['prev_post'] = serialize($_POST);
         $_SESSION['prev_uri'] = $_SERVER['REQUEST_URI'];

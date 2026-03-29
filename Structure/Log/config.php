@@ -1,5 +1,7 @@
 <?php
 
+use Ideal\Medium\UserList\Model;
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -7,7 +9,6 @@
  * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-
 // Журнал действий
 return [
     'params' => [
@@ -42,7 +43,7 @@ return [
             'label' => 'Пользователь совершивший действие',
             'sql' => 'int(8) not null',
             'type' => 'Ideal_Select',
-            'medium' => '\\Ideal\\Medium\\UserList\\Model',
+            'medium' => Model::class,
         ],
         'type' => [
             'label' => 'Тип события',

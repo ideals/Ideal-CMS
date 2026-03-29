@@ -52,9 +52,8 @@ class SiteModel extends AbstractSiteModel
      * Построение карты сайта в виде дерева
      *
      * @param int $page Не используется
-     * @return array
      */
-    public function getList($page = null)
+    public function getList($page = null): array
     {
         $config = Config::getInstance();
 
@@ -66,9 +65,8 @@ class SiteModel extends AbstractSiteModel
         $elements = $startStructure->getStructureElements();
 
         $path = [$structure];
-        $elements = $this->recursive($path, $elements);
 
-        return $elements;
+        return $this->recursive($path, $elements);
     }
 
     /**
@@ -77,11 +75,11 @@ class SiteModel extends AbstractSiteModel
      * @param array $list Древовидный список
      * @return string html-код списка ссылок карты сайта
      */
-    public function createSiteMap($list)
+    public function createSiteMap($list): string
     {
         $str = '';
         $lvl = 0;
-        foreach ($list as $k => $v) {
+        foreach ($list as $v) {
             if ($v['lvl'] > $lvl) {
                 $str .= "\n<ul class=\"site-map\">\n";
             } elseif ($v['lvl'] == $lvl) {
@@ -102,33 +100,32 @@ class SiteModel extends AbstractSiteModel
                 $tmp = $this->disallow;
 
                 $link = array_reduce($tmp, function (&$res, $rule) {
-                    if (!empty($rule)) {
-                        if ($res == 1 || preg_match($rule, $res)) {
-                            return 1;
-                        }
+                    if (!empty($rule) && ($res == 1 || preg_match($rule, $res))) {
+                        return 1;
                     }
+
                     return $res;
                 }, $v['link']);
                 if ($v['link'] !== $link) {
                     // Сработало одно из регулярных выражений, значит ссылку нужно исключить
                     continue;
                 }
+
                 $href = strpos($v['link'], 'href=') === false ? 'href="' . $v['link'] . '"' : $v['link'];
                 $href = $href == 'href=""' ? '' : $href;
                 $str .= '<li><a ' . $href . '>' . $v['name'] . '</a>';
             }
+
             $lvl = $v['lvl'];
         }
-        $str .= "</li>\n</ul>\n";
-        return $str;
+
+        return $str . "</li>\n</ul>\n";
     }
 
     /**
      * Рекурсивный метод построения дерева карты сайта
-     *
-     * @return array
      */
-    protected function recursive($path, $elements)
+    protected function recursive($path, $elements): array
     {
         if (empty($elements)) {
             return [];
@@ -150,6 +147,7 @@ class SiteModel extends AbstractSiteModel
                     $c = $lvl - $element['lvl'] + 1;
                     $fullPath = array_slice($fullPath, 0, -$c);
                 }
+
                 $lvl = $element['lvl'];
                 $fullPath[] = $element;
             } else {
@@ -157,6 +155,7 @@ class SiteModel extends AbstractSiteModel
                 if (count($fullPath) > count($path)) {
                     array_pop($fullPath);
                 }
+
                 $fullPath[] = $element;
             }
 

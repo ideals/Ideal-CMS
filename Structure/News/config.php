@@ -1,5 +1,7 @@
 <?php
 
+use Ideal\Medium\TagList\Model;
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -7,7 +9,6 @@
  * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-
 // Новости
 return [
     'params' => [
@@ -33,7 +34,7 @@ return [
             'label' => 'Теги',
             'sql' => '',
             'type' => 'Ideal_SelectMulti',
-            'medium' => '\\Ideal\\Medium\\TagList\\Model',
+            'medium' => Model::class,
         ],
         'name' => [
             'label' => 'Заголовок',

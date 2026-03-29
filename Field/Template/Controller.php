@@ -36,7 +36,7 @@ class Controller extends Select\Controller
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
 
         $html = '';
@@ -51,14 +51,13 @@ class Controller extends Select\Controller
         if (isset($pageData['structure']) && !empty($pageData['structure'])) {
             $structureValue = $pageData['structure'];
         } else {
-            reset($this->list);
-            $structureValue = key($this->list);
+            $structureValue = array_key_first($this->list);
         }
 
         // Составляем списки шаблонов
         foreach ($this->list as $key => $value) {
             // индикатор показа списка по умолчанию
-            $structureValue == $key ? $display = "block" : $display = "none";
+            $display = $structureValue == $key ? "block" : "none";
             $key = strtolower($key);
             $nameId = $this->htmlName . '_' . $key;
 
@@ -70,8 +69,10 @@ class Controller extends Select\Controller
                 if ($k == $defaultValue) {
                     $selected = ' selected="selected"';
                 }
+
                 $html .= '<option value="' . $k . '"' . $selected . '>' . $v . '</option>';
             }
+
             $html .= '</select>';
 
             // js скрипт инициализирующий модификацию тега "select" для возможности вставки собственного значения
@@ -178,15 +179,14 @@ class Controller extends Select\Controller
                 HTML;
 
         }
+
         return $html;
     }
 
     /**
      * Получение нового значения поля шаблона из данных, введённых пользователем, с учётом "Типа раздела"
-     *
-     * @return string
      */
-    public function pickupNewValue()
+    public function pickupNewValue(): string
     {
         $request = new Request();
 

@@ -10,9 +10,10 @@
 
 namespace Ideal\Structure\Service\Admin;
 
+use Ideal\Core\Admin\Controller;
 use Ideal\Core\Request;
 
-class ControllerAbstract extends \Ideal\Core\Admin\Controller
+class ControllerAbstract extends Controller
 {
     /* @var $model Model */
     protected $model;
@@ -24,33 +25,29 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
      * @param array $arguments Аргументы, передаваемые методу
      * @throws \Exception Исключение, если для вызываемого метода нет соответствующего файла
      */
-    public function __call($name, $arguments)
+    public function __call(string $name, array $arguments)
     {
         $item = $this->model->getPageData();
 
         [$module, $structure] = explode('_', $item['ID']);
-        $module = ($module == 'Ideal') ? '' : $module . '/';
+        $module = ($module === 'Ideal') ? '' : $module . '/';
         $file = $module . 'Structure/Service/' . $structure . '/' . $name . '.php';
 
         if (!stream_resolve_include_path($file)) {
-            throw new \Exception("Файл $file не существует");
+            throw new \Exception(sprintf('Файл %s не существует', $file));
         }
 
         include($file);
     }
 
-    public function indexAction()
+    public function indexAction(): void
     {
         $this->templateInit('Structure/Service/Admin/index.twig');
 
         // Инициализируем объект запроса
         $request = new Request();
         $sepPar = strpos($request->par, '-');
-        if ($sepPar === false) {
-            $this->view->par = $request->par;
-        } else {
-            $this->view->par = substr($request->par, 0, $sepPar);
-        }
+        $this->view->par = $sepPar === false ? $request->par : substr($request->par, 0, $sepPar);
 
         $this->view->items = $this->model->getMenu(); // $structure['items'];
 
@@ -58,7 +55,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $this->view->ID = $item['ID'];
 
         [$module, $structure] = explode('_', $item['ID']);
-        $module = ($module == 'Ideal') ? '' : $module . '/';
+        $module = ($module === 'Ideal') ? '' : $module . '/';
         $file = $module . 'Structure/Service/' . $structure . '/Action.php';
         ob_start();
         // TODO сделать уведомление об ошибке, в случае если такого файла нет

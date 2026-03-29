@@ -10,6 +10,7 @@
 
 namespace Ideal\Field\SelectMulti;
 
+use Ideal\Medium\AbstractModel;
 use Ideal\Field\AbstractController;
 
 /**
@@ -34,13 +35,13 @@ class Controller extends AbstractController
     /** @inheritdoc */
     protected static $instance;
 
-    /** @var  \Ideal\Medium\AbstractModel Объект доступа к редактируемым данным */
+    /** @var AbstractModel Объект доступа к редактируемым данным */
     protected $medium;
 
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $list = $this->medium->getList();
         $variants = $this->medium->getValues();
@@ -75,16 +76,18 @@ class Controller extends AbstractController
             if (in_array($k, $variants)) {
                 $selected = ' selected="selected"';
             }
+
             $html .= '<option value="' . $k . '"' . $selected . '>' . $v . '</option>';
         }
-        $html .= '</select>';
-        return $html;
+
+        return $html . '</select>';
     }
 
     /**
      * {@inheritdoc}
+     * @return array<string, string|null>
      */
-    public function parseInputValue($isCreate)
+    public function parseInputValue($isCreate): array
     {
         // При сохранении выбранных значений при использовании промежуточной таблицы,
         // потребуются дополнительные запросы к БД, которые генерирует медиум
@@ -92,20 +95,18 @@ class Controller extends AbstractController
         $this->newValue = null;
         $newValue = $this->pickupNewValue();
 
-        $item = [
+        return [
             'fieldName' => $this->htmlName,
             'value' => null,
             'message' => '',
             'sqlAdd' => $this->medium->getSqlAdd($newValue),
         ];
-
-        return $item;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setModel($model, $fieldName, $groupName = 'general')
+    public function setModel($model, $fieldName, $groupName = 'general'): void
     {
         parent::setModel($model, $fieldName, $groupName);
 

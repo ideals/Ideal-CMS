@@ -17,7 +17,7 @@ namespace Ideal\Core;
  * @property string action Зарезервировано для названия вызываемого экшена
  * @property string mode В случае ajax-запроса содержит 'ajax'
  * @property string controller Принудительное указание вызываемого контроллера
- * @mixin \Ideal\Core\Config
+ * @mixin Config
  */
 class Request
 {
@@ -29,7 +29,7 @@ class Request
      * @param string $name Название параметра
      * @return string Значение этого параметра в $_REQUEST
      */
-    public function __get($name)
+    public function __get(string $name)
     {
         // Перенос в $_REQUEST значений из formValues (используется исключительно для работы в админке)
         if (isset($_REQUEST['formValues'])) {
@@ -38,11 +38,7 @@ class Request
             unset($_REQUEST['formValues']);
         }
 
-        if (isset($_REQUEST[$name])) {
-            return $_REQUEST[$name];
-        }
-
-        return '';
+        return $_REQUEST[$name] ?? '';
     }
 
     /**
@@ -51,7 +47,7 @@ class Request
      * @param string $name Название параметра, который нужно задать
      * @param mixed $value Значение параметра
      */
-    public function __set($name, $value)
+    public function __set(string $name, $value)
     {
         $_REQUEST[$name] = $value;
     }
@@ -62,7 +58,7 @@ class Request
      * @param string $name название переменной
      * @return bool
      */
-    public function __isset($name)
+    public function __isset(string $name)
     {
         return isset($_REQUEST[$name]);
     }
@@ -85,7 +81,7 @@ class Request
      * @param string $url Полный адрес вызываемой страницы
      * @return string Query string без параметра $without
      */
-    public function getQueryWithout($without, $url = '')
+    public function getQueryWithout(string $without, $url = '')
     {
         $url = empty($url) ? $_SERVER['REQUEST_URI'] : $url;
         // Убираем переменную $without стоящую внутри GET-строки

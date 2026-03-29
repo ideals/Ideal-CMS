@@ -23,7 +23,10 @@ class Pagination
         return $this->next;
     }
 
-    public function getPages($itemsCount, $itemsOnPage, $page, $urlString, $urlParam)
+    /**
+     * @return array{url: mixed, num: ('…' | float | int<1, max>), current: (0 | 1)}[]
+     */
+    public function getPages($itemsCount, $itemsOnPage, $page, string $urlString, $urlParam): array
     {
         $page = ($page == 0) ? 1 : $page;
         $pagesCount = ceil($itemsCount / $itemsOnPage); // кол-во страниц
@@ -35,14 +38,10 @@ class Pagination
         // Номер первой отображаемой страницы
         $startPage = floor($actualBlock * $this->visiblePages) + 1;
         // Номер последней отображаемой страницы
-        $endPage = ($actualBlock == $endBlock) ? $pagesCount : $startPage + $this->visiblePages - 1;
+        $endPage = ($actualBlock === $endBlock) ? $pagesCount : $startPage + $this->visiblePages - 1;
 
         // Если переменные в GET-запросе уже есть добавляем с амперсандом, иначе с вопросом
-        if (strpos($urlString, '?') !== false) {
-            $urlParam = '&' . $urlParam . '=';
-        } else {
-            $urlParam = '?' . $urlParam . '=';
-        }
+        $urlParam = strpos($urlString, '?') !== false ? '&' . $urlParam . '=' : '?' . $urlParam . '=';
 
         $pages = [];
 
@@ -93,7 +92,7 @@ class Pagination
         return $this->prev;
     }
 
-    public function setVisiblePages($countPages)
+    public function setVisiblePages($countPages): void
     {
         $this->visiblePages = $countPages;
     }

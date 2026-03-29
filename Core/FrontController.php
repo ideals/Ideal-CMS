@@ -10,7 +10,9 @@
 
 namespace Ideal\Core;
 
-use Ideal\Structure\User;
+use Ideal\Core\Api\Router;
+use Ideal\Structure\User\Model;
+use Ideal\Mailer;
 
 /**
  * Front Controller объединяет всю обработку запросов, пропуская запросы через единственный объект-обработчик.
@@ -28,11 +30,11 @@ class FrontController
      *
      * @param string $mode Режим работы admin или site
      */
-    public function run($mode)
+    public function run($mode): void
     {
         // Запускаем роутер, для получения навигационной цепочки
         if ($mode == 'api') {
-            $router = new Api\Router();
+            $router = new Router();
         } elseif ($mode == 'admin') {
             $router = new Admin\Router();
         } else {
@@ -63,16 +65,13 @@ class FrontController
 
             // Если запрошена страница из пользовательской части, включён кэш и действие совершил не администратор,
             // то сохранить её
-            $user = new User\Model();
+            $user = new Model();
             if (!$user->checkLogin() && in_array($mode, ['api', 'admin'])
                 && isset($configCache['fileCache']) && $configCache['fileCache']) {
                 $model = $router->getModel();
                 $pageData = $model->getPageData();
-                if (isset($pageData['date_mod'])) {
-                    $modifyTime = $pageData['date_mod'];
-                } else {
-                    $modifyTime = time();
-                }
+                $modifyTime = $pageData['date_mod'] ?? time();
+
                 FileCache::saveCache($content, $_SERVER['REQUEST_URI'], $modifyTime);
             }
         }
@@ -85,17 +84,14 @@ class FrontController
     /**
      * Получение реферера пользователя и установка реферера в куки
      */
-    public function referer()
+    public function referer(): void
     {
         // Проверяем есть ли в куках информация о реферере
         if (!isset($_COOKIE['referer'])) {
             // Если информации о реферере нет в куках то добавляем её туда
-            if (!empty($_SERVER['HTTP_REFERER'])) {
-                $referer = $_SERVER['HTTP_REFERER'];
-            } else {
-                $referer = 'null';
-            }
-            setcookie("referer", $referer, time() + 315360000);
+            $referer = empty($_SERVER['HTTP_REFERER']) ? 'null' : $_SERVER['HTTP_REFERER'];
+
+            setcookie("referer", $referer, ['expires' => time() + 315360000]);
         }
     }
 
@@ -115,8 +111,9 @@ class FrontController
                 // Ключ указан, значит выводим и ключ и значение
                 header($k . ': ' . $v . "\r\n");
             }
+
             // Проверяем, не переопределён ли Content-Type
-            if (strtolower($k) == 'content-type') {
+            if (strtolower($k) === 'content-type') {
                 $isContentType = true;
             }
         }
@@ -137,24 +134,27 @@ class FrontController
         if (isset($config->cms['error404Notice'])) {
             $sent404 = $config->cms['error404Notice'];
         }
+
         if ($sent404) {
             if (empty($_SERVER['HTTP_REFERER'])) {
                 $from = 'Прямой переход.';
             } else {
                 $from = 'Переход со страницы ' . $_SERVER['HTTP_REFERER'];
             }
+
             $protocol = $config->getProtocol();
             $message = "Здравствуйте!\n\nНа странице {$protocol}{$config->domain}{$_SERVER['REQUEST_URI']} "
                 . "произошли следующие ошибки.\n\n"
                 . "\n\nСтраница не найдена (404).\n\n"
                 . "\n\n{$from}\n\n";
-            $user = new User\Model();
+            $user = new Model();
             if ($user->checkLogin()) {
                 $message .= "\n\nДействие совершил администратор.\n\n";
             }
+
             $message .= '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
             $subject = "Страница не найдена (404) на сайте " . $config->domain;
-            $mail = new \Ideal\Mailer();
+            $mail = new Mailer();
             $mail->setSubj($subject);
             $mail->setPlainBody($message);
             $mail->sent($config->robotEmail, $config->cms['adminEmail']);

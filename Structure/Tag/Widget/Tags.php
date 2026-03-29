@@ -9,10 +9,11 @@
 
 namespace Ideal\Structure\Tag\Widget;
 
+use Ideal\Core\Widget;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 
-class Tags extends \Ideal\Core\Widget
+class Tags extends Widget
 {
     public static function getTags($id)
     {
@@ -23,11 +24,13 @@ class Tags extends \Ideal\Core\Widget
         $sql = "SELECT tags.* FROM {$table} AS tags
                   INNER JOIN {$tableList} AS tag ON (tag.tag_id = tags.ID)
                   WHERE tag.part_id={$id}";
-        $result = $db->select($sql);
-        return $result;
+        return $db->select($sql);
     }
 
-    public function getData()
+    /**
+     * @return array{}
+     */
+    public function getData(): array
     {
         return [];
     }

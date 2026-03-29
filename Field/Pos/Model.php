@@ -30,7 +30,7 @@ class Model
         $table = $model->getTableName();
         $prevStructure = $model->getPrevStructure();
 
-        $_sql = "SELECT pos FROM {$table} WHERE prev_structure='{$prevStructure}' ORDER BY pos DESC LIMIT 1";
+        $_sql = sprintf("SELECT pos FROM %s WHERE prev_structure='%s' ORDER BY pos DESC LIMIT 1", $table, $prevStructure);
         $posArr = $db->select($_sql);
 
         $pos = 0;
@@ -51,7 +51,7 @@ class Model
      * @param string $prevStructure Путь к структуре в которой меняются позиции
      * @return string Sql-запрос изменения позиции
      */
-    public function movePos($oldPos, $newPos, $prevStructure)
+    public function movePos($oldPos, $newPos, $prevStructure): string
     {
         $update = [$oldPos => $newPos];
 
@@ -69,14 +69,15 @@ class Model
         }
 
         $_sql = 'UPDATE {{ table }} SET pos = CASE';
-        $where = $or = '';
+        $where = '';
+        $or = '';
         foreach ($update as $old => $new) {
             $_sql .= "\nWHEN pos = {$old} THEN {$new}";
-            $where .= $or . " pos = {$old}";
+            $where .= $or . (' pos = ' . $old);
             $or = ' OR';
         }
-        $_sql .= "\n ELSE pos END WHERE prev_structure='{$prevStructure}' AND ({$where})";
+
         // На основании массива $update составляем список запросов для обновления cid'ов
-        return $_sql;
+        return $_sql . "\n ELSE pos END WHERE prev_structure='{$prevStructure}' AND ({$where})";
     }
 }

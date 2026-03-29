@@ -30,7 +30,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         return
             '<textarea class="form-control" name="' . $this->htmlName

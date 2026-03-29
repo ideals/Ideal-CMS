@@ -15,7 +15,7 @@ class Resize
     protected $height;
 
     /** @var array $color Цвет фона изображения */
-    protected $color = null;
+    protected $color;
 
     /** @var string $sizeDelimiter Разделитель значений размеров изображения */
     protected $sizeDelimiter = 'x';
@@ -32,7 +32,7 @@ class Resize
     /**
      * @param string $image Строка содержащая параметры требуемого изображения, а также путь к исходному изображению
      */
-    public function run($image)
+    public function run($image): void
     {
         $this->setImage($image);
         $rImage = $this->resizeImage();
@@ -50,7 +50,7 @@ class Resize
     {
         $matches = [];
         preg_match('/http(s?)\/(.*)/i', $image, $matches);
-        if (!empty($matches[0])) {
+        if (isset($matches[0]) && ($matches[0] !== '' && $matches[0] !== '0')) {
             // Если указана ссылка на картинку на другом ресурсе
             $this->isLocal = false;
             $this->fullNameOriginal = preg_replace('/\//', '://', $matches[0], 1);
@@ -93,7 +93,6 @@ class Resize
             return;
         }
 
-        /** @var string $imgPath Путь к исходнму изображению */
         $this->fullNameOriginal = $_SERVER['DOCUMENT_ROOT'] . '/' . implode('/', $imgInfo);
         // Проверяем, существует ли исходный файл
         if (!file_exists($this->fullNameOriginal)) {
@@ -127,10 +126,7 @@ class Resize
 
         // Проверяем есть ли в списке разрешённых размеров изображений запрошенное
         $allowResize = explode("\n", $config['allowResize']);
-        if (!in_array($this->width . $this->sizeDelimiter . $this->height, $allowResize)) {
-            return false;
-        }
-        return true;
+        return in_array($this->width . $this->sizeDelimiter . $this->height, $allowResize);
     }
 
     /**
@@ -164,13 +160,14 @@ class Resize
         if ($this->width == 0) {
             $this->width = round(($this->height * imagesx($src)) / imagesy($src));
         }
+
         if ($this->height == 0) {
             $this->height = round(($this->width * imagesy($src)) / imagesx($src));
         }
 
         // Проверка цвета фона
         $isSetColor = false;
-        if (isset($this->color) && count($this->color) === 3) {
+        if ($this->color !== null && count($this->color) === 3) {
             $isSetColor = true;
         }
 
@@ -189,6 +186,7 @@ class Resize
                 if ($destWidth > $this->width) {
                     $destWidth = $this->width;
                 }
+
                 imageCopyResampled(
                     $dest2,
                     $src,
@@ -221,6 +219,7 @@ class Resize
                 if ($destHeight > $this->height) {
                     $destHeight = $this->height;
                 }
+
                 imageCopyResampled(
                     $dest2,
                     $src,
@@ -257,6 +256,7 @@ class Resize
                 imagegif($dest2);
                 break;
         }
+
         $image = ob_get_contents();
         ob_end_clean();
 
@@ -284,6 +284,7 @@ class Resize
             imagealphablending($img, false);
             imagesavealpha($img, true);
         }
+
         return $img;
     }
 
@@ -291,7 +292,7 @@ class Resize
      * @param mixed $rImage Изображение в бинарном виде
      * @param string $originalImagePath Путь к оригиналу изображения
      */
-    protected function saveImage($rImage, $originalImagePath)
+    protected function saveImage($rImage, string $originalImagePath)
     {
         /** @var string $pathResizedImg Путь к новому изображению */
         $resizedImgFile = $_SERVER['DOCUMENT_ROOT'] . '/images/resized/' . $originalImagePath;

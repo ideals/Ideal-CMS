@@ -48,13 +48,14 @@ class Controller
      *
      * @param string $tplName Название файла шаблона (с путём к нему)
      */
-    public function templateInit($tplName = '')
+    public function templateInit($tplName = ''): void
     {
         // Проверяем, присутствует ли указанный файл шаблона на диске
         if (!stream_resolve_include_path($tplName)) {
             echo 'Нет файла шаблона ' . $tplName;
             exit;
         }
+
         $tplRoot = dirname(stream_resolve_include_path($tplName));
         $tplName = basename($tplName);
 
@@ -81,7 +82,7 @@ class Controller
             $actionName = empty($actionName) ? 'index' : $actionName;
         }
 
-        $actionName = $actionName . 'Action';
+        $actionName .= 'Action';
 
         if (!method_exists($this, $actionName)) {
             // Вызываемый action отсутствует, запускаем 404 ошибку
@@ -109,11 +110,12 @@ class Controller
      *
      * @return array Массив где ключи - названия заголовков, а значения - содержание заголовков
      */
-    public function getHttpHeaders()
+    public function getHttpHeaders(): array
     {
         if ($this->jsonResponse) {
             return ['content-type' => 'application/json'];
         }
+
         return [];
 
     }
@@ -121,10 +123,8 @@ class Controller
     /**
      * Обязательный метод проверки авторизации API-запроса
      * Неавторизированные запросы всегда отдают 404-ую страницу
-     *
-     * @return bool
      */
-    public function authorize(Router $router)
+    public function authorize(Router $router): bool
     {
         return false;
     }

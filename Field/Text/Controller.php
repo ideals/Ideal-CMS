@@ -30,7 +30,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = htmlspecialchars($this->getValue());
         return

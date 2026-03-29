@@ -22,11 +22,12 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
     public function getByParentUrl($parentUrl)
     {
         $db = Db::getInstance();
-        $_sql = "SELECT * FROM {$this->_table} WHERE parent_url='{$parentUrl}'";
+        $_sql = sprintf("SELECT * FROM %s WHERE parent_url='%s'", $this->_table, $parentUrl);
         $arr = $db->select($_sql);
         if (!isset($arr[0]['ID'])) {
             $arr[0] = [];
         }
+
         return $arr[0];
     }
 }

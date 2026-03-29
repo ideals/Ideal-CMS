@@ -10,6 +10,7 @@
 
 namespace Ideal\Field;
 
+use Ideal\Core\Admin\Model;
 use Ideal\Core\Request;
 
 /**
@@ -39,7 +40,7 @@ abstract class AbstractController
     /** @var  string Название вкладки, в которой находится поле в окне редактирования */
     protected $groupName;
 
-    /** @var  \Ideal\Core\Admin\Model Модель данных, в которой находится редактируемое поле */
+    /** @var Model Модель данных, в которой находится редактируемое поле */
     protected $model;
 
     /** @var  string Название поля */
@@ -67,9 +68,10 @@ abstract class AbstractController
     {
         // PHP53 Late static binding
         if (empty(static::$instance)) {
-            $className = get_called_class();
+            $className = static::class;
             static::$instance = new $className();
         }
+
         return static::$instance;
     }
 
@@ -93,17 +95,18 @@ abstract class AbstractController
             // Если поле ещё не заполнено, берём его значение по умолчанию из описания полей структуры
             $value = $this->field['default'];
         }
+
         return $value;
     }
 
     /**
      * Форматирование значения поля для отображения значения в списке элементов
      *
-     * @param array $values Массив значений объекта
+     * @param array<string, mixed> $values Массив значений объекта
      * @param string $fieldName Название поля, из которого надо взять значение
      * @return string Строка со значением для отображения в списке
      */
-    public function getValueForList($values, $fieldName)
+    public function getValueForList(array $values, string $fieldName)
     {
         return $values[$fieldName];
     }
@@ -130,6 +133,7 @@ abstract class AbstractController
             if (!empty($this->newValue)) {
                 $item['message'] = 'При создании элемента поле ID не может быть заполнено';
             }
+
             return $item;
         }
 
@@ -171,11 +175,11 @@ abstract class AbstractController
      * Полю необходимо получать сведения о состоянии объекта и о других полях, т.к.
      * его значения и поведение может зависеть от значений других полей
      *
-     * @param \Ideal\Core\Admin\Model $model Модель редактируемого объекта
+     * @param Model $model Модель редактируемого объекта
      * @param string $fieldName Редактируемое поле
      * @param string $groupName Вкладка, к которой принадлежит редактируемое поле
      */
-    public function setModel($model, $fieldName, $groupName = 'general')
+    public function setModel($model, $fieldName, $groupName = 'general'): void
     {
         $this->name = $fieldName;
         $this->model = $model;
@@ -193,7 +197,8 @@ abstract class AbstractController
     {
         $label = $this->getLabelText();
         $input = $this->getInputText();
-        $html = <<<HTML
+
+        return <<<HTML
                     <div id="{$this->htmlName}-control-group" class="form-group">
                         <label class="{$this->labelClass} control-label" for="{$this->htmlName}">{$label}</label>
                         <div class="{$this->inputClass} {$this->htmlName}-controls">
@@ -202,8 +207,6 @@ abstract class AbstractController
                         </div>
                     </div>
             HTML;
-
-        return $html;
     }
 
     /**

@@ -1,5 +1,7 @@
 <?php
 
+use Ideal\Medium\StructureList\Model;
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -7,7 +9,6 @@
  * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-
 // Новости
 return [
     'params' => [
@@ -33,7 +34,7 @@ return [
             'label' => 'Тип раздела',
             'sql' => 'varchar(30) not null',
             'type' => 'Ideal_Select',
-            'medium' => '\\Ideal\\Medium\\StructureList\\Model',
+            'medium' => Model::class,
         ],
         'pos' => [
             'label' => 'Сортировка',

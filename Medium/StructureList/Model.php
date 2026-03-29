@@ -20,8 +20,9 @@ class Model extends AbstractModel
 {
     /**
      * {@inheritdoc}
+     * @return mixed[]
      */
-    public function getList()
+    public function getList(): array
     {
         // Получаем список структур, которые можно создавать в этой структуре
         $modelStructures = $this->obj->params['structures'];
@@ -35,6 +36,7 @@ class Model extends AbstractModel
                 $list[$structure['structure']] = $structure['name'];
             }
         }
+
         return $list;
     }
 }

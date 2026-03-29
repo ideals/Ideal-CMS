@@ -35,7 +35,7 @@ class Controller extends Date\Controller
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $this->getNow = true;
         $html = parent::getInputText();
@@ -52,6 +52,7 @@ class Controller extends Date\Controller
         if ($this->getNow && $value == '') {
             $value = time();
         }
+
         return $value;
     }
 }

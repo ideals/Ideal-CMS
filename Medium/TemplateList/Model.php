@@ -21,8 +21,9 @@ class Model extends AbstractModel
 {
     /**
      * {@inheritdoc}
+     * @return non-empty-array<string, \non-falsy-string>[]
      */
-    public function getList()
+    public function getList(): array
     {
         $config = Config::getInstance();
 
@@ -67,6 +68,7 @@ class Model extends AbstractModel
                 $folderPartNames = ['Mods', 'Mods.c'];
                 $moduleName .= '/';
             }
+
             $structureName = $parts[3];
             foreach ($folderPartNames as $folderPartName) {
                 $twigTplRootScanFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder

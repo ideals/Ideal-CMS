@@ -5,10 +5,8 @@ $configFile = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/crontab';
 $data = file_exists($configFile) ? file_get_contents($configFile) : '';
 
 $test = '';
-if (!file_exists($configFile)) {
-    if (!file_put_contents($configFile, '')) {
-        $test = 'Не могу создать файл для записи заданий: ' . $configFile;
-    }
+if (!file_exists($configFile) && !file_put_contents($configFile, '')) {
+    $test = 'Не могу создать файл для записи заданий: ' . $configFile;
 }
 
 if (!is_writable($configFile)) {

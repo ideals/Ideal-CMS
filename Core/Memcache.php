@@ -24,9 +24,10 @@ namespace Ideal\Core;
 class Memcache
 {
     /** @var array Массив для хранения подключений к разным серверам кэширования */
-    private static $connectedServers;
+    private static ?array $connectedServers = null;
+
     /** @var MemcacheWrapper|null Экземпляр класса MemcacheWrapper или null если не доступен класс Memcache */
-    private $memcacheWrapper = null;
+    private ?MemcacheWrapper $memcacheWrapper = null;
 
     /**
      * При создании экземпляра данного класса экземпляр класса MemcacheWrapper помещается в свойство $memcacheWrapper, если класс \Memcache доступен.
@@ -46,11 +47,12 @@ class Memcache
      * @param array $arguments Массив аргументов, передаваемый методу
      * @return bool|mixed Результат выполнения метода из класса \Memcache или false в случае если такой метод не реализован или класс \Memcache не доступен.
      */
-    public function __call($name, $arguments)
+    public function __call(string $name, array $arguments)
     {
-        if ($this->memcacheWrapper !== null && method_exists($this->memcacheWrapper, $name)) {
+        if ($this->memcacheWrapper instanceof MemcacheWrapper && method_exists($this->memcacheWrapper, $name)) {
             return call_user_func_array([$this->memcacheWrapper, $name], $arguments);
         }
+
         return false;
 
     }
@@ -77,7 +79,7 @@ class Memcache
             ];
         }
 
-        $serverId = "memcache://{$params['host']}/{$params['port']}";
+        $serverId = sprintf('memcache://%s/%s', $params['host'], $params['port']);
 
         if (!self::$connectedServers[$serverId]) {
             $server = new Memcache();
@@ -99,9 +101,10 @@ class Memcache
      */
     public function connect($host, $port)
     {
-        if ($this->memcacheWrapper !== null) {
+        if ($this->memcacheWrapper instanceof MemcacheWrapper) {
             return $this->memcacheWrapper->connect($host, $port);
         }
+
         return false;
 
     }
@@ -117,9 +120,10 @@ class Memcache
      */
     public function addWithTags($key, $value, $ttl = false, $tagsKeys = 'default')
     {
-        if ($this->memcacheWrapper !== null) {
+        if ($this->memcacheWrapper instanceof MemcacheWrapper) {
             return $this->memcacheWrapper->addWithTags($key, $value, $ttl, $tagsKeys);
         }
+
         return false;
 
     }
@@ -132,9 +136,10 @@ class Memcache
      */
     public function deleteByTag($tag)
     {
-        if ($this->memcacheWrapper !== null) {
+        if ($this->memcacheWrapper instanceof MemcacheWrapper) {
             return $this->memcacheWrapper->deleteByTag($tag);
         }
+
         return false;
 
     }
@@ -150,9 +155,10 @@ class Memcache
      */
     public function safeIncrement($key, $value = 1, $ttl = false)
     {
-        if ($this->memcacheWrapper !== null) {
+        if ($this->memcacheWrapper instanceof MemcacheWrapper) {
             return $this->memcacheWrapper->safeIncrement($key, $value, $ttl);
         }
+
         return false;
 
     }
@@ -165,9 +171,10 @@ class Memcache
      */
     public function getWithTags($key)
     {
-        if ($this->memcacheWrapper !== null) {
+        if ($this->memcacheWrapper instanceof MemcacheWrapper) {
             return $this->memcacheWrapper->getWithTags($key);
         }
+
         return false;
 
     }
@@ -183,9 +190,10 @@ class Memcache
      */
     public function safeDecrement($key, $value = 1, $ttl = false)
     {
-        if ($this->memcacheWrapper !== null) {
+        if ($this->memcacheWrapper instanceof MemcacheWrapper) {
             return $this->memcacheWrapper->safeDecrement($key, $value, $ttl);
         }
+
         return false;
 
     }
@@ -201,9 +209,10 @@ class Memcache
      */
     public function setWithTags($key, $value, $ttl = false, $tagsKeys = 'default')
     {
-        if ($this->memcacheWrapper !== null) {
+        if ($this->memcacheWrapper instanceof MemcacheWrapper) {
             return $this->memcacheWrapper->setWithTags($key, $value, $ttl, $tagsKeys);
         }
+
         return false;
 
     }

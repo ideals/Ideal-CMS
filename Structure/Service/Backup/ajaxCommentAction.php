@@ -29,6 +29,7 @@ switch ($act) {
         if (file_exists($cmtName)) {
             $cmtText = file_get_contents($cmtName);
         }
+
         echo $cmtText;
         break;
         // Сохраняем комментарий в файле

@@ -10,9 +10,10 @@
 
 namespace Ideal\Structure\Part\Widget;
 
+use Ideal\Core\Widget;
+use Ideal\Field\Url\Model;
 use Ideal\Core\Db;
 use Ideal\Core\Config;
-use Ideal\Field;
 
 /**
  * Виджет для получение иерархии страниц заданной вложенности
@@ -23,7 +24,7 @@ use Ideal\Field;
  *     $hierarchy->setLvl(4);
  *     $vars['hierarchy'] = $hierarchy->getData();
  */
-class MenuList extends \Ideal\Core\Widget
+class MenuList extends Widget
 {
     /** @var int Уровень вложенности, до которого выбираются страницы */
     protected $lvl = 4;
@@ -36,19 +37,19 @@ class MenuList extends \Ideal\Core\Widget
      *
      * @return array Список страниц
      */
-    public function getData()
+    public function getData(): array
     {
         $menuList = $this->getList();
 
         $path = $this->model->getPath();
         $object = array_pop($path);
-        $digits = (isset($this->model->params['digits'])) ? $this->model->params['digits'] : 3;
+        $digits = $this->model->params['digits'] ?? 3;
         $smallCidActive = $object['cid'] ?? '';
 
         $lvl = 1;
         $config = Config::getInstance();
         $menuUrl = ['0' => ['url' => $config->structures[0]['url']]];
-        $url = new Field\Url\Model();
+        $url = new Model();
 
         $menu = [];
         $lvlExit = false;
@@ -59,11 +60,13 @@ class MenuList extends \Ideal\Core\Widget
                 unset($menuList[$k]);
                 continue;
             }
+
             if ($lvlExit !== false && $v['lvl'] > $lvlExit) {
                 // Если это элемент, вложенный в скрытый, то не включаем его в список вывода
                 unset($menuList[$k]);
                 continue;
             }
+
             $lvlExit = false;
 
             $menu[$k] = $v;
@@ -71,33 +74,37 @@ class MenuList extends \Ideal\Core\Widget
                 if ($v['url'] != '/') {
                     $menuUrl[] = $menuList[$k - 1];
                 }
+
                 $url->setParentUrl($menuUrl);
             } elseif ($v['lvl'] < $lvl) {
                 $menuUrl = array_slice($menuUrl, 0, ($v['lvl'] - $lvl));
                 $url->setParentUrl($menuUrl);
             }
+
             $lvl = $v['lvl'];
 
             // Определяем активен ли данный пункт меню
             $menu[$k]['isActivePage'] = 0;
             $currentCid = substr($v['cid'], 0, $v['lvl'] * $digits);
             if (isset($object['lvl']) && $object['lvl'] >= $lvl
-                && substr($smallCidActive, 0, strlen($currentCid)) == $currentCid
+                && substr($smallCidActive, 0, strlen($currentCid)) === $currentCid
             ) {
                 $menu[$k]['isActivePage'] = 1;
             }
+
             if (isset($v['is_skip']) && $v['is_skip'] == 1 && $v['url'] == '---') {
                 // Для этого элемента ссылку делать не надо
                 $menu[$k]['link'] = '';
             }
+
             if (isset($v['url_full']) && $v['url_full'] != '') {
                 $menu[$k]['link'] = $v['url_full'];
             } else {
                 $menu[$k]['link'] = $this->prefix . $url->getUrl($v) . $this->query;
             }
         }
-        $pageList = $this->getSubPages($menu);
-        return $pageList;
+
+        return $this->getSubPages($menu);
     }
 
     /**
@@ -133,9 +140,8 @@ class MenuList extends \Ideal\Core\Widget
                  FROM {$table}
                  WHERE is_active=1 AND lvl<{$this->lvl}
                  ORDER BY cid";
-        $menuList = $db->select($_sql);
 
-        return $menuList;
+        return $db->select($_sql);
     }
 
     /**
@@ -143,7 +149,7 @@ class MenuList extends \Ideal\Core\Widget
      *
      * @param int $lvl Уровень вложенности, до которого выбираются страницы
      */
-    public function setLvl($lvl)
+    public function setLvl($lvl): void
     {
         $this->lvl = $lvl;
     }
@@ -153,7 +159,7 @@ class MenuList extends \Ideal\Core\Widget
      *
      * @param array $menuList Массив с плоским списком страниц
      */
-    public function setMenuList($menuList)
+    public function setMenuList($menuList): void
     {
         $this->menuList = $menuList;
     }
@@ -164,7 +170,7 @@ class MenuList extends \Ideal\Core\Widget
      * @param array $menu Массив, в котором строится иерархия
      * @return array Массив с построенной иерархией дочерних элементов
      */
-    protected function getSubPages(&$menu)
+    protected function getSubPages(&$menu): array
     {
         // Записываем в массив первый элемент
         $pageList = [
@@ -173,19 +179,19 @@ class MenuList extends \Ideal\Core\Widget
 
         $prev = $pageList[0]['lvl'];
 
-        while (count($menu) != 0) {
+        while ($menu !== []) {
             $m = reset($menu);
             if ($m['lvl'] == $prev) {
                 $pageList[] = array_shift($menu);
                 $prev = $m['lvl'];
             } elseif ($m['lvl'] > $prev) {
-                end($pageList);
-                $key = key($pageList);
+                $key = array_key_last($pageList);
                 $pageList[$key]['subPageList'] = $this->getSubPages($menu);
             } else {
                 return $pageList;
             }
         }
+
         return $pageList;
 
     }

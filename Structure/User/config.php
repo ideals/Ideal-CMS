@@ -1,5 +1,7 @@
 <?php
 
+use Ideal\Medium\UserGroupList\Model;
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -7,7 +9,6 @@
  * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-
 // Таблица пользователей
 return [
     'params' => [
@@ -43,7 +44,7 @@ return [
             'label' => 'Группа пользователя',
             'sql' => 'int(8)',
             'type' => 'Ideal_Select',
-            'medium' => '\\Ideal\\Medium\\UserGroupList\\Model',
+            'medium' => Model::class,
         ],
         'reg_date' => [
             'label' => 'Дата регистрации',

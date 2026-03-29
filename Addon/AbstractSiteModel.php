@@ -10,6 +10,7 @@
 
 namespace Ideal\Addon;
 
+use Ideal\Core\Site\Model;
 use Ideal\Core\Db;
 
 /**
@@ -17,20 +18,20 @@ use Ideal\Core\Db;
  *
  * Аддоны обеспечивают прикрепление к структуре дополнительного содержимого различных типов.
  */
-class AbstractSiteModel extends \Ideal\Core\Site\Model
+class AbstractSiteModel extends Model
 {
     /**
      * {@inheritdoc}
      */
     public function detectPageByUrl($path, $url) {}
 
-    public function setPageDataByPrevStructure($prevStructure)
+    public function setPageDataByPrevStructure($prevStructure): void
     {
         $db = Db::getInstance();
 
         // Получаем идентификатор таба из группы
         [, $tabID] = explode('-', $this->fieldsGroup, 2);
-        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps AND tab_ID=:tid";
+        $_sql = sprintf('SELECT * FROM %s WHERE prev_structure=:ps AND tab_ID=:tid', $this->_table);
         $pageData = $db->select($_sql, ['ps' => $prevStructure, 'tid' => $tabID]);
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось

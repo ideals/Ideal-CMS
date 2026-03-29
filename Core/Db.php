@@ -127,7 +127,7 @@ class Db extends \mysqli
         if ($this->logFile) {
             file_put_contents(
                 $this->logFile,
-                date('Y-m-d H:i:s ') . (string) session_id() . ' ' . mb_ereg_replace('\s+', ' ', $query) . "\n",
+                date('Y-m-d H:i:s ') . session_id() . ' ' . mb_ereg_replace('\s+', ' ', $query) . "\n",
                 FILE_APPEND,
             );
         }
@@ -152,7 +152,7 @@ class Db extends \mysqli
      *                              вложенные подзапросы
      * @return $this
      */
-    public function cacheMe($involvedTables = null)
+    public function cacheMe($involvedTables = null): self
     {
         if ($involvedTables) {
             $this->involvedTables = $involvedTables;
@@ -178,10 +178,11 @@ class Db extends \mysqli
                 // Пропускаем поля, которые не нужно создавать в БД
                 continue;
             }
-            $sqlFields[] = "`{$key}` {$value['sql']} COMMENT '{$value['label']}'";
+
+            $sqlFields[] = sprintf("`%s` %s COMMENT '%s'", $key, $value['sql'], $value['label']);
         }
 
-        $sql = "CREATE TABLE `{$table}` (" . implode(',', $sqlFields) . ') DEFAULT CHARSET=utf8';
+        $sql = sprintf('CREATE TABLE `%s` (', $table) . implode(',', $sqlFields) . ') DEFAULT CHARSET=utf8';
 
         return $this->query($sql);
     }
@@ -196,7 +197,7 @@ class Db extends \mysqli
      * @param string $table Таблица, в которой будут удаляться строки
      * @return $this
      */
-    public function delete($table)
+    public function delete($table): self
     {
         // Очищаем where, если он был задан ранее
         // Записываем название таблицы для DELETE
@@ -220,7 +221,7 @@ class Db extends \mysqli
             return false;
         }
 
-        $tag = $this->updateTableName ? $this->updateTableName : $this->deleteTableName;
+        $tag = $this->updateTableName ?: $this->deleteTableName;
         $sql = $this->updateTableName ? $this->getUpdateQuery() : $this->getDeleteQuery();
 
         if ($exec) {
@@ -233,6 +234,7 @@ class Db extends \mysqli
         } else {
             return $sql;
         }
+
         return true;
     }
 
@@ -241,9 +243,9 @@ class Db extends \mysqli
      *
      * @param string $table Название таблицы, для запросов из которой нужно очистить кэш
      */
-    public function clearCache($table)
+    public function clearCache($table): void
     {
-        if (isset($this->cache)) {
+        if ($this->cache !== null) {
             $this->cache->deleteByTag($table);
         }
     }
@@ -313,7 +315,8 @@ class Db extends \mysqli
     public function insertMultiple($table, $params)
     {
         $this->clearCache($table);
-        $values = $columns = [];
+        $values = [];
+        $columns = [];
 
         $cols = array_keys(reset($params));
         // Получаем название полей
@@ -321,16 +324,15 @@ class Db extends \mysqli
             $columns[] = "`" . parent::escape_string($column) . "`";
         }
 
-        foreach ($params as $column => $item) {
-            foreach ($item as $key => $value) {
+        foreach ($params as $item) {
+            foreach ($item as $value) {
                 // Добавляемые значения для 1 строки
                 $vals[] = "'" . parent::escape_string($value) . "'";
             }
-            if (!empty($vals)) {
-                // Массив всех добавляемых строк
-                $values[] = '(' . implode(', ', $vals) . ')';
-                unset($vals);
-            }
+
+            // Массив всех добавляемых строк
+            $values[] = '(' . implode(', ', $vals) . ')';
+            unset($vals);
         }
 
         $columns = implode(', ', $columns);
@@ -359,7 +361,7 @@ class Db extends \mysqli
     {
         $sql = $this->prepareSql($sql, $params, $fields);
 
-        if (!$this->cacheEnabled || !isset($this->cache)) {
+        if (!$this->cacheEnabled || $this->cache === null) {
             // Если кэширование не включено, то выполняем запрос и возвращаем результат в виде ассоциативного массива
             $result = $this->query($sql);
             if ($result === false) {
@@ -410,7 +412,7 @@ class Db extends \mysqli
      * @param array $values Названия и значения полей для вставки строки в таблицу
      * @return $this Db
      */
-    public function set(array $values)
+    public function set(array $values): self
     {
         $this->updateValues = $values;
         return $this;
@@ -426,7 +428,7 @@ class Db extends \mysqli
      * @param string $table Таблица, в которой будут обновляться строки
      * @return $this
      */
-    public function update($table)
+    public function update($table): self
     {
         // Очищаем set и where, если они были заданы ранее
         // Записываем название таблицы для UPDATE
@@ -448,7 +450,7 @@ class Db extends \mysqli
      * @param array $params Параметры, используемые в строке where-условия
      * @return $this
      */
-    public function where($sql, $params = '')
+    public function where($sql, $params = ''): self
     {
         $this->whereQuery = $sql;
         $this->whereParams = $params;
@@ -461,7 +463,7 @@ class Db extends \mysqli
      *
      * @param bool $bool
      */
-    public function setLogError($bool)
+    public function setLogError($bool): void
     {
         $this->logError = $bool;
     }
@@ -471,8 +473,11 @@ class Db extends \mysqli
      */
     protected function clearQueryAttributes()
     {
-        $this->updateTableName = $this->deleteTableName = $this->whereParams = '';
-        $this->updateValues = $this->whereParams = [];
+        $this->updateTableName = '';
+        $this->deleteTableName = '';
+        $this->whereParams = '';
+        $this->updateValues = [];
+        $this->whereParams = [];
         $this->involvedTables = null;
     }
 
@@ -481,7 +486,7 @@ class Db extends \mysqli
      *
      * @return string UPDATE запрос
      */
-    protected function getUpdateQuery()
+    protected function getUpdateQuery(): string
     {
         $values = [];
 
@@ -494,7 +499,8 @@ class Db extends \mysqli
             } else {
                 $value = "'" . parent::escape_string($value) . "'";
             }
-            $values[] = "{$column} = {$value}";
+
+            $values[] = sprintf('%s = %s', $column, $value);
         }
 
         $values = implode(', ', $values);
@@ -523,26 +529,19 @@ class Db extends \mysqli
     protected function prepareSql($sql, $params = null, $fields = null)
     {
         if (is_array($params)) {
-            uksort($params, function ($a, $b) {
-                return mb_strlen($a) < mb_strlen($b) ? 1 : -1;
-            });
+            uksort($params, fn($a, $b): int => mb_strlen($a) < mb_strlen($b) ? 1 : -1);
             foreach ($params as $key => $value) {
-                if ($value === null) {
-                    $value = 'NULL';
-                } else {
-                    $value = "'" . parent::escape_string($value) . "'";
-                }
-                $sql = str_replace(":{$key}", $value, $sql);
+                $value = $value === null ? 'NULL' : "'" . parent::escape_string($value) . "'";
+
+                $sql = str_replace(':' . $key, $value, $sql);
             }
         }
 
         if (is_array($fields)) {
-            uksort($fields, function ($a, $b) {
-                return mb_strlen($a) < mb_strlen($b) ? 1 : -1;
-            });
+            uksort($fields, fn($a, $b): int => mb_strlen($a) < mb_strlen($b) ? 1 : -1);
             foreach ($fields as $key => $value) {
                 $field = parent::escape_string($value);
-                $sql = str_replace("&{$key}", "`$field`", $sql);
+                $sql = str_replace('&' . $key, sprintf('`%s`', $field), $sql);
             }
         }
 
@@ -554,7 +553,7 @@ class Db extends \mysqli
      *
      * @return string DELETE запрос
      */
-    protected function getDeleteQuery()
+    protected function getDeleteQuery(): string
     {
         $this->deleteTableName = "`" . parent::escape_string($this->deleteTableName) . "`";
         $where = '';
@@ -572,7 +571,7 @@ class Db extends \mysqli
      * @param $query string SQL-запрос
      * @return string md5 от запроса, переведенного в нижний регистр
      */
-    protected function prepareCacheKey($query)
+    protected function prepareCacheKey(string $query): string
     {
         return md5(strtolower($this->dbName . $query));
     }
@@ -597,6 +596,7 @@ class Db extends \mysqli
 
         $query = strtolower($query);
         $query = preg_replace('/^(.|\n)*from\s+/i', '', $query);
+
         $pattern = '/\s+(join\s+|left\s+|right\s+|where\s+|group\s+by|having\s+|order\s+by|limit\s+)(.|\n)*$/i';
         $query = preg_replace($pattern, '', $query);
 
@@ -611,7 +611,7 @@ class Db extends \mysqli
         }
 
         foreach ($query as $key => $value) {
-            $value = str_replace(['\'', '"', '`'], '', $value);
+            $value = str_replace(["'", '"', '`'], '', $value);
             $asPosition = strpos($value, ' as ');
 
             if ($asPosition !== false) {

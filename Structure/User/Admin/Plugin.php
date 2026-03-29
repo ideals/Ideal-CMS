@@ -10,16 +10,16 @@
 
 namespace Ideal\Structure\User\Admin;
 
+use Ideal\Structure\User\Model;
 use Ideal\Core\Admin\Router;
 use Ideal\Core\Request;
-use Ideal\Structure;
 
 class Plugin
 {
-    public function onPostDispatch(Router $router)
+    public function onPostDispatch(Router $router): void
     {
         // Регистрируем объект пользователя
-        $user = Structure\User\Model::getInstance();
+        $user = Model::getInstance();
 
         // Инициализируем объект запроса
         $request = new Request();
@@ -30,7 +30,7 @@ class Plugin
         if (!$user->checkLogin()) {
             $_SESSION['IsAuthorized'] = false;
             $request->action = 'login';
-            $router->setControllerName('\\Ideal\\Structure\\User\\Admin\\Controller');
+            $router->setControllerName(Controller::class);
         }
     }
 }

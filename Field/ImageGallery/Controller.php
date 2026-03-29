@@ -33,10 +33,10 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function showEdit()
+    public function showEdit(): string
     {
         $value = htmlspecialchars($this->getValue());
-        $html = <<<HTML
+        return <<<HTML
                         <script type="text/javascript" src="Ideal/Field/ImageGallery/script.js"></script>
                         <input class="images-values" type="hidden" id="{$this->htmlName}" name="{$this->htmlName}"
                         value="{$value}">
@@ -52,13 +52,12 @@ class Controller extends AbstractController
                             <div id="{$this->htmlName}-list" class="input-group col-lg-12"></div>
                         </div>
             HTML;
-        return $html;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         return '';
     }

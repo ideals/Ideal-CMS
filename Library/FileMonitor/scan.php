@@ -1,5 +1,7 @@
 <?php
 
+use FileMonitor\FileMonitor;
+
 header('Content-Type: text/html; charset=utf-8');
 
 require __DIR__ . '/FileMonitor.php';
@@ -17,5 +19,5 @@ $settings = [
 ];
 
 // Запускаем мониторинг файлов
-$files = new \FileMonitor\FileMonitor($settings);
+$files = new FileMonitor($settings);
 $files->scan();

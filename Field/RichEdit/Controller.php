@@ -31,21 +31,20 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function showEdit()
+    public function showEdit(): string
     {
-        $html = '<div id="' . $this->htmlName . '-control-group">'
+        return '<div id="' . $this->htmlName . '-control-group">'
             . $this->getLabelText() . '<br />' . $this->getInputText() . '</div>';
-        return $html;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $config = Config::getInstance();
         $value = htmlspecialchars($this->getValue());
-        $html = <<<HTML
+        return <<<HTML
                         <textarea name="{$this->htmlName}"
                             id="{$this->htmlName}">{$value}</textarea>
                         <script>
@@ -60,6 +59,5 @@ class Controller extends AbstractController
                             CKEDITOR.replace("{$this->htmlName}");
                         </script>
             HTML;
-        return $html;
     }
 }

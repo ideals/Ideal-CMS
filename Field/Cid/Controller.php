@@ -35,7 +35,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = $this->getValue();
 
@@ -43,11 +43,9 @@ class Controller extends AbstractController
         $pageData = $this->model->getPageData();
         $value = $cid->getBlock($value, $pageData['lvl']);
 
-        $input = '<input type="text" class="form-control" name="' . $this->htmlName
+        return '<input type="text" class="form-control" name="' . $this->htmlName
             . '" id="' . $this->htmlName
             . '" value="' . $value . '">';
-
-        return $input;
     }
 
     /**
@@ -79,6 +77,7 @@ class Controller extends AbstractController
                 $end['cid'] = '';
                 $end['lvl'] = 0;
             }
+
             $this->newValue = $model->getNewCid($end['cid'], $end['lvl'] + 1);
         } else {
             $cid = new Model($model->params['levels'], $model->params['digits']);
@@ -88,6 +87,7 @@ class Controller extends AbstractController
                 // Инициируем изменение cid, только если он действительно изменился
                 $this->sqlAdd = $cid->moveCid($obj['cid'], $request->$fieldName, $obj['lvl']);
             }
+
             $this->newValue = $obj['cid']; // cid не меняем, т.к. все изменения будут через доп. запрос
         }
 
@@ -109,6 +109,7 @@ class Controller extends AbstractController
         } else {
             $html = parent::showEdit();
         }
+
         return $html;
     }
 }

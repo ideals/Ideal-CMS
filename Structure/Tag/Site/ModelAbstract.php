@@ -9,6 +9,7 @@
 
 namespace Ideal\Structure\Tag\Site;
 
+use Ideal\Field\Url\Model;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Pagination;
@@ -22,6 +23,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
 {
     /** @var bool Флаг отображения списка тегов (false), или списка элементов, которым присвоен тег (true) */
     protected $countSql = false;
+
     /**
      * @var int
      */
@@ -37,7 +39,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
      * @param array $url Оставшаяся, неразобранная часть URL
      * @return $this
      */
-    public function detectPageByUrl($path, $url)
+    public function detectPageByUrl($path, $url): self
     {
         parent::detectPageByUrl($path, $url);
 
@@ -56,7 +58,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
      * @return array Список элементов, которым присвоен тег из $this->pageData
      * @throws \Exception
      */
-    public function getElements($page = null, $fieldNames = 'ID,name,url', $orderBy = 'date_create')
+    public function getElements($page = null, $fieldNames = 'ID,name,url', ?string $orderBy = 'date_create'): array
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
@@ -64,7 +66,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
         $tableTag = $config->db['prefix'] . 'ideal_medium_taglist';
 
         // Считываем все связи этого тега
-        $sql = "SELECT * FROM {$tableTag} WHERE tag_id={$id}";
+        $sql = sprintf('SELECT * FROM %s WHERE tag_id=%s', $tableTag, $id);
         $listTag = $db->select($sql);
 
         // Раскладываем айдишники элементов по разделам
@@ -74,7 +76,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
         }
 
         // Построение запросов для извлечения данных из таблиц структур
-        $order = (empty($orderBy)) ? '' : ',' . $orderBy;
+        $order = (in_array($orderBy, [null, '', '0'], true)) ? '' : ',' . $orderBy;
         $elements = [];
         foreach ($tables as $structureId => $parts) {
             $structure = $config->getStructureById($structureId);
@@ -100,9 +102,8 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
 
         // Получаем часть массива для отображения на странице
         $start = ($page > 1) ? ($page - 1) * $this->params['elements_site'] : 0;
-        $result = array_slice($elements, $start, $this->params['elements_site']);
 
-        return $result;
+        return array_slice($elements, $start, $this->params['elements_site']);
     }
 
     /**
@@ -123,6 +124,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
         // Определяем кол-во отображаемых элементов на основании названия класса
         $class = strtolower(get_class($this));
         $class = explode('\\', trim($class, '\\'));
+
         $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
         $onPage = $this->params[$nameParam];
 
@@ -180,7 +182,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
         $result = $db->select($sql);
 
         // Формируем правильные ссылки
-        $url = new \Ideal\Field\Url\Model();
+        $url = new Model();
         foreach ($result as $k => $v) {
             $result[$k]['link'] = $url->getUrlWithPrefix($v, $prefix);
         }
@@ -190,10 +192,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
 
     public function getCurrent()
     {
-        if (isset($this->pageData)) {
-            return $this->pageData;
-        }
-        return false;
+        return $this->pageData ?? false;
 
     }
 
@@ -203,7 +202,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
      * @param int $page Номер отображаемой страницы
      * @return string LIMIT часть sql-запроса (например 'LIMIT 10, 10'
      */
-    protected function getSqlLimit($page)
+    protected function getSqlLimit($page): string
     {
         if (is_null($page)) {
             $this->setPageNum($page);
@@ -213,13 +212,12 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
         // Определяем кол-во отображаемых элементов на основании названия класса
         $class = strtolower(get_class($this));
         $class = explode('\\', trim($class, '\\'));
+
         $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
         $onPage = $this->params[$nameParam];
 
         $page = $this->setPageNum($page);
         $start = ($page - 1) * $onPage;
-
-        $sql = " LIMIT {$start}, {$onPage}";
-        return $sql;
+        return sprintf(' LIMIT %s, %s', $start, $onPage);
     }
 }

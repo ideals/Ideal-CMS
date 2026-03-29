@@ -19,7 +19,6 @@ namespace Ideal\Api;
 
 use Ideal\Core\Api\Controller;
 use Ideal\Core\Api\Router;
-use Ideal\Core\Config;
 use Ideal\Core\Request;
 
 class ExampleController extends Controller
@@ -27,14 +26,10 @@ class ExampleController extends Controller
     /**
      * Обязательный метод проверки авторизации API-запроса
      * Неавторизированные запросы всегда отдают 404-ую страницу
-     *
-     * @return bool
      */
-    public function authorize(Router $router)
+    public function authorize(Router $router): bool
     {
-        $request = new Request();
-        $token = $request->token;
-
+        new Request();
         // Проверяем правильность переданного токена для авторизации
         //$config = Config::getInstance();
         //return $token === $config->yandex['token'];

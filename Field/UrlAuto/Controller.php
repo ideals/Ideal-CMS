@@ -10,6 +10,7 @@
 
 namespace Ideal\Field\UrlAuto;
 
+use Ideal\Field\Url\Model;
 use Ideal\Field\Url;
 
 /**
@@ -35,9 +36,9 @@ class Controller extends Url\Controller
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
-        $url = new Url\Model();
+        $url = new Model();
         $value = ['url' => htmlspecialchars($this->getValue())];
         $link = $url->getUrlWithPrefix($value, $this->model->getParentUrl());
         $link = $url->cutSuffix($link);
@@ -48,10 +49,12 @@ class Controller extends Url\Controller
             $path = substr($link, 0, strrpos($link, '/'));
             $addOn = '<span class="input-group-addon">' . $path . '/</span>';
         }
+
         $nameField = 'name';
         if (isset($this->field['nameField'])) {
             $nameField = $this->field['nameField'];
         }
+
         return
             '<script type="text/javascript" src="Ideal/Field/UrlAuto/admin.js" />'
             . '<div class="input-group">' . $addOn

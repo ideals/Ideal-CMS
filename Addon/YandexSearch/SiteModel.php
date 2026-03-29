@@ -10,8 +10,8 @@
 
 namespace Ideal\Addon\YandexSearch;
 
+use Ideal\Addon\AbstractSiteModel;
 use Ideal\Core\Logger;
-use Ideal\Addon;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Core\View;
@@ -27,7 +27,7 @@ use Ideal\YandexSearch\WebSearchRequest;
  * поэтому аддон можно подключать как обычный аддон Page, для которого никакой дополнительной кастомизации
  * в общем шаблоне не требуется.
  */
-class SiteModel extends Addon\AbstractSiteModel
+class SiteModel extends AbstractSiteModel
 {
     /** @var int Общее количество результатов поиска */
     protected $listCount = 0;
@@ -66,10 +66,10 @@ class SiteModel extends Addon\AbstractSiteModel
         $query = trim((string) $request->query);
         $view->query = $query;
 
-        if (!empty($query)) {
+        if ($query !== '' && $query !== '0') {
             // Параметр необходимый для получения листалки
             $elementsSite = $this->pageData['elements_site'];
-            $this->params['elements_site'] = !empty($elementsSite) ? $elementsSite : 15;
+            $this->params['elements_site'] = empty($elementsSite) ? 15 : $elementsSite;
 
             try {
                 $request = (new WebSearchRequest(
@@ -87,9 +87,8 @@ class SiteModel extends Addon\AbstractSiteModel
                 Logger::getInstance(),
             );
             $response = $client->send($request);
-
-            // Передаём данные в шаблон для рендера поиска
-            $view->total = $this->listCount = $response->getDocsTotal();
+            $view->total = $response->getDocsTotal();
+            $this->listCount = $view->total;
             $view->parts = $response->getDocuments();
             $view->pager = $this->getPager('num');
             $page++;

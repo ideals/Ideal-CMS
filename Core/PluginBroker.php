@@ -12,21 +12,22 @@ namespace Ideal\Core;
 
 class PluginBroker
 {
-    private static $instance;
+    private static ?PluginBroker $instance = null;
 
     protected $_events = [];
 
-    public static function getInstance()
+    public static function getInstance(): PluginBroker
     {
-        if (empty(self::$instance)) {
+        if (!self::$instance instanceof \Ideal\Core\PluginBroker) {
             self::$instance = new PluginBroker();
         }
+
         return self::$instance;
     }
 
     public function makeEvent($eventName, $params)
     {
-        if (count($this->_events) == 0) {
+        if (count($this->_events) === 0) {
             return $params;
         }
 
@@ -38,10 +39,11 @@ class PluginBroker
             $plugin = new $event();
             $params = $plugin->$eventName($params);
         }
+
         return $params;
     }
 
-    public function registerPlugin($eventName, $pluginClassName)
+    public function registerPlugin($eventName, $pluginClassName): void
     {
         $this->_events[$eventName][] = $pluginClassName;
     }

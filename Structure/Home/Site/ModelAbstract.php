@@ -10,13 +10,13 @@
 
 namespace Ideal\Structure\Home\Site;
 
+use Ideal\Structure\Part\Site\Model;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
-use Ideal\Structure\Part;
 
-class ModelAbstract extends Part\Site\Model
+class ModelAbstract extends Model
 {
-    public function construct($prevStructure)
+    public function construct($prevStructure): void
     {
         $this->prevStructure = $prevStructure;
 
@@ -32,11 +32,11 @@ class ModelAbstract extends Part\Site\Model
         $this->_table = strtolower($config->db['prefix'] . 'Structure_' . $structure['structure']);
     }
 
-    public function detectPageByUrl($path, $url)
+    public function detectPageByUrl($path, $url): self
     {
         $db = Db::getInstance();
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE BINARY url=:url LIMIT 1";
+        $_sql = sprintf('SELECT * FROM %s WHERE BINARY url=:url LIMIT 1', $this->_table);
 
         $list = $db->select($_sql, ['url' => $url]); // получение всех страниц, соответствующих частям url
 

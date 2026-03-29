@@ -32,12 +32,13 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = $this->getValue();
         $date = empty($value) ? '' : date('d.m.Y H:i:s', strtotime($value));
         $htmlName = $this->htmlName;
-        $html = <<<HTML
+
+        return <<<HTML
             <link href="Ideal/Library/datetimepicker/build/css/bootstrap-datetimepicker.min.css" rel="stylesheet" type="text/css" >
             <script type="text/javascript" src="Ideal/Library/moment/moment.js"></script>
             <script type="text/javascript" src="Ideal/Library/moment/locale/ru.js"></script>
@@ -59,14 +60,12 @@ class Controller extends AbstractController
                 });
             </script>
             HTML;
-
-        return $html;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getValueForList($values, $fieldName)
+    public function getValueForList($values, $fieldName): string
     {
         return date('d.m.Y &\nb\sp; H:i', strtotime($values[$fieldName]));
     }

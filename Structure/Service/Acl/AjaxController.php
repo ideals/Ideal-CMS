@@ -19,7 +19,7 @@ use Ideal\Structure\Acl\Admin\Model as StructureAclModel;
 class AjaxController extends \Ideal\Core\AjaxController
 {
     /** @var object Ideal\Structure\Acl\Admin\Model */
-    protected $structureAclModel = null;
+    protected StructureAclModel $structureAclModel;
 
     public function __construct()
     {
@@ -47,15 +47,16 @@ class AjaxController extends \Ideal\Core\AjaxController
     /**
      * Занесение в базу изменённого правила для соответствующего пункта
      */
-    public function changePermissionAction()
+    public function changePermissionAction(): void
     {
         $this->structureAclModel->changePermission();
     }
 
     /**
      * {@inheritdoc}
+     * @return array<string, string>
      */
-    public function getHttpHeaders()
+    public function getHttpHeaders(): array
     {
         return [
             'Content-type' => 'Content-type: application/json',

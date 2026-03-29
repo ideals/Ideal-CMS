@@ -33,17 +33,18 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = htmlspecialchars($this->getValue());
         $startupPath = '';
-        if (empty($value)) {
+        if ($value === '' || $value === '0') {
             $img = '<span class="glyphicon glyphicon-remove" id="' . $this->htmlName . 'Span"></span>'
                 . '<img id="' . $this->htmlName . 'Img" src="" style="max-height:32px;display:none;">';
         } else {
             $img = '<img id="' . $this->htmlName . 'Img" src="' . $value . '" style="max-height:32px">';
             $startupPath = substr(dirname($value), strpos($value, '/', 2)) . '/';
         }
+
         return '<div class="input-group">'
         . '<span class="input-group-addon" style="padding: 0 5px">'
         // миниатюра картинки
@@ -53,7 +54,7 @@ class Controller extends AbstractController
         . '" value="' . $value
         . '" onchange="$(\'#' . $this->htmlName . 'Img\').show().attr(\'src\', $(this).val());$(\'#' . $this->htmlName . 'Span\').hide()">' // замена миниатюры картинки
         . '<span class="input-group-btn">'
-        . '<button class="btn" onclick="showFinder(\'' . $this->htmlName . '\', \'Images\', \'' . $startupPath . '\'); return false;" >Выбрать</button>'
+        . '<button class="btn" onclick="showFinder(\'' . $this->htmlName . "', 'Images', '" . $startupPath . '\'); return false;" >Выбрать</button>'
         . '</span></div>';
     }
 
@@ -78,7 +79,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getValueForList($values, $fieldName)
+    public function getValueForList($values, $fieldName): string
     {
         $result = '';
         if ($values[$fieldName] != '') {
@@ -93,16 +94,15 @@ class Controller extends AbstractController
                 </span>
                 HTML;
         }
+
         return $result;
     }
 
     /**
      * Удаление resized-вариантов картинки
      *
-     * @param string $value
-     * @return string
      */
-    protected function imageRegenerator($value)
+    protected function imageRegenerator(?string $value): string
     {
         $config = Config::getInstance();
         if ($value == '' || $config->allowResize == '') {
@@ -117,16 +117,18 @@ class Controller extends AbstractController
             if ($pos == 0) {
                 continue;
             }
+
             preg_match('/\^(.*)\/\(/', $v, $matches);
             if (is_null($matches)) {
                 return 'Не могу определить по файлу .htaccess папку для resized-картинок. '
                 . 'Правило должно быть вида ^images/resized/(.*)';
             }
+
             $folder = DOCUMENT_ROOT . '/' . $matches[1] . '/';
             break;
         }
 
-        if ($folder == '') {
+        if ($folder === '') {
             return 'В корневом .htaccess не задано правило для resized-картинок';
         }
 
@@ -137,11 +139,14 @@ class Controller extends AbstractController
             if (!file_exists($fileName)) {
                 continue;
             }
+
             if (!is_writable($fileName)) {
                 return 'Не могу удалить файл старой resized-картинки ' . $fileName;
             }
+
             unlink($fileName);
         }
+
         return '';
     }
 }

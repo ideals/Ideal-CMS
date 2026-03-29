@@ -10,15 +10,16 @@
 
 namespace Ideal\Structure\Part\Admin;
 
+use Ideal\Core\Admin\Controller;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
 
-class ControllerAbstract extends \Ideal\Core\Admin\Controller
+class ControllerAbstract extends Controller
 {
     /* @var $model Model */
     protected $model;
 
-    public function indexAction()
+    public function indexAction(): void
     {
         $this->templateInit();
 
@@ -33,7 +34,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $this->view->pager = $this->model->getPager('page');
     }
 
-    public function showCreateTemplateAction()
+    public function showCreateTemplateAction(): void
     {
         $request = new Request();
         $template = $request->template;
@@ -46,7 +47,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         exit;
     }
 
-    public function showEditTemplateAction()
+    public function showEditTemplateAction(): void
     {
         $request = new Request();
 

@@ -10,12 +10,14 @@
 
 namespace Ideal\Core;
 
+use Ideal\Core\Site\Model;
+
 /**
  * Абстрактный класс виджета. Все классы виджетов должны наследоваться от него
  */
 abstract class Widget
 {
-    /** @var \Ideal\Core\Site\Model Модель страницы с данными */
+    /** @var Model Модель страницы с данными */
     protected $model;
 
     /** @var string Префикс url для списка ссылок, генерируемых виджетом */
@@ -49,7 +51,7 @@ abstract class Widget
      *
      * @param string $prefix
      */
-    public function setPrefix($prefix)
+    public function setPrefix($prefix): void
     {
         $this->prefix = $prefix;
     }
@@ -59,7 +61,7 @@ abstract class Widget
      *
      * @param string $prevStructure
      */
-    public function setPrevStructure($prevStructure)
+    public function setPrevStructure($prevStructure): void
     {
         $this->prevStructure = $prevStructure;
     }
@@ -69,7 +71,7 @@ abstract class Widget
      *
      * @param string $query GET-параметры, в формате QUERY_STRING
      */
-    public function setQuery($query)
+    public function setQuery($query): void
     {
         $this->query = $query;
     }

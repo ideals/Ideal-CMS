@@ -20,7 +20,7 @@ class View
     protected $template;
 
     /** @var \Twig_Environment * */
-    protected $templater;
+    protected \Twig_Environment $templater;
 
     /** @var array Массив для хранения переменных, передаваемых во View */
     protected $vars = [];
@@ -69,6 +69,7 @@ class View
                 }
             }
         }
+
         $this->templater = new \Twig_Environment($loader, $params);
     }
 
@@ -78,7 +79,7 @@ class View
      * @param string $name Название переменной
      * @return bool Инициализирована эта переменная или нет
      */
-    public function __isset($name)
+    public function __isset(string $name)
     {
         return isset($this->vars[$name]);
     }
@@ -89,7 +90,7 @@ class View
      * @param string $name Название переменной
      * @param mixed $value Значение переменной
      */
-    public function __set($name, $value)
+    public function __set(string $name, $value)
     {
         $this->vars[$name] = $value;
     }
@@ -97,19 +98,17 @@ class View
     /**
      * Чистит все файлы twig кэширования
      */
-    public static function clearTwigCache($path = '')
+    public static function clearTwigCache($path = ''): void
     {
         $config = Config::getInstance();
-        if (empty($path)) {
-            $cachePath = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/templates';
-        } else {
-            $cachePath = $path;
-        }
+        $cachePath = empty($path) ? DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/templates' : $path;
+
         if ($objs = glob($cachePath . '/*')) {
             foreach ($objs as $obj) {
                 is_dir($obj) ? self::clearTwigCache($obj) : unlink($obj);
             }
         }
+
         if (!empty($path)) {
             rmdir($cachePath);
         }
@@ -126,13 +125,14 @@ class View
      * @param string $name Название переменной
      * @return mixed Переменная
      */
-    public function &__get($name)
+    public function &__get(string $name)
     {
         if (is_scalar($this->vars[$name])) {
             $property = $this->vars[$name];
         } else {
             $property = &$this->vars[$name];
         }
+
         return $property;
     }
 
@@ -141,7 +141,7 @@ class View
      *
      * @param string $fileName Название twig-файла
      */
-    public function loadTemplate($fileName)
+    public function loadTemplate($fileName): void
     {
         $this->template = $this->templater->loadTemplate($fileName);
     }

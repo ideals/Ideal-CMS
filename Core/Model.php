@@ -23,9 +23,9 @@ abstract class Model
 
     public $params;
 
-    protected $_table;
+    protected string $_table;
 
-    protected $module;
+    protected string $module;
 
     protected $pageData;
 
@@ -41,6 +41,7 @@ abstract class Model
 
     /** @var Model Используется только в Addon для обозначения модели-владельца аддона */
     protected $parentModel;
+
     protected $fieldsGroup = 'general';
 
     public function __construct($prevStructure)
@@ -52,6 +53,7 @@ abstract class Model
         $parts = preg_split('/[_\\\\]+/', get_class($this));
         $this->module = $parts[0];
         $module = ($this->module == 'Ideal') ? '' : $this->module . '/';
+
         $type = $parts[1]; // Structure или Addon
         $structureName = $parts[2];
         $structureFullName = $this->module . '_' . $structureName;
@@ -78,10 +80,10 @@ abstract class Model
                 if (!is_array($structure)) {
                     throw new \Exception('Не удалось подключить файл: ' . $includeFile);
                 }
+
                 break;
             default:
                 throw new \Exception('Неизвестный тип: ' . $type);
-                break;
         }
 
         $this->params = $structure['params'];
@@ -90,9 +92,9 @@ abstract class Model
         $this->_table = strtolower($config->db['prefix'] . $this->module . '_' . $type . '_' . $structureName);
     }
 
-    public function __get($name)
+    public function __get(string $name)
     {
-        if ($name == 'object') {
+        if ($name === 'object') {
             throw new \Exception('Свойство object упразднено.');
         }
     }
@@ -104,7 +106,7 @@ abstract class Model
      */
     public static function getStructureName()
     {
-        $parts = explode('\\', get_called_class());
+        $parts = explode('\\', static::class);
         return $parts[0] . '_' . $parts[2];
     }
 
@@ -115,7 +117,7 @@ abstract class Model
         $count = count($this->path);
 
         $class = get_class($this);
-        if ($class == 'Ideal\\Structure\\Home\\Site\\Model') {
+        if ($class == \Ideal\Structure\Home\Site\Model::class) {
             // В случае если у нас открыта главная страница, не нужно переопределять модель как обычной страницы
             return $model;
         }
@@ -147,6 +149,7 @@ abstract class Model
                 $model = $model->setVars($this);
             }
         }
+
         return $model;
     }
 
@@ -162,11 +165,13 @@ abstract class Model
     {
         $vars = get_object_vars($model);
         foreach ($vars as $k => $v) {
-            if (in_array($k, ['_table', 'module', 'params', 'fields', 'prevStructure'])) {
+            if (in_array($k, ['_table', 'module', 'params', 'fields', 'prevStructure'], true)) {
                 continue;
             }
+
             $this->$k = $v;
         }
+
         return $this;
     }
 
@@ -208,9 +213,8 @@ abstract class Model
         $structure->setPageDataById($prevElementId);
 
         $path = $structure->detectPath();
-        $path = array_merge($path, $localPath);
 
-        return $path;
+        return array_merge($path, $localPath);
     }
 
     /**
@@ -224,10 +228,10 @@ abstract class Model
         if (!empty($this->filter)) {
             $_sql = $this->filter->getSql();
         } else {
-            $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
+            $where = ($this->prevStructure !== '') ? sprintf("e.prev_structure='%s'", $this->prevStructure) : '';
             $where = $this->getWhere($where);
             $order = $this->getOrder();
-            $_sql = "SELECT e.* FROM {$this->_table} AS e {$where} {$order}";
+            $_sql = sprintf('SELECT e.* FROM %s AS e %s %s', $this->_table, $where, $order);
         }
 
         if (is_null($page)) {
@@ -242,12 +246,10 @@ abstract class Model
             $page = $this->setPageNum($page);
             $start = ($page - 1) * $onPage;
 
-            $_sql .= " LIMIT {$start}, {$onPage}";
+            $_sql .= sprintf(' LIMIT %s, %s', $start, $onPage);
         }
 
-        $list = $db->select($_sql);
-
-        return $list;
+        return $db->select($_sql);
     }
 
     /**
@@ -261,10 +263,11 @@ abstract class Model
         if (is_null($this->pageData)) {
             $this->initPageData();
         }
+
         return $this->pageData;
     }
 
-    public function setPageData($pageData)
+    public function setPageData($pageData): void
     {
         $this->pageData = $pageData;
     }
@@ -275,7 +278,7 @@ abstract class Model
      * @param int $id ID элемента
      * @throws \Exception В случае, если нет элемента с указанным ID
      */
-    public function initPageDataById($id)
+    public function initPageDataById($id): void
     {
         $id = (int) $id;
 
@@ -288,13 +291,9 @@ abstract class Model
         $this->initPageData($result[0]);
     }
 
-    public function initPageData($pageData = null)
+    public function initPageData($pageData = null): void
     {
-        if ($pageData === null) {
-            $this->pageData = end($this->path);
-        } else {
-            $this->pageData = $pageData;
-        }
+        $this->pageData = $pageData ?? end($this->path);
 
         // Получаем переменные шаблона
         $config = Config::getInstance();
@@ -339,6 +338,7 @@ abstract class Model
                         Util::addError('Отсутствует класс аддона: ' . $className);
                         continue;
                     }
+
                     $addon = new $className($prevStructure);
                     $addon->setParentModel($this);
                     [, $fildsGroup] = explode('_', $addonInfo[1]);
@@ -370,6 +370,7 @@ abstract class Model
         // Определяем кол-во отображаемых элементов на основании названия класса
         $class = strtolower(get_class($this));
         $class = explode('\\', trim($class, '\\'));
+
         $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
         $onPage = $this->params[$nameParam];
 
@@ -406,14 +407,16 @@ abstract class Model
             if (is_int($filterCount)) {
                 return $filterCount;
             }
+
             $_sql = $this->filter->getSqlCount();
         } else {
-            $where = ($this->prevStructure !== '') ? "e.prev_structure='{$this->prevStructure}'" : '';
+            $where = ($this->prevStructure !== '') ? sprintf("e.prev_structure='%s'", $this->prevStructure) : '';
             $where = $this->getWhere($where);
 
             // Считываем все элементы первого уровня
-            $_sql = "SELECT COUNT(e.ID) FROM {$this->_table} AS e {$where}";
+            $_sql = sprintf('SELECT COUNT(e.ID) FROM %s AS e %s', $this->_table, $where);
         }
+
         $list = $db->select($_sql);
 
         return $list[0]['COUNT(e.ID)'];
@@ -456,7 +459,7 @@ abstract class Model
         return $this->_table;
     }
 
-    public function setPath($path)
+    public function setPath($path): void
     {
         $this->path = $path;
         $end = end($path);
@@ -477,16 +480,16 @@ abstract class Model
         return $this->prevStructure;
     }
 
-    public function setPrevStructure($prevStructure)
+    public function setPrevStructure($prevStructure): void
     {
         $this->prevStructure = $prevStructure;
     }
 
-    public function setPageDataById($id)
+    public function setPageDataById($id): void
     {
         $db = Db::getInstance();
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE ID=:id";
+        $_sql = sprintf('SELECT * FROM %s WHERE ID=:id', $this->_table);
         $pageData = $db->select($_sql, ['id' => $id]);
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по ID ничего не нашлось
@@ -507,9 +510,10 @@ abstract class Model
      */
     public function setPageNum($pageNum, $pageNumTitle = null)
     {
-        if (isset($this->pageNum)) {
+        if ($this->pageNum !== null) {
             return $this->pageNum;
         }
+
         $this->pageNum = 0;
         if ($pageNum !== null) {
             $page = intval(substr($pageNum, 0, 10)); // отсекаем всякую ерунду и слишком большие числа в листалке
@@ -532,7 +536,7 @@ abstract class Model
      * Метод используется только в моделях Addon для установки модели владельца этого аддона
      *
      */
-    public function setParentModel($model)
+    public function setParentModel($model): void
     {
         $this->parentModel = $model;
     }
@@ -547,7 +551,7 @@ abstract class Model
         return $this->parentModel;
     }
 
-    public function setFieldsGroup($name)
+    public function setFieldsGroup($name): void
     {
         $this->fieldsGroup = $name;
     }
@@ -568,6 +572,7 @@ abstract class Model
         } else {
             throw new \Exception('No prev_structure in data');
         }
+
         return $prevStructure;
     }
 
@@ -599,6 +604,7 @@ abstract class Model
             $where = preg_replace('/(^AND)|(^OR)/i', '', $where);
             $where = 'WHERE ' . $where;
         }
+
         return $where;
     }
 
@@ -618,6 +624,7 @@ abstract class Model
         } else {
             $order .= $this->params['field_sort'];
         }
+
         return $order;
     }
 }

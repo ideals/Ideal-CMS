@@ -7,10 +7,10 @@
  * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-
 /**
  * Создаём дамп базы данных
  */
+use Ideal\Core\Versions;
 use Ideal\Core\Config;
 use Ifsnop\Mysqldump\Mysqldump;
 
@@ -40,7 +40,7 @@ if (isset($_POST['createMysqlDump'])) {
     $time = time();
 
     // Получаем версию админки
-    $versions = new \Ideal\Core\Versions();
+    $versions = new Versions();
     $nowVersions = $versions->getVersions();
     $version = 'v' . $nowVersions['Ideal-CMS'];
 

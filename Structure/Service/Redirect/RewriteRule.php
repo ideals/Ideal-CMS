@@ -27,13 +27,13 @@ class RewriteRule
     protected $error = 0;
 
     /** @var string Путь к файлу .htaccess */
-    protected $htFile;
+    protected string $htFile;
 
     /** @var string Сообщение для вывода ошибок и предупреждений */
     protected $msg = '';
 
     /** @var  string Путь к файлу redirect.txt */
-    protected $reFile;
+    protected string $reFile;
 
     /**
      * @var array Массив редиректов: ключ — откуда редирект, значение — куда.
@@ -68,7 +68,7 @@ class RewriteRule
      * @param string $from
      * @param string $to
      */
-    public function deleteLine($from, $to)
+    public function deleteLine($from, $to): void
     {
         $answer = ['error' => false, 'text' => ''];
         if (isset($this->redirects[$from])) {
@@ -77,12 +77,14 @@ class RewriteRule
             } else {
                 // todo не понял, когда такой случай возможен
                 $answer['error'] = true;
-                $answer['text'] = "Редирект с {$from} на {$this->redirects[$from]['to']}.";
+                $answer['text'] = sprintf('Редирект с %s на %s.', $from, $this->redirects[$from]['to']);
             }
         }
+
         if (!$answer['error']) {
             $this->saveFile();
         }
+
         print json_encode($answer);
         exit;
     }
@@ -95,7 +97,7 @@ class RewriteRule
      * @param string $oldFrom
      * @param string $oldTo
      */
-    public function editLine($from, $to, $oldFrom, $oldTo)
+    public function editLine($from, $to, $oldFrom, $oldTo): void
     {
         $answer = ['error' => false, 'text' => ''];
 
@@ -114,13 +116,13 @@ class RewriteRule
         }
 
         if (isset($this->redirects[$to]['to'])) {
-            $answer['text'] = "Организуется множественный редирект с {$from} на {$to},"
-                . " а потом на {$this->redirects[$to]['to']}";
+            $answer['text'] = sprintf('Организуется множественный редирект с %s на %s,', $from, $to)
+                . (' а потом на ' . $this->redirects[$to]['to']);
             $answer['error'] = true;
         }
 
         if (($to == $from) || (isset($this->redirects[$to]['to']) && ($this->redirects[$to]['to'] == $from))) {
-            $answer['text'] = "Организуется бесконечный редирект с {$from} на {$to} потом {$from}. Бесконечный цикл";
+            $answer['text'] = sprintf('Организуется бесконечный редирект с %s на %s потом %s. Бесконечный цикл', $from, $to, $from);
             $answer['error'] = true;
         }
 
@@ -141,7 +143,7 @@ class RewriteRule
      * @param string $to Куда
      * @param bool|string $oldFrom Заменяемый редирект
      */
-    public function addLine($from, $to, $oldFrom = false)
+    public function addLine($from, $to, $oldFrom = false): void
     {
         $answer = ['error' => false, 'text' => ''];
 
@@ -149,19 +151,21 @@ class RewriteRule
             if ($this->redirects[$from]['to'] == $to) {
                 $answer['text'] = "Такой уже редирект существует";
             } else {
-                $answer['text'] = "Редирект с {$from} уже существует и переадресует на {$this->redirects[$from]['to']}";
+                $answer['text'] = sprintf('Редирект с %s уже существует и переадресует на %s', $from, $this->redirects[$from]['to']);
             }
+
             $answer['error'] = true;
         }
 
         if (isset($this->redirects[$to]) && !$answer['error']) {
             if ($this->redirects[$to]['to'] == $from) {
-                $answer['text'] = "Организуется бесконечный редирект с {$from} на {$to} потом {$from}."
+                $answer['text'] = sprintf('Организуется бесконечный редирект с %s на %s потом %s.', $from, $to, $from)
                     . " Бесконечный цикл";
             } else {
-                $answer['text'] = "Организуется множественный редирект с {$from} на {$to},"
-                    . " а потом на {$this->redirects[$to]['to']}";
+                $answer['text'] = sprintf('Организуется множественный редирект с %s на %s,', $from, $to)
+                    . (' а потом на ' . $this->redirects[$to]['to']);
             }
+
             $answer['error'] = true;
         }
 
@@ -173,15 +177,19 @@ class RewriteRule
                     if ($k === $oldFrom) {
                         $k = $from;
                     }
+
                     $_arr[$k] = $v;
                 }
+
                 $this->redirects = $_arr;
             } else {
                 // Нужно просто добавить элемент
                 $this->redirects[$from]['to'] = $to;
             }
+
             $this->saveFile();
         }
+
         print json_encode($answer);
         exit;
     }
@@ -189,7 +197,7 @@ class RewriteRule
     /**
      * @return int Кол-во редиректов
      */
-    public function getCountParam()
+    public function getCountParam(): int
     {
         return count($this->redirects);
     }
@@ -215,21 +223,23 @@ class RewriteRule
      *
      * @return string Html-таблица с редиректами
      */
-    public function getTable()
+    public function getTable(): string
     {
         $str = '';
         $i = 1;
         foreach ($this->redirects as $from => $v) {
-            $class = $info = '';
-            $defaultFrom = "data-from='{$from}'";
-            $defaultTo = "data-to='{$v['to']}'";
+            $class = '';
+            $info = '';
+            $defaultFrom = sprintf("data-from='%s'", $from);
+            $defaultTo = sprintf("data-to='%s'", $v['to']);
 
             if (isset($v['htaccess'])) {
                 // Если редиректы в htaccess отличаются от redirect.txt
                 $class = "error";
                 if ($v['to'] != $v['htaccess']['to']) {
-                    $v['error'] .= ".htaccess: указан редирект на {$v['htaccess']['to']}<br />";
+                    $v['error'] .= sprintf('.htaccess: указан редирект на %s<br />', $v['htaccess']['to']);
                 }
+
                 if ($v['htaccess']['error']) {
                     $v['error'] .= $v['htaccess']['error'];
                 }
@@ -237,7 +247,7 @@ class RewriteRule
 
             if ($v['error']) {
                 // Если есть ошибки, оформляем их список
-                $class = ($class == '') ? "warning" : $class;
+                $class = ($class === '') ? "warning" : $class;
                 $info = '<small>' . $v['error'] . '</small>';
             }
 
@@ -278,6 +288,7 @@ class RewriteRule
                 RULE;
             $i++;
         }
+
         return $str;
     }
 
@@ -317,6 +328,7 @@ class RewriteRule
                 $this->redirects[$from] = $v;
                 continue;
             }
+
             if ($this->redirects[$from] != $v) {
                 // Если в htaccess не такой редирект, то добавляем информацию о нём
                 $this->redirects[$from]['htaccess'] = $v;
@@ -338,7 +350,7 @@ class RewriteRule
 
         // Проверяем, доступен ли файл для записи
         if (!is_writable($file)) {
-            $this->msg .= "<div class='alert alert-block'>Файл {$file} недоступен для записи</div>";
+            $this->msg .= sprintf("<div class='alert alert-block'>Файл %s недоступен для записи</div>", $file);
             $this->error = 2;
             return false;
         }
@@ -354,34 +366,37 @@ class RewriteRule
         if ($countTags == 0) {
             // Нет ни одного тега #redirect#, прекращаем обработку и выходим записав ошибку
             $this->error = 2;
-            $this->msg .= "<div class='alert alert-error'>В файле {$file} отсутствуют теги #redirect#</div>";
+            $this->msg .= sprintf("<div class='alert alert-error'>В файле %s отсутствуют теги #redirect#</div>", $file);
             return false;
         }
+
         if ($countTags < 2) {
             // Только один тег #redirect#, прекращаем обработку и выходим записав ошибку
             $this->error = 2;
-            $this->msg .= "<div class='alert alert-error'>В файле {$file} отсутствует закрывающий тег #redirect#</div>";
+            $this->msg .= sprintf("<div class='alert alert-error'>В файле %s отсутствует закрывающий тег #redirect#</div>", $file);
             return false;
         }
+
         if ($countTags > 2) {
             // Если больше двух тегов #redirect, прекращаем обработку и выходим записав ошибку
             $this->error = 2;
-            $this->msg .= "<div class='alert alert-block'>В файле {$file} больше двух тегов #redirect#,"
+            $this->msg .= sprintf("<div class='alert alert-block'>В файле %s больше двух тегов #redirect#,", $file)
                 . " а должно быть только два</div>";
             return false;
         }
 
-        // Выцепляем строчки наших редиректов между тегами #redirect в переменную $redirects
-        $redirects = $params = [];
+        $redirects = [];
+        $params = [];
         preg_match_all('/\#redirect\#(.*)\#redirect\#/s', $fileContent, $redirects);
         preg_match_all('/RewriteRule(.*)\[/U', $redirects[1][0], $redirects);
         foreach ($redirects[1] as $val) {
             // Убираем пробелы по краям
             $val = trim($val);
             // Пропускаем пустые строки
-            if ($val == '') {
+            if ($val === '') {
                 continue;
             }
+
             // Между "откуда" и "куда" присутствует единственный пробел, больше их быть не может, по нему и разбиваем
             [$from, $to] = explode(' ', $val, 2);
 
@@ -389,13 +404,15 @@ class RewriteRule
             $param = ['error' => ''];
             if ($to === null) {
                 $to = '';
-                $param['error'] .= "{$fileName}: Неправильное правило: {$val}<br />";
+                $param['error'] .= sprintf('%s: Неправильное правило: %s<br />', $fileName, $val);
             }
+
             if (isset($params[$from])) {
                 // Поскольку в htaccess срабатывает первый по порядку редирект, поэтому в списке только он и останется
-                $params[$from]['error'] .= "{$fileName}: присутствует лишний редирект на {$to}<br />";
+                $params[$from]['error'] .= sprintf('%s: присутствует лишний редирект на %s<br />', $fileName, $to);
                 continue;
             }
+
             $param['to'] = $to;
             $params[$from] = $param;
         }
@@ -408,13 +425,14 @@ class RewriteRule
      * Сбрасываются все конфликты. Используется первый срабатывающий редирект,
      * предпочтение отдаётся редиректам из файла redirect.txt
      */
-    private function saveFile()
+    private function saveFile(): bool
     {
         // Запись в redirect.txt
         $file = "#redirect#\n";
         foreach ($this->redirects as $k => $v) {
             $file .= "RewriteRule {$k} {$v['to']} [R=301,L]\n";
         }
+
         $file .= "#redirect#";
         file_put_contents($this->reFile, $file);
 

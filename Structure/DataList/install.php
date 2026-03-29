@@ -7,13 +7,14 @@
  * @copyright Copyright (c) 2012-2018 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
-
 // Инициализируем доступ к БД
+use Ideal\Core\Db;
+use Ideal\Core\Config;
 use Ideal\Core\Util;
 
-$db = Ideal\Core\Db::getInstance();
+$db = Db::getInstance();
 
-$config = Ideal\Core\Config::getInstance();
+$config = Config::getInstance();
 
 $cfg = $config->getStructureByName('Ideal_DataList');
 

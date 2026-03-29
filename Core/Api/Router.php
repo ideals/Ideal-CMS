@@ -22,7 +22,7 @@ class Router
     public $is404 = false;
 
     /** @var string Название контроллера обрабатывающего запрос */
-    protected $controllerName = '';
+    protected string $controllerName;
 
     /**
      * Конструктор генерирует события onPreDispatch и onPostDispatch,
@@ -43,7 +43,7 @@ class Router
      *
      * @return string Название контроллера
      */
-    public function getControllerName()
+    public function getControllerName(): string
     {
         return $this->controllerName;
     }
@@ -55,7 +55,7 @@ class Router
      *
      * @param $name string Название контроллера
      */
-    public function setControllerName($name)
+    public function setControllerName(string $name): void
     {
         $this->controllerName = $name;
     }
@@ -71,7 +71,7 @@ class Router
     /**
      * Возвращает значение флага отправки сообщения о 404ой ошибке
      */
-    public function send404()
+    public function send404(): bool
     {
         return false;
     }
@@ -81,9 +81,8 @@ class Router
      *
      * @param string $url
      * @param bool $stripQuery Нужно ли удалять символы после ?
-     * @return string
      */
-    protected function prepareUrl($url, $stripQuery = true)
+    protected function prepareUrl($url, $stripQuery = true): string
     {
         $config = Config::getInstance();
 
@@ -107,9 +106,8 @@ class Router
     /**
      * Ищет контроллер ответственный за обработку запроса
      * @param string $realUrl
-     * @return string
      */
-    private function detectController($realUrl)
+    private function detectController($realUrl): string
     {
         $url = $this->prepareUrl($realUrl);
         $realPath = explode('/', $url);
@@ -132,6 +130,7 @@ class Router
                 // Названия мода в запрашиваемом контроллере нет, а в Ideal он не нашёлся — бросаем 404
                 return $this->create404();
             }
+
             $modName = array_shift($realPath);
             $realPath = array_merge([$modName, 'Api'], $realPath);
             $controllerName = '\\' . implode('\\', $realPath) . 'Controller';
@@ -144,9 +143,9 @@ class Router
         return $controllerName;
     }
 
-    private function create404()
+    private function create404(): string
     {
         $this->is404 = true;
-        return '\Ideal\Core\Api\Controller';
+        return Controller::class;
     }
 }

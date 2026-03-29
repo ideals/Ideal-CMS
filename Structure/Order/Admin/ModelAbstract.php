@@ -16,14 +16,14 @@ use Ideal\Core\Request;
 
 class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
 {
-    public function getToolbar()
+    public function getToolbar(): string
     {
         $db = Db::getInstance();
         $config = Config::getInstance();
 
         // Ищем всех заказчиков для составления фильтра
         $_table = $config->db['prefix'] . 'ideal_structure_order';
-        $_sql = "SELECT DISTINCT order_type FROM {$_table} ORDER BY order_type";
+        $_sql = sprintf('SELECT DISTINCT order_type FROM %s ORDER BY order_type', $_table);
         $types = $db->select($_sql);
 
         $request = new Request();
@@ -38,12 +38,12 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
             if ($type['order_type'] === $currentType) {
                 $selected = 'selected="selected"';
             }
+
             $select .= '<option ' . $selected . ' value="' . $type['order_type'] . '">';
             $select .= $type['order_type'] . '</option>';
         }
-        $select .= '</select>';
 
-        return $select;
+        return $select . '</select>';
     }
 
 
@@ -59,14 +59,17 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         if (isset($request->toolbar['types'])) {
             $currentType = $request->toolbar['types'];
         }
+
         if ($currentType != '') {
             $db = DB::getInstance();
             if ($where != '') {
                 $where .= ' AND ';
             }
+
             // Выборка статей, принадлежащих этой категории
             $where .= 'order_type = "' . $db->real_escape_string($currentType) . '" ';
         }
+
         if ($where != '') {
             $where = 'WHERE ' . $where;
         }

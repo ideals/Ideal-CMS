@@ -25,6 +25,7 @@ abstract class Model extends Core\Model
 
         $class = strtolower(get_class($this));
         $class = explode('\\', trim($class, '\\'));
+
         $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
 
         $request = new Request();
@@ -39,13 +40,13 @@ abstract class Model extends Core\Model
     }
 
     // Создание нового элемента структуры
-    public function createElement($result, $groupName = 'general')
+    public function createElement($result, string $groupName = 'general')
     {
         // Из общего списка введённых данных выделяем те, что помечены general
         foreach ($result['items'] as $v) {
             [$group, $field] = explode('_', $v['fieldName'], 2);
 
-            if ($group == $groupName && $field == 'prev_structure' && $v['value'] == '') {
+            if ($group === $groupName && $field === 'prev_structure' && $v['value'] == '') {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
                 $v['value'] = $this->prevStructure;
             }
@@ -57,6 +58,7 @@ abstract class Model extends Core\Model
 
             $groups[$group][$field] = $v['value'];
         }
+
         unset($groups[$groupName]['ID']);
 
         $db = Db::getInstance();
@@ -72,7 +74,7 @@ abstract class Model extends Core\Model
                 $sqlAdd = str_replace('{{ objectId }}', $id, $sqlAdd);
                 $sqlAdd = explode(';', $sqlAdd);
                 foreach ($sqlAdd as $_sql) {
-                    if ($_sql != '') {
+                    if ($_sql !== '') {
                         $db->query($_sql);
                     }
                 }
@@ -87,6 +89,7 @@ abstract class Model extends Core\Model
             $result['isCorrect'] = 0;
             $result['errorText'] = 'Ошибка при добавлении в БД. ' . $db->error;
         }
+
         return $result;
     }
 
@@ -94,12 +97,11 @@ abstract class Model extends Core\Model
      * Обработка переменных от дополнительных табов с аддонами
      *
      * @param array $result
-     * @param array $groups
-     * @param string $groupName
+     * @param array<string, mixed> $groups
      * @param bool $isCreate
      * @return array
      */
-    public function saveAddData($result, $groups, $groupName, $isCreate = false)
+    public function saveAddData($result, array $groups, string $groupName, $isCreate = false)
     {
         $config = Config::getInstance();
 
@@ -126,6 +128,7 @@ abstract class Model extends Core\Model
                     // Для случая, если вдруг элемент был создан, а аддон у него был непрописан
                     $isCreate = true;
                 }
+
                 if ($isCreate) {
                     unset($addonData['ID']);
                 }
@@ -147,13 +150,10 @@ abstract class Model extends Core\Model
 
             // Удаляем информацию об удалённых аддонах
             $pageData = $this->getPageData();
-            if ((isset($pageData['addon']) && $pageData['addon'] != 'null')) {
-                $preSaveAddonsInfo = json_decode($pageData['addon']);
-            } else {
-                $preSaveAddonsInfo = [];
-            }
+            $preSaveAddonsInfo = isset($pageData['addon']) && $pageData['addon'] != 'null' ? json_decode($pageData['addon']) : [];
+
             if (!empty($preSaveAddonsInfo)) {
-                foreach ($preSaveAddonsInfo as $key => $preSaveAddonInfo) {
+                foreach ($preSaveAddonsInfo as $preSaveAddonInfo) {
                     // Удаляем информацию об аддоне из старого списка, если его нет в новом.
                     if (!in_array($preSaveAddonInfo, $addonsInfo)) {
                         $end = end($this->path);
@@ -168,16 +168,20 @@ abstract class Model extends Core\Model
                 }
             }
         }
+
         return $result;
     }
 
-    public function saveElement($result, $groupName = 'general')
+    /**
+     * @param array<string, mixed> $result
+     */
+    public function saveElement(array $result, string $groupName = 'general')
     {
         // Из общего списка введённых данных выделяем те, что помечены general
         foreach ($result['items'] as $v) {
             [$group, $field] = explode('_', $v['fieldName'], 2);
 
-            if ($group == $groupName && $field == 'prev_structure' && $v['value'] == '') {
+            if ($group === $groupName && $field === 'prev_structure' && $v['value'] == '') {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
                 $v['value'] = $this->prevStructure;
             }
@@ -188,7 +192,7 @@ abstract class Model extends Core\Model
             }
 
             // Если у этого поля не прописан sql, то сохранять его не надо
-            if ($group == $groupName && empty($this->fields[$field]['sql'])) {
+            if ($group === $groupName && empty($this->fields[$field]['sql'])) {
                 continue;
             }
 
@@ -219,15 +223,13 @@ abstract class Model extends Core\Model
             $sqlAdd = str_replace('{{ objectId }}', $groups[$groupName]['ID'], $sqlAdd);
             $sqlAdd = explode(';', $sqlAdd);
             foreach ($sqlAdd as $_sql) {
-                if ($_sql != '') {
+                if ($_sql !== '') {
                     $db->query($_sql);
                 }
             }
         }
 
-        $result = $this->saveAddData($result, $groups, $groupName);
-
-        return $result;
+        return $this->saveAddData($result, $groups, $groupName);
     }
 
     public function detectPageByIds($path, $par)
@@ -245,6 +247,7 @@ abstract class Model extends Core\Model
             $fieldModel->setModel($this, $fieldName, $this->fieldsGroup);
             $tabsContent .= $fieldModel->showEdit();
         }
+
         return $tabsContent;
     }
 
@@ -261,9 +264,13 @@ abstract class Model extends Core\Model
                 $headerNames[$v][2] = $sortFieldArray[$v];
             }
         }
+
         return $headerNames;
     }
 
+    /**
+     * @return string[]
+     */
     public function getHeaders()
     {
         $headers = [];
@@ -281,9 +288,7 @@ abstract class Model extends Core\Model
     {
         $config = Config::getInstance();
 
-        $title = $this->getHeader() . ' - админка ' . $config->domain;
-
-        return $title;
+        return $this->getHeader() . ' - админка ' . $config->domain;
     }
 
     public function getHeader()
@@ -321,14 +326,17 @@ abstract class Model extends Core\Model
                 $this->fields[$fieldName]['realTab'] = $this->fieldsGroup;
                 continue;
             }
+
             // Для каждой записи в структуре может быть несколько вкладок
             $tab = 'tab1';
             if (isset($field['tab'])) {
                 if (!array_key_exists($field['tab'], $tabs)) {
                     $tabs[$field['tab']] = 'tab' . ((int) substr(end($tabs), 3) + 1);
                 }
+
                 $tab = $tabs[$field['tab']];
             }
+
             $this->fields[$fieldName]['realTab'] = $tab;
         }
 
@@ -365,6 +373,7 @@ abstract class Model extends Core\Model
                         $result['isCorrect'] = false;
                     }
                 }
+
                 unset($item['items']);
             }
 
@@ -380,7 +389,7 @@ abstract class Model extends Core\Model
         }
 
         // Проверяем все поля на ошибки, если ошибки есть — составляем список табов, в которых ошибки
-        foreach ($result['items'] as $fieldName => $item) {
+        foreach ($result['items'] as $item) {
             // Если есть сообщение об ошибке - значит общий результат - ошибка
             $result['isCorrect'] = (($item['message'] === '') && ($result['isCorrect'] == true));
 
@@ -396,12 +405,12 @@ abstract class Model extends Core\Model
     /**
      * Установка пустого pageData
      */
-    public function setPageDataNew()
+    public function setPageDataNew(): void
     {
         $this->setPageData([]);
     }
 
-    public function delete()
+    public function delete(): void
     {
         $config = Config::getInstance();
         $pageData = $this->getPageData();
@@ -424,7 +433,7 @@ abstract class Model extends Core\Model
      * @param string $action Совершаемое действие
      * @throws \Exception
      */
-    public function saveToLog($action)
+    public function saveToLog(string $action): void
     {
         $logModel = new LogModel();
         $context = [
@@ -452,6 +461,7 @@ abstract class Model extends Core\Model
         foreach ($list as $k => $v) {
             $ids[$v['ID']] = $structure['ID'] . '-' . $v['ID'];
         }
+
         $aclModel = new \Ideal\Structure\Acl\Admin\Model();
         $acl = $aclModel->getAcl($ids);
         foreach ($list as $k => $v) {
@@ -459,6 +469,7 @@ abstract class Model extends Core\Model
                 $list[$k]['acl'] = $acl[$ids[$v['ID']]];
             }
         }
+
         return $list;
     }
 
@@ -488,8 +499,8 @@ abstract class Model extends Core\Model
         $structure = $config->getStructureByClass(get_class($this));
         $user = \Ideal\Structure\User\Model::getInstance();
         $aclTable = $config->db['prefix'] . 'ideal_structure_acl';
-        $sqlAcl = "SELECT structure FROM {$aclTable} WHERE user_group_id='{$user->data['user_group']}' AND `show`=0";
-        $where .= " AND CONCAT('{$structure['ID']}-', e.ID) NOT IN ({$sqlAcl})";
+        $sqlAcl = sprintf("SELECT structure FROM %s WHERE user_group_id='%s' AND `show`=0", $aclTable, $user->data['user_group']);
+        $where .= sprintf(" AND CONCAT('%s-', e.ID) NOT IN (%s)", $structure['ID'], $sqlAcl);
 
         return parent::getWhere($where);
     }
@@ -499,7 +510,7 @@ abstract class Model extends Core\Model
      *
      * @return array Массив с названием поля и порядком сортировки по нему
      */
-    private function getSortField()
+    private function getSortField(): array
     {
         // Определяем название поля и порядок сортировки по умолчанию
         $fieldSort = explode(' ', $this->params['field_sort']);
@@ -518,6 +529,7 @@ abstract class Model extends Core\Model
         if ($descSort) {
             $sortArray = [$descSort => 'desc'];
         }
+
         return $sortArray;
     }
 }

@@ -22,7 +22,7 @@ class Model
     /**
      * @var string Название таблицы в базе
      */
-    protected $table;
+    protected string $table;
 
     public function __construct()
     {
@@ -35,7 +35,7 @@ class Model
      *
      * @param string $message
      */
-    public function emergency($message, array $context = [])
+    public function emergency($message, array $context = []): void
     {
         $this->log('emergency', $message, $context);
     }
@@ -45,7 +45,7 @@ class Model
      *
      * @param string $message
      */
-    public function alert($message, array $context = [])
+    public function alert($message, array $context = []): void
     {
         $this->log('alert', $message, $context);
     }
@@ -55,7 +55,7 @@ class Model
      *
      * @param string $message
      */
-    public function critical($message, array $context = [])
+    public function critical($message, array $context = []): void
     {
         $this->log('critical', $message, $context);
     }
@@ -66,7 +66,7 @@ class Model
      *
      * @param string $message
      */
-    public function error($message, array $context = [])
+    public function error($message, array $context = []): void
     {
         $this->log('error', $message, $context);
     }
@@ -76,7 +76,7 @@ class Model
      *
      * @param string $message
      */
-    public function warning($message, array $context = [])
+    public function warning($message, array $context = []): void
     {
         $this->log('warning', $message, $context);
     }
@@ -86,7 +86,7 @@ class Model
      *
      * @param string $message
      */
-    public function notice($message, array $context = [])
+    public function notice($message, array $context = []): void
     {
         $this->log('notice', $message, $context);
     }
@@ -96,7 +96,7 @@ class Model
      *
      * @param string $message
      */
-    public function info($message, array $context = [])
+    public function info($message, array $context = []): void
     {
         $this->log('info', $message, $context);
     }
@@ -106,7 +106,7 @@ class Model
      *
      * @param string $message
      */
-    public function debug($message, array $context = [])
+    public function debug($message, array $context = []): void
     {
         $this->log('debug', $message, $context);
     }
@@ -116,8 +116,9 @@ class Model
      *
      * @param string $level Константа одного из уровней протоколирования
      * @param string $message
+     * @param array<string, mixed> $context
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, $message, array $context = []): void
     {
         $config = Config::getInstance();
         $db = Db::getInstance();

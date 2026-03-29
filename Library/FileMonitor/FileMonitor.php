@@ -6,6 +6,7 @@ class FileMonitor
 {
     /** @var array Массив исключений каталогов и файлов. Требуется полный путь до файла/каталога. */
     protected $exclude;
+
     private $files;
 
     /** @var array Массив со списком файлов, собранный в предыдущий раз */
@@ -27,7 +28,7 @@ class FileMonitor
     private $scriptTime = 50;
 
     /** @var int Время начала работы скрипта в формате timestamp */
-    private $startTime;
+    private float $startTime;
 
     /** @var array Массив изменённых файлов */
     private $updated = [];
@@ -44,9 +45,12 @@ class FileMonitor
     /** @var string Периодичность проверки. Варианты: daily, hourly */
     private $period;
 
-    private $fileMonitor = '/file-monitor.txt';
-    private $fileMonitorTmp = '/file-monitor-tmp.txt';
-    private $fileMonitorUpd = '/file-monitor-upd.txt';
+    private string $fileMonitor = '/file-monitor.txt';
+
+    private string $fileMonitorTmp = '/file-monitor-tmp.txt';
+
+    private string $fileMonitorUpd = '/file-monitor-upd.txt';
+
     private string $tmpDir;
 
     /**
@@ -91,6 +95,7 @@ class FileMonitor
                 if ($item === null) {
                     throw new \Exception('Не указан обязательный параметр ' . $key);
                 }
+
                 $this->$key = $item;
             } else {
                 $this->$key = $settings[$key];
@@ -101,7 +106,7 @@ class FileMonitor
     /**
      * Запускает процесс сбора информации всех файлов сайта
      */
-    public function scan()
+    public function scan(): void
     {
         // Проверка, создан ли файл с хэшами
         if (file_exists($this->fileMonitor)) {
@@ -110,6 +115,7 @@ class FileMonitor
                 echo "Файлы сегодня уже проверялись.\n";
                 return;
             }
+
             if ($this->period === 'hourly' && date('d.m.Y H') === date('d.m.Y H', $time)) {
                 echo "Файлы в этот час уже проверялись.\n";
                 return;
@@ -147,10 +153,8 @@ class FileMonitor
 
     /**
      * Считываем все файлы и каталоги из указанного каталога, исключая заданные папки
-     *
-     * @param string $dir
      */
-    private function glob($dir)
+    private function glob(string $dir): void
     {
         $arr = array_diff(scandir($dir), ['.', '..']);
 
@@ -175,7 +179,7 @@ class FileMonitor
     /**
      * Собирает хэши всех файлов сайта и сортирует их по массивам (новые, изменённые, удалённые)
      */
-    private function parseFiles()
+    private function parseFiles(): bool
     {
         $isTimeOut = false;
         $countOld = count($this->filesOld);
@@ -200,7 +204,7 @@ class FileMonitor
             $hash = hash_file('adler32', $file);
             $this->files[$file] = $hash;
 
-            if ($countOld == 0) {
+            if ($countOld === 0) {
                 continue;
             }
 
@@ -225,13 +229,11 @@ class FileMonitor
     /**
      * Ищет удалённые файлы
      */
-    private function checkDeleted()
+    private function checkDeleted(): void
     {
-        if (!empty($this->filesOld)) {
-            foreach ($this->filesOld as $k => $v) {
-                if (!isset($this->files[$k])) {
-                    $this->deleted[] = $k;
-                }
+        foreach ($this->filesOld as $k => $v) {
+            if (!isset($this->files[$k])) {
+                $this->deleted[] = $k;
             }
         }
     }
@@ -239,7 +241,7 @@ class FileMonitor
     /**
      * Отправляет результат мониторинга файлов на почту, указанную в свойстке "to" этого класса
      */
-    private function sendMail()
+    private function sendMail(): void
     {
         $message = '';
         $headers = "From: " . $this->from . "\n"
@@ -250,15 +252,19 @@ class FileMonitor
             if (count($this->updated) > 0) {
                 $message .= "Изменённые файлы:\n" . implode("\n", $this->updated) . "\n\n";
             }
+
             if (count($this->added) > 0) {
                 $message .= "Добавленные файлы:\n" . implode("\n", $this->added) . "\n\n";
             }
+
             if (count($this->deleted) > 0) {
                 $message .= "Удалённые файлы:\n" . implode("\n", $this->deleted) . "\n\n";
             }
+
             $params = $this->isFromParameter ? '-f ' . $this->from : null;
             mail($this->to, $this->domain . ': обнаружены изменения в файлах', $message, $headers, $params);
         }
+
         $this->saveChanges($message);
         $this->delTempFiles();
     }
@@ -268,7 +274,7 @@ class FileMonitor
      *
      * @param string $message Текст отчёта о работе скрипта
      */
-    private function saveChanges($message)
+    private function saveChanges(string $message): void
     {
         // Записываем в файл результат обхода
         $a = serialize($this->files);
@@ -277,11 +283,12 @@ class FileMonitor
         fclose($fp);
 
         // Записываем в файл текст отчёта
-        if (!empty($message)) {
+        if ($message !== '' && $message !== '0') {
             $fileMonitorReporstDir = dirname($this->fileMonitor) . '/file-reports/';
             if (!file_exists($fileMonitorReporstDir)) {
                 mkdir($fileMonitorReporstDir);
             }
+
             $reportFileName = $fileMonitorReporstDir . date('Y-m-d') . '.txt';
             $fp = fopen($reportFileName, 'w+');
             fwrite($fp, $message);
@@ -292,7 +299,7 @@ class FileMonitor
     /**
      * Сохраняет промежуточный результат работы скрипта
      */
-    private function saveTmpChanges()
+    private function saveTmpChanges(): void
     {
         $a = serialize($this->files);
         $fp = fopen($this->fileMonitorTmp, 'w+');
@@ -308,11 +315,12 @@ class FileMonitor
     /**
      * Удаляет временные файлы сканирования
      */
-    private function delTempFiles()
+    private function delTempFiles(): void
     {
         if (file_exists($this->fileMonitorTmp)) {
             unlink($this->fileMonitorTmp);
         }
+
         if (file_exists($this->fileMonitorUpd)) {
             unlink($this->fileMonitorUpd);
         }
@@ -323,10 +331,9 @@ class FileMonitor
      *
      * Если настройки Ideal CMS не удалось обнаружить, то они не применятся, но и ошибки в этом не будет.
      *
-     * @param array $settings
-     * @return array
+     * @param array<string, mixed> $settings
      */
-    private function loadCmsSetting($settings)
+    private function loadCmsSetting(array $settings): array
     {
         $dataFile = __DIR__ . '/../../../site_data.php';
         if ($dataFile = stream_resolve_include_path($dataFile)) {
@@ -336,12 +343,13 @@ class FileMonitor
                 empty($scanDir) ? $settings['scanDir'] : $scanDir,
             );
             $tmpDir = $settings['scanDir'] . $data['cms']['tmpFolder'];
-            $settings['tmpDir'] = empty($tmpDir) ? $settings['tmpDir'] : $tmpDir;
+            $settings['tmpDir'] = $tmpDir === '' || $tmpDir === '0' ? $settings['tmpDir'] : $tmpDir;
             $settings['exclude'] = $data['monitoring']['exclude'];
             $settings['to'] = $data['cms']['adminEmail'];
             $settings['from'] = $data['robotEmail'];
             $settings['domain'] = $data['domain'];
         }
+
         return $settings;
     }
 }

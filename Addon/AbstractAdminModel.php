@@ -10,7 +10,7 @@
 
 namespace Ideal\Addon;
 
-use Ideal\Core\Admin;
+use Ideal\Core\Admin\Model;
 use Ideal\Core\Db;
 
 /**
@@ -19,12 +19,12 @@ use Ideal\Core\Db;
  * Аддоны обеспечивают прикрепление к структуре дополнительного содержимого различных типов.
  *
  */
-class AbstractAdminModel extends Admin\Model
+class AbstractAdminModel extends Model
 {
     /**
      * {@inheritdoc}
      */
-    public function delete()
+    public function delete(): void
     {
         $db = Db::getInstance();
         $db->delete($this->_table)->where('ID=:id', ['id' => $this->pageData['ID']]);
@@ -37,13 +37,13 @@ class AbstractAdminModel extends Admin\Model
         return $this->pageData;
     }
 
-    public function setPageDataByPrevStructure($prevStructure)
+    public function setPageDataByPrevStructure($prevStructure): void
     {
         $db = Db::getInstance();
 
         // Получаем идентификатор таба из группы
         [, $tabID] = explode('-', $this->fieldsGroup, 2);
-        $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps AND tab_ID=:tid";
+        $_sql = sprintf('SELECT * FROM %s WHERE prev_structure=:ps AND tab_ID=:tid', $this->_table);
         $pageData = $db->select($_sql, ['ps' => $prevStructure, 'tid' => $tabID]);
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось

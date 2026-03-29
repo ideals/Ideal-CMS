@@ -4,7 +4,7 @@
  * Скрипт изменения размеров изображения. Вызывается с помощью .htaccess
  */
 
-include('Resize.php');
+include(__DIR__ . '/Resize.php');
 use Resize\Resize;
 
 if (!isset($_GET['img']) || $_GET['img'] == '') {

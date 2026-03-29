@@ -32,8 +32,9 @@ class ConfigPhp
 
     /**
      * Замена значений настроек в $this->params на данные, введённые пользователем
+     * @return mixed[]
      */
-    public function pickupValues()
+    public function pickupValues(): array
     {
         $response = ['res' => true, 'text' => ''];
         $pageData = [];
@@ -67,12 +68,13 @@ class ConfigPhp
                 $item = $fieldModel->parseInputValue(false);
 
                 if (!empty($item['message'])) {
-                    $response = ['res' => false, 'text' => $item['message']];
-                    return $response;
+                    return ['res' => false, 'text' => $item['message']];
                 }
+
                 $this->params[$tabId]['arr'][$field]['value'] = $value;
             }
         }
+
         return $response;
     }
 
@@ -89,9 +91,10 @@ class ConfigPhp
         foreach ($this->params as $tabId => $tab) {
             $pad = 4;
             if ($tabId != 'default') {
-                $file .= "    '{$tabId}' => array( // {$tab['name']}\n";
+                $file .= sprintf("    '%s' => array( // %s%s", $tabId, $tab['name'], PHP_EOL);
                 $pad = 8;
             }
+
             foreach ($tab['arr'] as $field => $param) {
                 $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;
                 $values = ($param['type'] == 'Ideal_Select') ? ' | ' . json_encode($param['values'], $options) : '';
@@ -103,6 +106,7 @@ class ConfigPhp
                 $file .= str_repeat(' ', $pad) . "'" . $field . "' => " . '"' . $param['value'] . '", '
                     . "// " . $param['label'] . ' | ' . $param['type'] . $values . "\n";
             }
+
             if ($tabId != 'default') {
                 $file .= "    ),\n";
             }
@@ -122,25 +126,24 @@ class ConfigPhp
      * @param string $text Текст для информирующего блока
      * @return bool Флаг успешности сохранения данных в файл
      */
-    public function changeAndSave($fileName, $res = true, $class = '', $text = 'Настройки сохранены!')
+    public function changeAndSave(string $fileName, $res = true, $class = '', $text = 'Настройки сохранены!')
     {
         if (empty($class)) {
             $class = 'alert alert-block alert-success';
         }
+
         // Заменяем настройки на введённые пользователем
         $response = $this->pickupValues();
         if ($response['res'] === false) {
             $res = false;
             $text = $response['text'];
             $class = 'alert alert-danger';
-        } else {
+        } elseif ($res) {
             // Пытаемся сохранить файл, только если до этого не произошло ошибок
-            if ($res) {
-                if ($this->saveFile($fileName) === false) {
-                    $res = false;
-                    $text = 'Не получилось сохранить настройки в файл ' . $fileName;
-                    $class = 'alert alert-danger';
-                }
+            if ($this->saveFile($fileName) === false) {
+                $res = false;
+                $text = 'Не получилось сохранить настройки в файл ' . $fileName;
+                $class = 'alert alert-danger';
             }
         }
 
@@ -158,7 +161,7 @@ class ConfigPhp
      * @param string $fileName Имя php-файла из которого читается конфигурация
      * @return bool Флаг успешного считывания данных из файла
      */
-    public function loadFile($fileName)
+    public function loadFile($fileName): bool
     {
         if (!stream_resolve_include_path($fileName)) {
             return false;
@@ -169,7 +172,7 @@ class ConfigPhp
         // Убираем служебные символы (пробелы, табуляцию) из начала и из конца строк
         array_walk(
             $cfg,
-            function (&$value) {
+            function (&$value): void {
                 $value = trim($value);
             },
         );
@@ -190,29 +193,29 @@ class ConfigPhp
         // Проходимся по всем строчкам php-файла и заполняем массив $params
         for ($i = 0; $i < $c; $i++) {
             $v = $cfg[$i];
-            if (in_array($v, $skip)) {
+            if (in_array($v, $skip, true)) {
                 continue;
             }
-            if (strpos($v, "', // ")) {
-                $cols = explode("', // ", $v);
-            } else {
-                $cols = explode('", // ', $v);
-            }
+
+            $cols = strpos($v, "', // ") ? explode("', // ", $v) : explode('", // ', $v);
+
             $other = $cols[0];
             $label = $cols[1] ?? null;
             if (is_null($label)) {
                 // Комментария в нужном формате нет, значит это массив
                 preg_match('/\'(.*)\'\s*=>\s*array\s*\(\s*\/\/\s*(.*)/i', $other, $match);
                 if (!isset($match[1]) || !isset($match[2])) {
-                    echo "Ошибка парсинга файла {$fileName} в строке $i<br />";
+                    echo sprintf('Ошибка парсинга файла %s в строке %d<br />', $fileName, $i);
                     exit;
                 }
+
                 $array = [];
                 while ($cfg[++$i] != '),') {
                     $v = $cfg[$i];
                     $param = $this->parseStr($v);
                     $array = array_merge($array, $param);
                 }
+
                 // Записываем массив данных в соответствующем формате
                 $params[$match[1]] = [
                     'arr' => $array,
@@ -224,6 +227,7 @@ class ConfigPhp
                 $params['default']['arr'] = array_merge($params['default']['arr'], $param);
             }
         }
+
         $this->params = $params;
         return true;
     }
@@ -232,7 +236,7 @@ class ConfigPhp
      * Сеттер для защищённого поля $this->params
      * @param array $params Модифицированный набор полей для сохранения в конфигурационном файле
      */
-    public function setParams($params)
+    public function setParams($params): void
     {
         $this->params = $params;
     }
@@ -242,7 +246,7 @@ class ConfigPhp
      *
      * @return string Сгенерированный HTML-код
      */
-    public function showEdit()
+    public function showEdit(): string
     {
         $tabs = '<ul class="nav nav-tabs">';
         $tabsContent = '<div class="tab-content">';
@@ -255,6 +259,7 @@ class ConfigPhp
                 } else {
                     $active = '';
                 }
+
                 $tabs .= '<li class="' . $active . '">'
                     . '<a href="#' . $tabId . '" data-toggle="tab">' . $tab['name'] . '</a>'
                     . '</li>';
@@ -276,15 +281,18 @@ class ConfigPhp
                     $fieldModel->inputClass = '';
                     $tabsContent .= $fieldModel->showEdit();
                 }
+
                 $tabsContent .= '</div>';
             }
         }
+
         $tabs .= '</ul>';
         $tabsContent .= '</div>';
-        if (count($this->params) == 1) {
+        if (count($this->params) === 1) {
             // Если вкладка только одна, то вкладки не надо отображать
             $tabs = '';
         }
+
         return $tabs . $tabsContent;
     }
 
@@ -297,22 +305,16 @@ class ConfigPhp
      */
     protected function parseStr($str)
     {
-        if (strpos($str, "', // ")) {
-            [$other, $label] = explode("', // ", $str);
-        } else {
-            [$other, $label] = explode('", // ', $str);
-        }
-        $label = chop($label);
+        [$other, $label] = strpos($str, "', // ") ? explode("', // ", $str) : explode('", // ', $str);
+
+        $label = rtrim($label);
         $fields = explode(' | ', $label);
         $label = $fields[0];
         $type = isset($fields[1]) && $fields[1] !== '' ? $fields[1] : 'Ideal_Text';
-        if (strpos($other, " => '")) {
-            [$name, $value] = explode(" => '", $other);
-        } else {
-            [$name, $value] = explode(' => "', $other);
-        }
+        [$name, $value] = strpos($other, " => '") ? explode(" => '", $other) : explode(' => "', $other);
+
         $value = str_replace('\n', "\n", $value); // заменяем переводы строки на правильные символы
-        $fieldName = trim($name, ' \''); // убираем стартовые пробелы и кавычку у названия поля
+        $fieldName = trim($name, " '"); // убираем стартовые пробелы и кавычку у названия поля
         $param[$fieldName] = [
             'label' => $label,
             'value' => $value,
@@ -322,6 +324,7 @@ class ConfigPhp
         if ($type === 'Ideal_Select') {
             $param[$fieldName]['values'] = json_decode($fields[2]);
         }
+
         return $param;
     }
 }

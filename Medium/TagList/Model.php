@@ -21,8 +21,9 @@ class Model extends AbstractModel
 {
     /**
      * {@inheritdoc}
+     * @return mixed[]
      */
-    public function getList()
+    public function getList(): array
     {
         $db = Db::getInstance();
         $config = Config::getInstance();
@@ -41,26 +42,28 @@ class Model extends AbstractModel
     /**
      * {@inheritdoc}
      */
-    public function getSqlAdd($newValue = [])
+    public function getSqlAdd($newValue = []): string
     {
         $config = Config::getInstance();
         // Определяем структуру объекта, которому присваиваются теги
         $structure = $config->getStructureByClass(get_class($this->obj));
 
-        $_sql = "DELETE FROM {$this->table} WHERE part_id='{{ objectId }}' AND structure_id='{$structure['ID']}';";
-        if (is_array($newValue) && (count($newValue) > 0)) {
+        $_sql = sprintf("DELETE FROM %s WHERE part_id='{{ objectId }}' AND structure_id='%s';", $this->table, $structure['ID']);
+        if (is_array($newValue) && ($newValue !== [])) {
             foreach ($newValue as $v) {
                 $_sql .= "INSERT INTO {$this->table}
                               SET part_id='{{ objectId }}', tag_id='{$v}', structure_id='{$structure['ID']}';";
             }
         }
+
         return $_sql;
     }
 
     /**
      * {@inheritdoc}
+     * @return mixed[]
      */
-    public function getValues()
+    public function getValues(): array
     {
         $fieldNames = array_keys($this->fields);
         $ownerField = $fieldNames[0];

@@ -10,23 +10,23 @@
 
 namespace Ideal\Core\Site;
 
+use Ideal\Structure\Error404\Model;
 use Ideal\Core\Config;
 use Ideal\Core\PluginBroker;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
-use Ideal\Structure\Error404;
 use Ideal\Structure\Home;
 
 class Router
 {
     /** @var string Название контроллера активной страницы */
-    protected $controllerName = '';
+    protected string $controllerName = '';
 
     /** @var Model Модель активной страницы */
-    protected $model = null;
+    protected $model;
 
     /** @var Model Модель для обработки 404-ых ошибок */
-    protected $error404 = null;
+    protected Model $error404;
 
     /**
      * Производит роутинг исходя из запрошенного URL-адреса
@@ -44,20 +44,18 @@ class Router
         if ($request->mode == 'ajax' && $request->controller != '') {
             $controllerName = str_replace('.', '\\', $request->controller) . '\\AjaxController';
             $is404 = true;
-            if (class_exists($controllerName)) {
-                // Если контроллер в запросе указан И запрошенный класс существует
-                // то устанавливаем контроллер и завершаем роутинг
-                if (!empty($request->action) && method_exists($controllerName, $request->action . 'Action')) {
-                    $this->controllerName = $controllerName;
-                    $is404 = false;
-                }
+            // Если контроллер в запросе указан И запрошенный класс существует
+            // то устанавливаем контроллер и завершаем роутинг
+            if (class_exists($controllerName) && (!empty($request->action) && method_exists($controllerName, $request->action . 'Action'))) {
+                $this->controllerName = $controllerName;
+                $is404 = false;
             }
         }
 
         $pluginBroker = PluginBroker::getInstance();
         $pluginBroker->makeEvent('onPreDispatch', $this);
 
-        $this->error404 = new Error404\Model();
+        $this->error404 = new Model();
 
         if (is_null($this->model)) {
             $this->model = $this->routeByUrl();
@@ -84,19 +82,19 @@ class Router
      *
      * @return string Название контроллера
      */
-    public function getControllerName()
+    public function getControllerName(): string
     {
-        if ($this->controllerName != '') {
+        if ($this->controllerName !== '') {
             return $this->controllerName;
         }
 
         $path = $this->model->getPath();
 
-        if (count($path) == 0) {
+        if (count($path) === 0) {
             // Эта проблема может возникнуть, только если что-то неправильно запрограммировано
             throw new \Exception('Не удалось построить путь. Модель: ' . get_class($this->model));
-            $this->model->is404 = true;
         }
+
         $end = array_pop($path);
         $prev = array_pop($path);
 
@@ -125,9 +123,7 @@ class Router
             }
         }
 
-        $controllerName = Util::getClassName($structure, 'Structure') . '\\Site\\Controller';
-
-        return $controllerName;
+        return Util::getClassName($structure, 'Structure') . '\\Site\\Controller';
     }
 
     /**
@@ -137,7 +133,7 @@ class Router
      *
      * @param $name string Название контроллера
      */
-    public function setControllerName($name)
+    public function setControllerName(string $name): void
     {
         $this->controllerName = $name;
     }
@@ -155,7 +151,7 @@ class Router
     /**
      * @param $model Model Устанавливает модель, найденную роутером (обычно использется в плагинах)
      */
-    public function setModel($model)
+    public function setModel($model): void
     {
         $this->model = $model;
     }
@@ -193,7 +189,7 @@ class Router
         $url = $this->prepareUrl($_SERVER['REQUEST_URI']);
 
         // Если запрошена главная страница
-        if ($url == '') {
+        if ($url === '') {
             $model = new Home\Site\Model('0-' . $prevStructureId);
             $model = $model->detectPageByUrl($path, '/');
             return $model;
@@ -217,6 +213,7 @@ class Router
                 if ($suffix != $config->urlSuffix) {
                     $is404 = true;
                 }
+
                 $url = substr($url, 0, -$lengthSuffix); // убираем суффикс из url
             }
 
@@ -238,6 +235,7 @@ class Router
                 // Если роутинг нашёл нужную страницу, но суффикс неправильный
                 $model->is404 = true;
             }
+
             if ($model->is404) {
                 $this->error404->save404();
             }
@@ -246,6 +244,7 @@ class Router
             $model->setPath($path);
             $model->is404 = true;
         }
+
         return $model;
     }
 
@@ -254,9 +253,8 @@ class Router
      *
      * @param string $url
      * @param bool $stripQuery Нужно ли удалять символы после ?
-     * @return string
      */
-    protected function prepareUrl($url, $stripQuery = true)
+    protected function prepareUrl($url, $stripQuery = true): string
     {
         $config = Config::getInstance();
 

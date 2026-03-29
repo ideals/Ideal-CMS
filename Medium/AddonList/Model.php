@@ -20,8 +20,9 @@ class Model extends AbstractModel
 {
     /**
      * {@inheritdoc}
+     * @return mixed[]
      */
-    public function getList()
+    public function getList(): array
     {
         $addons = $this->obj->fields[$this->fieldName]['available'];
         $list = [];
@@ -31,6 +32,7 @@ class Model extends AbstractModel
             $arr = require($folder . '/config.php');
             $list[$addon] = $arr['params']['name'];
         }
+
         return $list;
     }
 }

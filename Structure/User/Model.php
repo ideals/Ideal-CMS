@@ -34,7 +34,7 @@ class Model
     protected $session = [];
 
     /** @var string Название таблицы, в которой хранятся данные пользователей */
-    protected $table = 'ideal_structure_user';
+    protected string $table = 'ideal_structure_user';
 
     /** @var string Поле, используемое в качестве логина */
     protected $loginRow = 'email';
@@ -87,9 +87,10 @@ class Model
     public static function getInstance($seance = '')
     {
         if (empty(static::$instance)) {
-            $className = get_called_class();
+            $className = static::class;
             static::$instance = new $className($seance);
         }
+
         return static::$instance;
     }
 
@@ -98,7 +99,7 @@ class Model
      *
      * @return bool Если залогинен — true, иначе — false
      */
-    public function checkLogin()
+    public function checkLogin(): bool
     {
         // Если пользователь не залогинен - возвращаем false
         return isset($this->data['ID']);
@@ -114,25 +115,26 @@ class Model
      *
      * @return bool true — если удалось авторизоваться, false — если не удалось
      */
-    public function login($login, $pass)
+    public function login($login, $pass): bool
     {
         $login = trim($login);
         $pass = trim($pass);
 
         // Если не указан логин или пароль - выходим с false
         if (!$login || !$pass) {
-            $this->errorMessage = "Необходимо указать и {$this->loginRowName}, и пароль.";
+            $this->errorMessage = sprintf('Необходимо указать и %s, и пароль.', $this->loginRowName);
             return false;
         }
 
         // Получаем пользователя с указанным логином
         $db = Db::getInstance();
-        $_sql = "SELECT * FROM {$this->table} WHERE is_active = 1 AND {$this->loginRow} = :login";
+        $_sql = sprintf('SELECT * FROM %s WHERE is_active = 1 AND %s = :login', $this->table, $this->loginRow);
         $user = $db->select($_sql, ['login' => $login]);
-        if (count($user) == 0) {
-            $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
+        if (count($user) === 0) {
+            $this->errorMessage = sprintf('Неверно указаны %s или пароль.', $this->loginRowName);
             return false;
         }
+
         $user = $user[0];
 
         // Если пользователь с таким логином не нашлось, или пароль не совпал - выходим с false
@@ -146,7 +148,7 @@ class Model
             }
 
             $this->logout();
-            $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
+            $this->errorMessage = sprintf('Неверно указаны %s или пароль.', $this->loginRowName);
 
             // Придерживаем ответ на значение равное умножению счётчика неудачных попыток авторизации на 5
             sleep($user['counter_failures'] * 5);
@@ -181,9 +183,10 @@ class Model
     /**
      * Выход пользователя с удалением данных из сессии
      */
-    public function logout()
+    public function logout(): void
     {
-        $this->data = $this->session = [];
+        $this->data = [];
+        $this->session = [];
         unset($_SESSION[$this->seance]);
     }
 
@@ -193,7 +196,7 @@ class Model
      * @param string $loginRow Название поля (например, email)
      * @param string $loginRowName Название поля для отображения уведомлений (например, e-mail)
      */
-    public function setLoginField($loginRow, $loginRowName)
+    public function setLoginField($loginRow, $loginRowName): void
     {
         $this->loginRow = $loginRow;
         $this->loginRowName = $loginRowName;

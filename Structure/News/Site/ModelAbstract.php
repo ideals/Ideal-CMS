@@ -10,17 +10,18 @@
 
 namespace Ideal\Structure\News\Site;
 
+use Ideal\Core\Site\Model;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
 use Ideal\Structure\User;
 
-class ModelAbstract extends \Ideal\Core\Site\Model
+class ModelAbstract extends Model
 {
     public $cid;
 
-    public function detectPageByUrl($path, $url)
+    public function detectPageByUrl($path, $url): self
     {
         if (count($url) > 1) {
             // URL новостей не может содержать вложенных элементов
@@ -35,7 +36,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $user = new User\Model();
         $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
 
-        $_sql = "SELECT * FROM {$this->_table} WHERE BINARY url=:url {$checkActive} AND date_create < :time";
+        $_sql = sprintf('SELECT * FROM %s WHERE BINARY url=:url %s AND date_create < :time', $this->_table, $checkActive);
         $par = ['url' => $url[0], 'time' => time()];
 
         $news = $db->select($_sql, $par); // запрос на получение всех страниц, соответствующих частям url
@@ -49,7 +50,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
 
         if (count($news) > 1) {
             $c = count($news);
-            Util::addError("В базе несколько ({$c}) новостей с одинаковым url: " . implode('/', $url));
+            Util::addError(sprintf('В базе несколько (%d) новостей с одинаковым url: ', $c) . implode('/', $url));
             $news = [$news[0]]; // оставляем для отображения первую новость
         }
 
@@ -73,8 +74,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
      */
     public function getStructureElements()
     {
-        $list = $this->getList();
-        return $list;
+        return $this->getList();
     }
 
     /**
@@ -93,6 +93,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
             } else {
                 $news[$k]['link'] = $parentUrl . '/' . $v['url'] . $config->urlSuffix;
             }
+
             $news[$k]['date_create'] = Util::dateReach($v['date_create']);
         }
 
@@ -115,14 +116,16 @@ class ModelAbstract extends \Ideal\Core\Site\Model
                     $prevStructure = $value['ID'] . '-' . $end['ID'];
                 }
             }
+
             if (!isset($prevStructure)) {
                 Util::addError('Не найдена prev_structure: ' . $end['structure']);
                 return '';
             }
+
             foreach ($addons as $addon) {
                 $addonGroupName = strtolower(end(explode('_', $addon[1])));
                 $table = $config->db['prefix'] . 'ideal_addon_' . $addonGroupName;
-                $_sql = "SELECT * FROM {$table} WHERE prev_structure=:ps AND tab_ID=:ti";
+                $_sql = sprintf('SELECT * FROM %s WHERE prev_structure=:ps AND tab_ID=:ti', $table);
                 $result = $db->select($_sql, ['ps' => $prevStructure, 'ti' => $addon[0]]);
                 $text .= $result[0]['content'];
             }
@@ -133,9 +136,8 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         return $text;
     }
 
-    public function getWhere($where)
+    protected function getWhere($where): string
     {
-        $where = 'WHERE ' . $where . ' AND is_active=1 AND date_create < ' . time();
-        return $where;
+        return 'WHERE ' . $where . ' AND is_active=1 AND date_create < ' . time();
     }
 }

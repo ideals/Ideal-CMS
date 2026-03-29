@@ -39,17 +39,16 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function showEdit()
+    public function showEdit(): string
     {
         $this->htmlName = $this->groupName . '_' . $this->name;
-        $input = $this->getInputText();
-        return $input;
+        return $this->getInputText();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $value = $this->getValue();
 
@@ -70,8 +69,7 @@ class Controller extends AbstractController
         $tabs = $addonModel->getTabs($value);
 
         $valueHtml = htmlspecialchars($value);
-
-        $html = <<<HTML
+        return <<<HTML
                         <input type="hidden" id="{$this->htmlName}" name="{$this->htmlName}" value="{$valueHtml}">
                         <input type="hidden" id="available_addons" name="available_addons" value="{$availableAddons}">
                         <script type="text/javascript">
@@ -94,7 +92,6 @@ class Controller extends AbstractController
                         </script>
                         <script type="text/javascript" src="Ideal/Field/Addon/script.js"></script>
             HTML;
-        return $html;
     }
 
     /**
@@ -124,9 +121,8 @@ class Controller extends AbstractController
         }
 
         $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;
-        $value = json_encode($arr, $options);
 
-        return $value;
+        return json_encode($arr, $options);
     }
 
     /**
@@ -148,6 +144,7 @@ class Controller extends AbstractController
             $addon->setFieldsGroup($groupName);
             $item['items'][$tabID] = $addon->parseInputParams($isCreate);
         }
+
         return $item;
     }
 }

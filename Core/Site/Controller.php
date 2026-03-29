@@ -10,10 +10,10 @@
 
 namespace Ideal\Core\Site;
 
+use Ideal\Structure\User\Model;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Core\View;
-use Ideal\Structure\User;
 
 class Controller
 {
@@ -38,13 +38,15 @@ class Controller
     /**
      * Действие для отсутствующей страницы сайта (обработка ошибки 404)
      */
-    public function error404Action()
+    public function error404Action(): void
     {
-        $name = $title = 'Страница не найдена';
-        if (isset($this->view)) {
+        $name = 'Страница не найдена';
+        $title = 'Страница не найдена';
+        if ($this->view !== null) {
             // Если шаблон был инициирован ранее, сбрасываем его, чтобы поставить шаблон 404-ой ошибки
             unset($this->view);
         }
+
         $this->templateInit('404.twig');
 
         // Добавляем в path пустой элемент
@@ -64,21 +66,17 @@ class Controller
      * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
      * @param array $tplFolders Список дополнительных папок с файлами шаблонов
      */
-    public function templateInit($tplName = '', $tplFolders = [])
+    public function templateInit($tplName = '', array $tplFolders = []): void
     {
         // Если вьюха уже установлена, то ничего делать не надо
         // для переустановки вьюхи надо придумать отдельный метод, когда это потребуется
-        if (isset($this->view)) {
+        if ($this->view !== null) {
             return;
         }
 
         // Инициализация шаблона страницы
         if ($tplName == '') {
-            if ($this->tplName == '') {
-                $tplName = $this->getPathToTwigTemplate('index.twig');
-            } else {
-                $tplName = $this->tplName;
-            }
+            $tplName = $this->tplName == '' ? $this->getPathToTwigTemplate('index.twig') : $this->tplName;
         }
 
         // Проверяем, присутствует ли указанный файл шаблона на диске
@@ -86,14 +84,13 @@ class Controller
             echo 'Нет файла шаблона ' . $tplName;
             exit;
         }
+
         $tplRoot = dirname(stream_resolve_include_path($tplName));
         $tplName = basename($tplName);
 
         // Построение полных путей для дополнительных папок шаблонов
-        if (count($tplFolders) > 0) {
-            foreach ($tplFolders as $k => $v) {
-                $tplFolders[$k] = stream_resolve_include_path($v);
-            }
+        foreach ($tplFolders as $k => $v) {
+            $tplFolders[$k] = stream_resolve_include_path($v);
         }
 
         $config = Config::getInstance();
@@ -107,9 +104,9 @@ class Controller
      * По умолчанию система ставит только заголовок Content-Type, но и его можно
      * переопределить в этом методе.
      *
-     * @return array Массив где ключи - названия заголовков, а значения - содержание заголовков
+     * @return array{} Массив где ключи - названия заголовков, а значения - содержание заголовков
      */
-    public function getHttpHeaders()
+    public function getHttpHeaders(): array
     {
         return [
             // Дата последней модификации страницы
@@ -130,7 +127,7 @@ class Controller
      * Выдёргивает контент из связанного шаблона и по этому контенту определяет заголовок (H1)
      *
      */
-    public function indexAction()
+    public function indexAction(): void
     {
 
         // Выдёргиваем заголовок из addonName[key]['content']
@@ -161,7 +158,8 @@ class Controller
         if ($page > 1) {
             // На страницах листалки описание категории отображать не надо
             if (isset($pageData['addons'])) {
-                for ($i = 0; $i < count($pageData['addons']); $i++) {
+                $counter = count($pageData['addons']);
+                for ($i = 0; $i < $counter; $i++) {
                     $this->view->addons[$i]['content'] = '';
                 }
             }
@@ -193,7 +191,7 @@ class Controller
             }
         }
 
-        $actionName = $actionName . 'Action';
+        $actionName .= 'Action';
 
         if (method_exists($this, $actionName)) {
             // Вызываемый action существует, запускаем его
@@ -218,7 +216,7 @@ class Controller
         $this->view->isProduction = $config->domain == str_replace('www.', '', $_SERVER['HTTP_HOST']);
 
         // Определение залогинен пользователь в админку или нет
-        $user = new User\Model();
+        $user = new Model();
         $this->view->isAdmin = $user->checkLogin();
 
         $helper = new Helper();
@@ -249,7 +247,7 @@ class Controller
      * Сеттер, необходимый для вызова экшенов контроллера из других контроллеров
      *
      */
-    public function setModel($model)
+    public function setModel($model): void
     {
         $this->model = $model;
     }
@@ -271,7 +269,7 @@ class Controller
      *
      * @param string $tplName Путь к файлу шаблона от Ideal или от Mods (не включая эти папки)
      */
-    public function setTemplate($tplName)
+    public function setTemplate($tplName): void
     {
         $this->tplName = $tplName;
     }
@@ -280,15 +278,15 @@ class Controller
      * Получение пути до twig шаблона структуры
      *
      * @param string $tplName Тип класса (например, Structure или Field)
-     * @return string
      */
-    protected function getPathToTwigTemplate($tplName)
+    protected function getPathToTwigTemplate(string $tplName): string
     {
         // Если был введён полный путь то он используется напрямую иначе только имя
         // Считаем что был введён полный путь если присутствует хотябы один слэш
         if (strpos($tplName, '/') !== false) {
             return $tplName;
         }
+
         $parts = explode('\\', get_class($this));
         $moduleName = ($parts[0] == 'Ideal') ? '' : $parts[0] . '/';
         return $moduleName . $parts[1] . '/' . $parts[2] . '/Site/' . $tplName;
@@ -298,7 +296,7 @@ class Controller
      * Редирект по указанному адресу
      * @param string $url Адрес для редиректа
      */
-    protected function redirect($url)
+    protected function redirect(string $url)
     {
         header('Location: ' . $url);
         exit;

@@ -33,10 +33,11 @@ class Controller extends AbstractController
      *
      * @return string HTML-код группы редактирования для этого поля
      */
-    public function showEdit()
+    public function showEdit(): string
     {
         $input = $this->getInputText();
-        $html = <<<HTML
+
+        return <<<HTML
                     <div id="{$this->htmlName}-control-group" class="form-group checkbox">
                         <div class="{$this->inputClass} {$this->htmlName}-controls">
                             {$input}
@@ -44,14 +45,12 @@ class Controller extends AbstractController
                         </div>
                     </div>
             HTML;
-
-        return $html;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getInputText()
+    public function getInputText(): string
     {
         $checked = ($this->getValue() == 1) ? 'checked="checked"' : '';
         return '<label class="checkbox"><input type="checkbox" name="' . $this->htmlName
@@ -62,7 +61,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getValueForList($values, $fieldName)
+    public function getValueForList($values, $fieldName): string
     {
         return ($values[$fieldName] == 1) ? 'Да' : 'Нет';
     }
@@ -70,7 +69,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function pickupNewValue()
+    public function pickupNewValue(): int
     {
         $request = new Request();
         $fieldName = $this->groupName . '_' . $this->name;

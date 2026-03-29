@@ -1,5 +1,7 @@
 <?php
 
+use Ideal\Core\Db;
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -13,7 +15,7 @@
  */
 
 // Инициализируем доступ к БД
-$db = Ideal\Core\Db::getInstance();
+$db = Db::getInstance();
 
 // Файл дампа БД
 $dumpName = addslashes(stream_resolve_include_path($_POST['name']));

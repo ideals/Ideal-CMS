@@ -10,6 +10,7 @@
 
 namespace Ideal\Structure\Roster\Admin;
 
+use Ideal\Core\Admin\Model;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Util;
@@ -18,9 +19,9 @@ use Ideal\Core\Util;
  * Класс для работы со списками
  *
  */
-class ModelAbstract extends \Ideal\Core\Admin\Model
+class ModelAbstract extends Model
 {
-    public function delete()
+    public function delete(): void
     {
         parent::delete();
         $db = Db::getInstance();
@@ -36,8 +37,8 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
                               AND pos > {$this->pageData['pos']}";
             $db->query($_sql);
         }
+
         // TODO сделать проверку успешности удаления
-        return 1;
     }
 
     public function detectPageByIds($path, $par)
@@ -49,16 +50,17 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         }
 
         $first = intval($first);
-        $_sql = "SELECT * FROM {$this->_table} WHERE ID={$first}";
+        $_sql = sprintf('SELECT * FROM %s WHERE ID=%d', $this->_table, $first);
         $db = Db::getInstance();
         $localPath = $db->select($_sql);
         if (!isset($localPath[0]['ID'])) {
             $this->is404 = true;
             return $this;
         }
-        array_push($this->path, $localPath[0]);
 
-        if (count($par) != 0) {
+        $this->path[] = $localPath[0];
+
+        if ($par !== []) {
             // Ещё остались неопределённые элементы пути. Запускаем вложенную структуру.
             $config = Config::getInstance();
             $trueResult = $this->path;
@@ -72,6 +74,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $model = $structure->detectPageByIds($this->path, $par);
             return $model;
         }
+
         return $this;
     }
 }

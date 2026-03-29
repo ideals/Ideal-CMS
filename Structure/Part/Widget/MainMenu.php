@@ -14,17 +14,18 @@
 
 namespace Ideal\Structure\Part\Widget;
 
+use Ideal\Core\Widget;
+use Ideal\Field\Url\Model;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
-use Ideal\Field;
 
-class MainMenu extends \Ideal\Core\Widget
+class MainMenu extends Widget
 {
     public function getData()
     {
         $db = Db::getInstance();
         $config = Config::getInstance();
-        $url = new Field\Url\Model();
+        $url = new Model();
 
         // Считываем главное меню
         $par = [
@@ -33,7 +34,7 @@ class MainMenu extends \Ideal\Core\Widget
             'lvl' => 1,
         ];
         $table = strtolower($config->db['prefix'] . 'ideal_structure_part');
-        $_sql = "SELECT * FROM {$table} WHERE is_active=:active AND is_not_menu=:menu AND lvl=:lvl ORDER BY cid";
+        $_sql = sprintf('SELECT * FROM %s WHERE is_active=:active AND is_not_menu=:menu AND lvl=:lvl ORDER BY cid', $table);
         $menu = $db->select($_sql, $par);
 
         $path = $this->model->getPath();
@@ -50,9 +51,11 @@ class MainMenu extends \Ideal\Core\Widget
                 ) {
                     $menu[$k]['link'] = '';
                 }
+
                 $menu[$k]['isActivePage'] = 1;
             }
         }
+
         return $menu;
     }
 }
