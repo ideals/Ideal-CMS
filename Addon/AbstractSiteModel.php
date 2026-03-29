@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -21,18 +22,16 @@ class AbstractSiteModel extends \Ideal\Core\Site\Model
     /**
      * {@inheritdoc}
      */
-    public function detectPageByUrl($path, $url)
-    {
-    }
+    public function detectPageByUrl($path, $url) {}
 
     public function setPageDataByPrevStructure($prevStructure)
     {
         $db = Db::getInstance();
 
         // Получаем идентификатор таба из группы
-        list(, $tabID) = explode('-', $this->fieldsGroup, 2);
+        [, $tabID] = explode('-', $this->fieldsGroup, 2);
         $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps AND tab_ID=:tid";
-        $pageData = $db->select($_sql, array('ps' => $prevStructure, 'tid' => $tabID));
+        $pageData = $db->select($_sql, ['ps' => $prevStructure, 'tid' => $tabID]);
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
             /** @noinspection PhpUndefinedMethodInspection */

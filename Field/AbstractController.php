@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,7 +18,6 @@ use Ideal\Core\Request;
  */
 abstract class AbstractController
 {
-
     /** @var  mixed Хранит в себе копию соответствующего объекта поля (паттерн singleton) */
     protected static $instance;
 
@@ -47,6 +47,13 @@ abstract class AbstractController
 
     /** @var  string Дополнительный sql-код, генерируемый полем для сохранения всех своих данных */
     protected $sqlAdd = '';
+
+    /**
+     * Возвращает строку, содержащую html-код элементов ввода для редактирования поля
+     *
+     * @return string html-код элементов ввода
+     */
+    abstract public function getInputText();
 
     /**
      * Обеспечение паттерна singleton
@@ -111,12 +118,12 @@ abstract class AbstractController
     {
         $this->newValue = $this->pickupNewValue();
 
-        $item = array(
+        $item = [
             'fieldName' => $this->htmlName,
             'value' => $this->newValue,
             'message' => '',
-            'sqlAdd' => ''
-        );
+            'sqlAdd' => '',
+        ];
 
         // В первой версии только на правильность данных и их наличие, если в описании бд указано not null
         if (($this->name == 'ID') && $isCreate) {
@@ -187,14 +194,14 @@ abstract class AbstractController
         $label = $this->getLabelText();
         $input = $this->getInputText();
         $html = <<<HTML
-        <div id="{$this->htmlName}-control-group" class="form-group">
-            <label class="{$this->labelClass} control-label" for="{$this->htmlName}">{$label}</label>
-            <div class="{$this->inputClass} {$this->htmlName}-controls">
-                {$input}
-                <div id="{$this->htmlName}-help"></div>
-            </div>
-        </div>
-HTML;
+                    <div id="{$this->htmlName}-control-group" class="form-group">
+                        <label class="{$this->labelClass} control-label" for="{$this->htmlName}">{$label}</label>
+                        <div class="{$this->inputClass} {$this->htmlName}-controls">
+                            {$input}
+                            <div id="{$this->htmlName}-help"></div>
+                        </div>
+                    </div>
+            HTML;
 
         return $html;
     }
@@ -208,11 +215,4 @@ HTML;
     {
         return $this->field['label'] . ':';
     }
-
-    /**
-     * Возвращает строку, содержащую html-код элементов ввода для редактирования поля
-     *
-     * @return string html-код элементов ввода
-     */
-    abstract public function getInputText();
 }

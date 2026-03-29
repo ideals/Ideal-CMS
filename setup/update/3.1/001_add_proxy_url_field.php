@@ -1,4 +1,5 @@
 <?php
+
 // 1. Добавление поля "Адрес прокси скрипта" для Яндекса в конфигурационный файл site_data.php
 $config = \Ideal\Core\Config::getInstance();
 $configSD = new \Ideal\Structure\Service\SiteData\ConfigPhp();
@@ -8,11 +9,11 @@ $configSD->loadFile($file);
 $params = $configSD->getParams();
 
 if (!isset($params['yandex']['arr']['proxyUrl'])) {
-    $params['yandex']['arr']['proxyUrl'] = array(
+    $params['yandex']['arr']['proxyUrl'] = [
         'label' => 'Адрес прокси скрипта',
         'sql' => 'varchar(255)',
-        'type' => 'Ideal_Text'
-    );
+        'type' => 'Ideal_Text',
+    ];
 
     $configSD->setParams($params);
     $configSD->saveFile($file);

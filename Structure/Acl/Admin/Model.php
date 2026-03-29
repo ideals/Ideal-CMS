@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -9,9 +10,9 @@
 
 namespace Ideal\Structure\Acl\Admin;
 
-use \Ideal\Core\Db;
-use \Ideal\Core\Config;
-use \Ideal\Structure\User\Model as User;
+use Ideal\Core\Db;
+use Ideal\Core\Config;
+use Ideal\Structure\User\Model as User;
 use Ideal\Structure\Service\Admin\Model as ServiceModel;
 
 /**
@@ -46,12 +47,12 @@ class Model
         $db = Db::getInstance();
         $config = Config::getInstance();
         $user = new User();
-        $excludedIds = array(1, $user->data['ID']);
+        $excludedIds = [1, $user->data['ID']];
 
         // Формируем идентификаторы групп пользователей, правами которых управлять нельзя.
         // По умолчанию это группы пользователей
         // к которым относятся пользователи с идентификатором 1 и текущий пользователь
-        $par = array('IDS' => implode(',', $excludedIds));
+        $par = ['IDS' => implode(',', $excludedIds)];
         $userTable = $config->db['prefix'] . 'ideal_structure_user';
         $userGroupTable = $config->db['prefix'] . 'ideal_structure_usergroup';
         $sql = "
@@ -87,7 +88,7 @@ class Model
             $prefix = $str['ID'] . '-';
         }
         // Считываем права пользователя
-        $res = array();
+        $res = [];
         if (isset($this->user->data) && isset($this->user->data['user_group']) && $this->user->data['user_group']) {
             $sql = "SELECT * FROM {$this->table} WHERE user_group_id={$this->user->data['user_group']}";
             $result = $db->select($sql);
@@ -97,7 +98,7 @@ class Model
         }
 
         // Проводим проверку прав пользователя на каждый элемент
-        $result = array();
+        $result = [];
         foreach ($arr as $v) {
             $structure = $prefix . $v['ID'];
             if (!empty($res[$structure]) && !$res[$structure]['show']) {
@@ -116,7 +117,7 @@ class Model
      */
     public function getAcl($structures)
     {
-        $aclStructure = array();
+        $aclStructure = [];
         if ($this->user->data['user_group']) {
             $db = Db::getInstance();
             $sql = "SELECT * FROM {$this->table} "
@@ -124,7 +125,7 @@ class Model
                 . "AND user_group_id={$this->user->data['user_group']}";
             $acl = $db->select($sql);
             // Распределяем считанные права доступа по структурам
-            $aclStructure = array();
+            $aclStructure = [];
             foreach ($acl as $v) {
                 $aclStructure[$v['structure']] = $v;
             }
@@ -176,7 +177,7 @@ class Model
      */
     public function getMainUserGroupPermission()
     {
-        $permission = array();
+        $permission = [];
         $config = Config::getInstance();
 
         // Собираем начальную информацию об основных пунктах меню админки
@@ -189,7 +190,7 @@ class Model
         }
 
         // Получаем все права группы пользователя на основные пункты меню админки
-        $par = array('user_group_id' => $_POST['user_group_id']);
+        $par = ['user_group_id' => $_POST['user_group_id']];
         $whereString = ' WHERE user_group_id = :user_group_id AND structure LIKE \'0-%\'';
         $userPermissions = $this->getExistingAccessRules($par, $whereString);
 
@@ -204,16 +205,16 @@ class Model
      */
     public function getChildrenPermission()
     {
-        $permission = array();
+        $permission = [];
         $db = Db::getInstance();
         $config = Config::getInstance();
 
         // Получаем идентификатор структуры и идентификатор элемента структуры родительского пункта
-        list($structureID, $elementID) = explode('-', $_POST['structure']);
+        [$structureID, $elementID] = explode('-', $_POST['structure']);
 
         // Получаем информацию о структуре к которой относится родительский пункт
         $structure = $config->getStructureById($structureID);
-        $childrenStructure = array();
+        $childrenStructure = [];
 
         // Если идентификатор структуры == 0, то берём элементы из таблицы структуры, чей идентификатор был передан
         if ($structureID == 0) {
@@ -228,9 +229,9 @@ class Model
             if (strpos($structureTable, 'ideal_structure_service') === false) {
                 $partitionType = $db->select(
                     "SELECT * FROM {$structureTable} WHERE ID = :ID",
-                    array(
-                        'ID' => $elementID
-                    )
+                    [
+                        'ID' => $elementID,
+                    ],
                 );
                 if (!empty($partitionType) && isset($partitionType[0]['structure'])) {
                     // Получаем информацию о структуре, к которой относятся дочерние элементы данного пункта
@@ -247,7 +248,7 @@ class Model
             if (isset($childrenStructure['structure']) && $childrenStructure['structure'] != 'Ideal_Service') {
 
                 // Параметры для поиска дочерних элементов
-                $par = array();
+                $par = [];
 
                 // Строка, которая будет использоваться в WHERE-части запроса
                 $whereString = '';
@@ -271,9 +272,10 @@ class Model
                 // Если у дочерней структуры есть поле 'lvl', то добавляем соответствующие записи в WHERE-часть запроса
                 // Если идентификатор элемента равен 0 или тип родительской структуры отличается
                 // от типа дочерней структуры, то собираем только первый уровень.
-                if (isset($childrenStructure['fields']['lvl']) &&
-                    ($structureID == 0 || !isset($structure['structure']) ||
-                        $childrenStructure['structure'] != $structure['structure']
+                if (isset($childrenStructure['fields']['lvl'])
+                    && (
+                        $structureID == 0 || !isset($structure['structure'])
+                        || $childrenStructure['structure'] != $structure['structure']
                     )) {
                     if (!empty($whereString)) {
                         $whereString .= ' AND';
@@ -300,7 +302,7 @@ class Model
                     // Получаем cid родительского элемента
                     $cid = $db->select(
                         "SELECT cid FROM {$childrenStructure['tableName']} WHERE ID = :ID",
-                        array('ID' => $elementID)
+                        ['ID' => $elementID],
                     );
 
                     // Формируем cid для WHERE-части запроса на выборку дочерних элементов
@@ -325,7 +327,7 @@ class Model
                 // Получаем дочерние элементы текущего пункта
                 $structurePermissions = $db->select(
                     "SELECT * FROM {$childrenStructure['tableName']}{$whereString}",
-                    $par
+                    $par,
                 );
             } elseif (strpos($elementID, '_') === false) {
                 // Если запрашиваются дочерние элементы пункта "Сервис", то собираем их по особенному
@@ -355,11 +357,11 @@ class Model
 
                     $permission[$key] = $this->getDefaultPermissionArray();
                     $permission[$key]['name'] = $name;
-                    $permission[$key]['prev_structure'] = isset($prevStructure) ? $prevStructure : '';
-                    $par = array(
+                    $permission[$key]['prev_structure'] = $prevStructure ?? '';
+                    $par = [
                         'user_group_id' => $_POST['user_group_id'],
-                        'structure' => $childrenStructure['ID'] . '-' . $structurePermission['ID']
-                    );
+                        'structure' => $childrenStructure['ID'] . '-' . $structurePermission['ID'],
+                    ];
                     $whereString = ' WHERE user_group_id = :user_group_id AND structure = :structure';
                     $userGroupStructurePermissions = $this->getExistingAccessRules($par, $whereString);
 
@@ -384,7 +386,7 @@ class Model
 
         $db = Db::getInstance();
 
-        $par = array('user_group_id' => $_POST['user_group_id'], 'structure' => $_POST['structure']);
+        $par = ['user_group_id' => $_POST['user_group_id'], 'structure' => $_POST['structure']];
         $whereString = ' WHERE user_group_id = :user_group_id AND structure = :structure';
         $userGroupPermission = $this->getExistingAccessRules($par, $whereString);
 
@@ -393,8 +395,8 @@ class Model
             $db->insert($this->table, $permission);
         } else {
             // Если запись есть, обновляем
-            $values = array($_POST['target'] => $_POST['is']);
-            $params = array('user_group_id' => $_POST['user_group_id'], 'structure' => $_POST['structure']);
+            $values = [$_POST['target'] => $_POST['is']];
+            $params = ['user_group_id' => $_POST['user_group_id'], 'structure' => $_POST['structure']];
             $db->update($this->table)->set($values);
             $db->where('user_group_id = :user_group_id AND structure = :structure', $params)->exec();
         }
@@ -407,12 +409,12 @@ class Model
      */
     private function getDefaultPermissionArray()
     {
-        return array(
+        return [
             'show' => 1,
             'edit' => 1,
             'delete' => 1,
             'enter' => 1,
-        );
+        ];
     }
 
     /**
@@ -427,7 +429,7 @@ class Model
         $db = Db::getInstance();
         return $db->select(
             "SELECT * FROM {$this->table}{$whereString}",
-            $par
+            $par,
         );
     }
 
@@ -444,7 +446,7 @@ class Model
                 if (array_key_exists($rule['structure'], $defaultRules)) {
                     $defaultRules[$rule['structure']] = array_merge(
                         $defaultRules[$rule['structure']],
-                        $rule
+                        $rule,
                     );
                 }
             }

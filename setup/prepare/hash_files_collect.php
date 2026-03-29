@@ -1,4 +1,5 @@
 <?php
+
 $cmsFolder = stream_resolve_include_path(__DIR__ . '/../..');
 
 // Если передан аргумент содержащий путь до папки CMS, то используем его

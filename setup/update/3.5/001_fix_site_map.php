@@ -1,4 +1,5 @@
 <?php
+
 $path = getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT'];
 $isConsole = true;
 require_once $path . '/_.php';
@@ -14,52 +15,52 @@ if (file_exists($siteMapConfigFile)) {
     $configSD->loadFile($siteMapConfigFile);
     $params = $configSD->getParams();
     if (!isset($params['default']['arr']['existence_time_file'])) {
-        $params['default']['arr']['existence_time_file'] = array (
+        $params['default']['arr']['existence_time_file'] =  [
             'label' => 'Максимальное время существования версии промежуточного файла (часы)',
             'value' => '25',
             'type' => 'Ideal_Text',
             'sql' => '',
-        );
+        ];
     }
     if (!isset($params['default']['arr']['db_host'])) {
-        $params['default']['arr']['db_host'] = array (
+        $params['default']['arr']['db_host'] =  [
             'label' => 'Хост для подключения к базе данных',
             'value' => 'localhost',
             'type' => 'Ideal_Text',
             'sql' => '',
-        );
+        ];
     }
     if (!isset($params['default']['arr']['db_login'])) {
-        $params['default']['arr']['db_login'] = array (
+        $params['default']['arr']['db_login'] =  [
             'label' => 'Логин для подключения к базе данных',
             'value' => '',
             'type' => 'Ideal_Text',
             'sql' => '',
-        );
+        ];
     }
     if (!isset($params['default']['arr']['db_password'])) {
-        $params['default']['arr']['db_password'] = array (
+        $params['default']['arr']['db_password'] =  [
             'label' => 'Пароль для подключения к базе данных',
             'value' => '',
             'type' => 'Ideal_Text',
             'sql' => '',
-        );
+        ];
     }
     if (!isset($params['default']['arr']['db_name'])) {
-        $params['default']['arr']['db_name'] = array (
+        $params['default']['arr']['db_name'] =  [
             'label' => 'Название базы данных',
             'value' => '',
             'type' => 'Ideal_Text',
             'sql' => '',
-        );
+        ];
     }
     if (!isset($params['default']['arr']['db_prefix'])) {
-        $params['default']['arr']['db_prefix'] = array (
+        $params['default']['arr']['db_prefix'] =  [
             'label' => 'Префикс базы данных',
             'value' => 'i_',
             'type' => 'Ideal_Text',
             'sql' => '',
-        );
+        ];
     }
     $configSD->setParams($params);
     $configSD->saveFile($siteMapConfigFile);

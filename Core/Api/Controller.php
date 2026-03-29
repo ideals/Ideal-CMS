@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -58,7 +59,7 @@ class Controller
         $tplName = basename($tplName);
 
         $config = Config::getInstance();
-        $folders = array($tplRoot);
+        $folders = [$tplRoot];
         $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
@@ -67,7 +68,6 @@ class Controller
     /**
      * Реакиця контроллера на запрос
      *
-     * @param Router $router
      * @return string Ответ системы на запрос
      */
     public function run(Router $router)
@@ -112,17 +112,16 @@ class Controller
     public function getHttpHeaders()
     {
         if ($this->jsonResponse) {
-            return array('content-type' => 'application/json');
-        } else {
-            return array();
+            return ['content-type' => 'application/json'];
         }
+        return [];
+
     }
 
     /**
      * Обязательный метод проверки авторизации API-запроса
      * Неавторизированные запросы всегда отдают 404-ую страницу
      *
-     * @param Router $router
      * @return bool
      */
     public function authorize(Router $router)

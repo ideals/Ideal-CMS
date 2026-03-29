@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -45,14 +46,14 @@ class Model
     /**
      * Изменение позиции $oldPos на новую $newPos
      *
-     * @param int    $oldPos        Старое значение позиции
-     * @param int    $newPos        Новое значение позиции
+     * @param int $oldPos Старое значение позиции
+     * @param int $newPos Новое значение позиции
      * @param string $prevStructure Путь к структуре в которой меняются позиции
      * @return string Sql-запрос изменения позиции
      */
     public function movePos($oldPos, $newPos, $prevStructure)
     {
-        $update = array($oldPos => $newPos);
+        $update = [$oldPos => $newPos];
 
         // Определяем реальное значение сегмента в новом cid
         // если cid становится больше, то новое значение уменьшается на единицу,

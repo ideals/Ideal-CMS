@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,9 +18,8 @@ use Ideal\Core\Util;
  */
 class ConfigPhp
 {
-
     /** @var array Массив для хранения считанных данных из php-файла */
-    protected $params = array();
+    protected $params = [];
 
     /**
      * Геттер для защищённого поля $params
@@ -35,8 +35,8 @@ class ConfigPhp
      */
     public function pickupValues()
     {
-        $response = array('res' => true, 'text' => '');
-        $pageData = array();
+        $response = ['res' => true, 'text' => ''];
+        $pageData = [];
         $applyChange = new ApplyChange();
         foreach ($this->params as $tabId => $tab) {
             foreach ($tab['arr'] as $field => $param) {
@@ -67,7 +67,7 @@ class ConfigPhp
                 $item = $fieldModel->parseInputValue(false);
 
                 if (!empty($item['message'])) {
-                    $response = array('res' => false, 'text' => $item['message']);
+                    $response = ['res' => false, 'text' => $item['message']];
                     return $response;
                 }
                 $this->params[$tabId]['arr'][$field]['value'] = $value;
@@ -145,10 +145,10 @@ class ConfigPhp
         }
 
         print <<<DONE
-        <div class="{$class} fade in">
-        <button type="button" class="close" data-dismiss="alert">&times;</button>
-        <span class="alert-heading">{$text}</span></div>
-DONE;
+                    <div class="{$class} fade in">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <span class="alert-heading">{$text}</span></div>
+            DONE;
         return $res;
     }
 
@@ -171,20 +171,20 @@ DONE;
             $cfg,
             function (&$value) {
                 $value = trim($value);
-            }
+            },
         );
 
-        $skip = array(
+        $skip = [
             '<?php',
             '// @codingStandardsIgnoreFile',
             'return array(',
-            ');'
-        );
+            ');',
+        ];
 
-        $params['default'] = array(
-            'arr' => array(),
-            'name' => 'Основное'
-        );
+        $params['default'] = [
+            'arr' => [],
+            'name' => 'Основное',
+        ];
 
         $c = count($cfg);
         // Проходимся по всем строчкам php-файла и заполняем массив $params
@@ -199,7 +199,7 @@ DONE;
                 $cols = explode('", // ', $v);
             }
             $other = $cols[0];
-            $label = isset($cols[1]) ? $cols[1] : null;
+            $label = $cols[1] ?? null;
             if (is_null($label)) {
                 // Комментария в нужном формате нет, значит это массив
                 preg_match('/\'(.*)\'\s*=>\s*array\s*\(\s*\/\/\s*(.*)/i', $other, $match);
@@ -207,17 +207,17 @@ DONE;
                     echo "Ошибка парсинга файла {$fileName} в строке $i<br />";
                     exit;
                 }
-                $array = array();
+                $array = [];
                 while ($cfg[++$i] != '),') {
                     $v = $cfg[$i];
                     $param = $this->parseStr($v);
                     $array = array_merge($array, $param);
                 }
                 // Записываем массив данных в соответствующем формате
-                $params[$match[1]] = array(
+                $params[$match[1]] = [
                     'arr' => $array,
-                    'name' => $match[2]
-                );
+                    'name' => $match[2],
+                ];
             } else {
                 // Считываем и записываем переменную первого уровня
                 $param = $this->parseStr($v);
@@ -226,43 +226,6 @@ DONE;
         }
         $this->params = $params;
         return true;
-    }
-
-    /**
-     * Парсим одну строку конфига в массив данных
-     *
-     * @param string $str Строка конфига
-     *
-     * @return array
-     */
-    protected function parseStr($str)
-    {
-        if (strpos($str, "', // ")) {
-            [$other, $label] = explode("', // ", $str);
-        } else {
-            [$other, $label] = explode('", // ', $str);
-        }
-        $label = chop($label);
-        $fields = explode(' | ', $label);
-        $label = $fields[0];
-        $type = isset($fields[1]) && $fields[1] !== '' ? $fields[1] : 'Ideal_Text';
-        if (strpos($other, " => '")) {
-            [$name, $value] = explode(" => '", $other);
-        } else {
-            [$name, $value] = explode(' => "', $other);
-        }
-        $value = str_replace('\n', "\n", $value); // заменяем переводы строки на правильные символы
-        $fieldName = trim($name, ' \''); // убираем стартовые пробелы и кавычку у названия поля
-        $param[$fieldName] = array(
-            'label' => $label,
-            'value' => $value,
-            'type' => $type,
-            'sql' => '',
-        );
-        if ($type === 'Ideal_Select') {
-            $param[$fieldName]['values'] = json_decode($fields[2]);
-        }
-        return $param;
     }
 
     /**
@@ -296,7 +259,7 @@ DONE;
                     . '<a href="#' . $tabId . '" data-toggle="tab">' . $tab['name'] . '</a>'
                     . '</li>';
                 $tabsContent .= '<div class="tab-pane well ' . $active . '" id="' . $tabId . '">';
-                $pageData = array();
+                $pageData = [];
                 foreach ($tab['arr'] as $field => $param) {
                     $fieldName = $tabId . '_' . $field;
                     $model = new MockModel('');
@@ -323,5 +286,42 @@ DONE;
             $tabs = '';
         }
         return $tabs . $tabsContent;
+    }
+
+    /**
+     * Парсим одну строку конфига в массив данных
+     *
+     * @param string $str Строка конфига
+     *
+     * @return array
+     */
+    protected function parseStr($str)
+    {
+        if (strpos($str, "', // ")) {
+            [$other, $label] = explode("', // ", $str);
+        } else {
+            [$other, $label] = explode('", // ', $str);
+        }
+        $label = chop($label);
+        $fields = explode(' | ', $label);
+        $label = $fields[0];
+        $type = isset($fields[1]) && $fields[1] !== '' ? $fields[1] : 'Ideal_Text';
+        if (strpos($other, " => '")) {
+            [$name, $value] = explode(" => '", $other);
+        } else {
+            [$name, $value] = explode(' => "', $other);
+        }
+        $value = str_replace('\n', "\n", $value); // заменяем переводы строки на правильные символы
+        $fieldName = trim($name, ' \''); // убираем стартовые пробелы и кавычку у названия поля
+        $param[$fieldName] = [
+            'label' => $label,
+            'value' => $value,
+            'type' => $type,
+            'sql' => '',
+        ];
+        if ($type === 'Ideal_Select') {
+            $param[$fieldName]['values'] = json_decode($fields[2]);
+        }
+        return $param;
     }
 }

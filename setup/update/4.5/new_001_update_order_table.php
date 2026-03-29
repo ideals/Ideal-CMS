@@ -1,4 +1,5 @@
 <?php
+
 // Актуализируем таблицу структуры заказа
 
 use Ideal\Core\Config;
@@ -12,7 +13,7 @@ $orderStructure = $config->getStructureByName('Ideal_Order');
 if ($orderStructure) {
     $orderTable = $config->getTableByName('Ideal_Order');
     $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $orderTable . ' FROM `' . $config->db['name'] . '`');
-    $fields = array();
+    $fields = [];
     array_walk($fieldsInfo, function ($v) use (&$fields) {
         $fields[$v['Field']] = $v['Type'];
     });

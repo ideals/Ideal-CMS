@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -32,7 +33,6 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
-
     /** {@inheritdoc} */
     protected static $instance;
 
@@ -61,7 +61,7 @@ class Controller extends AbstractController
             . $addonModel->getAvailableAddonsList()
             . '<button class="btn btn-link" onclick="$(\'#tabsModal\').toggle()">Закрыть</button>';
 
-        $editHtml = strtr($editHtml, array("\n" => ''));
+        $editHtml = strtr($editHtml, ["\n" => '']);
         $editHtml = addcslashes($editHtml, "'");
 
         // Получаем список доступных аддонов
@@ -72,28 +72,28 @@ class Controller extends AbstractController
         $valueHtml = htmlspecialchars($value);
 
         $html = <<<HTML
-            <input type="hidden" id="{$this->htmlName}" name="{$this->htmlName}" value="{$valueHtml}">
-            <input type="hidden" id="available_addons" name="available_addons" value="{$availableAddons}">
-            <script type="text/javascript">
-            function getAddonFieldName() {
-                return "{$this->htmlName}";
-            }
-            $(document).ready(function() {
-                // Добавляем контент во всплывающее окно редактирования вкладок
-                $('#tabsModal').html('{$editHtml}');
+                        <input type="hidden" id="{$this->htmlName}" name="{$this->htmlName}" value="{$valueHtml}">
+                        <input type="hidden" id="available_addons" name="available_addons" value="{$availableAddons}">
+                        <script type="text/javascript">
+                        function getAddonFieldName() {
+                            return "{$this->htmlName}";
+                        }
+                        $(document).ready(function() {
+                            // Добавляем контент во всплывающее окно редактирования вкладок
+                            $('#tabsModal').html('{$editHtml}');
 
-                // Включаем кнопку редактирования вкладок
-                $('#modalTabsEdit').removeClass('hide');
+                            // Включаем кнопку редактирования вкладок
+                            $('#modalTabsEdit').removeClass('hide');
 
-                // Добавляем вкладки к списку вкладок
-                $('#tabs').append('{$tabs['names']}');
+                            // Добавляем вкладки к списку вкладок
+                            $('#tabs').append('{$tabs['names']}');
 
-                // Добавляем собственно само содержимое вкладок
-                $('#tabs-content').append('{$tabs['contents']}');
-            });
-            </script>
-            <script type="text/javascript" src="Ideal/Field/Addon/script.js"></script>
-HTML;
+                            // Добавляем собственно само содержимое вкладок
+                            $('#tabs-content').append('{$tabs['contents']}');
+                        });
+                        </script>
+                        <script type="text/javascript" src="Ideal/Field/Addon/script.js"></script>
+            HTML;
         return $html;
     }
 
@@ -104,7 +104,7 @@ HTML;
     {
         $value = parent::getValue();
         if (empty($value) || $value == 'null') {
-            return json_encode(array());
+            return json_encode([]);
         }
 
         // Восстановление названия подключённых аддонов, т.к. по умолчанию текстовое название
@@ -114,7 +114,7 @@ HTML;
 
         foreach ($arr as $k => $v) {
             $addonVar = $v[1];
-            $addonName = isset($v[2]) ? $v[2] : '';
+            $addonName = $v[2] ?? '';
 
             $class = Util::getClassName($addonVar, 'Addon') . '\\AdminModel';
 
@@ -139,7 +139,7 @@ HTML;
         // TODO Дли типа данных аддон - нужно распарсить его элементы
         $addonsData = json_decode($item['value']);
         foreach ($addonsData as $addonData) {
-            list($tabID, $addonType) = $addonData;
+            [$tabID, $addonType] = $addonData;
             $addonName = Util::getClassName($addonType, 'Addon') . '\\AdminModel';
             $addon = new $addonName('не имеет значения, т.к. только парсим ввод пользователя');
             $explodeAddonType = explode('_', $addonType);

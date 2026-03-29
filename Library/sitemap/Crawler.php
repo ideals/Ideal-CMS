@@ -5,31 +5,34 @@ namespace SiteMap;
 class Crawler
 {
     /** Регулярное выражение для поиска ссылок */
-    const LINK = "/<[Aa][^>]*[Hh][Rr][Ee][Ff]=['\"]?([^\"'>]+)[^>]*>/";
+    public const LINK = "/<[Aa][^>]*[Hh][Rr][Ee][Ff]=['\"]?([^\"'>]+)[^>]*>/";
+
+    /** @var array Массив для данных из конфига */
+    public $config = [];
+
+    /** @var bool Флаг необходимости кэширования echo/print */
+    public $ob = false;
+
+    /** @var string Статус запуска скрипта. Варианты cron|test */
+    public $status = 'cron';
 
     /** @var string Ссылка из мета-тега base, если он есть на странице */
     private $base;
 
     /** @var array Массив проверенных ссылок */
-    private $checked = array();
-
-    /** @var array Массив для данных из конфига */
-    public $config = array();
+    private $checked = [];
 
     /** @var string Переменная содержащая адрес главной страницы сайта */
     private $host;
 
     /** @var  array Массив НЕпроверенных ссылок */
-    private $links = array();
+    private $links = [];
 
     /** @var array Массив внешних ссылок */
-    private $external = array();
+    private $external = [];
 
     /** @var array Массив ссылок из области отслеживаемой радаром с подсчётом количества */
-    private $radarLinks = array();
-
-    /** @var bool Флаг необходимости кэширования echo/print */
-    public $ob = false;
+    private $radarLinks = [];
 
     /** @var float Время начала работы скрипта */
     private $start;
@@ -37,11 +40,8 @@ class Crawler
     /** @var bool Флаг необходимости сброса ранее собранных страниц */
     private $clearTemp = false;
 
-    /** @var string Статус запуска скрипта. Варианты cron|test */
-    public $status = 'cron';
-
     /** @var array Массив параметров curl для получения заголовков и html кода страниц */
-    private $options = array(
+    private $options = [
         CURLOPT_RETURNTRANSFER => true, //  возвращать строку, а не выводить в браузере
         CURLOPT_VERBOSE => false, // вывод дополнительной информации (?)
         CURLOPT_HEADER => true, // включать заголовки в вывод
@@ -53,7 +53,7 @@ class Crawler
         CURLOPT_MAXREDIRS => 0, // максимальное число редиректов
         64 => false, // CURLOPT_SSL_VERIFYPEER не проверять ssl-сертификат
         81 => 0, // CURLOPT_SSL_VERIFYHOST не проверять ssl-сертификат
-    );
+    ];
 
     /**
      * Инициализация счетчика времени работы скрипта, вызов метода загрузки конфига,
@@ -71,7 +71,7 @@ class Crawler
         $this->ob = !file_exists(basename($_SERVER['PHP_SELF']));
 
         // Проверяем статус запуска - тестовый или по расписанию
-        $argv = !empty($_SERVER['argv']) ? $_SERVER['argv'] : array();
+        $argv = !empty($_SERVER['argv']) ? $_SERVER['argv'] : [];
         if (isset($_GET['w']) || (array_search('w', $argv) !== false)) {
             // Если задан GET-параметр или ключ w в командной строке — это принудительный запуск,
             // письма о нём слать не надо
@@ -114,280 +114,6 @@ class Crawler
     }
 
     /**
-     * Вывод сообщения и завершение работы скрипта
-     *
-     * @param string $message - сообщение для вывода
-     * @param bool $sendNotification - флаг обозначающий надобность отправления сообщения перед остановкой скрипта
-     * @throws \Exception
-     */
-    protected function stop($message, $sendNotification = true)
-    {
-        if ($sendNotification) {
-            $this->sendEmail($message, '', $this->host . ' sitemap error');
-        }
-        throw new \Exception($message);
-    }
-
-    /**
-     * Корректировка времени, в течение которого будут собираться ссылки
-     */
-    protected function setTimeout()
-    {
-        $count = count($this->links) + count($this->checked);
-        if ($count > 1000) {
-            $this->config['recording'] = ($count / 1000) * 0.05 + $this->config['recording'];
-        }
-        $this->config['script_timeout'] -= $this->config['recording'];
-    }
-
-    /**
-     * Загрузка конфига в переменную $this->config
-     */
-    protected function loadConfig()
-    {
-        // Подгрузка конфига
-        $config = __DIR__ . '/site_map.php';
-        $message = 'Working with settings php-file from local directory';
-
-        // Проверяем наличие файла рядом с запускаемым скриптом
-        if (!file_exists($config)) {
-            // Проверяем, есть ли конфигурационный файл в корневой папке Ideal CMS
-            $config = substr(__DIR__, 0, stripos(__DIR__, '/Ideal/Library/sitemap')) . '/site_map.php';
-            $message = 'Working with settings php-file from config directory';
-            if (!file_exists($config)) {
-                // Конфигурационный файл нигде не нашли :(
-                $this->stop("Configuration file {$config} not found!");
-            }
-        }
-
-        echo $message . "\n";
-
-        /** @noinspection PhpIncludeInspection */
-        $this->config = require($config);
-
-        if (!isset($this->config['existence_time_file'])) {
-            $this->config['existence_time_file'] = 25;
-        }
-
-        $tmp = parse_url($this->config['website']);
-        $this->host = $tmp['host'];
-        if (!isset($tmp['path'])) {
-            $tmp['path'] = '/';
-        }
-        $this->config['website'] = $tmp['scheme'] . '://' . $tmp['host'] . $tmp['path'];
-
-        if (empty($this->config['pageroot'])) {
-            if (empty($_SERVER['DOCUMENT_ROOT'])) {
-                // Обнаружение корня сайта, если скрипт запускается из стандартного места в Ideal CMS
-                $self = $_SERVER['PHP_SELF'];
-                $path = substr($self, 0, strpos($self, 'Ideal') - 1);
-                $this->config['pageroot'] = dirname($path);
-            } else {
-                $this->config['pageroot'] = $_SERVER['DOCUMENT_ROOT'];
-            }
-        }
-
-        // Массив значений по умолчанию
-        $default = array(
-            'script_timeout' => 60,
-            'load_timeout' => 10,
-            'delay' => 1,
-            'old_sitemap' => '/images/map-old.part',
-            'tmp_file' => '/images/map.part',
-            'tmp_radar_file' => '/tmp/radar.part',
-            'old_radar_file' => '/tmp/radar-old.part',
-            'pageroot' => '',
-            'sitemap_file' => '/sitemap.xml',
-            'crawler_url' => '/',
-            'change_freq' => 'weekly',
-            'priority' => 0.8,
-            'time_format' => 'long',
-            'disallow_key' => '',
-            'disallow_regexp' => '',
-            'seo_urls' => '',
-            'is_radar' => '1',
-        );
-        foreach ($default as $key => $value) {
-            if (!isset($this->config[$key])) {
-                $this->config[$key] = $value;
-            }
-        }
-
-        // Строим массивы для пропуска GET-параметров и URL по регулярным выражениям
-        $this->config['disallow_key'] = explode("\n", $this->config['disallow_key']);
-        $this->config['disallow_regexp'] = explode("\n", $this->config['disallow_regexp']);
-
-        // Строим массив страниц с изменённым приоритетом
-        $this->config['seo_urls'] = explode("\n", $this->config['seo_urls']);
-        $seo = array();
-        foreach ($this->config['seo_urls'] as $v => $k) {
-            $a = explode('=', trim($k));
-            $url = trim($a[0]);
-            $priority = trim($a[1]);
-            $seo[$url] = $priority;
-        }
-        $this->config['seo_urls'] = $seo;
-        // Если среди ссылок с заданным приоритетом нет главной страницы, добавляем её туда,
-        // но приоритет оставляем стандартным
-        if (!isset($this->config['seo_urls'][$this->config['website']])) {
-            $this->config['seo_urls'][$this->config['website']] = $this->config['priority'];
-        }
-    }
-
-    /**
-     * Проверка доступности временных файлов и времени последнего сохранения промежуточного файла ссылок
-     */
-    protected function loadRadarData()
-    {
-        if (empty($this->config['is_radar'])) {
-            return;
-        }
-
-        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
-
-        if (file_exists($tmpRadarFile)) {
-            if (!is_writable($tmpRadarFile)) {
-                $this->stop("Временный файл {$tmpRadarFile} недоступен для записи!");
-            }
-        } elseif ((file_put_contents($tmpRadarFile, '') === false)) {
-            // Файла нет и создать его не удалось
-            $this->stop("Не удалось создать временный файл {$tmpRadarFile}!");
-        } else {
-            unlink($tmpRadarFile);
-        }
-
-        // Если существует файл хранения временных данных отчёта о перелинковке
-        if (file_exists($tmpRadarFile)) {
-            $arr = file_get_contents($tmpRadarFile);
-            $this->radarLinks = unserialize($arr);
-        }
-    }
-
-    /**
-     * Проверка наличия, доступности для записи и актуальности xml-файла карты сайта
-     */
-    protected function prepareSiteMapFile()
-    {
-        $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
-
-        // Проверяем существует ли файл и доступен ли он для чтения и записи
-        if (file_exists($xmlFile)) {
-            if (!is_readable($xmlFile)) {
-                $this->stop("File {$xmlFile} is not readable!");
-            }
-            if (!is_writable($xmlFile)) {
-                $this->stop("File {$xmlFile} is not writable!");
-            }
-        } else {
-            if ((file_put_contents($xmlFile, '') === false)) {
-                // Файла нет и создать его не удалось
-                $this->stop("Couldn't create file {$xmlFile}!");
-            } else {
-                // Удаляем пустой файл, т.к. пустого файла не должно быть
-                unlink($xmlFile);
-                return;
-            }
-        }
-
-        // Проверяем, обновлялась ли сегодня карта сайта
-        if (date('d:m:Y', filemtime($xmlFile)) == date('d:m:Y')) {
-            if ($this->status == 'cron') {
-                $this->stop("Sitemap {$xmlFile} already created today! Everything it's alright.", false);
-            } else {
-                // Если дата сегодняшняя, но запуск не из крона, то продолжаем работу над картой сайта
-                echo "Warning! File {$xmlFile} have current date and skip in cron";
-            }
-        } else {
-            // Если карта сайта в два раза старше указанного значения в поле
-            // "Максимальное время существования версии промежуточного файла"
-            // и временный файл сбора ссылок обновлялся последний раз более 12 часов назад, то
-            // отсылаем соответствующее уведомление
-            $countHourForNotify = $this->config['existence_time_file'] * 2;
-            $existenceTimeFile = $countHourForNotify * 60 * 60;
-            $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
-            if (file_exists($tmpFile)
-                && time() - filemtime($xmlFile) > $existenceTimeFile
-                && time() - filemtime($tmpFile) > 43200) {
-                $msg = 'Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.';
-                $this->sendEmail($msg);
-            }
-        }
-    }
-
-    /**
-     * Метод для загрузки распарсенных данных из временных файлов
-     */
-    protected function loadParsedUrls()
-    {
-        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
-        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
-
-        if (file_exists($tmpFile)) {
-            if (!is_writable($tmpFile)) {
-                $this->stop("Временный файл {$tmpFile} недоступен для записи!");
-            }
-
-            // Если промежуточный файл ссылок последний раз обновлялся более того количества часов назад,
-            // которое указано в настройках, то производим его принудительную очистку.
-            $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
-            if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
-                unlink($tmpFile);
-                unlink($tmpRadarFile);
-            }
-        } elseif ((file_put_contents($tmpFile, '') === false)) {
-            // Файла нет и создать его не удалось
-            $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
-        } else {
-            unlink($tmpFile);
-        }
-
-        // Если существует файл хранения временных данных сканирования,
-        // Данные разбиваются на 2 массива: пройденных и непройденных ссылок
-        if (file_exists($tmpFile)) {
-            $arr = file_get_contents($tmpFile);
-            $arr = unserialize($arr);
-
-            $this->links = empty($arr[0]) ? array() : $arr[0];
-            $this->checked = empty($arr[1]) ? array() : $arr[1];
-            $this->external = empty($arr[2]) ? array() : $arr[2];
-        }
-    }
-
-    /**
-     * Метод для сохранения распарсенных данных во временный файл
-     */
-    protected function saveParsedUrls()
-    {
-        $result = array(
-            $this->links,
-            $this->checked,
-            $this->external
-        );
-
-        $result = serialize($result);
-
-        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
-
-        $fp = fopen($tmpFile, 'wb');
-
-        fwrite($fp, $result);
-
-        fclose($fp);
-    }
-
-    /**
-     * Метод сохраняющий данные для отчёта о перелинковке во временный файл
-     */
-    protected function saveParsedRadarLinks()
-    {
-        $result = serialize($this->radarLinks);
-        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
-        $fp = fopen($tmpRadarFile, 'wb');
-        fwrite($fp, $result);
-        fclose($fp);
-    }
-
-    /**
      * Метод основного цикла для сборки карты сайта и парсинга товаров
      */
     public function run()
@@ -396,7 +122,7 @@ class Crawler
         $this->loadData();
 
         // Список страниц, которые не удалось прочитать с первого раза
-        $broken = array();
+        $broken = [];
 
         /** Массив checked вида [ссылка] => пометка о том является ли ссылка корректной (1 - да, 0 - нет) */
         $number = count($this->checked) + 1;
@@ -539,7 +265,7 @@ class Crawler
      */
     public function xmlEscape($str)
     {
-        $trans = array();
+        $trans = [];
         if (!isset($trans)) {
             $trans = get_html_translation_table(HTML_ENTITIES, ENT_QUOTES);
             foreach ($trans as $key => $value) {
@@ -553,13 +279,312 @@ class Crawler
     }
 
     /**
+     * Примитивный mock-метод для доступа к закрытым методам для их тестирования
+     *
+     * @param string $methodName Название вызываемого метода класса
+     * @param array $parameters Массив передаваемых методу параметров
+     * @return mixed Результат работы метода
+     */
+    public function mock($methodName, $parameters)
+    {
+        $r = '';
+        $str = '$r = $this->' . $methodName . '(' . implode(',', $parameters) . ');';
+        eval($str);
+        return $r;
+    }
+
+    /**
+     * Метод для выполнения произвольного кода внутри класса в целях тестирования
+     *
+     * @param string $code Код, выполняемый внутри класса
+     */
+    public function evalMe($code)
+    {
+        eval($code);
+    }
+
+    /**
+     * Вывод сообщения и завершение работы скрипта
+     *
+     * @param string $message - сообщение для вывода
+     * @param bool $sendNotification - флаг обозначающий надобность отправления сообщения перед остановкой скрипта
+     * @throws \Exception
+     */
+    protected function stop($message, $sendNotification = true)
+    {
+        if ($sendNotification) {
+            $this->sendEmail($message, '', $this->host . ' sitemap error');
+        }
+        throw new \Exception($message);
+    }
+
+    /**
+     * Корректировка времени, в течение которого будут собираться ссылки
+     */
+    protected function setTimeout()
+    {
+        $count = count($this->links) + count($this->checked);
+        if ($count > 1000) {
+            $this->config['recording'] = ($count / 1000) * 0.05 + $this->config['recording'];
+        }
+        $this->config['script_timeout'] -= $this->config['recording'];
+    }
+
+    /**
+     * Загрузка конфига в переменную $this->config
+     */
+    protected function loadConfig()
+    {
+        // Подгрузка конфига
+        $config = __DIR__ . '/site_map.php';
+        $message = 'Working with settings php-file from local directory';
+
+        // Проверяем наличие файла рядом с запускаемым скриптом
+        if (!file_exists($config)) {
+            // Проверяем, есть ли конфигурационный файл в корневой папке Ideal CMS
+            $config = substr(__DIR__, 0, stripos(__DIR__, '/Ideal/Library/sitemap')) . '/site_map.php';
+            $message = 'Working with settings php-file from config directory';
+            if (!file_exists($config)) {
+                // Конфигурационный файл нигде не нашли :(
+                $this->stop("Configuration file {$config} not found!");
+            }
+        }
+
+        echo $message . "\n";
+
+        /** @noinspection PhpIncludeInspection */
+        $this->config = require($config);
+
+        if (!isset($this->config['existence_time_file'])) {
+            $this->config['existence_time_file'] = 25;
+        }
+
+        $tmp = parse_url($this->config['website']);
+        $this->host = $tmp['host'];
+        if (!isset($tmp['path'])) {
+            $tmp['path'] = '/';
+        }
+        $this->config['website'] = $tmp['scheme'] . '://' . $tmp['host'] . $tmp['path'];
+
+        if (empty($this->config['pageroot'])) {
+            if (empty($_SERVER['DOCUMENT_ROOT'])) {
+                // Обнаружение корня сайта, если скрипт запускается из стандартного места в Ideal CMS
+                $self = $_SERVER['PHP_SELF'];
+                $path = substr($self, 0, strpos($self, 'Ideal') - 1);
+                $this->config['pageroot'] = dirname($path);
+            } else {
+                $this->config['pageroot'] = $_SERVER['DOCUMENT_ROOT'];
+            }
+        }
+
+        // Массив значений по умолчанию
+        $default = [
+            'script_timeout' => 60,
+            'load_timeout' => 10,
+            'delay' => 1,
+            'old_sitemap' => '/images/map-old.part',
+            'tmp_file' => '/images/map.part',
+            'tmp_radar_file' => '/tmp/radar.part',
+            'old_radar_file' => '/tmp/radar-old.part',
+            'pageroot' => '',
+            'sitemap_file' => '/sitemap.xml',
+            'crawler_url' => '/',
+            'change_freq' => 'weekly',
+            'priority' => 0.8,
+            'time_format' => 'long',
+            'disallow_key' => '',
+            'disallow_regexp' => '',
+            'seo_urls' => '',
+            'is_radar' => '1',
+        ];
+        foreach ($default as $key => $value) {
+            if (!isset($this->config[$key])) {
+                $this->config[$key] = $value;
+            }
+        }
+
+        // Строим массивы для пропуска GET-параметров и URL по регулярным выражениям
+        $this->config['disallow_key'] = explode("\n", $this->config['disallow_key']);
+        $this->config['disallow_regexp'] = explode("\n", $this->config['disallow_regexp']);
+
+        // Строим массив страниц с изменённым приоритетом
+        $this->config['seo_urls'] = explode("\n", $this->config['seo_urls']);
+        $seo = [];
+        foreach ($this->config['seo_urls'] as $v => $k) {
+            $a = explode('=', trim($k));
+            $url = trim($a[0]);
+            $priority = trim($a[1]);
+            $seo[$url] = $priority;
+        }
+        $this->config['seo_urls'] = $seo;
+        // Если среди ссылок с заданным приоритетом нет главной страницы, добавляем её туда,
+        // но приоритет оставляем стандартным
+        if (!isset($this->config['seo_urls'][$this->config['website']])) {
+            $this->config['seo_urls'][$this->config['website']] = $this->config['priority'];
+        }
+    }
+
+    /**
+     * Проверка доступности временных файлов и времени последнего сохранения промежуточного файла ссылок
+     */
+    protected function loadRadarData()
+    {
+        if (empty($this->config['is_radar'])) {
+            return;
+        }
+
+        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+
+        if (file_exists($tmpRadarFile)) {
+            if (!is_writable($tmpRadarFile)) {
+                $this->stop("Временный файл {$tmpRadarFile} недоступен для записи!");
+            }
+        } elseif ((file_put_contents($tmpRadarFile, '') === false)) {
+            // Файла нет и создать его не удалось
+            $this->stop("Не удалось создать временный файл {$tmpRadarFile}!");
+        } else {
+            unlink($tmpRadarFile);
+        }
+
+        // Если существует файл хранения временных данных отчёта о перелинковке
+        if (file_exists($tmpRadarFile)) {
+            $arr = file_get_contents($tmpRadarFile);
+            $this->radarLinks = unserialize($arr);
+        }
+    }
+
+    /**
+     * Проверка наличия, доступности для записи и актуальности xml-файла карты сайта
+     */
+    protected function prepareSiteMapFile()
+    {
+        $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
+
+        // Проверяем существует ли файл и доступен ли он для чтения и записи
+        if (file_exists($xmlFile)) {
+            if (!is_readable($xmlFile)) {
+                $this->stop("File {$xmlFile} is not readable!");
+            }
+            if (!is_writable($xmlFile)) {
+                $this->stop("File {$xmlFile} is not writable!");
+            }
+        } else {
+            if ((file_put_contents($xmlFile, '') === false)) {
+                // Файла нет и создать его не удалось
+                $this->stop("Couldn't create file {$xmlFile}!");
+            } else {
+                // Удаляем пустой файл, т.к. пустого файла не должно быть
+                unlink($xmlFile);
+                return;
+            }
+        }
+
+        // Проверяем, обновлялась ли сегодня карта сайта
+        if (date('d:m:Y', filemtime($xmlFile)) == date('d:m:Y')) {
+            if ($this->status == 'cron') {
+                $this->stop("Sitemap {$xmlFile} already created today! Everything it's alright.", false);
+            } else {
+                // Если дата сегодняшняя, но запуск не из крона, то продолжаем работу над картой сайта
+                echo "Warning! File {$xmlFile} have current date and skip in cron";
+            }
+        } else {
+            // Если карта сайта в два раза старше указанного значения в поле
+            // "Максимальное время существования версии промежуточного файла"
+            // и временный файл сбора ссылок обновлялся последний раз более 12 часов назад, то
+            // отсылаем соответствующее уведомление
+            $countHourForNotify = $this->config['existence_time_file'] * 2;
+            $existenceTimeFile = $countHourForNotify * 60 * 60;
+            $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+            if (file_exists($tmpFile)
+                && time() - filemtime($xmlFile) > $existenceTimeFile
+                && time() - filemtime($tmpFile) > 43200) {
+                $msg = 'Карта сайта последний раз обновлялась более ' . $countHourForNotify . ' часов(а) назад.';
+                $this->sendEmail($msg);
+            }
+        }
+    }
+
+    /**
+     * Метод для загрузки распарсенных данных из временных файлов
+     */
+    protected function loadParsedUrls()
+    {
+        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+
+        if (file_exists($tmpFile)) {
+            if (!is_writable($tmpFile)) {
+                $this->stop("Временный файл {$tmpFile} недоступен для записи!");
+            }
+
+            // Если промежуточный файл ссылок последний раз обновлялся более того количества часов назад,
+            // которое указано в настройках, то производим его принудительную очистку.
+            $existenceTimeFile = $this->config['existence_time_file'] * 60 * 60;
+            if (time() - filemtime($tmpFile) > $existenceTimeFile || $this->clearTemp) {
+                unlink($tmpFile);
+                unlink($tmpRadarFile);
+            }
+        } elseif ((file_put_contents($tmpFile, '') === false)) {
+            // Файла нет и создать его не удалось
+            $this->stop("Не удалось создать временный файл {$tmpFile} для карты сайта!");
+        } else {
+            unlink($tmpFile);
+        }
+
+        // Если существует файл хранения временных данных сканирования,
+        // Данные разбиваются на 2 массива: пройденных и непройденных ссылок
+        if (file_exists($tmpFile)) {
+            $arr = file_get_contents($tmpFile);
+            $arr = unserialize($arr);
+
+            $this->links = empty($arr[0]) ? [] : $arr[0];
+            $this->checked = empty($arr[1]) ? [] : $arr[1];
+            $this->external = empty($arr[2]) ? [] : $arr[2];
+        }
+    }
+
+    /**
+     * Метод для сохранения распарсенных данных во временный файл
+     */
+    protected function saveParsedUrls()
+    {
+        $result = [
+            $this->links,
+            $this->checked,
+            $this->external,
+        ];
+
+        $result = serialize($result);
+
+        $tmpFile = $this->config['pageroot'] . $this->config['tmp_file'];
+
+        $fp = fopen($tmpFile, 'wb');
+
+        fwrite($fp, $result);
+
+        fclose($fp);
+    }
+
+    /**
+     * Метод сохраняющий данные для отчёта о перелинковке во временный файл
+     */
+    protected function saveParsedRadarLinks()
+    {
+        $result = serialize($this->radarLinks);
+        $tmpRadarFile = $this->config['pageroot'] . $this->config['tmp_radar_file'];
+        $fp = fopen($tmpRadarFile, 'wb');
+        fwrite($fp, $result);
+        fclose($fp);
+    }
+
+    /**
      * Поиск изменений в новой карте сайта и отчёте о перелинковке, относительно предыдущего результата
      */
     protected function compare()
     {
         // Карта сайта
         $file = $this->config['pageroot'] . $this->config['old_sitemap'];
-        $old = file_exists($file) ? unserialize(file_get_contents($file)) : array(array(), array());
+        $old = file_exists($file) ? unserialize(file_get_contents($file)) : [[], []];
 
         $oldUrl = $old[0];
         $oldExternal = $old[1];
@@ -568,14 +593,14 @@ class Crawler
         $external = $this->external;
 
         // Сохраним новый массив ссылок, что бы в следующий раз взять его как старый
-        file_put_contents($file, serialize(array($new, $external)));
+        file_put_contents($file, serialize([$new, $external]));
 
         $text = '';
         $modifications = false;
-        $add = array();
-        $del = array();
-        $addExternal = array();
-        $delExternal = array();
+        $add = [];
+        $del = [];
+        $addExternal = [];
+        $delExternal = [];
 
         if (empty($oldUrl)) {
             $modifications = true;
@@ -646,12 +671,12 @@ class Crawler
         $this->sendEmail($text);
         if ($modifications && !empty($this->config['email_json'])) {
             // Формируем json формат данных для отправки на почту, хранящую информацию о работе карт сайта
-            $log = array(
+            $log = [
                 'add' => array_keys($add),
                 'del' => array_keys($del),
                 'add_external' => $addExternal,
                 'del_external' => $delExternal,
-            );
+            ];
             $log = json_encode($log);
             $this->sendEmail($log, $this->config['email_json'], $this->host . ' sitemap result');
         }
@@ -668,7 +693,7 @@ class Crawler
                 $this->sendEmail(
                     'Отчёт о перелинковке не может быть составлен, возможно не установлен радар.',
                     '',
-                    $this->host . ' - перелинковка'
+                    $this->host . ' - перелинковка',
                 );
                 return;
             }
@@ -774,7 +799,7 @@ class Crawler
             if (isset($this->config['change_freq'])) {
                 $ret .= sprintf(
                     '<changefreq>%s</changefreq>',
-                    $this->config['change_freq']
+                    $this->config['change_freq'],
                 );
             }
             if (isset($this->config['priority'])) {
@@ -790,16 +815,16 @@ class Crawler
         }
 
         $ret = <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-                http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
-            >
-    <!-- Last update of sitemap {$lastDate} -->
-    {$ret}
-    </urlset>
-XML;
+            <?xml version="1.0" encoding="UTF-8"?>
+                <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+                        >
+                <!-- Last update of sitemap {$lastDate} -->
+                {$ret}
+                </urlset>
+            XML;
 
         $xmlFile = $this->config['pageroot'] . $this->config['sitemap_file'];
         $fp = fopen($xmlFile, 'w');
@@ -812,53 +837,6 @@ XML;
         }
 
         return $xmlFile;
-    }
-
-    /**
-     * Метод для получения html-кода страницы по адресу $k в основном цикле
-     *
-     * @param string $k Ссылка на страницу для получения её контента
-     * @param string $place Страница, на которой получили ссылку (нужна только в случае ошибки)
-     * @return string Html-код страницы
-     */
-    private function getUrl($k, $place)
-    {
-        // Проверяем, не является ли файл тем, в котором не нужно искать ссылки
-        $ext = strtolower(pathinfo($k, PATHINFO_EXTENSION));
-        if (in_array($ext, array('xls', 'xlsx', 'pdf', 'doc', 'docx'))) {
-            return '';
-        }
-
-        // Инициализируем CURL для получения содержимого страницы
-
-        $ch = curl_init($k);
-
-        curl_setopt_array($ch, $this->options);
-
-        $res = curl_exec($ch); // получаем html код страницы, включая заголовки
-
-        $info = curl_getinfo($ch); // получаем информацию о запрошенной странице
-
-        // Если страница недоступна прекращаем выполнение скрипта
-        if ($info['http_code'] != 200) {
-            $this->stop("Страница {$k} недоступна. Статус: {$info['http_code']}. Переход с {$place}");
-        }
-
-        // Если страница имеет слишком малый вес прекращаем выполнение скрипта
-        if ($info['size_download'] < 1024) {
-            $this->stop("Страница {$k} пуста. Размер страницы: {$info['size_download']} байт. Переход с {$place}");
-        }
-
-        // Если размер страницы больше 3 МБ, то не анализируем контент
-        if ($info['size_download'] > 3145728) {
-            return '';
-        }
-
-        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
-        curl_close($ch);
-
-        // вырезаем html код страницы
-        return substr($res, $headerSize);
     }
 
     /**
@@ -903,7 +881,7 @@ XML;
         preg_match_all('/<a (.*)>/isU', $text, $urls);
 
         if (empty($urls[1])) {
-            return array();
+            return [];
         }
 
         // Выдёргиваем атрибуты
@@ -937,7 +915,7 @@ XML;
         }
 
         if (empty($links)) {
-            $links = array();
+            $links = [];
         }
 
         return $links;
@@ -951,7 +929,7 @@ XML;
      */
     protected function parseRadarLinks($content)
     {
-        $radarLinks = array();
+        $radarLinks = [];
         // Удаляем области контента не попадающие в радар
         $content = preg_replace("/<!--start_content_off-->(.*)<!--end_content_off-->/iusU", '', $content);
 
@@ -968,84 +946,11 @@ XML;
     }
 
     /**
-     * Обработка полученных ссылок, добавление в очередь новых ссылок
-     *
-     * @param array $urls Массив ссылок на обработку
-     * @param string $current Текущая страница
-     */
-    private function addLinks($urls, $current)
-    {
-        foreach ($urls as $url) {
-            if ($this->isExternalLink($url, $current)) {
-                $this->external[$url] = $current;
-                // Пропускаем ссылки на другие сайты
-                continue;
-            }
-
-            // Абсолютизируем ссылку
-            $link = $this->getAbsoluteUrl($url, $current);
-
-            // Убираем лишние GET параметры из ссылки
-            $link = $this->cutExcessGet($link);
-
-            if ($this->skipUrl($link)) {
-                // Если ссылку не нужно добавлять, переходим к следующей
-                continue;
-            }
-
-            if (isset($this->links[$link]) || isset($this->checked[$link])) {
-                // Пропускаем уже добавленные ссылки
-                continue;
-            }
-
-            $this->links[$link] = $current;
-        }
-    }
-
-    /**
-     * Обработка полученных ссылок, добавление в массив отчёта о перелинковке
-     *
-     * @param array $radarLinks Массив ссылок на обработку
-     * @param string $current Текущая страница
-     */
-    private function addRadarLinks($radarLinks, $current)
-    {
-        foreach ($radarLinks as $radarLink => $count) {
-            // Убираем анкоры без ссылок и js-код в ссылках
-            if (strpos($radarLink, '#') === 0 || stripos($radarLink, 'javascript:') === 0) {
-                continue;
-            }
-
-            if ($this->isExternalLink($radarLink, $current)) {
-                // Пропускаем ссылки на другие сайты
-                continue;
-            }
-
-            // Абсолютизируем ссылку
-            $link = $this->getAbsoluteUrl($radarLink, $current);
-
-            // Убираем лишние GET параметры из ссылки
-            $link = $this->cutExcessGet($link);
-
-            if ($this->skipUrl($link)) {
-                // Если ссылку не нужно добавлять, переходим к следующей
-                continue;
-            }
-
-            if (!isset($this->radarLinks[$link])) {
-                $this->radarLinks[$link] = $count;
-            } else {
-                $this->radarLinks[$link] += $count;
-            }
-        }
-    }
-
-    /**
      * Достраивание обрабатываемой ссылки до абсолютной
      *
      * @param string $link Обрабатываемая ссылка
      * @param string $current Текущая страница с которой получена ссылка
-     * @return string  Возвращается абсолютная ссылка
+     * @return string Возвращается абсолютная ссылка
      */
     protected function getAbsoluteUrl($link, $current)
     {
@@ -1245,12 +1150,12 @@ XML;
     protected function unparseUrl($parsedUrl)
     {
         $scheme = isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '';
-        $host = isset($parsedUrl['host']) ? $parsedUrl['host'] : '';
+        $host = $parsedUrl['host'] ?? '';
         $port = isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '';
-        $user = isset($parsedUrl['user']) ? $parsedUrl['user'] : '';
+        $user = $parsedUrl['user'] ?? '';
         $pass = isset($parsedUrl['pass']) ? ':' . $parsedUrl['pass'] : '';
         $pass = ($user || $pass) ? "$pass@" : '';
-        $path = isset($parsedUrl['path']) ? $parsedUrl['path'] : '';
+        $path = $parsedUrl['path'] ?? '';
         $query = isset($parsedUrl['query']) ? '?' . $parsedUrl['query'] : '';
         $fragment = isset($parsedUrl['fragment']) ? '#' . $parsedUrl['fragment'] : '';
         return "$scheme$user$pass$host$port$path$query$fragment";
@@ -1258,7 +1163,6 @@ XML;
 
     /**
      * Проверяем, нужно исключать этот URL или не надо
-     * @param $filename
      * @return bool
      */
     protected function skipUrl($filename)
@@ -1278,7 +1182,7 @@ XML;
                     }
                     return $res;
                 },
-                $filename
+                $filename,
             );
             if ($filename !== $reduce) {
                 // Сработало одно из регулярных выражений, значит ссылку нужно исключить
@@ -1291,27 +1195,122 @@ XML;
     }
 
     /**
-     * Примитивный mock-метод для доступа к закрытым методам для их тестирования
+     * Метод для получения html-кода страницы по адресу $k в основном цикле
      *
-     * @param string $methodName Название вызываемого метода класса
-     * @param array $parameters Массив передаваемых методу параметров
-     * @return mixed Результат работы метода
+     * @param string $k Ссылка на страницу для получения её контента
+     * @param string $place Страница, на которой получили ссылку (нужна только в случае ошибки)
+     * @return string Html-код страницы
      */
-    public function mock($methodName, $parameters)
+    private function getUrl($k, $place)
     {
-        $r = '';
-        $str = '$r = $this->' . $methodName . '(' . implode(',', $parameters) . ');';
-        eval($str);
-        return $r;
+        // Проверяем, не является ли файл тем, в котором не нужно искать ссылки
+        $ext = strtolower(pathinfo($k, PATHINFO_EXTENSION));
+        if (in_array($ext, ['xls', 'xlsx', 'pdf', 'doc', 'docx'])) {
+            return '';
+        }
+
+        // Инициализируем CURL для получения содержимого страницы
+
+        $ch = curl_init($k);
+
+        curl_setopt_array($ch, $this->options);
+
+        $res = curl_exec($ch); // получаем html код страницы, включая заголовки
+
+        $info = curl_getinfo($ch); // получаем информацию о запрошенной странице
+
+        // Если страница недоступна прекращаем выполнение скрипта
+        if ($info['http_code'] != 200) {
+            $this->stop("Страница {$k} недоступна. Статус: {$info['http_code']}. Переход с {$place}");
+        }
+
+        // Если страница имеет слишком малый вес прекращаем выполнение скрипта
+        if ($info['size_download'] < 1024) {
+            $this->stop("Страница {$k} пуста. Размер страницы: {$info['size_download']} байт. Переход с {$place}");
+        }
+
+        // Если размер страницы больше 3 МБ, то не анализируем контент
+        if ($info['size_download'] > 3145728) {
+            return '';
+        }
+
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE); // получаем размер header'а
+        curl_close($ch);
+
+        // вырезаем html код страницы
+        return substr($res, $headerSize);
     }
 
     /**
-     * Метод для выполнения произвольного кода внутри класса в целях тестирования
+     * Обработка полученных ссылок, добавление в очередь новых ссылок
      *
-     * @param string $code Код, выполняемый внутри класса
+     * @param array $urls Массив ссылок на обработку
+     * @param string $current Текущая страница
      */
-    public function evalMe($code)
+    private function addLinks($urls, $current)
     {
-        eval($code);
+        foreach ($urls as $url) {
+            if ($this->isExternalLink($url, $current)) {
+                $this->external[$url] = $current;
+                // Пропускаем ссылки на другие сайты
+                continue;
+            }
+
+            // Абсолютизируем ссылку
+            $link = $this->getAbsoluteUrl($url, $current);
+
+            // Убираем лишние GET параметры из ссылки
+            $link = $this->cutExcessGet($link);
+
+            if ($this->skipUrl($link)) {
+                // Если ссылку не нужно добавлять, переходим к следующей
+                continue;
+            }
+
+            if (isset($this->links[$link]) || isset($this->checked[$link])) {
+                // Пропускаем уже добавленные ссылки
+                continue;
+            }
+
+            $this->links[$link] = $current;
+        }
+    }
+
+    /**
+     * Обработка полученных ссылок, добавление в массив отчёта о перелинковке
+     *
+     * @param array $radarLinks Массив ссылок на обработку
+     * @param string $current Текущая страница
+     */
+    private function addRadarLinks($radarLinks, $current)
+    {
+        foreach ($radarLinks as $radarLink => $count) {
+            // Убираем анкоры без ссылок и js-код в ссылках
+            if (strpos($radarLink, '#') === 0 || stripos($radarLink, 'javascript:') === 0) {
+                continue;
+            }
+
+            if ($this->isExternalLink($radarLink, $current)) {
+                // Пропускаем ссылки на другие сайты
+                continue;
+            }
+
+            // Абсолютизируем ссылку
+            $link = $this->getAbsoluteUrl($radarLink, $current);
+
+            // Убираем лишние GET параметры из ссылки
+            $link = $this->cutExcessGet($link);
+
+            if ($this->skipUrl($link)) {
+                // Если ссылку не нужно добавлять, переходим к следующей
+                continue;
+            }
+
+            if (!isset($this->radarLinks[$link])) {
+                $this->radarLinks[$link] = $count;
+            } else {
+                $this->radarLinks[$link] += $count;
+            }
+        }
     }
 }

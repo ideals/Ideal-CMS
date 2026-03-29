@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -25,13 +26,13 @@ $db->create($config->db['prefix'] . 'ideal_structure_error404', $cfg['fields']);
 
 $db->insert(
     $dataListTable,
-    array(
+    [
         'prev_structure' => '0-3',
         'structure' => 'Ideal_Error404',
         'pos' => $newPos,
         'name' => 'Ошибки 404',
         'url' => 'oshibki-404',
         'parent_url' => '---',
-        'annot' => ''
-    )
+        'annot' => '',
+    ],
 );

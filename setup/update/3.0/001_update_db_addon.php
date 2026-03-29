@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Преобразования базы данных, связанные с переходом от шаблонов к аддонам.
  */
@@ -37,7 +38,7 @@ fixIncludedTemplates($config);
 function conversionTemplateField($db, $structureTablesWithoutAddon, $structureTablesWithAddon)
 {
     // Получаем значение по умолчанию для столбца 'addon'
-    $defaultValue = $db->real_escape_string(json_encode(array(array('1', 'Ideal_Page', 'Текст'))));
+    $defaultValue = $db->real_escape_string(json_encode([['1', 'Ideal_Page', 'Текст']]));
 
     // Преобразуем талбицы структур у которых не было столбца 'addon'
     foreach ($structureTablesWithoutAddon as $structureTable) {
@@ -76,11 +77,11 @@ function conversionTemplateTables($db, $templateTables)
  */
 function getTablesForConversion($db, $config)
 {
-    $listTableName = array(
-        'structure' => array(),
-        'structureModified' => array(),
-        'template' => array(),
-    );
+    $listTableName = [
+        'structure' => [],
+        'structureModified' => [],
+        'template' => [],
+    ];
 
     // Получаем таблицы структур, у которых есть поле 'template' но нет поля 'addon'
     $sql = "SELECT DISTINCT TABLE_NAME
@@ -156,7 +157,7 @@ function modifySettingsAddonColumn($db, $tableName, $defaultValue)
             $addonInfo[$key] = $addonValue;
         }
         $value['addon'] = json_encode($addonInfo);
-        $params = array('ID' => $value['ID']);
+        $params = ['ID' => $value['ID']];
         unset($value['prev_structure']);
         unset($value['ID']);
         $db->update($tableName)->set($value)->where('ID = :ID', $params)->exec();
@@ -176,8 +177,8 @@ function updateAddonColumn($db, $tableName)
     $rows = $db->select("SELECT ID, template, prev_structure FROM $tableName");
     foreach ($rows as $value) {
         $label = getAddonLabel($value['template'], $value['prev_structure']);
-        $value['addon'] = json_encode(array(array('1', $value['template'], $label)));
-        $params = array('ID' => $value['ID']);
+        $value['addon'] = json_encode([['1', $value['template'], $label]]);
+        $params = ['ID' => $value['ID']];
         unset($value['template']);
         unset($value['ID']);
         unset($value['prev_structure']);
@@ -251,7 +252,7 @@ function fixIncludedTemplates($config)
  */
 function findTwigTemplates($dir)
 {
-    $files = array();
+    $files = [];
     if ($handle = opendir($dir)) {
         while (false !== ($item = readdir($handle))) {
             if (is_file("$dir/$item") && strpos($item, '.twig') !== false) {

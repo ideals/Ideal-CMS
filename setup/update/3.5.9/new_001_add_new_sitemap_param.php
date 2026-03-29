@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Добавление дополнительного поля в файл site_map.php
  */
@@ -11,11 +12,11 @@ $configSD->loadFile($file);
 $params = $configSD->getParams();
 // Если поле уже есть, то ничего делать не нужно
 if (!isset($params['default']['arr']['tmp_radar_file'])) {
-    $params['default']['arr']['tmp_radar_file'] = array(
+    $params['default']['arr']['tmp_radar_file'] = [
         'label' => 'Путь от корня сайта к временному файлу отчёта о перелинковке',
         'value' => '/tmp/radar.part',
-        'type' => 'Ideal_Text'
-    );
+        'type' => 'Ideal_Text',
+    ];
     $configSD->setParams($params);
     $configSD->saveFile($file);
 }

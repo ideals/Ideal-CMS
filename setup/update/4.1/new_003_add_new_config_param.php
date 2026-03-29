@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Добавление дополнительных полей для настроек SMTP в конфигурационный файл site_data.php
  */
@@ -11,36 +12,36 @@ $configSD->loadFile($file);
 $params = $configSD->getParams();
 // Если поле уже есть, то ничего делать не нужно
 if (!isset($params['smtp'])) {
-    $params['smtp'] = array(
+    $params['smtp'] = [
         'name' => 'SMTP',
-        'arr' => array(
-            'server' => array(
+        'arr' => [
+            'server' => [
                 'label' => 'Адрес SMTP-сервера',
                 'value' => '',
-                'type' => 'Ideal_Text'
-            ),
-            'port' => array(
+                'type' => 'Ideal_Text',
+            ],
+            'port' => [
                 'label' => 'Порт SMTP-сервера',
                 'value' => '',
-                'type' => 'Ideal_Text'
-            ),
-            'user' => array(
+                'type' => 'Ideal_Text',
+            ],
+            'user' => [
                 'label' => 'Имя пользователя для авторизации на SMTP-сервере',
                 'value' => '',
-                'type' => 'Ideal_Text'
-            ),
-            'password' => array(
+                'type' => 'Ideal_Text',
+            ],
+            'password' => [
                 'label' => 'Пароль для авторизации на SMTP-сервере',
                 'value' => '',
-                'type' => 'Ideal_Text'
-            ),
-            'domain' => array(
+                'type' => 'Ideal_Text',
+            ],
+            'domain' => [
                 'label' => 'Домен, с которого идёт отправка письма',
                 'value' => '',
-                'type' => 'Ideal_Text'
-            )
-        )
-    );
+                'type' => 'Ideal_Text',
+            ],
+        ],
+    ];
 }
 $configSD->setParams($params);
 $configSD->saveFile($file);

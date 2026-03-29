@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -9,9 +10,6 @@
 
 namespace Ideal\Core;
 
-use Ideal\Core\Admin;
-use Ideal\Core\Site;
-use Ideal\Core\Api;
 use Ideal\Structure\User;
 
 /**
@@ -53,7 +51,7 @@ class FrontController
         $content = $controller->run($router);
 
         if ($router->is404()) {
-            $httpHeaders = array('HTTP/1.0 404 Not Found');
+            $httpHeaders = ['HTTP/1.0 404 Not Found'];
             if ($router->send404()) {
                 $this->emailError404();
             }
@@ -66,7 +64,7 @@ class FrontController
             // Если запрошена страница из пользовательской части, включён кэш и действие совершил не администратор,
             // то сохранить её
             $user = new User\Model();
-            if (!$user->checkLogin() && in_array($mode, array('api', 'admin'))
+            if (!$user->checkLogin() && in_array($mode, ['api', 'admin'])
                 && isset($configCache['fileCache']) && $configCache['fileCache']) {
                 $model = $router->getModel();
                 $pageData = $model->getPageData();
@@ -82,6 +80,23 @@ class FrontController
         $this->sendHttpHeaders($httpHeaders); // вывод http-заголовков
 
         echo $content; // отображение страницы
+    }
+
+    /**
+     * Получение реферера пользователя и установка реферера в куки
+     */
+    public function referer()
+    {
+        // Проверяем есть ли в куках информация о реферере
+        if (!isset($_COOKIE['referer'])) {
+            // Если информации о реферере нет в куках то добавляем её туда
+            if (!empty($_SERVER['HTTP_REFERER'])) {
+                $referer = $_SERVER['HTTP_REFERER'];
+            } else {
+                $referer = 'null';
+            }
+            setcookie("referer", $referer, time() + 315360000);
+        }
     }
 
     /**
@@ -143,23 +158,6 @@ class FrontController
             $mail->setSubj($subject);
             $mail->setPlainBody($message);
             $mail->sent($config->robotEmail, $config->cms['adminEmail']);
-        }
-    }
-
-    /**
-     * Получение реферера пользователя и установка реферера в куки
-     */
-    public function referer()
-    {
-        // Проверяем есть ли в куках информация о реферере
-        if (!isset($_COOKIE['referer'])) {
-            // Если информации о реферере нет в куках то добавляем её туда
-            if (!empty($_SERVER['HTTP_REFERER'])) {
-                $referer = $_SERVER['HTTP_REFERER'];
-            } else {
-                $referer = 'null';
-            }
-            setcookie("referer", $referer, time() + 315360000);
         }
     }
 }

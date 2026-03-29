@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,7 +18,6 @@ use Ideal\Structure\Error404;
 
 class Router
 {
-
     /** @var string Название контроллера активной страницы */
     protected $controllerName = '';
 
@@ -76,50 +76,6 @@ class Router
     }
 
     /**
-     * Определение модели активной страницы и пути к ней на основе переменной $_GET['par']
-     *
-     * @return Model Модель активной страницы
-     */
-    protected function routeByPar()
-    {
-        $config = Config::getInstance();
-
-        // Инициализируем $par — массив ID к активному объекту
-        $request = new Request();
-        $par = $request->par;
-
-        if ($par == '') {
-            // par не задан, берём стартовую структуру из списка структур
-            $path = array($config->getStartStructure());
-            $prevStructureId = $path[0]['ID'];
-            $par = array();
-        } else {
-            // par задан, нужно его разложить в массив
-            $par = explode('-', $par);
-            // Определяем первую структуру
-            $prevStructureId = $par[0];
-            $path = array($config->getStructureById($prevStructureId));
-            unset($par[0]); // убираем первый элемент - ID начальной структуры
-        }
-
-        if (!isset($path[0]['structure'])) {
-            // По par ничего не нашлось, берём стартовую структуру из списка структуру
-            $path = array($config->getStartStructure());
-            $prevStructureId = $path[0]['ID'];
-            $par = array();
-        }
-
-        $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Admin\\Model';
-        /* @var $structure Model */
-        $structure = new $modelClassName('0-' . $prevStructureId);
-
-        // Запускаем определение пути и активной модели по $par
-        $model = $structure->detectPageByIds($path, $par);
-
-        return $model;
-    }
-
-    /**
      * Возвращает название контроллера для активной страницы
      *
      * @return string Название контроллера
@@ -130,7 +86,7 @@ class Router
             return $this->controllerName;
         }
 
-        if (method_exists ($this->model, 'getControllerName')) {
+        if (method_exists($this->model, 'getControllerName')) {
             return $this->model->getControllerName();
         }
         $request = new Request();
@@ -189,5 +145,49 @@ class Router
     public function send404()
     {
         return $this->error404->send404();
+    }
+
+    /**
+     * Определение модели активной страницы и пути к ней на основе переменной $_GET['par']
+     *
+     * @return Model Модель активной страницы
+     */
+    protected function routeByPar()
+    {
+        $config = Config::getInstance();
+
+        // Инициализируем $par — массив ID к активному объекту
+        $request = new Request();
+        $par = $request->par;
+
+        if ($par == '') {
+            // par не задан, берём стартовую структуру из списка структур
+            $path = [$config->getStartStructure()];
+            $prevStructureId = $path[0]['ID'];
+            $par = [];
+        } else {
+            // par задан, нужно его разложить в массив
+            $par = explode('-', $par);
+            // Определяем первую структуру
+            $prevStructureId = $par[0];
+            $path = [$config->getStructureById($prevStructureId)];
+            unset($par[0]); // убираем первый элемент - ID начальной структуры
+        }
+
+        if (!isset($path[0]['structure'])) {
+            // По par ничего не нашлось, берём стартовую структуру из списка структуру
+            $path = [$config->getStartStructure()];
+            $prevStructureId = $path[0]['ID'];
+            $par = [];
+        }
+
+        $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Admin\\Model';
+        /* @var $structure Model */
+        $structure = new $modelClassName('0-' . $prevStructureId);
+
+        // Запускаем определение пути и активной модели по $par
+        $model = $structure->detectPageByIds($path, $par);
+
+        return $model;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -19,7 +20,6 @@ use Ideal\Field;
 
 class MainMenu extends \Ideal\Core\Widget
 {
-
     public function getData()
     {
         $db = Db::getInstance();
@@ -27,11 +27,11 @@ class MainMenu extends \Ideal\Core\Widget
         $url = new Field\Url\Model();
 
         // Считываем главное меню
-        $par = array(
+        $par = [
             'active' => 1,
             'menu' => 0,
-            'lvl' => 1
-        );
+            'lvl' => 1,
+        ];
         $table = strtolower($config->db['prefix'] . 'ideal_structure_part');
         $_sql = "SELECT * FROM {$table} WHERE is_active=:active AND is_not_menu=:menu AND lvl=:lvl ORDER BY cid";
         $menu = $db->select($_sql, $par);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -28,7 +29,6 @@ use Ideal\Field\Url;
  */
 class Controller extends Url\Controller
 {
-
     /** @inheritdoc */
     protected static $instance;
 
@@ -38,7 +38,7 @@ class Controller extends Url\Controller
     public function getInputText()
     {
         $url = new Url\Model();
-        $value = array('url' => htmlspecialchars($this->getValue()));
+        $value = ['url' => htmlspecialchars($this->getValue())];
         $link = $url->getUrlWithPrefix($value, $this->model->getParentUrl());
         $link = $url->cutSuffix($link);
         // Проверяем, является ли url этого объекта частью пути

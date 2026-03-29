@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -26,7 +27,6 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
-
     /** {@inheritdoc} */
     protected static $instance;
 
@@ -58,7 +58,7 @@ class Controller extends AbstractController
         $fieldName = $this->groupName . '_' . $this->name . '-check';
         $newCheckValue = $request->$fieldName;
 
-        $item = array();
+        $item = [];
         $item['fieldName'] = $this->htmlName;
 
         if ($this->newValue == '') {

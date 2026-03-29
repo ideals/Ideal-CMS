@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -14,6 +15,4 @@ namespace Ideal\Structure\Service\SiteData;
  *
  * Используется в ConfigPhp.php
  */
-class MockModel extends \Ideal\Core\Admin\Model
-{
-}
+class MockModel extends \Ideal\Core\Admin\Model {}

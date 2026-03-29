@@ -15,7 +15,7 @@ if ($scriptDir !== $_SERVER['REQUEST_URI']) {
 
 require_once 'install_func.php';
 
-$fields = array(
+$fields = [
     'siteName',
     'redirect',
     'cmsLogin',
@@ -25,8 +25,8 @@ $fields = array(
     'dbLogin',
     'dbPass',
     'dbName',
-    'dbPrefix'
-);
+    'dbPrefix',
+];
 
 $formValue = initFormValue($_POST, $fields);
 $error = '';
@@ -118,16 +118,16 @@ if (empty($error) && $errorText === 'Ok') {
     if ($error != '') {
         echo $error;
     }
-    if ($errorText != '') {
-        echo '<div class="alert">' . $errorText . '</div>';
-    }
-    if ($allReady) {
-        echo '<p>В консоли выполните команду composer install в корне сервера и после этого '
-            . '<a href="../../index.php">перейдите в админку</a></p>';
-        echo '</div></body></html>';
-        exit;
-    }
-    ?>
+if ($errorText != '') {
+    echo '<div class="alert">' . $errorText . '</div>';
+}
+if ($allReady) {
+    echo '<p>В консоли выполните команду composer install в корне сервера и после этого '
+        . '<a href="../../index.php">перейдите в админку</a></p>';
+    echo '</div></body></html>';
+    exit;
+}
+?>
 
     <form method="post" action="">
         <div class="col-lg-5">

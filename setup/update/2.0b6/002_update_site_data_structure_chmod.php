@@ -1,4 +1,5 @@
 <?php
+
 $config = \Ideal\Core\Config::getInstance();
 $configSD = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 

@@ -1,4 +1,5 @@
 <?php
+
 $path = getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT'];
 $isConsole = true;
 require_once $path . '/_.php';
@@ -20,15 +21,15 @@ if ($log === false) {
     $logId++;
     $add = <<<ADD
 
-        // Подключаем справочник логов
-        array(
-            'ID' => {$logId},
-            'structure' => 'Ideal_Log',
-            'name' => 'Логи',
-            'isShow' => 0,
-            'hasTable' => true
-        ),
-ADD;
+                // Подключаем справочник логов
+                array(
+                    'ID' => {$logId},
+                    'structure' => 'Ideal_Log',
+                    'name' => 'Логи',
+                    'isShow' => 0,
+                    'hasTable' => true
+                ),
+        ADD;
     $fileName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/config.php';
     if (!file_exists($fileName)) {
         throw new \Exception('Файл не найден: ' . $fileName);
@@ -52,15 +53,15 @@ if (empty($log)) {
     // Создаем запись Заказы с сайта в Справочниках
     $db->insert(
         $dataListTable,
-        array(
+        [
             'prev_structure' => '0-3',
             'structure' => 'Ideal_Log',
             'pos' => $newPos,
             'name' => 'Логи',
             'url' => 'logi',
             'parent_url' => '---',
-            'annot' => ''
-        )
+            'annot' => '',
+        ],
     );
 }
 

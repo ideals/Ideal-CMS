@@ -34,13 +34,13 @@ $config = Config::getInstance();
 
 $result = $db->select('SHOW TABLES');
 
-$dbTables = array();
+$dbTables = [];
 foreach ($result as $v) {
     $table = array_shift($v);
 
     // Получаем информацию о полях таблицы
     $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $table . ' FROM `' . $config->db['name'] . '`');
-    $fields = array();
+    $fields = [];
     array_walk($fieldsInfo, function ($v) use (&$fields) {
         $fields[$v['Field']] = $v['Type'];
     });
@@ -74,14 +74,14 @@ $checkTypeFile = function ($dir, $module, &$cfgTables, &$cfgTablesFull, &$config
     }
 };
 
-$cfgTables = array();
-$cfgTablesFull = array();
+$cfgTables = [];
+$cfgTablesFull = [];
 foreach ($config->structures as $v) {
     if (!$v['hasTable']) {
         continue;
     }
     $fields = getFieldListWithTypes($v);
-    list($module, $structure) = explode('_', $v['structure'], 2);
+    [$module, $structure] = explode('_', $v['structure'], 2);
     $table = strtolower($config->db['prefix'] . $module . '_structure_' . $structure);
     $cfgTables[$table] = $fields;
 
@@ -124,7 +124,7 @@ if (isset($_POST['create'])) {
 // Если есть поля, которые надо создать
 if (isset($_POST['create_field'])) {
     foreach ($_POST['create_field'] as $tableField => $v) {
-        list($table, $field) = explode('-', $tableField);
+        [$table, $field] = explode('-', $tableField);
         echo '<p>Добавляем поле ' . $field . ' в таблицу ' . $table . '…';
         $file = $cfgTablesFull[$table] . '/config.php';
         /** @noinspection PhpIncludeInspection */
@@ -170,7 +170,7 @@ if (isset($_POST['delete'])) {
 // Если есть поля, которые нужно удалить
 if (isset($_POST['delete_field'])) {
     foreach ($_POST['delete_field'] as $tableField => $v) {
-        list($table, $field) = explode('-', $tableField);
+        [$table, $field] = explode('-', $tableField);
         echo '<p>Удаляем поле ' . $field . ' в таблице ' . $table . '…';
         $db->query("ALTER TABLE {$table} DROP COLUMN {$field};");
         echo ' Готово.</p>';
@@ -181,7 +181,7 @@ if (isset($_POST['delete_field'])) {
 // Если есть поля, которые нужно преобразовать
 if (isset($_POST['change_type'])) {
     foreach ($_POST['change_type'] as $tableField => $v) {
-        list($table, $field, $type) = explode('-', $tableField, 3);
+        [$table, $field, $type] = explode('-', $tableField, 3);
         echo '<p>Изменяем поле ' . $field . ' в таблице ' . $table . ' на тип' . $type . '…';
         // Поле с типом "SET", требует особенного подхода в обновлении значений
         if (strpos(mb_strtolower($type), 'set') === 0) {
@@ -276,7 +276,7 @@ if ($isCool) {
 // Получаем информацию о полях из конфигурационных файлов
 function getFieldListWithTypes($data)
 {
-    $fields = array();
+    $fields = [];
     if (isset($data['fields']) && is_array($data['fields'])) {
         array_walk($data['fields'], function ($value, $key) use (&$fields) {
             if (isset($value['sql'])) {
@@ -288,7 +288,7 @@ function getFieldListWithTypes($data)
                         $type = preg_replace('/\v|\s\s/is', '', $matchesType[0]);
                     }
                 } else {
-                    list($type) = explode(' ', $value['sql']);
+                    [$type] = explode(' ', $value['sql']);
                 }
                 if ($type) {
                     $fields[$key] = $type;
@@ -301,7 +301,7 @@ function getFieldListWithTypes($data)
 
 function diffConfigBaseType($a, $b)
 {
-    $result = array();
+    $result = [];
     foreach ($a as $k => $v) {
         if (isset($b[$k])) {
             if ($v === 'bool') {

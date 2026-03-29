@@ -1,4 +1,5 @@
 <?php
+
 // Обновляем файлы "min.gen.php" для css и js
 use Ideal\Core\Config;
 

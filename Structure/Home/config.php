@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -8,7 +9,7 @@
  */
 
 // Главная страница
-return array(
-    'params' => array(),
-    'fields' => array()
-);
+return [
+    'params' => [],
+    'fields' => [],
+];

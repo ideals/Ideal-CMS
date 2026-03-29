@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -9,7 +10,4 @@
 
 namespace Ideal\Structure\News\Admin;
 
-class Model extends \Ideal\Structure\Roster\Admin\ModelAbstract
-{
-
-}
+class Model extends \Ideal\Structure\Roster\Admin\ModelAbstract {}

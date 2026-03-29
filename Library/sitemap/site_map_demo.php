@@ -1,6 +1,7 @@
 <?php
+
 // @codingStandardsIgnoreFile
-return array(
+return [
     'pageroot' => "", // Корневая папка сайта на диске (только если скрипт без этого не работает) | Ideal_Text
     'website' => "http://example.com", // Сайт для сканирования | Ideal_Text
     'sitemap_file' => "/sitemap.xml", // Файл для записи xml-карты сайта | Ideal_Text
@@ -23,4 +24,4 @@ return array(
     'email_cron' => "help@neox.ru", // Электронная почта для cron-сообщений | Ideal_Text
     'email_notify' => "top@neox.ru", // Электронная почта для уведомления о добавленных/удалённых ссылках | Ideal_Text
     'email_json' => "help@neox.ru", // Электронная почта для уведомлений об изменениях в карте сайта (json-формат) | Ideal_Text
-);
+];

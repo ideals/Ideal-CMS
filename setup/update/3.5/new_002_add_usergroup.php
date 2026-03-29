@@ -1,4 +1,5 @@
 <?php
+
 // Подключаем структуру для хранения групп пользователей.
 use Ideal\Core\Config;
 use Ideal\Core\Db;
@@ -18,15 +19,15 @@ if ($userGroup === false) {
     $userGroupId++;
     $add = <<<ADD
 
-        // Подключаем справочник групп пользователей
-        array(
-            'ID' => {$userGroupId},
-            'structure' => 'Ideal_UserGroup',
-            'name' => 'Группы пользователей',
-            'isShow' => 0,
-            'hasTable' => true
-        ),
-ADD;
+                // Подключаем справочник групп пользователей
+                array(
+                    'ID' => {$userGroupId},
+                    'structure' => 'Ideal_UserGroup',
+                    'name' => 'Группы пользователей',
+                    'isShow' => 0,
+                    'hasTable' => true
+                ),
+        ADD;
     $fileName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/config.php';
     if (!file_exists($fileName)) {
         throw new \Exception('Файл не найден: ' . $fileName);
@@ -60,14 +61,14 @@ if (empty($userGroup)) {
     // Создаем запись Заказы с сайта в Справочниках
     $db->insert(
         $dataListTable,
-        array(
+        [
             'prev_structure' => '0-3',
             'structure' => 'Ideal_UserGroup',
             'pos' => $newPos,
             'name' => 'Группы пользователей',
             'url' => 'gruppy-polzovatelej',
             'parent_url' => '---',
-            'annot' => ''
-        )
+            'annot' => '',
+        ],
     );
 }

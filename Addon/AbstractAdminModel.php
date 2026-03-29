@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -26,7 +27,7 @@ class AbstractAdminModel extends Admin\Model
     public function delete()
     {
         $db = Db::getInstance();
-        $db->delete($this->_table)->where('ID=:id', array('id' => $this->pageData['ID']));
+        $db->delete($this->_table)->where('ID=:id', ['id' => $this->pageData['ID']]);
         $db->exec();
     }
 
@@ -41,9 +42,9 @@ class AbstractAdminModel extends Admin\Model
         $db = Db::getInstance();
 
         // Получаем идентификатор таба из группы
-        list(, $tabID) = explode('-', $this->fieldsGroup, 2);
+        [, $tabID] = explode('-', $this->fieldsGroup, 2);
         $_sql = "SELECT * FROM {$this->_table} WHERE prev_structure=:ps AND tab_ID=:tid";
-        $pageData = $db->select($_sql, array('ps' => $prevStructure, 'tid' => $tabID));
+        $pageData = $db->select($_sql, ['ps' => $prevStructure, 'tid' => $tabID]);
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по prevStructure ничего не нашлось
             /** @noinspection PhpUndefinedMethodInspection */

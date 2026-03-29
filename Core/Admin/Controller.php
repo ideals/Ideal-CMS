@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -9,7 +10,6 @@
 
 namespace Ideal\Core\Admin;
 
-use Ideal\Core;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Core\Util;
@@ -19,7 +19,6 @@ use Ideal\Core\FileCache;
 
 class Controller
 {
-
     /** @var Model Модель соответствующая этому контроллеру */
     protected $model;
 
@@ -52,7 +51,7 @@ class Controller
     {
         $request = new Request();
 
-        $result = array();
+        $result = [];
         $result['ID'] = intval($request->id);
         $result['isCorrect'] = false;
 
@@ -107,7 +106,7 @@ class Controller
 
         // Добавляем в path пустой элемент
         $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
+        $path[] = ['ID' => '', 'name' => $name, 'url' => '404'];
         $this->model->setPath($path);
 
         // Устанавливаем нужный нам title
@@ -156,7 +155,7 @@ class Controller
 
         // Инициализируем Twig-шаблонизатор
         $config = Config::getInstance();
-        $this->view = new View(array($gblRoot, $tplRoot), $config->cache['templateAdmin']);
+        $this->view = new View([$gblRoot, $tplRoot], $config->cache['templateAdmin']);
         $this->view->loadTemplate($tplName);
     }
 
@@ -169,9 +168,9 @@ class Controller
      */
     public function getHttpHeaders()
     {
-        return array(
-            'X-Robots-Tag' => 'noindex, nofollow'
-        );
+        return [
+            'X-Robots-Tag' => 'noindex, nofollow',
+        ];
     }
 
     // TODO перенести в контроллер юзера
@@ -198,7 +197,7 @@ class Controller
         $this->view->par = $request->par;
 
         // Отображение списка элементов
-        $rows = array();
+        $rows = [];
         foreach ($list as $k => $v) {
             $fields = '';
             foreach ($headers as $key => $v2) {
@@ -208,14 +207,14 @@ class Controller
                 $fieldModel->setModel($this->model, $key);
                 $value = $fieldModel->getValueForList($v, $key);
                 if (isset($this->model->params['field_name']) && $key == $this->model->params['field_name']
-                    && (!isset($v['acl']) || $v['acl']['enter']) ) {
+                    && (!isset($v['acl']) || $v['acl']['enter'])) {
                     // На активный элемент ставим ссылку
                     $par = $request->par . '-' . $v['ID'];
                     $value = '<a href="index.php?par=' . $par . '">' . $value . '</a>';
                 }
                 $fields .= '<td>' . $value . '</td>';
             }
-            $rows[] = array(
+            $rows[] = [
                 'ID' => $v['ID'],
                 'row' => $fields,
                 'is_active' => (isset($v['is_active'])) ? $v['is_active'] : 1,
@@ -223,7 +222,7 @@ class Controller
                 'acl_edit' => (isset($v['acl'])) ? $v['acl']['edit'] : 1,
                 'acl_delete' => (isset($v['acl'])) ? $v['acl']['delete'] : 1,
                 'acl_enter' => (isset($v['acl'])) ? $v['acl']['enter'] : 1,
-            );
+            ];
         }
         $this->view->rows = $rows;
     }
@@ -231,7 +230,6 @@ class Controller
     /**
      * Генерация контента страницы для отображения в браузере
      *
-     * @param Router $router
      * @return string Содержимое отображаемой страницы
      */
     public function run(Router $router)
@@ -272,13 +270,13 @@ class Controller
         $this->view->activeStructureId = $path[0]['ID'];
 
         // Отображение хлебных крошек
-        $pars = $breadCrumbs = array();
+        $pars = $breadCrumbs = [];
         foreach ($path as $v) {
             $pars[] = $v['ID'];
-            $breadCrumbs[] = array(
+            $breadCrumbs[] = [
                 'link' => implode('-', $pars),
-                'name' => $v['name']
-            );
+                'name' => $v['name'],
+            ];
         }
         $this->view->breadCrumbs = $breadCrumbs;
 
@@ -299,9 +297,7 @@ class Controller
      *
      * @param string $actionName
      */
-    public function finishMod($actionName)
-    {
-    }
+    public function finishMod($actionName) {}
 
     public function showCreateAction()
     {
@@ -309,42 +305,6 @@ class Controller
         // Отображаем список полей структуры part
         $this->showEditTabs();
         exit;
-    }
-
-    protected function showEditTabs($values = '')
-    {
-        $model = $this->model;
-        // Выстраиваем список табов
-        $defaultName = 'Основное';
-        $tabs = array($defaultName => array());
-        foreach ($model->fields as $fieldName => $field) {
-            if (isset($field['tab'])) {
-                $tabs[$field['tab']][$fieldName] = $field;
-            } else {
-                $tabs[$defaultName][$fieldName] = $field;
-            }
-        }
-        $tabLine = '<ul class="nav nav-tabs" id="tabs">';
-        $tabsContent = '<div class="tab-content" id="tabs-content">';
-        $isActive = ' active';
-        $num = 0;
-        foreach ($tabs as $tabName => $tab) {
-            $num++;
-            $tabLine .= '<li class="' . $isActive . '"><a href="#tab' . $num . '" data-toggle="tab">' . $tabName
-                . '</a></li>';
-            $tabsContent .= '<div class="tab-pane' . $isActive . '" id="tab' . $num . '">';
-            $tabsContent .= $model->getFieldsList($tab);
-            $tabsContent .= '</div>';
-            $isActive = '';
-        }
-        $tabLine .= '</ul>';
-        $tabsContent .= '</div>';
-        echo json_encode(
-            array(
-                'tabs' => $tabLine,
-                'content' => $tabsContent
-            )
-        );
     }
 
     public function showEditAction()
@@ -369,5 +329,41 @@ class Controller
         if (isset($configCache['fileCache']) && $configCache['fileCache']) {
             FileCache::clearFileCache();
         }
+    }
+
+    protected function showEditTabs($values = '')
+    {
+        $model = $this->model;
+        // Выстраиваем список табов
+        $defaultName = 'Основное';
+        $tabs = [$defaultName => []];
+        foreach ($model->fields as $fieldName => $field) {
+            if (isset($field['tab'])) {
+                $tabs[$field['tab']][$fieldName] = $field;
+            } else {
+                $tabs[$defaultName][$fieldName] = $field;
+            }
+        }
+        $tabLine = '<ul class="nav nav-tabs" id="tabs">';
+        $tabsContent = '<div class="tab-content" id="tabs-content">';
+        $isActive = ' active';
+        $num = 0;
+        foreach ($tabs as $tabName => $tab) {
+            $num++;
+            $tabLine .= '<li class="' . $isActive . '"><a href="#tab' . $num . '" data-toggle="tab">' . $tabName
+                . '</a></li>';
+            $tabsContent .= '<div class="tab-pane' . $isActive . '" id="tab' . $num . '">';
+            $tabsContent .= $model->getFieldsList($tab);
+            $tabsContent .= '</div>';
+            $isActive = '';
+        }
+        $tabLine .= '</ul>';
+        $tabsContent .= '</div>';
+        echo json_encode(
+            [
+                'tabs' => $tabLine,
+                'content' => $tabsContent,
+            ],
+        );
     }
 }

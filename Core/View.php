@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -15,7 +16,6 @@ namespace Ideal\Core;
  */
 class View
 {
-
     /** @var \Twig_TemplateInterface */
     protected $template;
 
@@ -23,7 +23,7 @@ class View
     protected $templater;
 
     /** @var array Массив для хранения переменных, передаваемых во View */
-    protected $vars = array();
+    protected $vars = [];
 
     /**
      * Инициализация шаблонизатора
@@ -40,7 +40,7 @@ class View
         $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
 
         // Папки от которых строится путь до шаблона
-        $idealFolders = array('Ideal.c', 'Ideal', 'Mods.c', 'Mods');
+        $idealFolders = ['Ideal.c', 'Ideal', 'Mods.c', 'Mods'];
         foreach ($idealFolders as $k => $v) {
             if (file_exists($cmsFolder . '/' . $v)) {
                 $idealFolders[$k] = $cmsFolder . '/' . $v;
@@ -49,14 +49,14 @@ class View
             }
         }
 
-        $pathToTemplates = is_string($pathToTemplates) ? array($pathToTemplates) : $pathToTemplates;
+        $pathToTemplates = is_string($pathToTemplates) ? [$pathToTemplates] : $pathToTemplates;
 
-        $pathToTemplates = array_merge(array($cmsFolder), $pathToTemplates, $idealFolders);
+        $pathToTemplates = array_merge([$cmsFolder], $pathToTemplates, $idealFolders);
 
         $loader = new \Twig_Loader_Filesystem($pathToTemplates);
 
         $config = Config::getInstance();
-        $params = array();
+        $params = [];
         if ($isCache) {
             $cachePath = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/templates';
             $params['cache'] = stream_resolve_include_path($cachePath);
@@ -70,27 +70,6 @@ class View
             }
         }
         $this->templater = new \Twig_Environment($loader, $params);
-    }
-
-    /**
-     * Получение переменной View
-     *
-     * Передача по ссылке используется для того, чтобы в коде была возможность изменять значения
-     * элементов массива, хранящегося во View. Например:
-     *
-     * $view->addonName[key]['content'] = 'something new';
-     *
-     * @param string $name Название переменной
-     * @return mixed Переменная
-     */
-    public function &__get($name)
-    {
-        if (is_scalar($this->vars[$name])) {
-            $property = $this->vars[$name];
-        } else {
-            $property = &$this->vars[$name];
-        }
-        return $property;
     }
 
     /**
@@ -116,21 +95,6 @@ class View
     }
 
     /**
-     * Загрузка в шаблонизатор файла с twig-шаблоном
-     *
-     * @param string $fileName Название twig-файла
-     */
-    public function loadTemplate($fileName)
-    {
-        $this->template = $this->templater->loadTemplate($fileName);
-    }
-
-    public function render()
-    {
-        return $this->template->render($this->vars);
-    }
-
-    /**
      * Чистит все файлы twig кэширования
      */
     public static function clearTwigCache($path = '')
@@ -149,5 +113,41 @@ class View
         if (!empty($path)) {
             rmdir($cachePath);
         }
+    }
+
+    /**
+     * Получение переменной View
+     *
+     * Передача по ссылке используется для того, чтобы в коде была возможность изменять значения
+     * элементов массива, хранящегося во View. Например:
+     *
+     * $view->addonName[key]['content'] = 'something new';
+     *
+     * @param string $name Название переменной
+     * @return mixed Переменная
+     */
+    public function &__get($name)
+    {
+        if (is_scalar($this->vars[$name])) {
+            $property = $this->vars[$name];
+        } else {
+            $property = &$this->vars[$name];
+        }
+        return $property;
+    }
+
+    /**
+     * Загрузка в шаблонизатор файла с twig-шаблоном
+     *
+     * @param string $fileName Название twig-файла
+     */
+    public function loadTemplate($fileName)
+    {
+        $this->template = $this->templater->loadTemplate($fileName);
+    }
+
+    public function render()
+    {
+        return $this->template->render($this->vars);
     }
 }

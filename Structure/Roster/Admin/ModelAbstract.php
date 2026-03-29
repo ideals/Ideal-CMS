@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -19,13 +20,12 @@ use Ideal\Core\Util;
  */
 class ModelAbstract extends \Ideal\Core\Admin\Model
 {
-
     public function delete()
     {
         parent::delete();
         $db = Db::getInstance();
         $db->delete($this->_table)
-            ->where('ID=:id', array('id' => $this->pageData['ID']))
+            ->where('ID=:id', ['id' => $this->pageData['ID']])
             ->exec();
 
         if (isset($this->pageData['pos'])) {
@@ -58,7 +58,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         }
         array_push($this->path, $localPath[0]);
 
-        if (0 != count($par)) {
+        if (count($par) != 0) {
             // Ещё остались неопределённые элементы пути. Запускаем вложенную структуру.
             $config = Config::getInstance();
             $trueResult = $this->path;

@@ -1,4 +1,5 @@
 <?php
+
 // Модифицируем конфигурацию и базу данных структуры пользователя.
 use Ideal\Core\Config;
 use Ideal\Core\Db;
@@ -13,12 +14,12 @@ $filename = DOCUMENT_ROOT . '/' . $cmsFolder . '/Ideal.c/Structure/Order/config.
 if (file_exists($filename)) {
     $orderConfig = require($filename);
     if (!isset($orderConfig['fields']['customer'])) {
-        $orderConfig['fields']['customer'] = array(
+        $orderConfig['fields']['customer'] = [
             'label' => 'Заказчик',
             'sql' => 'int(8)',
             'type' => 'Ideal_Select',
-            'medium' => '\\Ideal\\Medium\\CustomerList\\Model'
-        );
+            'medium' => '\\Ideal\\Medium\\CustomerList\\Model',
+        ];
         file_put_contents($filename, '<?php return ' . var_export($orderConfig, true) . ";\n");
     }
 }
@@ -27,7 +28,7 @@ if (file_exists($filename)) {
 $orderTable = $config->getTableByName('Ideal_Order');
 // Получаем информацию о полях таблицы
 $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $orderTable . ' FROM `' . $config->db['name'] . '`');
-$fields = array();
+$fields = [];
 array_walk($fieldsInfo, function ($v) use (&$fields) {
     $fields[] = $v['Field'];
 });

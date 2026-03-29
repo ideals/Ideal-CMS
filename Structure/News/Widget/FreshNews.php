@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -18,7 +19,6 @@ use Ideal\Core\Util;
  */
 class FreshNews
 {
-
     /**
      * Получение последних новостей
      *
@@ -38,7 +38,7 @@ class FreshNews
                  ORDER BY date_create DESC
                  LIMIT ' . intval($num);
         $news = $db->select($_sql);
-        $freshNews = array();
+        $freshNews = [];
         $num = 0;
         foreach ($news as $v) {
             $freshNews[$num]['name'] = $v['name'];

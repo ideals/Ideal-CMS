@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -11,7 +12,6 @@ namespace Ideal\Core;
 
 class Pagination
 {
-
     protected $next;
 
     protected $prev;
@@ -44,33 +44,33 @@ class Pagination
             $urlParam = '?' . $urlParam . '=';
         }
 
-        $pages = array();
+        $pages = [];
 
         // Если блок не первый, то ставим ссылку на последний элемент предыдущего блока
         if ($startPage > 1) {
-            $pages[] = array(
+            $pages[] = [
                 'url' => $urlString . $urlParam . ($startPage - 1),
                 'num' => '…',
-                'current' => 0
-            );
+                'current' => 0,
+            ];
         }
 
         // Составляем основной список листалки
         for ($n = $startPage; $n <= $endPage; $n++) {
-            $pages[] = array(
+            $pages[] = [
                 'url' => ($n == 1) ? $urlString : $urlString . $urlParam . $n,
                 'num' => $n,
-                'current' => ($n == $page) ? 1 : 0
-            );
+                'current' => ($n == $page) ? 1 : 0,
+            ];
         }
 
         // Если последняя видимая цифра листалки не последняя, то ставим ссылку на следующий блок
         if ($endPage < $pagesCount) {
-            $pages[] = array(
+            $pages[] = [
                 'url' => $urlString . $urlParam . ($endPage + 1),
                 'num' => '…',
-                'current' => 0
-            );
+                'current' => 0,
+            ];
         }
 
         if ($page == 2) {

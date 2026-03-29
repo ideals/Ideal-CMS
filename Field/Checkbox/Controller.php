@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -24,7 +25,6 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
-
     /** {@inheritdoc} */
     protected static $instance;
 
@@ -37,13 +37,13 @@ class Controller extends AbstractController
     {
         $input = $this->getInputText();
         $html = <<<HTML
-        <div id="{$this->htmlName}-control-group" class="form-group checkbox">
-            <div class="{$this->inputClass} {$this->htmlName}-controls">
-                {$input}
-                <div id="{$this->htmlName}-help"></div>
-            </div>
-        </div>
-HTML;
+                    <div id="{$this->htmlName}-control-group" class="form-group checkbox">
+                        <div class="{$this->inputClass} {$this->htmlName}-controls">
+                            {$input}
+                            <div id="{$this->htmlName}-help"></div>
+                        </div>
+                    </div>
+            HTML;
 
         return $html;
     }

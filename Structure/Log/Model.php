@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -33,9 +34,8 @@ class Model
      * Авария, система неработоспособна.
      *
      * @param string $message
-     * @param array $context
      */
-    public function emergency($message, array $context = array())
+    public function emergency($message, array $context = [])
     {
         $this->log('emergency', $message, $context);
     }
@@ -44,9 +44,8 @@ class Model
      * Тревога, меры должны быть предприняты незамедлительно.
      *
      * @param string $message
-     * @param array $context
      */
-    public function alert($message, array $context = array())
+    public function alert($message, array $context = [])
     {
         $this->log('alert', $message, $context);
     }
@@ -55,9 +54,8 @@ class Model
      * Критическая ошибка, критическая ситуация.
      *
      * @param string $message
-     * @param array $context
      */
-    public function critical($message, array $context = array())
+    public function critical($message, array $context = [])
     {
         $this->log('critical', $message, $context);
     }
@@ -67,9 +65,8 @@ class Model
      * но требующая протоколирования и дальнейшего изучения.
      *
      * @param string $message
-     * @param array $context
      */
-    public function error($message, array $context = array())
+    public function error($message, array $context = [])
     {
         $this->log('error', $message, $context);
     }
@@ -78,9 +75,8 @@ class Model
      * Предупреждение, нештатная ситуация, не являющаяся ошибкой.
      *
      * @param string $message
-     * @param array $context
      */
-    public function warning($message, array $context = array())
+    public function warning($message, array $context = [])
     {
         $this->log('warning', $message, $context);
     }
@@ -89,9 +85,8 @@ class Model
      * Замечание, важное событие.
      *
      * @param string $message
-     * @param array $context
      */
-    public function notice($message, array $context = array())
+    public function notice($message, array $context = [])
     {
         $this->log('notice', $message, $context);
     }
@@ -100,9 +95,8 @@ class Model
      * Информация, полезные для понимания происходящего события.
      *
      * @param string $message
-     * @param array $context
      */
-    public function info($message, array $context = array())
+    public function info($message, array $context = [])
     {
         $this->log('info', $message, $context);
     }
@@ -111,9 +105,8 @@ class Model
      * Информация, полезные для понимания происходящего события.
      *
      * @param string $message
-     * @param array $context
      */
-    public function debug($message, array $context = array())
+    public function debug($message, array $context = [])
     {
         $this->log('debug', $message, $context);
     }
@@ -123,14 +116,13 @@ class Model
      *
      * @param string $level Константа одного из уровней протоколирования
      * @param string $message
-     * @param array $context
      */
-    public function log($level, $message, array $context = array())
+    public function log($level, $message, array $context = [])
     {
         $config = Config::getInstance();
         $db = Db::getInstance();
         $user = UserModel::getInstance();
-        $json = array();
+        $json = [];
 
         if (isset($context['model'])) {
             $model = $context['model'];
@@ -141,14 +133,14 @@ class Model
         }
 
         // Генерируем преструктуру для записи в базу
-        $par = array('structure' => 'Ideal_Log');
-        $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
+        $par = ['structure' => 'Ideal_Log'];
+        $fields = ['table' => $config->db['prefix'] . 'ideal_structure_datalist'];
         $result = $db->select('SELECT * FROM &table WHERE structure = :structure', $par, $fields);
         $id = $result[0]['ID'];
         $datalistStructure = $config->getStructureByName('Ideal_DataList');
         $prevStructure = $datalistStructure['ID'] . '-' . $id;
 
-        $par = array(
+        $par = [
             'prev_structure' => $prevStructure,
             'date_create' => time(),
             'level' => $level,
@@ -156,7 +148,7 @@ class Model
             'type' => $context['type'],
             'message' => $message,
             'json' => json_encode($json, JSON_UNESCAPED_UNICODE),
-        );
+        ];
 
         $db->insert($this->table, $par);
     }

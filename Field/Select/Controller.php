@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -33,7 +34,6 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
-
     /** @inheritdoc */
     protected static $instance;
 

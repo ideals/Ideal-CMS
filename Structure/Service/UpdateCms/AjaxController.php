@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -56,10 +57,10 @@ class AjaxController extends \Ideal\Core\AjaxController
         }
 
         $this->updateModel->setUpdateFolders(
-            array(
+            [
                 'getFileScript' => $getFileScript,
-                'uploadDir' => $uploadDir
-            )
+                'uploadDir' => $uploadDir,
+            ],
         );
 
         // Создаём сессию для хранения данных между ajax запросами
@@ -70,21 +71,21 @@ class AjaxController extends \Ideal\Core\AjaxController
         if (!isset($_POST['version']) || !isset($_POST['name'])) {
             $this->updateModel->addAnswer('Непонятно, что обновлять. Не указаны version и name', 'error');
             exit;
-        } else {
-            $this->updateModel->setUpdate($_POST['name'], $_POST['version'], $_POST['currentVersion']);
         }
+        $this->updateModel->setUpdate($_POST['name'], $_POST['version'], $_POST['currentVersion']);
+
 
         if (isset($_SESSION['update'])) {
-            if ($_SESSION['update']['name'] != $this->updateModel->updateName ||
-                $_SESSION['update']['version'] != $this->updateModel->updateVersion) {
+            if ($_SESSION['update']['name'] != $this->updateModel->updateName
+                || $_SESSION['update']['version'] != $this->updateModel->updateVersion) {
                 unset($_SESSION['update']);
             }
         }
         if (!isset($_SESSION['update'])) {
-            $_SESSION['update'] = array(
+            $_SESSION['update'] = [
                 'name' => $this->updateModel->updateName,
                 'version' => $this->updateModel->updateVersion,
-            );
+            ];
         }
     }
 
@@ -101,7 +102,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     // Распаковка архива с обновлением
     public function ajaxUnpackAction()
     {
-        $archive = isset($_SESSION['update']['archive']) ? $_SESSION['update']['archive'] : null;
+        $archive = $_SESSION['update']['archive'] ?? null;
         if (!$archive) {
             $this->updateModel->addAnswer('Неполучен путь к файлу архива', 'error');
             exit;
@@ -165,11 +166,11 @@ class AjaxController extends \Ideal\Core\AjaxController
         $_SESSION['update']['currentVersion'] = $_SESSION['update']['archive']['version'];
         // Модуль установился успешно, делаем запись в лог обновлений
         $this->updateModel->writeLog(
-            'Installed ' . $this->updateModel->updateName . ' v. ' . $_SESSION['update']['currentVersion']
+            'Installed ' . $this->updateModel->updateName . ' v. ' . $_SESSION['update']['currentVersion'],
         );
 
         // Получаем раздел со старой версией
-        $oldFolder = isset($_SESSION['update']['oldFolder']) ? $_SESSION['update']['oldFolder'] : null;
+        $oldFolder = $_SESSION['update']['oldFolder'] ?? null;
         if (!$oldFolder) {
             $this->updateModel->addAnswer('Не удалось удалить раздел со старой версией.', 'warning');
         }
@@ -177,12 +178,12 @@ class AjaxController extends \Ideal\Core\AjaxController
         $this->updateModel->removeDirectory($oldFolder);
         $data = null;
         if ($_SESSION['update']['archive']['version'] != $this->updateModel->updateVersion) {
-            $data = array('next' => 'true', 'currentVersion' => $_SESSION['update']['currentVersion']);
+            $data = ['next' => 'true', 'currentVersion' => $_SESSION['update']['currentVersion']];
         }
         $this->updateModel->addAnswer(
             'Обновление на версию ' . $_SESSION['update']['currentVersion'] . ' произведено успешно',
             'success',
-            $data
+            $data,
         );
         exit;
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -10,7 +11,6 @@
 namespace Ideal\Structure\Service\UpdateCms;
 
 use Ideal\Core\Config;
-use Ideal\Core\Util;
 
 /**
  * Класс для работы с версиями Ideal CMS
@@ -21,7 +21,7 @@ use Ideal\Core\Util;
 class Versions
 {
     /** @var array Ответ, возвращаемый при ajax-вызове */
-    protected $answer = array('message' => array(), 'error' => false, 'data' => null);
+    protected $answer = ['message' => [], 'error' => false, 'data' => null];
 
     /** @var string Путь к файлу с логом обновлений */
     protected $log = '';
@@ -78,7 +78,7 @@ class Versions
         $modDirName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/Mods';
         if (file_exists($modDirName)) {
             // Получаем папки
-            $modDirs = array_diff(scandir($modDirName), array('.', '..')); // получаем массив папок модулей
+            $modDirs = array_diff(scandir($modDirName), ['.', '..']); // получаем массив папок модулей
             foreach ($modDirs as $dir) {
                 // Исключаем папки, явно не содержащие модули
                 if ((stripos($dir, '.') === 0) || (is_file($modDirName . '/' . $dir))) {
@@ -92,6 +92,97 @@ class Versions
         $versions = $this->getVersionFromFile($mods);
 
         return $versions;
+    }
+
+    /**
+     * Получение версий из Readme.md
+     *
+     * @param array $mods Массив состоящий из названий модулей и полных путей к ним
+     * @return array Версии модулей или false в случае ошибки
+     */
+    public function getVersionFromReadme($mods)
+    {
+        // Получаем файл README.md для cms
+        $mdFile = 'README.md';
+        $version = [];
+        foreach ($mods as $k => $v) {
+            if (!file_exists($v . '/' . $mdFile)) {
+                $this->addAnswer('Отсутствует файл ' . $v . '/' . $mdFile, 'error');
+                return false;
+            }
+            $lines = file($v . '/' . $mdFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if (($lines == false) || (count($lines) == 0)) {
+                $this->addAnswer('Не удалось получить версию из ' . $v . '/' . $mdFile, 'error');
+                return false;
+            }
+            // Получаем номер версии из первой строки
+            // Формат номера: пробел+v.+пробел+номер-версии+пробел-или-конец-строки
+            preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $lines[0], $ver);
+            // Если номер версии не удалось определить — выходим
+            if (!isset($ver[2][0]) || ($ver[2][0] == '')) {
+                $this->addAnswer('Ошибка при разборе строки с версией файла', 'error');
+                return false;
+            }
+
+            $version[$k] = $ver[2][0];
+        }
+        return $version;
+    }
+
+    /**
+     * Добавление сообщения, возвращаемого в ответ на ajax запрос
+     *
+     * @param array $message Сообщения возвращаемые в ответ на ajax запрос
+     * @param string $type Статус сообщения, характеризующий так же наличие ошибки
+     * @param mixed $data Данные передаваемые в ответ на ajax запрос
+     * @throws \Exception
+     */
+    public function addAnswer($message, $type, $data = null)
+    {
+        if (!is_string($message) || !is_string($type)) {
+            throw new \Exception("Необходим аргумент типа строка");
+        }
+        if (!in_array($type, ['error', 'info', 'warning', 'success'])) {
+            throw new \Exception("Недопустимое значение типа сообщения");
+        }
+        $this->answer['message'][] = [$message, $type];
+        if ($type == 'error') {
+            $this->answer['error'] = true;
+        }
+        if ($data != null) {
+            $this->answer['data'] = $data;
+        }
+    }
+
+    /**
+     * Получение результирующих данных
+     *
+     * @return array
+     */
+    public function getAnswer()
+    {
+        return $this->answer;
+    }
+
+    /**
+     * Получение пути к файлу с логом обновлений
+     *
+     * @return string Путь к файлу с логом обновлений
+     */
+    public function getLogName()
+    {
+        return $this->log;
+    }
+
+    /**
+     * Запись строки в log-файл
+     *
+     * @param string $msg Строка для записи в log
+     */
+    public function writeLog($msg)
+    {
+        $msg = rtrim($msg) . "\n";
+        file_put_contents($this->log, $msg, FILE_APPEND);
     }
 
     /**
@@ -131,49 +222,14 @@ class Versions
     }
 
     /**
-     * Получение версий из Readme.md
-     *
-     * @param array $mods Массив состоящий из названий модулей и полных путей к ним
-     * @return array Версии модулей или false в случае ошибки
-     */
-    public function getVersionFromReadme($mods)
-    {
-        // Получаем файл README.md для cms
-        $mdFile = 'README.md';
-        $version = array();
-        foreach ($mods as $k => $v) {
-            if (!file_exists($v . '/' . $mdFile)) {
-                $this->addAnswer('Отсутствует файл ' . $v . '/' . $mdFile, 'error');
-                return false;
-            }
-            $lines = file($v . '/' . $mdFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            if (($lines == false) || (count($lines) == 0)) {
-                $this->addAnswer('Не удалось получить версию из ' . $v . '/' . $mdFile, 'error');
-                return false;
-            }
-            // Получаем номер версии из первой строки
-            // Формат номера: пробел+v.+пробел+номер-версии+пробел-или-конец-строки
-            preg_match_all('/\sv\.(\s*)(.*)(\s*)/i', $lines[0], $ver);
-            // Если номер версии не удалось определить — выходим
-            if (!isset($ver[2][0]) || ($ver[2][0] == '')) {
-                $this->addAnswer('Ошибка при разборе строки с версией файла', 'error');
-                return false;
-            }
-
-            $version[$k] = $ver[2][0];
-        }
-        return $version;
-    }
-
-    /**
      * Запись версий в update.log
      *
-     * @param array  $version Версии полученные из Readme.ms
-     * @param string $log     Файл с логом обновлений
+     * @param array $version Версии полученные из Readme.ms
+     * @param string $log Файл с логом обновлений
      */
     protected function putVersionLog($version, $log)
     {
-        $lines = array();
+        $lines = [];
         foreach ($version as $k => $v) {
             $lines[] = 'Installed ' . $k . ' v.' . $v;
         }
@@ -189,7 +245,7 @@ class Versions
     protected function getVersionFromLog($log)
     {
         $linesLog = file($log);
-        $versions = array();
+        $versions = [];
 
         foreach ($linesLog as $v) {
             // Удаление спец символов конца строки (если пролез символ \r)
@@ -211,61 +267,5 @@ class Versions
         }
 
         return $versions;
-    }
-
-    /**
-     * Добавление сообщения, возвращаемого в ответ на ajax запрос
-     *
-     * @param array $message Сообщения возвращаемые в ответ на ajax запрос
-     * @param string $type Статус сообщения, характеризующий так же наличие ошибки
-     * @param mixed $data Данные передаваемые в ответ на ajax запрос
-     * @throws \Exception
-     */
-    public function addAnswer($message, $type, $data = null)
-    {
-        if (!is_string($message) || !is_string($type)) {
-            throw new \Exception("Необходим аргумент типа строка");
-        }
-        if (!in_array($type, array('error', 'info', 'warning', 'success'))) {
-            throw new \Exception("Недопустимое значение типа сообщения");
-        }
-        $this->answer['message'][] = array($message, $type);
-        if ($type == 'error') {
-            $this->answer['error'] = true;
-        }
-        if ($data != null) {
-            $this->answer['data'] = $data;
-        }
-    }
-
-    /**
-     * Получение результирующих данных
-     *
-     * @return array
-     */
-    public function getAnswer()
-    {
-        return $this->answer;
-    }
-
-    /**
-     * Получение пути к файлу с логом обновлений
-     *
-     * @return string Путь к файлу с логом обновлений
-     */
-    public function getLogName()
-    {
-        return $this->log;
-    }
-
-    /**
-     * Запись строки в log-файл
-     *
-     * @param string $msg Строка для записи в log
-     */
-    public function writeLog($msg)
-    {
-        $msg = rtrim($msg) . "\n";
-        file_put_contents($this->log, $msg, FILE_APPEND);
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -8,13 +9,13 @@
  */
 
 // @codingStandardsIgnoreFile
+
 namespace Ideal\Core;
 
 use Ideal\Field\Url;
 
 abstract class Model
 {
-
     public $fields;
 
     /** @var bool Флаг 404-ошибки */
@@ -34,7 +35,7 @@ abstract class Model
 
     protected $parentUrl;
 
-    protected $path = array();
+    protected $path = [];
 
     protected $prevStructure;
 
@@ -89,6 +90,13 @@ abstract class Model
         $this->_table = strtolower($config->db['prefix'] . $this->module . '_' . $type . '_' . $structureName);
     }
 
+    public function __get($name)
+    {
+        if ($name == 'object') {
+            throw new \Exception('Свойство object упразднено.');
+        }
+    }
+
     /**
      * Определение сокращённого имени структуры Модуль_Структура по имени этого класса
      *
@@ -98,13 +106,6 @@ abstract class Model
     {
         $parts = explode('\\', get_called_class());
         return $parts[0] . '_' . $parts[2];
-    }
-
-    public function __get($name)
-    {
-        if ($name == 'object') {
-            throw new \Exception('Свойство object упразднено.');
-        }
     }
 
     public function detectActualModel()
@@ -127,7 +128,7 @@ abstract class Model
             if (!isset($end['structure'])) {
                 return $model;
             }
-            
+
             $prev = $this->path[($count - 2)];
 
             $endClass = ltrim(Util::getClassName($end['structure'], 'Structure'), '\\');
@@ -161,7 +162,7 @@ abstract class Model
     {
         $vars = get_object_vars($model);
         foreach ($vars as $k => $v) {
-            if (in_array($k, array('_table', 'module', 'params', 'fields', 'prevStructure'))) {
+            if (in_array($k, ['_table', 'module', 'params', 'fields', 'prevStructure'])) {
                 continue;
             }
             $this->$k = $v;
@@ -190,7 +191,7 @@ abstract class Model
             $first['prev_structure'] = $this->prevStructure;
         }
 
-        list($prevStructureId, $prevElementId) = explode('-', $first['prev_structure']);
+        [$prevStructureId, $prevElementId] = explode('-', $first['prev_structure']);
         $structure = $config->getStructureByPrev($first['prev_structure']);
 
         if ($prevStructureId == 0) {
@@ -210,20 +211,6 @@ abstract class Model
         $path = array_merge($path, $localPath);
 
         return $path;
-    }
-
-    // Устанавливаем информацию о странице
-
-    /**
-     * Построение пути в рамках одной структуры.
-     * Этот метод обязательно должен быть переопределён перед использованием.
-     * Если он не будет переопределён, то будет вызвано исключение.
-     *
-     * @throws \Exception
-     */
-    protected function getLocalPath()
-    {
-        throw new \Exception('Вызов не переопределённого метода getLocalPath');
     }
 
     /**
@@ -264,42 +251,6 @@ abstract class Model
     }
 
     /**
-     * Добавление к where-запросу фильтра по category_id
-     *
-     * @param string $where Исходная WHERE-часть
-     * @return string Модифицированная WHERE-часть, с расширенным запросом, если установлена GET-переменная category
-     */
-    protected function getWhere($where)
-    {
-        if ($where != '') {
-            // Убираем из строки начальные команды AND или OR
-            $where = trim($where);
-            $where = preg_replace('/(^AND)|(^OR)/i', '', $where);
-            $where = 'WHERE ' . $where;
-        }
-        return $where;
-    }
-
-    /**
-     * Формирование ORDER-части запроса
-     *
-     * @return string Сформированная ORDER-часть
-     */
-    protected function getOrder()
-    {
-        $request = new Request();
-        $order = 'ORDER BY e.';
-        if ($request->asc) {
-            $order .= $request->asc;
-        } elseif ($request->desc) {
-            $order .= $request->desc . ' DESC';
-        } else {
-            $order .= $this->params['field_sort'];
-        }
-        return $order;
-    }
-
-    /**
      * Получение из БД данных открытой страницы (в том числе и подключённых аддонов)
      *
      * @return mixed
@@ -326,10 +277,10 @@ abstract class Model
      */
     public function initPageDataById($id)
     {
-        $id = (int)$id;
+        $id = (int) $id;
 
         $db = Db::getInstance();
-        $result = $db->select('SELECT * FROM ' . $this->_table . ' WHERE ID=:id', array('id' => $id));
+        $result = $db->select('SELECT * FROM ' . $this->_table . ' WHERE ID=:id', ['id' => $id]);
         if (empty($result[0])) {
             throw new \Exception('Элемент не найден');
         }
@@ -390,7 +341,7 @@ abstract class Model
                     }
                     $addon = new $className($prevStructure);
                     $addon->setParentModel($this);
-                    list(, $fildsGroup) = explode('_', $addonInfo[1]);
+                    [, $fildsGroup] = explode('_', $addonInfo[1]);
                     $addon->setFieldsGroup(strtolower($fildsGroup) . '-' . $addonInfo[0]);
                     $pageData = $addon->getPageData();
                     if (!empty($pageData)) {
@@ -475,7 +426,7 @@ abstract class Model
      */
     public function getPageNum()
     {
-        return isset($this->pageNum) ? $this->pageNum : 1;
+        return $this->pageNum ?? 1;
     }
 
     public function getParentUrl()
@@ -536,7 +487,7 @@ abstract class Model
         $db = Db::getInstance();
 
         $_sql = "SELECT * FROM {$this->_table} WHERE ID=:id";
-        $pageData = $db->select($_sql, array('id' => $id));
+        $pageData = $db->select($_sql, ['id' => $id]);
         if (isset($pageData[0]['ID'])) {
             // TODO сделать обработку ошибки, когда по ID ничего не нашлось
             $this->setPageData($pageData[0]);
@@ -580,7 +531,6 @@ abstract class Model
     /**
      * Метод используется только в моделях Addon для установки модели владельца этого аддона
      *
-     * @param $model
      */
     public function setParentModel($model)
     {
@@ -619,5 +569,55 @@ abstract class Model
             throw new \Exception('No prev_structure in data');
         }
         return $prevStructure;
+    }
+
+    // Устанавливаем информацию о странице
+
+    /**
+     * Построение пути в рамках одной структуры.
+     * Этот метод обязательно должен быть переопределён перед использованием.
+     * Если он не будет переопределён, то будет вызвано исключение.
+     *
+     * @throws \Exception
+     */
+    protected function getLocalPath()
+    {
+        throw new \Exception('Вызов не переопределённого метода getLocalPath');
+    }
+
+    /**
+     * Добавление к where-запросу фильтра по category_id
+     *
+     * @param string $where Исходная WHERE-часть
+     * @return string Модифицированная WHERE-часть, с расширенным запросом, если установлена GET-переменная category
+     */
+    protected function getWhere($where)
+    {
+        if ($where != '') {
+            // Убираем из строки начальные команды AND или OR
+            $where = trim($where);
+            $where = preg_replace('/(^AND)|(^OR)/i', '', $where);
+            $where = 'WHERE ' . $where;
+        }
+        return $where;
+    }
+
+    /**
+     * Формирование ORDER-части запроса
+     *
+     * @return string Сформированная ORDER-часть
+     */
+    protected function getOrder()
+    {
+        $request = new Request();
+        $order = 'ORDER BY e.';
+        if ($request->asc) {
+            $order .= $request->asc;
+        } elseif ($request->desc) {
+            $order .= $request->desc . ' DESC';
+        } else {
+            $order .= $this->params['field_sort'];
+        }
+        return $order;
     }
 }

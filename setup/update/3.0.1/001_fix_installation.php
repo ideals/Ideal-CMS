@@ -15,15 +15,15 @@ if ($structure === false) {
     $ID++;
     $add = <<<ADD
 
-        // Подключаем справочники
-        array(
-            'ID' => {$ID},
-            'structure' => 'Ideal_DataList',
-            'name' => 'Справочники',
-            'isShow' => 1,
-            'hasTable' => true
-        ),
-ADD;
+                // Подключаем справочники
+                array(
+                    'ID' => {$ID},
+                    'structure' => 'Ideal_DataList',
+                    'name' => 'Справочники',
+                    'isShow' => 1,
+                    'hasTable' => true
+                ),
+        ADD;
     $fileName = $cmsDir . '/config.php';
     if (!file_exists($fileName)) {
         throw new \Exception('Файл не найден: ' . $fileName);
@@ -85,15 +85,15 @@ if ($order === false) {
     $orderId++;
     $add = <<<ADD
 
-        // Подключаем заказы
-        array(
-            'ID' => {$orderId},
-            'structure' => 'Ideal_Order',
-            'name' => 'Заказы с сайта',
-            'isShow' => 0,
-            'hasTable' => true
-        ),
-ADD;
+                // Подключаем заказы
+                array(
+                    'ID' => {$orderId},
+                    'structure' => 'Ideal_Order',
+                    'name' => 'Заказы с сайта',
+                    'isShow' => 0,
+                    'hasTable' => true
+                ),
+        ADD;
     $fileName = $cmsDir . '/config.php';
     if (!file_exists($fileName)) {
         throw new \Exception('Файл не найден: ' . $fileName);
@@ -123,15 +123,15 @@ if (empty($order)) {
     // Создаем запись Заказы с сайта в Справочниках
     $db->insert(
         $dataListTable,
-        array(
+        [
             'prev_structure' => "0-{$ID}",
             'structure' => 'Ideal_Order',
             'pos' => $newPos,
             'name' => 'Заказы с сайта',
             'url' => 'zakazy-s-sajta',
             'parent_url' => '---',
-            'annot' => ''
-        )
+            'annot' => '',
+        ],
     );
 }
 

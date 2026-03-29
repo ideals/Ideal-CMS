@@ -1,4 +1,5 @@
 <?php
+
 // @codingStandardsIgnoreFile
 
 // todo Избавиться от констант DOCUMENT_ROOT и SETUP_DIR
@@ -45,7 +46,7 @@ if (!file_exists(dirname($cms) . '/site_data.php')) {
 
 // Определяем папку, где находится устанавливаемое обновление
 $modDir = ($mod === 'Ideal-CMS') ? $cms : dirname($cms) . '/' . "Mods" . '/' . $mod;
-$setupDir = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : $modDir;
+$setupDir = $_SERVER['argv'][1] ?? $modDir;
 define('SETUP_DIR', $setupDir);
 
 // Устанавливаем корневую папку сайта для инициализации окружения
@@ -70,7 +71,7 @@ $versions = new \Ideal\Structure\Service\UpdateCms\Versions();
 
 // Получаем текущую версию из файла логов и файла README.md
 $nowVersions = $versions->getVersions();
-$nowVersionsFromReadme = $versions->getVersionFromReadme(array($mod => $setupDir));
+$nowVersionsFromReadme = $versions->getVersionFromReadme([$mod => $setupDir]);
 
 // Инициализируем модель обновления
 $updateCmsModel = new \Ideal\Structure\Service\UpdateCms\Model();
@@ -85,7 +86,7 @@ $updateCmsModel->setUpdate($mod, $nowVersionsFromReadme[$mod], $nowVersions[$mod
 $scripts = $updateCmsModel->getUpdateScripts();
 
 // Если указана отдельная папка с дистрибутивом
-if (SETUP_DIR !== $modDir) {
+if ($modDir !== SETUP_DIR) {
     // Запускаем скрипты обновления до замены файлов CMS
     foreach ($scripts['pre'] as $script) {
         $updateCmsModel->runScript($script);
@@ -93,8 +94,9 @@ if (SETUP_DIR !== $modDir) {
     $updateCmsModel->swapUpdate();
 } else {
     echo mb_convert_encoding(
-            'Скрипт запущен без указания папки обновления. Запускаем только скрипты new_*',
-            $outputEncoding)
+        'Скрипт запущен без указания папки обновления. Запускаем только скрипты new_*',
+        $outputEncoding,
+    )
         . "\n";
 }
 

@@ -23,7 +23,7 @@ $userGroups = \Ideal\Structure\Acl\Admin\Model::getAllUserGroups();
                 foreach ($userGroups as $userGroup) {
                     echo '<option value="' . $userGroup['ID'] . '">' . $userGroup['name'] . '</option>';
                 }
-                ?>
+?>
             </select>
         </div>
     </div>

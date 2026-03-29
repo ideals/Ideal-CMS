@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -25,7 +26,6 @@ use Ideal\Field\Date;
  */
 class Controller extends Date\Controller
 {
-
     /** {@inheritdoc} */
     protected static $instance;
 

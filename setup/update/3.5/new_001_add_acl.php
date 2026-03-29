@@ -1,4 +1,5 @@
 <?php
+
 // Подключаем структуру для управления правами пользователей.
 use Ideal\Core\Config;
 use Ideal\Core\Db;
@@ -18,15 +19,15 @@ if ($acl === false) {
     $aclId++;
     $add = <<<ADD
 
-        // Подключаем структуру управления пользователями
-        array(
-            'ID' => {$aclId},
-            'structure' => 'Ideal_Acl',
-            'name' => 'Права пользователей',
-            'isShow' => 0,
-            'hasTable' => true
-        ),
-ADD;
+                // Подключаем структуру управления пользователями
+                array(
+                    'ID' => {$aclId},
+                    'structure' => 'Ideal_Acl',
+                    'name' => 'Права пользователей',
+                    'isShow' => 0,
+                    'hasTable' => true
+                ),
+        ADD;
     $fileName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/config.php';
     if (!file_exists($fileName)) {
         throw new \Exception('Файл не найден: ' . $fileName);

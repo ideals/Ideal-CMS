@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
@@ -11,7 +12,4 @@ namespace Ideal\Structure\Tag\Site;
 /**
  * Класс-заглушка для переопределения модели тегов в своих проектах
  */
-class Model extends ModelAbstract
-{
-
-}
+class Model extends ModelAbstract {}

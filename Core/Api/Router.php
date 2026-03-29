@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -10,8 +11,6 @@
 namespace Ideal\Core\Api;
 
 use Ideal\Core\Config;
-use Ideal\Core\Request;
-use Ideal\Structure\Error404;
 use Ideal\Core\PluginBroker;
 
 /**
@@ -19,12 +18,11 @@ use Ideal\Core\PluginBroker;
  */
 class Router
 {
+    /** @var bool Флаг 404-ошибки */
+    public $is404 = false;
 
     /** @var string Название контроллера обрабатывающего запрос */
     protected $controllerName = '';
-
-    /** @var bool Флаг 404-ошибки */
-    public $is404 = false;
 
     /**
      * Конструктор генерирует события onPreDispatch и onPostDispatch,
@@ -71,43 +69,11 @@ class Router
     }
 
     /**
-     * Ищет контроллер ответственный за обработку запроса
-     * @param string $realUrl
-     * @return string
+     * Возвращает значение флага отправки сообщения о 404ой ошибке
      */
-    private function detectController($realUrl)
+    public function send404()
     {
-        $url = $this->prepareUrl($realUrl);
-        $realPath = explode('/', $url);
-
-        if (count($realPath) < 2) {
-            // Неправильный url, выдаём 404
-            return $this->create404();
-        }
-
-        // Убираем слово api из начала пути
-        array_shift($realPath);
-
-        // Проверяем, не является ли это вызовом апи системы
-        $path = array_merge(array('Ideal', 'Api'), $realPath);
-
-        $controllerName = '\\' . implode('\\', $path) . 'Controller';
-
-        if (!class_exists($controllerName)) {
-            if (count($realPath) < 2) {
-                // Названия мода в запрашиваемом контроллере нет, а в Ideal он не нашёлся — бросаем 404
-                return $this->create404();
-            }
-            $modName = array_shift($realPath);
-            $realPath = array_merge(array($modName, 'Api'), $realPath);
-            $controllerName = '\\' . implode('\\', $realPath) . 'Controller';
-            if (!class_exists($controllerName)) {
-                // Подходящего контроллера не нашлось, значит выдаём 404
-                return $this->create404();
-            }
-        }
-
-        return  $controllerName;
+        return false;
     }
 
     /**
@@ -138,17 +104,49 @@ class Router
         return $url;
     }
 
+    /**
+     * Ищет контроллер ответственный за обработку запроса
+     * @param string $realUrl
+     * @return string
+     */
+    private function detectController($realUrl)
+    {
+        $url = $this->prepareUrl($realUrl);
+        $realPath = explode('/', $url);
+
+        if (count($realPath) < 2) {
+            // Неправильный url, выдаём 404
+            return $this->create404();
+        }
+
+        // Убираем слово api из начала пути
+        array_shift($realPath);
+
+        // Проверяем, не является ли это вызовом апи системы
+        $path = array_merge(['Ideal', 'Api'], $realPath);
+
+        $controllerName = '\\' . implode('\\', $path) . 'Controller';
+
+        if (!class_exists($controllerName)) {
+            if (count($realPath) < 2) {
+                // Названия мода в запрашиваемом контроллере нет, а в Ideal он не нашёлся — бросаем 404
+                return $this->create404();
+            }
+            $modName = array_shift($realPath);
+            $realPath = array_merge([$modName, 'Api'], $realPath);
+            $controllerName = '\\' . implode('\\', $realPath) . 'Controller';
+            if (!class_exists($controllerName)) {
+                // Подходящего контроллера не нашлось, значит выдаём 404
+                return $this->create404();
+            }
+        }
+
+        return $controllerName;
+    }
+
     private function create404()
     {
         $this->is404 = true;
         return '\Ideal\Core\Api\Controller';
-    }
-
-    /**
-     * Возвращает значение флага отправки сообщения о 404ой ошибке
-     */
-    public function send404()
-    {
-        return false;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -9,7 +10,4 @@
 
 namespace Ideal\Structure\Order\Admin;
 
-class ControllerAbstract extends \Ideal\Structure\Roster\Admin\ControllerAbstract
-{
-
-}
+class ControllerAbstract extends \Ideal\Structure\Roster\Admin\ControllerAbstract {}

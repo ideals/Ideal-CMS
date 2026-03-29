@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -19,7 +20,6 @@ use Ideal\Core\View;
  */
 class Model
 {
-
     protected $configFileClass;
 
     /**
@@ -33,6 +33,36 @@ class Model
     }
 
     /**
+     * Обрабатывает список исключений из настроек кэша
+     *
+     * @param string $string Значение поля "Адреса для исключения из кэша"
+     *
+     * @return array Массив содержащий флаг успешности проверки настроек, а так же текст в случае обнаружения ошибок
+     */
+    private static function cacheExcludeProcessing($string)
+    {
+        $response = ['res' => true];
+
+        // Экранируем переводы строки для обработки каждой строки
+        $string = str_replace("\r", '', $string);
+        $lines = explode("\n", $string);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                // Пропускаем пустые линии в списке исключений из кэша
+                continue;
+            }
+            if (!FileCache::addExcludeFileCache($line)) {
+                $response['res'] = false;
+                $response['text'] = 'Не получилось сохранить настройки исключений в файл';
+            }
+        }
+
+        return $response;
+    }
+
+    /**
      * Отвечает за реакции системы на изменения настроек файлового кэширования,
      * кэширования twig-шаблонов и кэширования запросов к бд
      *
@@ -41,7 +71,7 @@ class Model
      */
     public function checkSettings()
     {
-        $response = array('res' => true, 'text' => '', 'class' => '');
+        $response = ['res' => true, 'text' => '', 'class' => ''];
         $oldParams = $this->configFileClass->getParams();
         $responseGV = $this->configFileClass->pickupValues();
         if ($responseGV['res'] === false) {
@@ -90,36 +120,6 @@ class Model
                     $response['text'] = 'Класс "Memcache" не доступен. Кэширование запросов к БД не может быть включено!';
                     $response['class'] = 'alert alert-danger';
                 }
-            }
-        }
-
-        return $response;
-    }
-
-    /**
-     * Обрабатывает список исключений из настроек кэша
-     *
-     * @param string $string Значение поля "Адреса для исключения из кэша"
-     *
-     * @return array Массив содержащий флаг успешности проверки настроек, а так же текст в случае обнаружения ошибок
-     */
-    private static function cacheExcludeProcessing($string)
-    {
-        $response = array('res' => true);
-
-        // Экранируем переводы строки для обработки каждой строки
-        $string = str_replace("\r", '', $string);
-        $lines = explode("\n", $string);
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) {
-                // Пропускаем пустые линии в списке исключений из кэша
-                continue;
-            }
-            if (!FileCache::addExcludeFileCache($line)) {
-                $response['res'] = false;
-                $response['text'] = 'Не получилось сохранить настройки исключений в файл';
             }
         }
 

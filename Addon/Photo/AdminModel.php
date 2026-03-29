@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -11,6 +12,4 @@ namespace Ideal\Addon\Photo;
 
 use Ideal\Addon\AbstractAdminModel;
 
-class AdminModel extends AbstractAdminModel
-{
-}
+class AdminModel extends AbstractAdminModel {}

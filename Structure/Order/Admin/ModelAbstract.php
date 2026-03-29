@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -15,7 +16,6 @@ use Ideal\Core\Request;
 
 class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
 {
-
     public function getToolbar()
     {
         $db = Db::getInstance();

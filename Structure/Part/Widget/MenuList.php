@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -28,7 +29,7 @@ class MenuList extends \Ideal\Core\Widget
     protected $lvl = 4;
 
     /** @var array Массив, позволяющий избежать получения из БД страниц, если они были получены вне виджета */
-    protected $menuList = array();
+    protected $menuList = [];
 
     /**
      * Получение списка страниц
@@ -42,14 +43,14 @@ class MenuList extends \Ideal\Core\Widget
         $path = $this->model->getPath();
         $object = array_pop($path);
         $digits = (isset($this->model->params['digits'])) ? $this->model->params['digits'] : 3;
-        $smallCidActive = isset($object['cid']) ? $object['cid'] : '';
+        $smallCidActive = $object['cid'] ?? '';
 
         $lvl = 1;
         $config = Config::getInstance();
-        $menuUrl = array('0' => array('url' => $config->structures[0]['url']));
+        $menuUrl = ['0' => ['url' => $config->structures[0]['url']]];
         $url = new Field\Url\Model();
 
-        $menu = array();
+        $menu = [];
         $lvlExit = false;
         foreach ($menuList as $k => $v) {
             if ($v['is_active'] == 0) {
@@ -97,38 +98,6 @@ class MenuList extends \Ideal\Core\Widget
         }
         $pageList = $this->getSubPages($menu);
         return $pageList;
-    }
-
-    /**
-     * Рекурсивный метод для построения иерархии вложенных страниц
-     *
-     * @param array $menu Массив, в котором строится иерархия
-     * @return array Массив с построенной иерархией дочерних элементов
-     */
-    protected function getSubPages(&$menu)
-    {
-        // Записываем в массив первый элемент
-        $pageList = array(
-            array_shift($menu)
-        );
-
-        $prev = $pageList[0]['lvl'];
-
-        while (count($menu) != 0) {
-            $m = reset($menu);
-            if ($m['lvl'] == $prev) {
-                $pageList[] = array_shift($menu);
-                $prev = $m['lvl'];
-            } elseif ($m['lvl'] > $prev) {
-                end($pageList);
-                $key = key($pageList);
-                $pageList[$key]['subPageList'] = $this->getSubPages($menu);
-            } else {
-                return $pageList;
-            }
-        }
-        return $pageList;
-
     }
 
     /**
@@ -187,5 +156,37 @@ class MenuList extends \Ideal\Core\Widget
     public function setMenuList($menuList)
     {
         $this->menuList = $menuList;
+    }
+
+    /**
+     * Рекурсивный метод для построения иерархии вложенных страниц
+     *
+     * @param array $menu Массив, в котором строится иерархия
+     * @return array Массив с построенной иерархией дочерних элементов
+     */
+    protected function getSubPages(&$menu)
+    {
+        // Записываем в массив первый элемент
+        $pageList = [
+            array_shift($menu),
+        ];
+
+        $prev = $pageList[0]['lvl'];
+
+        while (count($menu) != 0) {
+            $m = reset($menu);
+            if ($m['lvl'] == $prev) {
+                $pageList[] = array_shift($menu);
+                $prev = $m['lvl'];
+            } elseif ($m['lvl'] > $prev) {
+                end($pageList);
+                $key = key($pageList);
+                $pageList[$key]['subPageList'] = $this->getSubPages($menu);
+            } else {
+                return $pageList;
+            }
+        }
+        return $pageList;
+
     }
 }

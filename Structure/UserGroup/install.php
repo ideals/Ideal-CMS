@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -25,13 +26,13 @@ $db->create($config->db['prefix'] . 'ideal_structure_usergroup', $cfg['fields'])
 
 $db->insert(
     $dataListTable,
-    array(
+    [
         'prev_structure' => '0-3',
         'structure' => 'Ideal_UserGroup',
         'pos' => $newPos,
         'name' => 'Группы пользователей',
         'url' => 'gruppy-polzovatelej',
         'parent_url' => '---',
-        'annot' => ''
-    )
+        'annot' => '',
+    ],
 );

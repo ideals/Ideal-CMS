@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -26,7 +27,6 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
-
     /** {@inheritdoc} */
     protected static $instance;
 
@@ -37,21 +37,21 @@ class Controller extends AbstractController
     {
         $value = htmlspecialchars($this->getValue());
         $html = <<<HTML
-            <script type="text/javascript" src="Ideal/Field/ImageGallery/script.js"></script>
-            <input class="images-values" type="hidden" id="{$this->htmlName}" name="{$this->htmlName}"
-            value="{$value}">
-            <div id="{$this->htmlName}-control-group">
-                <div class="text-center"><strong>{$this->getLabelText()}</strong></div><br />
-                <div class="text-center">
-                    <span class="input-group-btn">
-                        <button class="btn" onclick="imageGalleryShowFinder('{$this->htmlName}'); return false;">
-                            Выбрать
-                        </button>
-                    </span>
-                </div>
-                <div id="{$this->htmlName}-list" class="input-group col-lg-12"></div>
-            </div>
-HTML;
+                        <script type="text/javascript" src="Ideal/Field/ImageGallery/script.js"></script>
+                        <input class="images-values" type="hidden" id="{$this->htmlName}" name="{$this->htmlName}"
+                        value="{$value}">
+                        <div id="{$this->htmlName}-control-group">
+                            <div class="text-center"><strong>{$this->getLabelText()}</strong></div><br />
+                            <div class="text-center">
+                                <span class="input-group-btn">
+                                    <button class="btn" onclick="imageGalleryShowFinder('{$this->htmlName}'); return false;">
+                                        Выбрать
+                                    </button>
+                                </span>
+                            </div>
+                            <div id="{$this->htmlName}-list" class="input-group col-lg-12"></div>
+                        </div>
+            HTML;
         return $html;
     }
 

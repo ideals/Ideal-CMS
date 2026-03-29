@@ -87,7 +87,7 @@ if (count($msg['message'])) {
 <!-- Передаём в JS необходимые переменные -->
 <script type="text/javascript">
     var urlSrv = '<?php echo $url; ?>';
-    var nowVersions = '<?php echo  $nowVersions ?>';
+    var nowVersions = '<?php echo $nowVersions ?>';
     var url = '<?php echo $_GET['par']; ?>';
 </script>
 

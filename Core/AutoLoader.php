@@ -35,7 +35,7 @@ set_error_handler('myErrorHandler');
 function shutDownFunction()
 {
     $error = error_get_last();
-    $errors = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING);
+    $errors = [E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING];
     if (!is_null($error) && in_array($error['type'], $errors)) {
         $err = 'Ошибка ' . $error['message'] . ', в строке ' . $error['line'] . ' файла ' . $error['file'];
         \Ideal\Core\Util::addError($err, false);

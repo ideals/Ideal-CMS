@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
@@ -8,7 +9,6 @@
 
 namespace Ideal\Structure\Tag\Site;
 
-use Ideal\Core\Config;
 use Ideal\Core\Request;
 
 /**
@@ -37,7 +37,7 @@ class ControllerAbstract extends \Ideal\Core\Site\Controller
         $this->view->tags = $this->model->getList();
 
         $request = new Request();
-        $page = (int)$request->page;
+        $page = (int) $request->page;
         $this->view->elements = $this->model->getElements($page);
         $this->view->pager = $this->model->getElementsPager('page');
     }

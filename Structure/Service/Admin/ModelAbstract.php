@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,7 +18,7 @@ use Ideal\Core\Config;
 class ModelAbstract extends \Ideal\Core\Admin\Model
 {
     /** @var array Массив с пунктами бокового меню */
-    protected $menu = array();
+    protected $menu = [];
 
     /**
      * {@inheritdoc}
@@ -61,7 +62,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $this->getActions('Ideal/Structure/Service'),
             $this->getActions('Ideal.c/Structure/Service'),
             $this->getModulesActions('Mods'),
-            $this->getModulesActions('Mods.c')
+            $this->getModulesActions('Mods.c'),
         );
 
         // Сортируем экшены по полю pos
@@ -69,7 +70,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
             $actions,
             function ($a, $b) {
                 return ($a['pos'] - $b['pos']);
-            }
+            },
         );
 
         $this->menu = $actions;
@@ -85,7 +86,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     protected function getActions($folder)
     {
         $config = Config::getInstance();
-        $actions = array();
+        $actions = [];
         $dir = stream_resolve_include_path($config->cmsFolder . '/' . $folder);
         if ($handle = opendir($dir)) {
             while (false !== ($file = readdir($handle))) {
@@ -117,7 +118,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
     protected function getModulesActions($folder)
     {
         $config = Config::getInstance();
-        $actions = array();
+        $actions = [];
         $dir = stream_resolve_include_path($config->cmsFolder . '/' . $folder);
         if ($handle = opendir($dir)) {
             while (false !== ($file = readdir($handle))) {
@@ -130,7 +131,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
 
                 $actions = array_merge(
                     $actions,
-                    $this->getActions($folder . '/' . $file . '/Structure/Service')
+                    $this->getActions($folder . '/' . $file . '/Structure/Service'),
                 );
             }
         }

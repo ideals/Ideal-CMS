@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Добавление дополнительных полей в файл site_data.php
  */
@@ -11,21 +12,21 @@ $configSD->loadFile($file);
 $params = $configSD->getParams();
 // Если поле уже есть, то ничего делать не нужно
 if (!isset($params['monitoring'])) {
-    $params['monitoring'] = array(
+    $params['monitoring'] = [
         'name' => 'Мониторинг',
-        'arr' => array(
-            'scanDir' => array(
+        'arr' => [
+            'scanDir' => [
                 'label' => 'Путь от корня системы до папки, в которой нужно проводить сканирование. Если пусто, то сканируется весь сайт',
                 'value' => '',
-                'type' => 'Ideal_Text'
-            ),
-            'exclude' => array(
+                'type' => 'Ideal_Text',
+            ],
+            'exclude' => [
                 'label' => 'Регулярные выражения для исключения папок/файлов из сканирования',
                 'value' => '',
-                'type' => 'Ideal_RegexpList'
-            ),
-        )
-    );
+                'type' => 'Ideal_RegexpList',
+            ],
+        ],
+    ];
 }
 $configSD->setParams($params);
 $configSD->saveFile($file);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -18,7 +19,7 @@ class AjaxController
     protected $model;
 
     /** @var array Дополнительные HTTP-заголовки ответа  */
-    protected $httpHeaders = array('X-Robots-Tag' => 'noindex, nofollow');
+    protected $httpHeaders = ['X-Robots-Tag' => 'noindex, nofollow'];
 
     /* @var View Объект вида — twig-шаблонизатор */
     protected $view;
@@ -88,7 +89,7 @@ class AjaxController
         $config = Config::getInstance();
         $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
 
-        $folders = array_merge(array($tplRoot, $cmsFolder));
+        $folders = array_merge([$tplRoot, $cmsFolder]);
         $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
@@ -103,7 +104,7 @@ class AjaxController
 
         // Добавляем в path пустой элемент
         $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
+        $path[] = ['ID' => '', 'name' => $name, 'url' => '404'];
         $this->model->setPath($path);
 
         // Устанавливаем нужный нам title

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -11,6 +12,4 @@ namespace Ideal\Structure\Tag\Admin;
 
 use Ideal\Structure\Roster\Admin\ModelAbstract;
 
-class Model extends ModelAbstract
-{
-}
+class Model extends ModelAbstract {}

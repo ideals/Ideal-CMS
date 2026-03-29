@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -16,7 +17,6 @@ use Ideal\Field\Cid;
 
 class ModelAbstract extends \Ideal\Core\Admin\Model
 {
-
     public $cid;
 
     public function delete()
@@ -31,7 +31,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         if (count($res) > 0) {
             return 2;
         }
-        $db->delete($this->_table)->where('ID=:id', array('id' => $this->pageData['ID']));
+        $db->delete($this->_table)->where('ID=:id', ['id' => $this->pageData['ID']]);
         $db->exec();
         // TODO сделать проверку успешности удаления
         return 1;
@@ -41,7 +41,6 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
      * Определение пути по ID элементов пути
      *
      * @param array $path Начальная, уже найденная часть пути
-     * @param       $par
      * @return $this
      */
     public function detectPageByIds($path, $par)
@@ -49,7 +48,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         /* @var Db $db */
         $db = Db::getInstance();
 
-        if (0 == count($par)) {
+        if (count($par) == 0) {
             $this->path = $path;
             return $this;
         }
@@ -65,7 +64,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         // и последовательности cid адресов
         $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
         $cidPrev = $cidModel->reconstruct('0'); // вначале разбора параметров не существует никакого сида
-        $trueResult = array();
+        $trueResult = [];
         $parElement = reset($par);
         foreach ($result as $v) {
             if ($v['ID'] != $parElement) {
@@ -87,7 +86,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
         $this->path = array_merge($path, $trueResult);
 
         $config = Config::getInstance();
-        if (0 != count($par)) {
+        if (count($par) != 0) {
             // Ещё остались неопределённые элементы пути. Запускаем вложенную структуру.
             $trueResult = $this->path;
             $end = array_pop($trueResult);
@@ -108,7 +107,7 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
      * Считываем наибольший cid на уровне $lvl для родительского $cid
      *
      * @param string $cid Родительский cid
-     * @param int    $lvl Уровень, на котором нужно получить макс. cid
+     * @param int $lvl Уровень, на котором нужно получить макс. cid
      * @return string Максимальный cid на уровне $lvl
      */
     public function getNewCid($cid, $lvl)
@@ -118,18 +117,18 @@ class ModelAbstract extends \Ideal\Core\Admin\Model
 
         $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
         $parentCid = $cidModel->getCidByLevel($cid, $lvl - 1, false);
-        $par = array(
+        $par = [
             'parentCid' => $parentCid . '%',
             'lvl' => $lvl,
-        );
+        ];
         $_sql = "SELECT cid FROM {$this->_table} WHERE cid LIKE :parentCid AND lvl=:lvl ORDER BY cid DESC LIMIT 1";
         $cidArr = $db->select($_sql, $par);
         if (count($cidArr) > 0) {
             // Если элементы на этом уровне есть, берём cid последнего
             $cid = $cidArr[0]['cid'];
-        } else {
-            // Если элементов на этом уровне нет, берём id родителя
         }
+        // Если элементов на этом уровне нет, берём id родителя
+
         // Прибавляем единицу в cid на нашем уровне
         return $cidModel->setBlock($cid, $lvl, '+1', true);
     }

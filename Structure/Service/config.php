@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -8,9 +9,9 @@
  */
 
 // Настройки сервисов
-return array(
-    'params' => array(
-        'structures' => array('Service'), // типы, которые можно создавать в этом разделе
-    ),
-    'fields' => array(),
-);
+return [
+    'params' => [
+        'structures' => ['Service'], // типы, которые можно создавать в этом разделе
+    ],
+    'fields' => [],
+];

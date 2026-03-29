@@ -1,4 +1,5 @@
 <?php
+
 $path = getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT'];
 $isConsole = true;
 require_once $path . '/_.php';
@@ -14,12 +15,12 @@ if (file_exists($siteMapConfigFile)) {
     $configSD->loadFile($siteMapConfigFile);
     $params = $configSD->getParams();
     if (!isset($params['default']['arr']['collect_result_mail'])) {
-        $params['default']['arr']['collect_result_mail'] = array (
+        $params['default']['arr']['collect_result_mail'] =  [
             'label' => 'Электронная почта для уведомлений об изменениях в карте сайта (json-формат)',
             'value' => 'help@neox.ru',
             'type' => 'Ideal_Text',
             'sql' => '',
-        );
+        ];
     }
     if (isset($params['default']['arr']['db_host'])) {
         unset($params['default']['arr']['db_host']);

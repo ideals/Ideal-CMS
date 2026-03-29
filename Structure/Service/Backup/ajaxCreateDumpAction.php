@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -20,20 +21,20 @@ if (isset($_POST['createMysqlDump'])) {
     $backupPart = stream_resolve_include_path($_POST['backupPart']);
 
     // Задаём параметры для создания бэкапа
-    $dumpSettings = array(
+    $dumpSettings = [
         'compress' => 'GZIP',
         'no-data' => false,
         'add-drop-table' => true,
         'single-transaction' => false,
         'lock-tables' => false,
         'add-locks' => true,
-        'extended-insert' => false
-    );
+        'extended-insert' => false,
+    ];
     $dump = new Mysqldump(
         'mysql:host=' . $config->db['host'] . ';dbname=' . $config->db['name'],
         $config->db['login'],
         $config->db['password'],
-        $dumpSettings
+        $dumpSettings,
     );
 
     $time = time();
@@ -52,17 +53,17 @@ if (isset($_POST['createMysqlDump'])) {
     $dumpName = $backupPart . DIRECTORY_SEPARATOR . $dumpName;
 
     // Формируем строку с новым файлом
-    echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\'' .
-        addslashes($dumpName) . '\')"> ' .
-        date('d.m.Y - H:i:s', $time) . ' - ' . $version
+    echo '<tr id="' . $dumpName . '"><td><a href="" onClick="return downloadDump(\''
+        . addslashes($dumpName) . '\')"> '
+        . date('d.m.Y - H:i:s', $time) . ' - ' . $version
         . '</a></td>';
     echo '<td>'
-    . '<button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' .
-        addslashes($dumpName) . '\'); return false;">'
+    . '<button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\''
+        . addslashes($dumpName) . '\'); return false;">'
         . '<span class="glyphicon glyphicon-upload"></span></button>&nbsp;'
 
-    . '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' .
-        addslashes($dumpName) . '\'); return false;">'
+    . '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\''
+        . addslashes($dumpName) . '\'); return false;">'
         . '<span class="glyphicon glyphicon-remove"></span></button>&nbsp;'
 
     . '<button id="' . $dumpName . '_btn_cmt"

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -26,7 +27,7 @@ $count = ($levels - 1) * $digits;
 // Создаём главную страницу
 $db->insert(
     $table,
-    array(
+    [
         'ID' => 1,
         'prev_structure' => '0-1',
         'cid' => str_pad('1', $digits, '0', STR_PAD_LEFT) . str_repeat('0', $count),
@@ -38,17 +39,17 @@ $db->insert(
         'url' => '/',
         'date_create' => time(),
         'date_mod' => time(),
-        'is_active' => 1
-    )
+        'is_active' => 1,
+    ],
 );
 
 // Создаём текст для главной страницы
 $db->insert(
     $tableAddon,
-    array(
+    [
         'ID' => 1,
         'prev_structure' => '1-1',
         'tab_ID' => '1',
         'content' => '<p>Это Главная страница Вашего сайта.</p>',
-    )
+    ],
 );

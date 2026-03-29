@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
@@ -13,11 +14,6 @@ use Ideal\Core\Db;
 
 class Tags extends \Ideal\Core\Widget
 {
-
-    public function getData()
-    {
-    }
-
     public static function getTags($id)
     {
         $db = Db::getInstance();
@@ -30,4 +26,6 @@ class Tags extends \Ideal\Core\Widget
         $result = $db->select($sql);
         return $result;
     }
+
+    public function getData() {}
 }

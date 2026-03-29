@@ -1,4 +1,5 @@
 <?php
+
 $path = getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT'];
 $isConsole = true;
 require_once $path . '/_.php';
@@ -14,12 +15,12 @@ if (file_exists($siteMapConfigFile)) {
     $configSD->loadFile($siteMapConfigFile);
     $params = $configSD->getParams();
     if (isset($params['default']['arr']['collect_result_mail']) && !isset($params['default']['arr']['email_json'])) {
-        $params['default']['arr']['email_json'] = array(
+        $params['default']['arr']['email_json'] = [
             'label' => 'Электронная почта для уведомлений об изменениях в карте сайта (json-формат)',
             'value' => $params['default']['arr']['collect_result_mail']['value'],
             'type' => 'Ideal_Text',
             'sql' => '',
-        );
+        ];
         unset($params['default']['arr']['collect_result_mail']);
     }
     $configSD->setParams($params);

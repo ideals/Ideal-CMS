@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,12 +18,11 @@ use Ideal\Core\Db;
  */
 class Model
 {
-
     /** @var  mixed Хранит в себе копию соответствующего объекта поля (паттерн singleton) */
     protected static $instance;
 
     /** @var array Массив с данными пользователя */
-    public $data = array();
+    public $data = [];
 
     /** @var string Последнее сообщение об ошибке */
     public $errorMessage = '';
@@ -31,7 +31,7 @@ class Model
     protected $seance = '';
 
     /** @var array Считанная сессия этого сеанса */
-    protected $session = array();
+    protected $session = [];
 
     /** @var string Название таблицы, в которой хранятся данные пользователей */
     protected $table = 'ideal_structure_user';
@@ -71,7 +71,7 @@ class Model
             $this->session = unserialize($_SESSION[$this->seance]);
             $this->data = $this->session['user_data'];
         } else {
-            $this->data = array();
+            $this->data = [];
         }
     }
 
@@ -94,16 +94,6 @@ class Model
     }
 
     /**
-     * При уничтожении объекта данные пользователя записываются в сессию
-     */
-    public function __destruct()
-    {
-        if (isset($this->session['user_data'])) {
-            $_SESSION[$this->seance] = serialize($this->session);
-        }
-    }
-
-    /**
      * Проверка залогинен ли пользователь
      *
      * @return bool Если залогинен — true, иначе — false
@@ -120,7 +110,7 @@ class Model
      * В случае удачной авторизации заполняется поле $this->data
      *
      * @param string $login Имя пользователя
-     * @param string $pass  Пароль в md5()
+     * @param string $pass Пароль в md5()
      *
      * @return bool true — если удалось авторизоваться, false — если не удалось
      */
@@ -138,7 +128,7 @@ class Model
         // Получаем пользователя с указанным логином
         $db = Db::getInstance();
         $_sql = "SELECT * FROM {$this->table} WHERE is_active = 1 AND {$this->loginRow} = :login";
-        $user = $db->select($_sql, array('login' => $login));
+        $user = $db->select($_sql, ['login' => $login]);
         if (count($user) == 0) {
             $this->errorMessage = "Неверно указаны {$this->loginRowName} или пароль.";
             return false;
@@ -151,8 +141,8 @@ class Model
         ) {
             // Увеличиваем значение счётчика неудачных попыток авторизации если он меньше 12
             if ($user['counter_failures'] < 12) {
-                $db->update($this->table)->set(array('counter_failures' => $user['counter_failures'] + 1));
-                $db->where($this->loginRow . ' = :login', array('login' => $login))->exec();
+                $db->update($this->table)->set(['counter_failures' => $user['counter_failures'] + 1]);
+                $db->where($this->loginRow . ' = :login', ['login' => $login])->exec();
             }
 
             $this->logout();
@@ -176,12 +166,12 @@ class Model
         $this->data = $user;
 
         // Обновляем запись о последнем визите пользователя
-        $userParams = array(
+        $userParams = [
             'last_visit' => $user['last_visit'],
             'counter_failures' => $user['counter_failures'],
-        );
+        ];
         $db->update($this->table)->set($userParams);
-        $db->where('ID=:id', array('id' => $user['ID']))->exec();
+        $db->where('ID=:id', ['id' => $user['ID']])->exec();
 
         // Записываем данные о пользователе в сессию
         $this->session['user_data'] = $this->data;
@@ -193,7 +183,7 @@ class Model
      */
     public function logout()
     {
-        $this->data = $this->session = array();
+        $this->data = $this->session = [];
         unset($_SESSION[$this->seance]);
     }
 
@@ -207,5 +197,15 @@ class Model
     {
         $this->loginRow = $loginRow;
         $this->loginRowName = $loginRowName;
+    }
+
+    /**
+     * При уничтожении объекта данные пользователя записываются в сессию
+     */
+    public function __destruct()
+    {
+        if (isset($this->session['user_data'])) {
+            $_SESSION[$this->seance] = serialize($this->session);
+        }
     }
 }

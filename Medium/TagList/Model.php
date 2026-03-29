@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -18,7 +19,6 @@ use Ideal\Medium\AbstractModel;
  */
 class Model extends AbstractModel
 {
-
     /**
      * {@inheritdoc}
      */
@@ -30,7 +30,7 @@ class Model extends AbstractModel
         $sql = 'SELECT ID, name FROM ' . $table . ' ORDER BY name ASC';
         $arr = $db->select($sql);
 
-        $list = array();
+        $list = [];
         foreach ($arr as $item) {
             $list[$item['ID']] = $item['name'];
         }
@@ -41,7 +41,7 @@ class Model extends AbstractModel
     /**
      * {@inheritdoc}
      */
-    public function getSqlAdd($newValue = array())
+    public function getSqlAdd($newValue = [])
     {
         $config = Config::getInstance();
         // Определяем структуру объекта, которому присваиваются теги
@@ -75,14 +75,14 @@ class Model extends AbstractModel
 
         if (!isset($owner['ID'])) {
             // Если владелец списка ещё не создан, то и выбранных элементов в нём нет
-            return array();
+            return [];
         }
 
         $_sql = "SELECT {$elementsField} FROM {$this->table}
                   WHERE {$ownerField}='{$owner['ID']}' AND structure_id='{$structure['ID']}'";
         $arr = $db->select($_sql);
 
-        $list = array();
+        $list = [];
         foreach ($arr as $v) {
             $list[] = $v[$elementsField];
         }

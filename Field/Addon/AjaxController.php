@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -26,7 +27,7 @@ class AjaxController extends \Ideal\Core\AjaxController
 
         if ($request->id == 0) {
             // Если аддон подключается к ещё несозданному элементу, то данные модели из БД взять не получится
-            $this->model->setPageData(array());
+            $this->model->setPageData([]);
         } else {
             $this->model->setPageDataById($request->id);
         }
@@ -39,8 +40,8 @@ class AjaxController extends \Ideal\Core\AjaxController
         $result = $addonModel->getTab($request->newId, $request->addonName);
 
         // Возвращаем информацию только о новом подключенном аддоне
-        $json = array();
-        $json[] = array($request->newId, $request->addonName, $result['name']);
+        $json = [];
+        $json[] = [$request->newId, $request->addonName, $result['name']];
 
         $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;
         $result['list'] = json_encode($json, $options);

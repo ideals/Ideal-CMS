@@ -1,4 +1,5 @@
 <?php
+
 // Модифицируем конфигурацию и базу данных структуры пользователя.
 use Ideal\Core\Config;
 use Ideal\Core\Db;
@@ -13,12 +14,12 @@ $filename = DOCUMENT_ROOT . '/' . $cmsFolder . '/Ideal.c/Structure/User/config.p
 if (file_exists($filename)) {
     $userConfig = require($filename);
     if (!isset($userConfig['fields']['user_group'])) {
-        $userConfig['fields']['user_group'] = array(
+        $userConfig['fields']['user_group'] = [
             'label' => 'Группа пользователя',
             'sql' => 'int(8)',
             'type' => 'Ideal_Select',
-            'medium' => '\\Ideal\\Medium\\UserGroupList\\Model'
-        );
+            'medium' => '\\Ideal\\Medium\\UserGroupList\\Model',
+        ];
         file_put_contents($filename, '<?php return ' . var_export($userConfig, true) . ";\n");
     }
 }
@@ -27,7 +28,7 @@ if (file_exists($filename)) {
 $userTable = $config->getTableByName('Ideal_User');
 // Получаем информацию о полях таблицы
 $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $userTable . ' FROM `' . $config->db['name'] . '`');
-$fields = array();
+$fields = [];
 array_walk($fieldsInfo, function ($v) use (&$fields) {
     $fields[] = $v['Field'];
 });

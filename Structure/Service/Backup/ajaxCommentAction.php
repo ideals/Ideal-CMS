@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -30,7 +31,7 @@ switch ($act) {
         }
         echo $cmtText;
         break;
-    // Сохраняем комментарий в файле
+        // Сохраняем комментарий в файле
     case 'save':
         $cmtText = $_POST['text'];
         file_put_contents($cmtName, $cmtText);

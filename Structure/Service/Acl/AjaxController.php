@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,7 +18,6 @@ use Ideal\Structure\Acl\Admin\Model as StructureAclModel;
  */
 class AjaxController extends \Ideal\Core\AjaxController
 {
-
     /** @var object Ideal\Structure\Acl\Admin\Model */
     protected $structureAclModel = null;
 
@@ -57,8 +57,8 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function getHttpHeaders()
     {
-        return array(
-            'Content-type' => 'Content-type: application/json'
-        );
+        return [
+            'Content-type' => 'Content-type: application/json',
+        ];
     }
 }

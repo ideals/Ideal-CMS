@@ -1,4 +1,5 @@
 <?php
+
 // Добавление правил в файл ".htaccess" для отдачи закэшированных страниц.
 use Ideal\Core\Config;
 
@@ -26,27 +27,27 @@ $basicFragment = '# Если файла на диске нет, вызывает
 $additionalFragment = 'RewriteRule ^.*$ /_.php [NC,L]';
 
 $addText = <<<PHP
-# file cache redirects
-# Запрашивается главная страница
-RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/{$configCache['indexFile']} -f [OR]
-RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/{$configCache['indexFile']} -l
-RewriteRule ^$ tmp/cache/fileCache/{$configCache['indexFile']} [NC,L]
+    # file cache redirects
+    # Запрашивается главная страница
+    RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/{$configCache['indexFile']} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/{$configCache['indexFile']} -l
+    RewriteRule ^$ tmp/cache/fileCache/{$configCache['indexFile']} [NC,L]
 
-# Запрашивается внутренняя страница при установленном суффиксе "/" или при отсуствии суффикса
-RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/{$configCache['indexFile']} -f [OR]
-RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/{$configCache['indexFile']} -l
-RewriteRule ^(.*)$ tmp/cache/fileCache/$1/{$configCache['indexFile']} [NC,L]
+    # Запрашивается внутренняя страница при установленном суффиксе "/" или при отсуствии суффикса
+    RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/{$configCache['indexFile']} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI}/{$configCache['indexFile']} -l
+    RewriteRule ^(.*)$ tmp/cache/fileCache/$1/{$configCache['indexFile']} [NC,L]
 
-# Запрашивается внутреняя страница при произвольно установленном суффиксе
-RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -f [OR]
-RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -d [OR]
-RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -l
-RewriteRule ^(.*)$ tmp/cache/fileCache/$1 [NC,L]
-# file cache redirects
+    # Запрашивается внутреняя страница при произвольно установленном суффиксе
+    RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -d [OR]
+    RewriteCond %{DOCUMENT_ROOT}/tmp/cache/fileCache/%{REQUEST_URI} -l
+    RewriteRule ^(.*)$ tmp/cache/fileCache/$1 [NC,L]
+    # file cache redirects
 
-[[BASIC FRAGMENT]]
-RewriteRule ^.*$ /_.php [NC,L]
-PHP;
+    [[BASIC FRAGMENT]]
+    RewriteRule ^.*$ /_.php [NC,L]
+    PHP;
 
 if (mb_strpos($file, $basicFragment)) {
     $insertPos = mb_strpos($file, $basicFragment);

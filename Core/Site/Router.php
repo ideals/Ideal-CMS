@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -18,7 +19,6 @@ use Ideal\Structure\Home;
 
 class Router
 {
-
     /** @var string Название контроллера активной страницы */
     protected $controllerName = '';
 
@@ -77,78 +77,6 @@ class Router
         if (!$this->model->is404) {
             $this->model = $this->model->detectActualModel();
         }
-    }
-
-    /**
-     * Определение модели активной страницы и пути к ней на основе запрошенного URL
-     *
-     * @return Model Модель активной страницы
-     */
-    protected function routeByUrl()
-    {
-        $config = Config::getInstance();
-
-        // Находим начальную структуру
-        $path = array($config->getStartStructure());
-        $prevStructureId = $path[0]['ID'];
-
-        $url = $this->prepareUrl($_SERVER['REQUEST_URI']);
-
-        // Если запрошена главная страница
-        if ($url == '') {
-            $model = new Home\Site\Model('0-' . $prevStructureId);
-            $model = $model->detectPageByUrl($path, '/');
-            return $model;
-        }
-
-        $this->error404->setUrl($url);
-
-        // Проверяем наличие адреса среди уже известных 404-ых
-        $is404 = $this->error404->checkAvailability404();
-
-        // Определяем оставшиеся элементы пути
-        $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Site\\Model';
-        /* @var $model Model */
-        $model = new $modelClassName('0-' . $prevStructureId);
-
-        if ($is404 !== true) {
-            // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
-            $lengthSuffix = strlen($config->urlSuffix);
-            if ($lengthSuffix > 0) {
-                $suffix = substr($url, -$lengthSuffix);
-                if ($suffix != $config->urlSuffix) {
-                    $is404 = true;
-                }
-                $url = substr($url, 0, -$lengthSuffix); // убираем суффикс из url
-            }
-
-            // Проверка, не остался ли в конце URL слэш
-            if (substr($url, -1) == '/') {
-                // Убираем завершающие слэши, если они есть
-                $url = rtrim($url, '/');
-                // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
-                // то ставим 404-ошибку
-                $is404 = true;
-            }
-
-            // Разрезаем URL на части
-            $url = explode('/', $url);
-
-            // Запускаем определение пути и активной модели по $par
-            $model = $model->detectPageByUrl($path, $url);
-            if ($model->is404 == false && $is404) {
-                // Если роутинг нашёл нужную страницу, но суффикс неправильный
-                $model->is404 = true;
-            }
-            if ($model->is404) {
-                $this->error404->save404();
-            }
-        } else {
-            unset($path[0]['ID']);
-            $model->setPath($path);
-            $model->is404 = true;
-        }
-        return $model;
     }
 
     /**
@@ -247,6 +175,78 @@ class Router
     public function send404()
     {
         return $this->error404->send404();
+    }
+
+    /**
+     * Определение модели активной страницы и пути к ней на основе запрошенного URL
+     *
+     * @return Model Модель активной страницы
+     */
+    protected function routeByUrl()
+    {
+        $config = Config::getInstance();
+
+        // Находим начальную структуру
+        $path = [$config->getStartStructure()];
+        $prevStructureId = $path[0]['ID'];
+
+        $url = $this->prepareUrl($_SERVER['REQUEST_URI']);
+
+        // Если запрошена главная страница
+        if ($url == '') {
+            $model = new Home\Site\Model('0-' . $prevStructureId);
+            $model = $model->detectPageByUrl($path, '/');
+            return $model;
+        }
+
+        $this->error404->setUrl($url);
+
+        // Проверяем наличие адреса среди уже известных 404-ых
+        $is404 = $this->error404->checkAvailability404();
+
+        // Определяем оставшиеся элементы пути
+        $modelClassName = Util::getClassName($path[0]['structure'], 'Structure') . '\\Site\\Model';
+        /* @var $model Model */
+        $model = new $modelClassName('0-' . $prevStructureId);
+
+        if ($is404 !== true) {
+            // Определяем, заканчивается ли URL на правильный суффикс, если нет — 404
+            $lengthSuffix = strlen($config->urlSuffix);
+            if ($lengthSuffix > 0) {
+                $suffix = substr($url, -$lengthSuffix);
+                if ($suffix != $config->urlSuffix) {
+                    $is404 = true;
+                }
+                $url = substr($url, 0, -$lengthSuffix); // убираем суффикс из url
+            }
+
+            // Проверка, не остался ли в конце URL слэш
+            if (substr($url, -1) == '/') {
+                // Убираем завершающие слэши, если они есть
+                $url = rtrim($url, '/');
+                // Т.к. слэшей быть не должно (если они — суффикс, то они убираются выше)
+                // то ставим 404-ошибку
+                $is404 = true;
+            }
+
+            // Разрезаем URL на части
+            $url = explode('/', $url);
+
+            // Запускаем определение пути и активной модели по $par
+            $model = $model->detectPageByUrl($path, $url);
+            if ($model->is404 == false && $is404) {
+                // Если роутинг нашёл нужную страницу, но суффикс неправильный
+                $model->is404 = true;
+            }
+            if ($model->is404) {
+                $this->error404->save404();
+            }
+        } else {
+            unset($path[0]['ID']);
+            $model->setPath($path);
+            $model->is404 = true;
+        }
+        return $model;
     }
 
     /**

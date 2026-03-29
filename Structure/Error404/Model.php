@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -56,7 +57,7 @@ class Model
         $config = Config::getInstance();
 
         // Признак запуска процесса обработки 404ой ошибки. Зависит от параметра "Уведомление о 404ых ошибках"
-        $init404Process = isset($config->cms['error404Notice']) ? $config->cms['error404Notice'] : true;
+        $init404Process = $config->cms['error404Notice'] ?? true;
 
         if (!$init404Process) {
             // Если не включена галка "Уведомление о 404ых ошибках" — говорим, что в списке этой странице нет
@@ -120,30 +121,30 @@ class Model
             $matchesRules = self::matchesRules($rules404List, $this->url);
             if (empty($matchesRules)) {
                 // Получаем данные о рассматриваемом url в справочнике "Ошибки 404"
-                $par = array('url' => $this->url);
-                $fields = array('table' => $error404Table);
+                $par = ['url' => $this->url];
+                $fields = ['table' => $error404Table];
                 $rows = $db->select('SELECT * FROM &table WHERE BINARY url = :url LIMIT 1', $par, $fields);
                 if (count($rows) == 0) {
                     // Добавляем запись в справочник
                     $dataList = $config->getStructureByName('Ideal_DataList');
                     $prevStructure = $dataList['ID'] . '-';
-                    $par = array('structure' => 'Ideal_Error404');
-                    $fields = array('table' => $config->db['prefix'] . 'ideal_structure_datalist');
+                    $par = ['structure' => 'Ideal_Error404'];
+                    $fields = ['table' => $config->db['prefix'] . 'ideal_structure_datalist'];
                     $row = $db->select('SELECT ID FROM &table WHERE structure = :structure', $par, $fields);
                     $prevStructure .= $row[0]['ID'];
-                    $params = array(
+                    $params = [
                         'prev_structure' => $prevStructure,
                         'date_create' => time(),
                         'url' => $this->url,
                         'count' => 1,
-                    );
+                    ];
                     $db->insert($error404Table, $params);
                 } elseif ($rows[0]['count'] < 15) {
                     $this->send404 = false;
 
                     // Увеличиваем счётчик посещения страницы
-                    $values = array('count' => $rows[0]['count'] + 1);
-                    $par = array('url' => $this->url);
+                    $values = ['count' => $rows[0]['count'] + 1];
+                    $par = ['url' => $this->url];
                     $db->update($error404Table)->set($values)->where('url = :url', $par)->exec();
                 } else {
                     $this->send404 = false;
@@ -154,13 +155,13 @@ class Model
                     $known404Params['known']['arr']['known404']['value'] = implode("\n", $known404List);
                     $this->known404->setParams($known404Params);
                     $this->known404->saveFile(DOCUMENT_ROOT . '/' . $config->cmsFolder . '/known404.php');
-                    $par = array('url' => $this->url);
+                    $par = ['url' => $this->url];
                     $db->delete($error404Table)->where('url = :url', $par)->exec();
                 }
             }
         } elseif ($isAdmin) {
             // Если пользователь залогинен в админку, то удаляем запрошенный адрес из справочника "Ошибки 404"
-            $par = array('url' => $this->url);
+            $par = ['url' => $this->url];
             $db->delete($error404Table)->where('url = :url', $par)->exec();
         }
     }

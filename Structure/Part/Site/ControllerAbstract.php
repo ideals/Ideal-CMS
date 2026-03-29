@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -14,7 +15,6 @@ use Ideal\Core\Request;
 
 class ControllerAbstract extends Core\Site\Controller
 {
-
     /** @var bool Включение листалки (пагинации) */
     protected $isPager = false;
 

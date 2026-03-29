@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -23,7 +24,7 @@ class Model extends AbstractModel
      */
     public function getList()
     {
-        $list = array(0 => '---');
+        $list = [0 => '---'];
         $db = Db::getInstance();
         $config = Config::getInstance();
         $table = $config->db['prefix'] . 'ideal_structure_usergroup';

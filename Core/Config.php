@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
@@ -21,30 +22,14 @@ namespace Ideal\Core;
  */
 class Config
 {
-
     /** @var object Необходима для реализации паттерна Singleton */
     private static $instance;
 
     /** @var array Список всех подключённых к проекту структур */
-    public $structures = array();
+    public $structures = [];
 
     /** @var array Содержит все конфигурационные переменные проекта */
-    private $array = array();
-
-    /**
-     * Статический метод, возвращающий находящийся в нём динамический объект
-     *
-     * Этот метод реализует паттерн Singleton.
-     *
-     * @return Config
-     */
-    public static function getInstance()
-    {
-        if (empty(self::$instance)) {
-            self::$instance = new Config();
-        }
-        return self::$instance;
-    }
+    private $array = [];
 
     /**
      * Магический метод, возвращающий по запросу $config->varName переменную varName из массива $this->array
@@ -63,8 +48,8 @@ class Config
     /**
      * Магический метод, по $config->varName устанавливающий в $this->array переменную varName в указанное значение
      *
-     * @param string $name  Название переменной
-     * @param mixed  $value Значение переменной
+     * @param string $name Название переменной
+     * @param mixed $value Значение переменной
      */
     public function __set($name, $value)
     {
@@ -77,6 +62,21 @@ class Config
     }
 
     /**
+     * Статический метод, возвращающий находящийся в нём динамический объект
+     *
+     * Этот метод реализует паттерн Singleton.
+     *
+     * @return Config
+     */
+    public static function getInstance()
+    {
+        if (empty(self::$instance)) {
+            self::$instance = new Config();
+        }
+        return self::$instance;
+    }
+
+    /**
      * Из списка подключённых структур находит стартовую по наличию заполненного параметра startName
      *
      * @return array|bool Массив стартовой структуры, или FALSE, если структуру не удалось обнаружить
@@ -85,7 +85,7 @@ class Config
     {
         // TODO сделать уведомление об ошибке, если нет структуры с startName
         foreach ($this->structures as $structure) {
-            if (isset($structure['startName']) && ('' != $structure['startName'])) {
+            if (isset($structure['startName']) && ($structure['startName'] != '')) {
                 return $structure;
             }
         }
@@ -194,74 +194,14 @@ class Config
     {
         // Подключаем описание данных для БД
         /** @noinspection PhpIncludeInspection */
-        $this->import(include($this->cmsFolder . '/config.php'));
+        $this->import(include ($this->cmsFolder . '/config.php'));
 
         // Подключаем файл с переменными изменяемыми в админке
         /** @noinspection PhpIncludeInspection */
-        $this->import(include($this->cmsFolder . '/site_data.php'));
+        $this->import(include ($this->cmsFolder . '/site_data.php'));
 
         // Загрузка данных из конфигурационных файлов подключённых структур
         $this->loadStructures();
-    }
-
-    /**
-     * Импортирует все значения массива $arr в массив $this->array
-     *
-     * @param array $arr Массив значений для импорта
-     */
-    protected function import($arr)
-    {
-        // Проверяем, не объявлены ли переменные из импортируемого массива в этом классе
-        foreach ($arr as $k => $v) {
-            if (isset($this->$k)) {
-                $this->$k = $v;
-                unset($arr[$k]);
-            }
-        }
-        // Объединяем импортируемый массив с основным массивом переменных конфига
-        $this->array = array_merge($this->array, $arr);
-    }
-
-    /**
-     * Загрузка в конфиг данных из конфигурационных файлов подключённых структур
-     */
-    protected function loadStructures()
-    {
-        // Проходимся по всем конфигам подключённых структур и добавляем их в общий конфиг
-        $structures = $this->structures;
-        foreach ($structures as $k => $structureName) {
-            list($module, $structure) = explode('_', $structureName['structure'], 2);
-            $module = ($module == 'Ideal') ? '' : $module . '/';
-            $fileName = $module . 'Structure/' . $structure . '/config.php';
-            /** @noinspection PhpIncludeInspection */
-            $arr = require_once($fileName);
-            if (is_array($arr)) {
-                $structures[$k] = array_merge($structureName, $arr);
-            }
-        }
-
-        // Строим массив соответствия порядковых номеров структур их названиям
-        $structuresNum = array();
-        foreach ($structures as $num => $structure) {
-            $structureName = $structure['structure'];
-            if (isset($structuresNum[$structureName])) {
-                Util::addError('Повторяющееся наименование структуры; ' . $structureName);
-            }
-            $structuresNum[$structureName] = $num;
-        }
-
-        // Проводим инъекции данных в соответствии с конфигами структур
-        foreach ($structures as $structure) {
-            if (!isset($structure['params']['in_structures'])) {
-                // Пропускаем структуры, в которых не заданы инъекции
-                continue;
-            }
-            foreach ($structure['params']['in_structures'] as $structureName) {
-                $num = $structuresNum[$structureName];
-                $structures[$num]['params']['structures'][] = $structure['structure'];
-            }
-        }
-        $this->structures = $structures;
     }
 
     /**
@@ -301,5 +241,65 @@ class Config
 
         $this->protocol = 'http://';
         return $this->protocol;
+    }
+
+    /**
+     * Импортирует все значения массива $arr в массив $this->array
+     *
+     * @param array $arr Массив значений для импорта
+     */
+    protected function import($arr)
+    {
+        // Проверяем, не объявлены ли переменные из импортируемого массива в этом классе
+        foreach ($arr as $k => $v) {
+            if (isset($this->$k)) {
+                $this->$k = $v;
+                unset($arr[$k]);
+            }
+        }
+        // Объединяем импортируемый массив с основным массивом переменных конфига
+        $this->array = array_merge($this->array, $arr);
+    }
+
+    /**
+     * Загрузка в конфиг данных из конфигурационных файлов подключённых структур
+     */
+    protected function loadStructures()
+    {
+        // Проходимся по всем конфигам подключённых структур и добавляем их в общий конфиг
+        $structures = $this->structures;
+        foreach ($structures as $k => $structureName) {
+            [$module, $structure] = explode('_', $structureName['structure'], 2);
+            $module = ($module == 'Ideal') ? '' : $module . '/';
+            $fileName = $module . 'Structure/' . $structure . '/config.php';
+            /** @noinspection PhpIncludeInspection */
+            $arr = require_once($fileName);
+            if (is_array($arr)) {
+                $structures[$k] = array_merge($structureName, $arr);
+            }
+        }
+
+        // Строим массив соответствия порядковых номеров структур их названиям
+        $structuresNum = [];
+        foreach ($structures as $num => $structure) {
+            $structureName = $structure['structure'];
+            if (isset($structuresNum[$structureName])) {
+                Util::addError('Повторяющееся наименование структуры; ' . $structureName);
+            }
+            $structuresNum[$structureName] = $num;
+        }
+
+        // Проводим инъекции данных в соответствии с конфигами структур
+        foreach ($structures as $structure) {
+            if (!isset($structure['params']['in_structures'])) {
+                // Пропускаем структуры, в которых не заданы инъекции
+                continue;
+            }
+            foreach ($structure['params']['in_structures'] as $structureName) {
+                $num = $structuresNum[$structureName];
+                $structures[$num]['params']['structures'][] = $structure['structure'];
+            }
+        }
+        $this->structures = $structures;
     }
 }

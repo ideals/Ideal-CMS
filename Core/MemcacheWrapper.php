@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -15,7 +16,7 @@ namespace Ideal\Core;
  */
 class MemcacheWrapper extends \Memcache
 {
-    const FALSE_VALUE = '-s95VSn.zMbP(ph1-S6M]Q.c$e<9wV-h';
+    public const FALSE_VALUE = '-s95VSn.zMbP(ph1-S6M]Q.c$e<9wV-h';
 
     /**
      * Добавляет значение $value по ключу $key в случае, если значение с $key не было установлено ранее
@@ -30,48 +31,11 @@ class MemcacheWrapper extends \Memcache
     {
         $value = $this->createTagsContainer($value, $tagsKeys);
 
-        if (false === $value) {
+        if ($value === false) {
             $value = self::FALSE_VALUE;
         }
 
         return parent::add($key, $value, false, (int) $ttl);
-    }
-
-    /**
-     * Подготовка контейнера с тегами для кеширования
-     *
-     * Структура контейнера:
-     *     $container = array(
-     *         'tags' => array(
-     *             'tag_1' => 'versionOfTag1',
-     *             'tag_2' => 'versionOfTag2',
-     *         ),
-     *         'value' => 'value',
-     *     );
-     *
-     * @param $value mixed Кэшируемое значение
-     * @param $tags  string|array Строка или массив тегов
-     * @return array Контейнер для помещения в кэш
-     */
-    private function createTagsContainer($value, $tags)
-    {
-        if (!is_array($tags)) {
-            $tags = array($tags);
-        }
-
-        $tagsValues = (array) parent::get($tags);
-
-        foreach ($tags as $tagKey) {
-            if (!isset($tagsValues[$tagKey]) || is_null($tagsValues[$tagKey])) {
-                $tagsValues[$tagKey] = 0;
-                parent::add($tagKey, 0);
-            }
-        }
-
-        return array(
-            'tags' => $tagsValues,
-            'value' => $value
-        );
     }
 
     /**
@@ -92,7 +56,6 @@ class MemcacheWrapper extends \Memcache
      *
      * Если значения по ключу $key не было, то оно будет создано
      *
-     * @param      $key
      * @param int $value
      * @param bool $ttl
      * @return bool Возвращает true при успешном выполнении и false в случае ошибки
@@ -118,11 +81,11 @@ class MemcacheWrapper extends \Memcache
     {
         $value = parent::get($key);
 
-        if (false === $value) {
+        if ($value === false) {
             $value = null;
         }
 
-        if (self::FALSE_VALUE === $value) {
+        if ($value === self::FALSE_VALUE) {
             $value = false;
         }
 
@@ -142,50 +105,10 @@ class MemcacheWrapper extends \Memcache
     }
 
     /**
-     * Получение значения из контейнера с тегами
-     *
-     * @param $key       string Ключ кэше
-     * @param $container array Контейнер с тегами и значением из кэша
-     * @return mixed Значение по ключу $key или null
-     */
-    private function getFromTagsContainer($key, $container)
-    {
-        if ($this->isTagsValid($container['tags'])) {
-            return $container['value'];
-        } else {
-            $this->delete($key);
-
-            return null;
-        }
-    }
-
-    /**
-     * Проверка валидности тегов контейнера
-     *
-     * @param $tags
-     * @return bool
-     */
-    private function isTagsValid($tags)
-    {
-        // Версии тегов из кэша сравниваются с версиями, полученными из контейнера
-
-        $tagsVersions = (array) parent::get(array_keys($tags));
-
-        foreach ($tagsVersions as $tagKey => $tagVersion) {
-            if (is_null($tagVersion) || $tags[$tagKey] != $tagVersion) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Безопасное уменьшение значения в memcache.
      *
      * Если значения по ключу $key не было, то оно будет создано
      *
-     * @param      $key
      * @param int $value
      * @param bool $ttl
      * @return bool Возвращает true при успешном выполнении и false в случае ошибки
@@ -214,10 +137,85 @@ class MemcacheWrapper extends \Memcache
     {
         $value = $this->createTagsContainer($value, $tagsKeys);
 
-        if (false === $value) {
+        if ($value === false) {
             $value = self::FALSE_VALUE;
         }
 
         return parent::set($key, $value, false, (int) $ttl);
+    }
+
+    /**
+     * Подготовка контейнера с тегами для кеширования
+     *
+     * Структура контейнера:
+     *     $container = array(
+     *         'tags' => array(
+     *             'tag_1' => 'versionOfTag1',
+     *             'tag_2' => 'versionOfTag2',
+     *         ),
+     *         'value' => 'value',
+     *     );
+     *
+     * @param $value mixed Кэшируемое значение
+     * @param $tags string|array Строка или массив тегов
+     * @return array Контейнер для помещения в кэш
+     */
+    private function createTagsContainer($value, $tags)
+    {
+        if (!is_array($tags)) {
+            $tags = [$tags];
+        }
+
+        $tagsValues = (array) parent::get($tags);
+
+        foreach ($tags as $tagKey) {
+            if (!isset($tagsValues[$tagKey]) || is_null($tagsValues[$tagKey])) {
+                $tagsValues[$tagKey] = 0;
+                parent::add($tagKey, 0);
+            }
+        }
+
+        return [
+            'tags' => $tagsValues,
+            'value' => $value,
+        ];
+    }
+
+    /**
+     * Получение значения из контейнера с тегами
+     *
+     * @param $key string Ключ кэше
+     * @param $container array Контейнер с тегами и значением из кэша
+     * @return mixed Значение по ключу $key или null
+     */
+    private function getFromTagsContainer($key, $container)
+    {
+        if ($this->isTagsValid($container['tags'])) {
+            return $container['value'];
+        }
+        $this->delete($key);
+
+        return null;
+
+    }
+
+    /**
+     * Проверка валидности тегов контейнера
+     *
+     * @return bool
+     */
+    private function isTagsValid($tags)
+    {
+        // Версии тегов из кэша сравниваются с версиями, полученными из контейнера
+
+        $tagsVersions = (array) parent::get(array_keys($tags));
+
+        foreach ($tagsVersions as $tagKey => $tagVersion) {
+            if (is_null($tagVersion) || $tags[$tagKey] != $tagVersion) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

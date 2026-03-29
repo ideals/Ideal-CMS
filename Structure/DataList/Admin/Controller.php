@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -9,7 +10,4 @@
 
 namespace Ideal\Structure\DataList\Admin;
 
-class Controller extends ControllerAbstract
-{
-
-}
+class Controller extends ControllerAbstract {}

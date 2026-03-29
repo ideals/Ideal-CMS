@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,6 +18,32 @@ use Ideal\Core\Config;
  */
 class AjaxController extends \Ideal\Core\AjaxController
 {
+    /**
+     * Получает массив, где ключи это путь до файла, а значения это хэш файла
+     *
+     * @param string $folder Путь до сканируемой папки
+     * @param string $cmsFolder Путь до корневой папки системы
+     * @return array Массив где ключами являются пути до файлов, а значениями их хэши
+     */
+    public static function getAllSystemFiles($folder, $cmsFolder)
+    {
+        $systemFiles = [];
+        $files = scandir($folder);
+        foreach ($files as $file) {
+            // Отбрасываем не нужные каталоги и файлы
+            if (preg_match('/^\..*?|hash_files$/isU', $file)) {
+                continue;
+            }
+            // Если директория, то запускаем сбор внутри директории
+            if (is_dir($folder . '/' . $file)) {
+                $systemFiles = array_merge($systemFiles, self::getAllSystemFiles($folder . '/' . $file, $cmsFolder));
+            } else {
+                $fileKeyArray = ltrim(str_replace($cmsFolder, '', $folder) . '/' . $file, '/');
+                $systemFiles[$fileKeyArray] = hash_file('crc32b', $folder . '/' . $file);
+            }
+        }
+        return $systemFiles;
+    }
 
     /**
      * Действие срабатывающее при нажатии на кнопку "Проверка целостности файлов"
@@ -47,34 +74,7 @@ class AjaxController extends \Ideal\Core\AjaxController
         $delFiles = implode('<br />', array_keys($delFiles));
         $newFiles = implode('<br />', array_keys($newFiles));
 
-        print json_encode(array('newFiles' => $newFiles, 'delFiles' => $delFiles, 'changeFiles' => $changeFiles));
+        print json_encode(['newFiles' => $newFiles, 'delFiles' => $delFiles, 'changeFiles' => $changeFiles]);
         exit;
-    }
-
-    /**
-     * Получает массив, где ключи это путь до файла, а значения это хэш файла
-     *
-     * @param string $folder Путь до сканируемой папки
-     * @param string $cmsFolder Путь до корневой папки системы
-     * @return array Массив где ключами являются пути до файлов, а значениями их хэши
-     */
-    public static function getAllSystemFiles($folder, $cmsFolder)
-    {
-        $systemFiles = array();
-        $files = scandir($folder);
-        foreach ($files as $file) {
-            // Отбрасываем не нужные каталоги и файлы
-            if (preg_match('/^\..*?|hash_files$/isU', $file)) {
-                continue;
-            }
-            // Если директория, то запускаем сбор внутри директории
-            if (is_dir($folder . '/' . $file)) {
-                $systemFiles = array_merge($systemFiles, self::getAllSystemFiles($folder . '/' . $file, $cmsFolder));
-            } else {
-                $fileKeyArray = ltrim(str_replace($cmsFolder, '', $folder) . '/' . $file, '/');
-                $systemFiles[$fileKeyArray] = hash_file('crc32b', $folder . '/' . $file);
-            }
-        }
-        return $systemFiles;
     }
 }

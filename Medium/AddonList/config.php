@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -7,9 +8,9 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-return array(
-    'params' => array(
-        'has_table' => false
-    ),
-    'fields' => array()
-);
+return [
+    'params' => [
+        'has_table' => false,
+    ],
+    'fields' => [],
+];

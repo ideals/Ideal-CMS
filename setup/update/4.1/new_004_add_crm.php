@@ -1,4 +1,5 @@
 <?php
+
 // Подключаем структуру для управления списком заказчиков
 
 use Ideal\Core\Config;
@@ -19,15 +20,15 @@ if ($crm === false) {
     $crmId++;
     $add = <<<ADD
 
-        // Подключаем справочник заказчиков
-        array(
-            'ID' => {$crmId},
-            'structure' => 'Ideal_Crm',
-            'name' => 'Заказчики',
-            'isShow' => 0,
-            'hasTable' => true
-        ),
-ADD;
+                // Подключаем справочник заказчиков
+                array(
+                    'ID' => {$crmId},
+                    'structure' => 'Ideal_Crm',
+                    'name' => 'Заказчики',
+                    'isShow' => 0,
+                    'hasTable' => true
+                ),
+        ADD;
     $fileName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/config.php';
     if (!file_exists($fileName)) {
         throw new \Exception('Файл не найден: ' . $fileName);
@@ -51,15 +52,15 @@ if (empty($crm)) {
     // Создаем запись Заказчики с сайта в Справочниках
     $prevStructureId = $db->insert(
         $dataListTable,
-        array(
+        [
             'prev_structure' => '0-3',
             'structure' => 'Ideal_Crm',
             'pos' => $newPos,
             'name' => 'Заказчики',
             'url' => 'zakazchiki',
             'parent_url' => '---',
-            'annot' => ''
-        )
+            'annot' => '',
+        ],
     );
 } else {
     $prevStructureId = $crm[0]['ID'];
@@ -77,12 +78,12 @@ if (empty($res)) {
     // Добавляем тестового заказчика
     $db->insert(
         $config->db['prefix'] . 'ideal_structure_crm',
-        array(
-            'phones' => json_encode(array('00000000000')),
+        [
+            'phones' => json_encode(['00000000000']),
             'emails' => '',
             'client_ids' => '',
             'date_create' => time(),
             'prev_structure' => '3-' . $prevStructureId,
-            'name' => 'test')
+            'name' => 'test'],
     );
 }

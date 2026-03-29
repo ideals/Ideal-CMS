@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -24,7 +25,6 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
-
     /** @inheritdoc */
     protected static $instance;
 
@@ -46,20 +46,20 @@ class Controller extends AbstractController
         $config = Config::getInstance();
         $value = htmlspecialchars($this->getValue());
         $html = <<<HTML
-            <textarea name="{$this->htmlName}"
-                id="{$this->htmlName}">{$value}</textarea>
-            <script>
-                CKFinder.setupCKEditor( null, "/{$config->cmsFolder}/Ideal/Library/ckfinder/" );
-                // Закрываем от авто модификации и wysiwig-редактирования содержимое тега script
-                CKEDITOR.config.protectedSource.push(/<script[\\s\\S]*?script>/ig);
-                // Код в блоке <div class="protectedSource"></div> не будет редактироваться во WYSIWIG,
-                // но будет доступен в режиме редактирования исходного кода HTML
-                CKEDITOR.config.protectedSource.push(/<div[\\s\\S]*?class="protected"[\\s\\S]*?<\\/div>/g);
-                // Разрешаем использовать для всех тегов — атрибуты style и class
-                CKEDITOR.config.extraAllowedContent = '*(*)[style]{*}; *(*)[class]{*}; span(*); style; *(*)[data-*]{*}';
-                CKEDITOR.replace("{$this->htmlName}");
-            </script>
-HTML;
+                        <textarea name="{$this->htmlName}"
+                            id="{$this->htmlName}">{$value}</textarea>
+                        <script>
+                            CKFinder.setupCKEditor( null, "/{$config->cmsFolder}/Ideal/Library/ckfinder/" );
+                            // Закрываем от авто модификации и wysiwig-редактирования содержимое тега script
+                            CKEDITOR.config.protectedSource.push(/<script[\\s\\S]*?script>/ig);
+                            // Код в блоке <div class="protectedSource"></div> не будет редактироваться во WYSIWIG,
+                            // но будет доступен в режиме редактирования исходного кода HTML
+                            CKEDITOR.config.protectedSource.push(/<div[\\s\\S]*?class="protected"[\\s\\S]*?<\\/div>/g);
+                            // Разрешаем использовать для всех тегов — атрибуты style и class
+                            CKEDITOR.config.extraAllowedContent = '*(*)[style]{*}; *(*)[class]{*}; span(*); style; *(*)[data-*]{*}';
+                            CKEDITOR.replace("{$this->htmlName}");
+                        </script>
+            HTML;
         return $html;
     }
 }

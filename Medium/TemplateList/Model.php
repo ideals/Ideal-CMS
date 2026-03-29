@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -29,7 +30,7 @@ class Model extends AbstractModel
         $objClassNameSlice = explode('\\', $objClassName);
 
         // Получаем название текущего типа структуры
-        $modelStructures = array($objClassNameSlice[0] . '_' . $objClassNameSlice[2]);
+        $modelStructures = [$objClassNameSlice[0] . '_' . $objClassNameSlice[2]];
 
         // Заносим уже введённое значение в список доступных шаблонов, так как оно может быть кастомным
         $pageData = $this->obj->getPageData();
@@ -57,11 +58,11 @@ class Model extends AbstractModel
             $parts = explode('/', $folderName);
             $moduleName = $parts[1];
             if ($moduleName == 'Ideal') {
-                $folderPartNames = array('Ideal', 'Ideal.c');
+                $folderPartNames = ['Ideal', 'Ideal.c'];
                 $moduleName = '';
                 $folderName = str_replace('/Ideal', '', $folderName);
             } else {
-                $folderPartNames = array('Mods', 'Mods.c');
+                $folderPartNames = ['Mods', 'Mods.c'];
                 $moduleName = $moduleName . '/';
             }
             $structureName = $parts[3];

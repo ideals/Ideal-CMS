@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -25,7 +26,6 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
-
     /** {@inheritdoc} */
     protected static $instance;
 
@@ -38,27 +38,27 @@ class Controller extends AbstractController
         $date = empty($value) ? '' : date('d.m.Y H:i:s', $value);
         $htmlName = $this->htmlName;
         $html = <<<HTML
-<link href="Ideal/Library/datetimepicker/build/css/bootstrap-datetimepicker.min.css" rel="stylesheet" type="text/css" >
-<script type="text/javascript" src="Ideal/Library/moment/moment.js"></script>
-<script type="text/javascript" src="Ideal/Library/moment/locale/ru.js"></script>
-<script type="text/javascript" src="Ideal/Library/datetimepicker/src/js/bootstrap-datetimepicker.js"></script>
+            <link href="Ideal/Library/datetimepicker/build/css/bootstrap-datetimepicker.min.css" rel="stylesheet" type="text/css" >
+            <script type="text/javascript" src="Ideal/Library/moment/moment.js"></script>
+            <script type="text/javascript" src="Ideal/Library/moment/locale/ru.js"></script>
+            <script type="text/javascript" src="Ideal/Library/datetimepicker/src/js/bootstrap-datetimepicker.js"></script>
 
-<div id="picker_{$htmlName}" class="input-group date">
-    <span class="input-group-addon">
-        <span class="glyphicon glyphicon-calendar" ></span>
-    </span>
-    <input type="text" class="form-control" name="{$htmlName}" value="{$date}" >
-</div>
+            <div id="picker_{$htmlName}" class="input-group date">
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar" ></span>
+                </span>
+                <input type="text" class="form-control" name="{$htmlName}" value="{$date}" >
+            </div>
 
-<script type="text/javascript">
-    $(function () {
-        $('#picker_{$htmlName}').datetimepicker({
-            format: 'DD.MM.YYYY HH:mm:ss',
-            locale: 'ru'
-        });
-    });
-</script>
-HTML;
+            <script type="text/javascript">
+                $(function () {
+                    $('#picker_{$htmlName}').datetimepicker({
+                        format: 'DD.MM.YYYY HH:mm:ss',
+                        locale: 'ru'
+                    });
+                });
+            </script>
+            HTML;
 
         return $html;
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -11,10 +12,9 @@ namespace Ideal\Core;
 
 class PluginBroker
 {
-
     private static $instance;
 
-    protected $_events = array();
+    protected $_events = [];
 
     public static function getInstance()
     {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -27,7 +28,6 @@ class ExampleController extends Controller
      * Обязательный метод проверки авторизации API-запроса
      * Неавторизированные запросы всегда отдают 404-ую страницу
      *
-     * @param Router $router
      * @return bool
      */
     public function authorize(Router $router)
@@ -44,12 +44,11 @@ class ExampleController extends Controller
     /**
      * Реакиця контроллера на запрос
      *
-     * @param Router $router
      * @return string Содержимое отображаемой страницы
      */
     public function infoAction(Router $router)
     {
-        $response = json_encode(array('success' => true), JSON_FORCE_OBJECT);
+        $response = json_encode(['success' => true], JSON_FORCE_OBJECT);
         $this->jsonResponse = true;
 
         return $response;

@@ -1,4 +1,5 @@
 <?php
+
 // Обновляем файл "/js/jsFlashCookies/refererDetector.js"
 use Ideal\Core\Config;
 

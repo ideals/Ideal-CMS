@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,7 +18,6 @@ namespace Ideal\Core;
  */
 class FileCache
 {
-
     /**
      * Сохраняет содержимое в файл кэша
      *
@@ -31,7 +31,7 @@ class FileCache
         $configCache = $config->cache;
 
         // Получаем чистый $uri без GET параметров
-        list($uri) = explode('?', $uri, 2);
+        [$uri] = explode('?', $uri, 2);
 
         // Удаляем первый слэш, для использования пути в проверке на исключения
         $stringToCheck = preg_replace('/\//', '', $uri, 1);
@@ -133,12 +133,12 @@ class FileCache
             $file = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php';
             if ($configSD->saveFile($file) === false) {
                 return false;
-            } else {
-                return true;
             }
-        } else {
             return true;
+
         }
+        return true;
+
     }
 
     public static function getModifyUri(&$uri)
@@ -165,18 +165,6 @@ class FileCache
     }
 
     /**
-     * Проверяет на существование нужную директорию, если таковая отсутствует, то создаёт её
-     *
-     * @param string $path путь к папке
-     */
-    private static function checkDir($path)
-    {
-        if (!is_dir($path)) {
-            mkdir($path, 0777, true);
-        }
-    }
-
-    /**
      * Удаляет файл кэша и директории его нахождения, если они пустые
      *
      * @param string $path путь до удаляемого файла
@@ -196,7 +184,7 @@ class FileCache
             array_pop($dirArray);
             if (!empty($dirArray)) {
                 // Получаем массив с полными путями до каждого каталога в иерархии
-                $implodeDirArrayElement = array();
+                $implodeDirArrayElement = [];
                 for ($i = 0; $i < count($dirArray); $i++) {
                     // TODO продумать вариант получения пути по красивее
                     $dirPath = implode('/', explode('/', implode('/', $dirArray), 0 - $i));
@@ -212,8 +200,20 @@ class FileCache
                 }
             }
             return true;
-        } else {
-            return false;
+        }
+        return false;
+
+    }
+
+    /**
+     * Проверяет на существование нужную директорию, если таковая отсутствует, то создаёт её
+     *
+     * @param string $path путь к папке
+     */
+    private static function checkDir($path)
+    {
+        if (!is_dir($path)) {
+            mkdir($path, 0777, true);
         }
     }
 }

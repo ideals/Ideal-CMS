@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -12,7 +13,6 @@ namespace Ideal\Structure\Service\UpdateCms;
 use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Util;
-use Ideal\Structure\Service\UpdateCms\Versions;
 
 /**
  * Получение номеров версий установленной CMS и модулей
@@ -20,19 +20,6 @@ use Ideal\Structure\Service\UpdateCms\Versions;
  */
 class Model
 {
-
-    /** @var array Ответ, возвращаемый при ajax-вызове */
-    protected $answer = array('message' => array(), 'error' => false, 'data' => null);
-
-    /** @var string Путь к файлу с логом обновлений */
-    protected $log = '';
-
-    /** @var bool Признак тестового режима */
-    protected $testMode = false;
-
-    /** @var array Массив папок для обновления */
-    protected $updateFolders = array();
-
     /** @var string Название модуля */
     public $updateName = '';
 
@@ -41,6 +28,18 @@ class Model
 
     /** @var string Текущая версия */
     public $currentVersion = '';
+
+    /** @var array Ответ, возвращаемый при ajax-вызове */
+    protected $answer = ['message' => [], 'error' => false, 'data' => null];
+
+    /** @var string Путь к файлу с логом обновлений */
+    protected $log = '';
+
+    /** @var bool Признак тестового режима */
+    protected $testMode = false;
+
+    /** @var array Массив папок для обновления */
+    protected $updateFolders = [];
 
     /**
      * Инициализация файла лога обновлений
@@ -70,7 +69,7 @@ class Model
     /**
      * Задаём название и версию обновляемого модуля
      *
-     * @param string $updateName    Название модуля
+     * @param string $updateName Название модуля
      * @param string $updateVersion Номер версии, на которую обновляемся
      * @param string $currentVersion Номер текущей версии
      */
@@ -98,7 +97,7 @@ class Model
         if ($info === false || !isset($info['file']) || !isset($info['md5']) ||  !isset($info['version'])) {
             $this->addAnswer(
                 'Не удалось получить данные о получаемом обновлении',
-                'error'
+                'error',
             );
             exit;
         }
@@ -124,7 +123,7 @@ class Model
         if ($data === false) {
             $this->addAnswer(
                 'Не удалось получить файл обновления с сервера обновлений ' . $this->updateFolders['getFileScript'],
-                'error'
+                'error',
             );
             exit;
         }
@@ -141,7 +140,7 @@ class Model
 
         $this->addAnswer('Загружен архив с обновлениями', 'success');
         // Возвращаем название загруженного архива
-        return array('path' => $path, 'version' => $info['version']);
+        return ['path' => $path, 'version' => $info['version']];
     }
 
     /**
@@ -153,7 +152,7 @@ class Model
      */
     public function unpackUpdate($archive)
     {
-        $zip = new \ZipArchive;
+        $zip = new \ZipArchive();
         $res = $zip->open($archive['path']);
 
         if ($res !== true) {
@@ -208,7 +207,7 @@ class Model
                 $result,
                 function (&$result, $item) {
                     $result = $result . "<br />\n" . $item['path'];
-                }
+                },
             );
             $this->addAnswer("Не удалось изменить права для следующих файлов/папок: <br />\n{$paths}", 'warning');
         }
@@ -229,10 +228,10 @@ class Model
         if (!is_string($message) || !is_string($type)) {
             throw new \Exception("Необходим аргумент типа строка");
         }
-        if (!in_array($type, array('error', 'info', 'warning', 'success'))) {
+        if (!in_array($type, ['error', 'info', 'warning', 'success'])) {
             throw new \Exception("Недопустимое значение типа сообщения");
         }
-        $this->answer['message'][] = array($message, $type);
+        $this->answer['message'][] = [$message, $type];
         if ($type == 'error') {
             $this->answer['error'] = true;
         }
@@ -255,8 +254,8 @@ class Model
     /**
      * Удаление папки или её очистка
      *
-     * @param string $dir   Папка которую необходимо удалить или очистить
-     * @param bool   $clear Если значение ложь, то удаляем папку, если истина, очищаем
+     * @param string $dir Папка которую необходимо удалить или очистить
+     * @param bool $clear Если значение ложь, то удаляем папку, если истина, очищаем
      * @return bool
      */
     public function removeDirectory($dir, $clear = false)
@@ -266,7 +265,7 @@ class Model
             // Если папки нет, то и удалять её не надо, а если требовалось очистить - возвращаем ошибку
             return !$clear;
         }
-        $files = array_diff(scandir($dir), array('.', '..'));
+        $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
             $res = (is_dir("$dir/$file")) ? $this->removeDirectory("$dir/$file") : unlink("$dir/$file");
         }
@@ -279,14 +278,13 @@ class Model
     /**
      * Установка путей к папкам для обновления модулей
      *
-     * @param $array
      */
     public function setUpdateFolders($array)
     {
-        $this->updateFolders = array(
+        $this->updateFolders = [
             'getFileScript' => $array['getFileScript'],
-            'uploadDir' => $array['uploadDir']
-        );
+            'uploadDir' => $array['uploadDir'],
+        ];
     }
 
     /**
@@ -317,7 +315,7 @@ class Model
         }
 
         // Считываем названия папок со скриптами обновления
-        $updates = array_diff(scandir($updateFolder), array('.', '..'));
+        $updates = array_diff(scandir($updateFolder), ['.', '..']);
 
         // Убираем из списка файлы
         foreach ($updates as $k => $v) {
@@ -331,7 +329,7 @@ class Model
             $updates,
             function ($a, $b) {
                 return version_compare($a, $b);
-            }
+            },
         );
 
         // Убираем из списка папки с установленными обновлениями
@@ -342,10 +340,10 @@ class Model
         }
 
         // Составление списка скриптов для обновления
-        $scripts = array('pre' => array(), 'after' => array());
+        $scripts = ['pre' => [], 'after' => []];
         foreach ($updates as $folder) {
             $scriptFolder = $updateFolder . '/' . $folder;
-            $files = array_diff(scandir($scriptFolder), array('.', '..'));
+            $files = array_diff(scandir($scriptFolder), ['.', '..']);
             foreach ($files as $file) {
                 $fileScript = '/' . $folder . '/' . $file;
                 if (is_dir($scriptFolder . '/' . $file)) {
@@ -353,7 +351,7 @@ class Model
                 }
                 if ($lastScript == $fileScript) {
                     // Нашли последний установленный скрипт, значит отсекаем все предыдущие скрипты
-                    $scripts = array('pre' => array(), 'after' => array());
+                    $scripts = ['pre' => [], 'after' => []];
                     continue;
                 }
                 if (preg_match("(\/new_\.*)", $fileScript) && version_compare($folder, $currentVersion) > 0) {
@@ -365,9 +363,9 @@ class Model
         }
 
         $this->addAnswer(
-            'Получен список скриптов в количестве: ' . ((int)count($scripts['pre']) + (int)count($scripts['after'])),
+            'Получен список скриптов в количестве: ' . ((int) count($scripts['pre']) + (int) count($scripts['after'])),
             'success',
-            array('scripts' => json_encode($scripts))
+            ['scripts' => json_encode($scripts)],
         );
 
         return $scripts;
@@ -385,7 +383,7 @@ class Model
         $ext = substr($script, strrpos($script, '.'));
 
         if (strpos(basename($script), 'new') === 0) {
-            $file = 'setup/update' .  $script;
+            $file = 'setup/update' . $script;
             if ($this->updateName !== 'Ideal-CMS') {
                 $file = $this->updateName . '/' . $file;
             }

@@ -112,7 +112,7 @@ try {
 <?php
 echo '<p>Папка с архивами: &nbsp;' . $backupPart . '</p>';
 // Получение списка файлов
-$dumpFiles = array();
+$dumpFiles = [];
 
 if (is_dir($backupPart)) {
     echo '<table id="dumpTable" class="table table-hover">';
@@ -174,7 +174,7 @@ if (is_dir($backupPart)) {
         // Кнопка комментария
         echo '<button id="' . $file . '_btn_cmt"
             class="tlp btn ' . $cmtBtnStyle . ' btn-xs btn-cmt"
-            title="' . $cmtText .'"
+            title="' . $cmtText . '"
             onclick="showModal(\'' . addslashes($file) . '\'); false;">';
         echo ' <span class="glyphicon glyphicon-pencil"></span> ';
         echo '</button>&nbsp;';

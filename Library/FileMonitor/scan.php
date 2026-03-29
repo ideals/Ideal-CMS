@@ -1,9 +1,10 @@
 <?php
+
 header('Content-Type: text/html; charset=utf-8');
 
 require __DIR__ . '/FileMonitor.php';
 
-$settings = array(
+$settings = [
     'scanDir' => __DIR__ . '/../../../..',
     'tmpDir' => __DIR__ . '/../../../../tmp',
     'scriptTime' => 50,
@@ -13,7 +14,7 @@ $settings = array(
     'domain' => 'example.com',
     'exclude' => '',
     'period' => 'daily',
-);
+];
 
 // Запускаем мониторинг файлов
 $files = new \FileMonitor\FileMonitor($settings);

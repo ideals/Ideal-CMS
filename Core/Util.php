@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -16,13 +17,12 @@ namespace Ideal\Core;
 class Util
 {
     /** @var array Массив для хранения списка ошибок, возникших при выполнении скрипта */
-    public static $errorArray = array();
+    public static $errorArray = [];
 
     /**
      * Вывод сообщения об ошибке
      *
      * @param string $txt Текст сообщения об ошибке
-     * @param $isTrace
      * @throws \Exception
      */
     public static function addError($txt, $isTrace = true)
@@ -126,7 +126,7 @@ class Util
      */
     public static function dateReach($date, $year = ' года')
     {
-        $months = array(
+        $months = [
             '',
             'января',
             'февраля',
@@ -139,10 +139,10 @@ class Util
             'сентября',
             'октября',
             'ноября',
-            'декабря'
-        );
-        $date = date('j', $date) . ' ' . $months[date('n', $date)] . ' ' .
-            date('Y', $date) . $year;
+            'декабря',
+        ];
+        $date = date('j', $date) . ' ' . $months[date('n', $date)] . ' '
+            . date('Y', $date) . $year;
         return $date;
     }
 
@@ -154,7 +154,7 @@ class Util
      */
     public static function dateStrReach($date)
     {
-        $months = array(
+        $months = [
             '',
             'января',
             'февраля',
@@ -167,11 +167,11 @@ class Util
             'сентября',
             'октября',
             'ноября',
-            'декабря'
-        );
+            'декабря',
+        ];
         $date = explode(' ', $date);
         $date = explode('-', $date[0]);
-        $day = (int)$date[1];
+        $day = (int) $date[1];
         $date = $date[2] . ' ' . $months[$day] . ' ' . $date[0] . ' года';
         return $date;
     }
@@ -185,7 +185,7 @@ class Util
      */
     public static function getClassName($module, $type)
     {
-        list($module, $structure) = explode('_', $module);
+        [$module, $structure] = explode('_', $module);
         $name = '\\' . $module . '\\' . $type . '\\' . $structure;
         return $name;
     }
@@ -219,7 +219,7 @@ class Util
      * Обрабатываем блок текста, переданный из браузера
      *
      * @param string $str строка
-     * @param int    $len Максимальная длина строки (по умолчанию 3072)
+     * @param int $len Максимальная длина строки (по умолчанию 3072)
      * @return string Безопасный блок текста
      */
     public static function parseWebArea($str, $len = 3072)
@@ -243,7 +243,7 @@ class Util
      * Обрабатываем строку, переданную из браузера
      *
      * @param string $str строка
-     * @param int    $len Максимальная длина строки (по умолчанию 255)
+     * @param int $len Максимальная длина строки (по умолчанию 255)
      * @return string Безопасная строка
      */
     public static function parseWebStr($str, $len = 255)
@@ -258,7 +258,7 @@ class Util
      * Обработка адрес e-mail, переданного из браузера
      *
      * @param string $str E-mail
-     * @param int    $len Максимальная длина строки (по умолчанию 255)
+     * @param int $len Максимальная длина строки (по умолчанию 255)
      * @return string Безопасный и валидный адрес
      */
     public static function parseWebMail($str, $len = 255)
@@ -318,7 +318,7 @@ class Util
      * строки до последнего пробела
      *
      * @param string $str исходная строка
-     * @param int    $len максимальное количество символов в строке
+     * @param int $len максимальное количество символов в строке
      * @return string
      */
     public static function smartTrim($str, $len)
@@ -329,19 +329,6 @@ class Util
             $str = mb_substr($str, 0, mb_strrpos($str, ' '));
         }
         return $str;
-    }
-
-    /**
-     * Переход на страницу логина с сохранением страницы, на которую не пустило
-     *
-     * @param string $link Ссылка на страницу авторизации
-     */
-    public function goUrl($link)
-    {
-        $_SESSION['prev_post'] = serialize($_POST);
-        $_SESSION['prev_uri'] = $_SERVER['REQUEST_URI'];
-        header('Location: ' . $link);
-        exit;
     }
 
     /**
@@ -377,13 +364,13 @@ class Util
      */
     public static function chmod($path, $dirMode, $fileMode)
     {
-        $resultInfo = array();
+        $resultInfo = [];
 
         if (is_dir($path)) {
             if (!chmod($path, intval($dirMode, 8))) {
-                return array('path' => $path, 'mode' => $dirMode, 'is_dir' => true);
+                return ['path' => $path, 'mode' => $dirMode, 'is_dir' => true];
             }
-            $files = array_diff(scandir($path), array('.', '..'));
+            $files = array_diff(scandir($path), ['.', '..']);
             foreach ($files as $file) {
                 $fullPath = $path . '/' . $file;
                 $arr = self::chmod($fullPath, $dirMode, $fileMode);
@@ -391,10 +378,10 @@ class Util
             }
         } else {
             if (is_link($path)) {
-                return array();
+                return [];
             }
             if (!chmod($path, intval($fileMode, 8))) {
-                $resultInfo[] = array('path' => $path, 'mode' => $fileMode, 'is_dir' => false);
+                $resultInfo[] = ['path' => $path, 'mode' => $fileMode, 'is_dir' => false];
             }
         }
         return $resultInfo;
@@ -409,10 +396,23 @@ class Util
     {
         $GACid = false;
         if (isset($_COOKIE['_ga'])) {
-            list($version, $domainDepth, $cid1, $cid2) = explode('.', $_COOKIE["_ga"], 4);
-            $contents = array('version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1 . '.' . $cid2);
+            [$version, $domainDepth, $cid1, $cid2] = explode('.', $_COOKIE["_ga"], 4);
+            $contents = ['version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1 . '.' . $cid2];
             $GACid = $contents['cid'];
         }
         return $GACid;
+    }
+
+    /**
+     * Переход на страницу логина с сохранением страницы, на которую не пустило
+     *
+     * @param string $link Ссылка на страницу авторизации
+     */
+    public function goUrl($link)
+    {
+        $_SESSION['prev_post'] = serialize($_POST);
+        $_SESSION['prev_uri'] = $_SERVER['REQUEST_URI'];
+        header('Location: ' . $link);
+        exit;
     }
 }

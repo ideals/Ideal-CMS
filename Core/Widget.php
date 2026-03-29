@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -14,10 +15,9 @@ namespace Ideal\Core;
  */
 abstract class Widget
 {
-
     /** @var \Ideal\Core\Site\Model Модель страницы с данными */
     protected $model;
-    
+
     /** @var string Префикс url для списка ссылок, генерируемых виджетом */
     protected $prefix;
 
@@ -29,7 +29,6 @@ abstract class Widget
 
     /**
      * При инициализации виджета необходимо передать модель страницы с данными
-     * @param $model
      */
     public function __construct($model)
     {

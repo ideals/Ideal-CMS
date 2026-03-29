@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -8,7 +9,8 @@
  */
 
 // Инициализируем доступ к БД
-$db = Ideal\Core\Db::getInstance();;
+$db = Ideal\Core\Db::getInstance();
+;
 
 $cfg = $config->getStructureByName('Ideal_User');
 

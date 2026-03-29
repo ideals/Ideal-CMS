@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -35,7 +36,7 @@ class Controller extends \Ideal\Field\AbstractController
      */
     public function getValue()
     {
-        return (int)parent::getValue() / 100;
+        return (int) parent::getValue() / 100;
     }
 
     /**

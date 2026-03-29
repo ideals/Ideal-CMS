@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -65,16 +66,15 @@ class Model
     /**
      * Получения содержимого всех вкладок для первоначального отображения
      *
-     * @param $json
      * @return array
      */
     public function getTabs($json)
     {
         $arr = json_decode($json);
-        $result = array(
+        $result = [
             'names' => '',
-            'contents' => ''
-        );
+            'contents' => '',
+        ];
 
         foreach ($arr as $v) {
             $tabId = $v[0];
@@ -88,13 +88,13 @@ class Model
             $result['names'] .= addslashes($tab['header']);
 
             $tab['content'] = str_replace(
-                array("\\", '<script>', '/', "'"),
-                array("\\\\", '\<script>', '\/', "\\'"),
-                $tab['content']
+                ["\\", '<script>', '/', "'"],
+                ["\\\\", '\<script>', '\/', "\\'"],
+                $tab['content'],
             );
 
             // Убираем переводы строки, иначе текст не обрабатывается в JS
-            $tab['content'] = str_replace(array("\n\r", "\r\n", "\n", "\r"), '\\n', $tab['content']);
+            $tab['content'] = str_replace(["\n\r", "\r\n", "\n", "\r"], '\\n', $tab['content']);
 
             // Записываем содержимое вкладки
             $result['contents'] .= $tab['content'];
@@ -106,7 +106,7 @@ class Model
     /**
      * Получение названия и содержимого одной вкладки
      *
-     * @param  integer $id Идентификатор вкладки
+     * @param integer $id Идентификатор вкладки
      * @param string $addonVar Название аддона
      * @param string $addonName Наименование вкладки аддона
      * @return array
@@ -153,11 +153,11 @@ class Model
         // Оборачиваем в div вкладки
         $tabContent = "<div id=\"tab{$addonVar}\" class=\"tab-pane\">{$tabContent}</div>";
 
-        $result = array(
+        $result = [
             'name' => $addonName,
             'header' => $tab,
-            'content' => $tabContent
-        );
+            'content' => $tabContent,
+        ];
 
         return $result;
     }
@@ -168,9 +168,9 @@ class Model
      * Полю необходимо получать сведения о состоянии объекта и о других полях, т.к.
      * его значения и поведение может зависеть от значений других полей
      *
-     * @param \Ideal\Core\Admin\Model $model     Модель редактируемого объекта
-     * @param string                  $fieldName Редактируемое поле
-     * @param string                  $groupName Вкладка, к которой принадлежит редактируемое поле
+     * @param \Ideal\Core\Admin\Model $model Модель редактируемого объекта
+     * @param string $fieldName Редактируемое поле
+     * @param string $groupName Вкладка, к которой принадлежит редактируемое поле
      */
     public function setModel($model, $fieldName, $groupName = 'general')
     {

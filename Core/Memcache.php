@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -22,11 +23,10 @@ namespace Ideal\Core;
  */
 class Memcache
 {
-    /** @var MemcacheWrapper|null Экземпляр класса MemcacheWrapper или null если не доступен класс Memcache */
-    private $memcacheWrapper = null;
-
     /** @var array Массив для хранения подключений к разным серверам кэширования */
     private static $connectedServers;
+    /** @var MemcacheWrapper|null Экземпляр класса MemcacheWrapper или null если не доступен класс Memcache */
+    private $memcacheWrapper = null;
 
     /**
      * При создании экземпляра данного класса экземпляр класса MemcacheWrapper помещается в свойство $memcacheWrapper, если класс \Memcache доступен.
@@ -49,10 +49,10 @@ class Memcache
     public function __call($name, $arguments)
     {
         if ($this->memcacheWrapper !== null && method_exists($this->memcacheWrapper, $name)) {
-            return call_user_func_array(array($this->memcacheWrapper, $name), $arguments);
-        } else {
-            return false;
+            return call_user_func_array([$this->memcacheWrapper, $name], $arguments);
         }
+        return false;
+
     }
 
     /**
@@ -71,10 +71,10 @@ class Memcache
         }
 
         if (!is_array($params)) {
-            $params = array(
+            $params = [
                 'host' => 'localhost',
-                'port' => 11211
-            );
+                'port' => 11211,
+            ];
         }
 
         $serverId = "memcache://{$params['host']}/{$params['port']}";
@@ -101,9 +101,9 @@ class Memcache
     {
         if ($this->memcacheWrapper !== null) {
             return $this->memcacheWrapper->connect($host, $port);
-        } else {
-            return false;
         }
+        return false;
+
     }
 
     /**
@@ -119,9 +119,9 @@ class Memcache
     {
         if ($this->memcacheWrapper !== null) {
             return $this->memcacheWrapper->addWithTags($key, $value, $ttl, $tagsKeys);
-        } else {
-            return false;
         }
+        return false;
+
     }
 
     /**
@@ -134,9 +134,9 @@ class Memcache
     {
         if ($this->memcacheWrapper !== null) {
             return $this->memcacheWrapper->deleteByTag($tag);
-        } else {
-            return false;
         }
+        return false;
+
     }
 
     /**
@@ -144,7 +144,6 @@ class Memcache
      *
      * Если значения по ключу $key не было, то оно будет создано
      *
-     * @param $key
      * @param int $value
      * @param bool $ttl
      * @return bool Возвращает true при успешном выполнении и false в случае ошибки
@@ -153,9 +152,9 @@ class Memcache
     {
         if ($this->memcacheWrapper !== null) {
             return $this->memcacheWrapper->safeIncrement($key, $value, $ttl);
-        } else {
-            return false;
         }
+        return false;
+
     }
 
     /**
@@ -168,9 +167,9 @@ class Memcache
     {
         if ($this->memcacheWrapper !== null) {
             return $this->memcacheWrapper->getWithTags($key);
-        } else {
-            return false;
         }
+        return false;
+
     }
 
     /**
@@ -178,7 +177,6 @@ class Memcache
      *
      * Если значения по ключу $key не было, то оно будет создано
      *
-     * @param      $key
      * @param int $value
      * @param bool $ttl
      * @return bool Возвращает true при успешном выполнении и false в случае ошибки
@@ -187,9 +185,9 @@ class Memcache
     {
         if ($this->memcacheWrapper !== null) {
             return $this->memcacheWrapper->safeDecrement($key, $value, $ttl);
-        } else {
-            return false;
         }
+        return false;
+
     }
 
     /**
@@ -205,8 +203,8 @@ class Memcache
     {
         if ($this->memcacheWrapper !== null) {
             return $this->memcacheWrapper->setWithTags($key, $value, $ttl, $tagsKeys);
-        } else {
-            return false;
         }
+        return false;
+
     }
 }

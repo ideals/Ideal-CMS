@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -7,10 +8,10 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-return array(
+return [
     'name' => '404 ошибки',
     'pos' => 80,
     'info' => '',
     'structure' => 'Ideal_Service',
-    'ID' => 'Ideal_Error404'
-);
+    'ID' => 'Ideal_Error404',
+];

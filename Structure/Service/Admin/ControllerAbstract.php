@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -13,22 +14,21 @@ use Ideal\Core\Request;
 
 class ControllerAbstract extends \Ideal\Core\Admin\Controller
 {
-
     /* @var $model Model */
     protected $model;
 
     /**
      * Магический метод, перехватывающий ajax-запросы и подключающий соответствующие файлы
      *
-     * @param string $name      Название вызываемого метода
-     * @param array  $arguments Аргументы, передаваемые методу
+     * @param string $name Название вызываемого метода
+     * @param array $arguments Аргументы, передаваемые методу
      * @throws \Exception Исключение, если для вызываемого метода нет соответствующего файла
      */
     public function __call($name, $arguments)
     {
         $item = $this->model->getPageData();
 
-        list($module, $structure) = explode('_', $item['ID']);
+        [$module, $structure] = explode('_', $item['ID']);
         $module = ($module == 'Ideal') ? '' : $module . '/';
         $file = $module . 'Structure/Service/' . $structure . '/' . $name . '.php';
 
@@ -57,7 +57,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         $item = $this->model->getPageData();
         $this->view->ID = $item['ID'];
 
-        list($module, $structure) = explode('_', $item['ID']);
+        [$module, $structure] = explode('_', $item['ID']);
         $module = ($module == 'Ideal') ? '' : $module . '/';
         $file = $module . 'Structure/Service/' . $structure . '/Action.php';
         ob_start();

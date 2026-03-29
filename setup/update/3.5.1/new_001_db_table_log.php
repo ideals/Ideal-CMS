@@ -1,4 +1,5 @@
 <?php
+
 $path = getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT'];
 $isConsole = true;
 require_once $path . '/_.php';

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -13,7 +14,6 @@ use Ideal\Core\Request;
 
 class ControllerAbstract extends \Ideal\Core\Admin\Controller
 {
-
     /* @var $model ModelAbstract */
     protected $model;
 

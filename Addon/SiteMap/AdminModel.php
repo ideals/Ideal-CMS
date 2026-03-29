@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -15,6 +16,4 @@ use Ideal\Addon\AbstractAdminModel;
  * Класс построения html-карты сайта на основании структуры БД
  *
  */
-class AdminModel extends AbstractAdminModel
-{
-}
+class AdminModel extends AbstractAdminModel {}

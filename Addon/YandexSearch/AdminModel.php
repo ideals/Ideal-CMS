@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -14,6 +15,4 @@ use Ideal\Addon\AbstractAdminModel;
 /**
  * Класс аддона, обеспечивающий поиск по сайту
  */
-class AdminModel extends AbstractAdminModel
-{
-}
+class AdminModel extends AbstractAdminModel {}

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -14,7 +15,6 @@ use Ideal\Structure\Part\Widget\MainMenu;
 
 class Helper
 {
-
     public $xhtml = false;
 
     public function getVariables($model)

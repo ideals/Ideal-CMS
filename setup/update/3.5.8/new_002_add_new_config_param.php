@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Добавление дополнительного поля в файл site_data.php
  */
@@ -11,11 +12,11 @@ $configSD->loadFile($file);
 $params = $configSD->getParams();
 // Если поле уже есть, то ничего делать не нужно
 if (!isset($params['cms']['arr']['indexedOptions'])) {
-    $params['cms']['arr']['indexedOptions'] = array(
+    $params['cms']['arr']['indexedOptions'] = [
         'label' => 'Индексируемые параметры (по одному через запятую)',
         'value' => 'page',
-        'type' => 'Ideal_Text'
-    );
+        'type' => 'Ideal_Text',
+    ];
     $configSD->setParams($params);
     $configSD->saveFile($file);
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -13,7 +14,7 @@
 
 // Функция для выхода из скрипта
 $exitScript = function ($html, $error) {
-    echo json_encode(array('html' => $html, 'error' => $error));
+    echo json_encode(['html' => $html, 'error' => $error]);
     exit;
 };
 
@@ -55,7 +56,7 @@ $dumpNameFull = $backupPart . DIRECTORY_SEPARATOR . $dumpName;
 // Полный путь до архива .gz
 $dumpNameGz = $dumpNameFull . '.gz';
 
-if (!in_array($ext, array('gz', 'zip', 'sql'))) {
+if (!in_array($ext, ['gz', 'zip', 'sql'])) {
     $exitScript('', 'Ошибка: расширение файла должно быть .gz, .sql или .zip');
 }
 
@@ -72,7 +73,7 @@ switch ($ext) {
     case 'gz':
         rename($dumpNameFull, $dumpNameGz);
         break;
-    // Запаковываем .sql в архив GZIP
+        // Запаковываем .sql в архив GZIP
     case 'sql':
         rename($dumpNameFull, $dumpNameGz);
         $contents = file_get_contents($dumpNameGz);
@@ -80,7 +81,7 @@ switch ($ext) {
         gzwrite($gz, $contents);
         gzclose($gz);
         break;
-    // Перепаковываем из ZIP в GZIP
+        // Перепаковываем из ZIP в GZIP
     case 'zip':
         $archive = new PclZip($dumpNameFull);
 
@@ -129,16 +130,16 @@ switch ($ext) {
 }
 
 // Формируем строку с новым файлом
-$html = '<tr id="' . $dumpNameGz . '"><td><a href="" onClick="return downloadDump(\'' .
-    addslashes($dumpNameGz) . '\')"> ' .
-    str_replace('_', ' - ', $timeName) . ' (upload)'
+$html = '<tr id="' . $dumpNameGz . '"><td><a href="" onClick="return downloadDump(\''
+    . addslashes($dumpNameGz) . '\')"> '
+    . str_replace('_', ' - ', $timeName) . ' (upload)'
     . '</a></td>'
-    . '<td><button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\'' .
-    addslashes($dumpNameGz) . '\'); return false;">'
+    . '<td><button class="btn btn-info btn-xs" title="Импортировать" onclick="importDump(\''
+    . addslashes($dumpNameGz) . '\'); return false;">'
     . '<span class="glyphicon glyphicon-upload"></span></button>&nbsp;'
 
-    . '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\'' .
-    addslashes($dumpNameGz) . '\'); return false;">'
+    . '<button class="btn btn-danger btn-xs" title="Удалить" onclick="delDump(\''
+    . addslashes($dumpNameGz) . '\'); return false;">'
     . '<span class="glyphicon glyphicon-remove"></span></button>&nbsp;'
 
     . '<button id="' . $dumpNameGz . '_btn_cmt"
@@ -149,6 +150,6 @@ $html = '<tr id="' . $dumpNameGz . '"><td><a href="" onClick="return downloadDum
 
     . '</td></tr>';
 
-echo json_encode(array('html' => $html, 'error' => false));
+echo json_encode(['html' => $html, 'error' => false]);
 
 exit;

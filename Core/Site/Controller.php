@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -9,7 +10,6 @@
 
 namespace Ideal\Core\Site;
 
-use Ideal\Core;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Core\View;
@@ -17,7 +17,6 @@ use Ideal\Structure\User;
 
 class Controller
 {
-
     /** @var bool Включение листалки (пагинации) */
     protected $isPager = true;
 
@@ -50,7 +49,7 @@ class Controller
 
         // Добавляем в path пустой элемент
         $path = $this->model->getPath();
-        $path[] = array('ID' => '', 'name' => $name, 'url' => '404');
+        $path[] = ['ID' => '', 'name' => $name, 'url' => '404'];
         $this->model->setPath($path);
 
         // Устанавливаем нужный нам title
@@ -65,7 +64,7 @@ class Controller
      * @param string $tplName Название файла шаблона (с путём к нему), если не задан - будет index.twig
      * @param array $tplFolders Список дополнительных папок с файлами шаблонов
      */
-    public function templateInit($tplName = '', $tplFolders = array())
+    public function templateInit($tplName = '', $tplFolders = [])
     {
         // Если вьюха уже установлена, то ничего делать не надо
         // для переустановки вьюхи надо придумать отдельный метод, когда это потребуется
@@ -98,7 +97,7 @@ class Controller
         }
 
         $config = Config::getInstance();
-        $folders = array_merge(array($tplRoot), $tplFolders);
+        $folders = array_merge([$tplRoot], $tplFolders);
         $this->view = new View($folders, $config->cache['templateSite']);
         $this->view->loadTemplate($tplName);
     }
@@ -112,7 +111,7 @@ class Controller
      */
     public function getHttpHeaders()
     {
-        return array(
+        return [
             // Дата последней модификации страницы
             // 'Last-Modified' => gmdate('D, d M Y H:i:s', $lastMod ) . ' GMT',
             // Затирание информации о языке, на котором написан сайт
@@ -123,7 +122,7 @@ class Controller
             // 'Cache-Control' => 'no-store, no-cache, must-revalidate',
             // 'Cache-Control' => 'post-check=0, pre-check=0',
             // 'Cache-Control' => 'Pragma: no-cache',
-        );
+        ];
     }
 
     /**
@@ -157,7 +156,7 @@ class Controller
         }
 
         $request = new Request();
-        $page = (int)$request->{$this->pageName};
+        $page = (int) $request->{$this->pageName};
 
         if ($page > 1) {
             // На страницах листалки описание категории отображать не надо
@@ -177,7 +176,6 @@ class Controller
     /**
      * Отображение структуры в браузере
      *
-     * @param Router $router
      * @return string Содержимое отображаемой страницы
      */
     public function run(Router $router)
@@ -250,7 +248,6 @@ class Controller
     /**
      * Сеттер, необходимый для вызова экшенов контроллера из других контроллеров
      *
-     * @param $model
      */
     public function setModel($model)
     {
@@ -267,9 +264,7 @@ class Controller
      *
      * @param string $actionName
      */
-    public function finishMod($actionName)
-    {
-    }
+    public function finishMod($actionName) {}
 
     /**
      * Установка нестандартного шаблона View

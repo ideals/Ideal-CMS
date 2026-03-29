@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -29,7 +30,6 @@ use Ideal\Core\Request;
  */
 class Controller extends Select\Controller
 {
-
     /** @inheritdoc */
     protected static $instance;
 
@@ -76,106 +76,106 @@ class Controller extends Select\Controller
 
             // js скрипт инициализирующий модификацию тега "select" для возможности вставки собственного значения
             $html .= <<<HTML
-            <script>
-                (function( $ ) {
-                    $.widget( "custom.combobox", {
-                        _create: function() {
-                                this.element.hide();
-                                this._createAutocomplete();
-                                this._createShowAllButton();
-                        },
+                            <script>
+                                (function( $ ) {
+                                    $.widget( "custom.combobox", {
+                                        _create: function() {
+                                                this.element.hide();
+                                                this._createAutocomplete();
+                                                this._createShowAllButton();
+                                        },
 
-                        _createAutocomplete: function() {
-                            var selected = this.element.children( ":selected" );
-                            value = selected.val() ? selected.text() : "";
+                                        _createAutocomplete: function() {
+                                            var selected = this.element.children( ":selected" );
+                                            value = selected.val() ? selected.text() : "";
 
-                            this.input = $( "<input>" )
-                                .insertAfter( this.element )
-                                .val( value )
-                                .attr( "title", "" )
-                                .attr( "name", "{$nameId}" )
-                                .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default "
-                                    + "ui-corner-left general_template_{$key} form-control")
-                                .css("display", "{$display}")
+                                            this.input = $( "<input>" )
+                                                .insertAfter( this.element )
+                                                .val( value )
+                                                .attr( "title", "" )
+                                                .attr( "name", "{$nameId}" )
+                                                .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default "
+                                                    + "ui-corner-left general_template_{$key} form-control")
+                                                .css("display", "{$display}")
 
-                                .autocomplete({
-                                    delay: 0,
-                                    minLength: 0,
-                                    appendTo: ".general_template-controls",
-                                    source: $.proxy( this, "_source" )
-                                })
-                                .tooltip({
-                                    tooltipClass: "ui-state-highlight"
+                                                .autocomplete({
+                                                    delay: 0,
+                                                    minLength: 0,
+                                                    appendTo: ".general_template-controls",
+                                                    source: $.proxy( this, "_source" )
+                                                })
+                                                .tooltip({
+                                                    tooltipClass: "ui-state-highlight"
+                                                });
+
+                                                this._on( this.input, {
+                                                    autocompleteselect: function( event, ui ) {
+                                                        ui.item.option.selected = true;
+                                                        this._trigger( "select", event, {
+                                                            item: ui.item.option
+                                                        });
+                                                    },
+                                                });
+                                        },
+
+                                        _createShowAllButton: function() {
+                                            var input = this.input,
+                                            wasOpen = false;
+
+                                            $( "<a>" )
+                                                .attr( "tabIndex", -1 )
+                                                .tooltip()
+                                                .insertAfter( this.element )
+                                                .button({
+                                                    icons: {
+                                                        primary: "ui-icon-triangle-1-s"
+                                                    },
+                                                    text: false
+                                                })
+                                                .removeClass( "ui-corner-all" )
+                                                .addClass( "custom-combobox-toggle ui-corner-right general_template_{$key}" )
+                                                .css("display", "{$display}")
+                                                .html("<span class=\"arrow-down\"></span>")
+                                                .mousedown(function() {
+                                                    wasOpen = input.autocomplete( "widget" ).is(":visible");
+                                                })
+                                                .click(function() {
+                                                    input.focus();
+
+                                                    if ( wasOpen ) {
+                                                        return;
+                                                    }
+
+                                                    input.autocomplete( "search", "" );
+                                                });
+                                        },
+
+                                        _source: function( request, response ) {
+                                            var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+                                            response( this.element.children( "option" ).map(function() {
+                                                var text = $( this ).text();
+                                                if ( this.value && ( !request.term || matcher.test(text) ) )
+                                                return {
+                                                    label: text,
+                                                    value: text,
+                                                    option: this
+                                                };
+                                             }) );
+                                        },
+                                    });
+                                })( jQuery );
+                                $(function() {
+                                    $("#{$nameId}").combobox();
+                                    $("#{$nameId}").siblings('input.{$nameId}').click(function(){
+                                        if ($(this).autocomplete( "widget" ).is(":visible")) {
+                                            $(this).autocomplete( "close" );
+                                        } else {
+                                            $(this).autocomplete( "search", "" );
+                                        }
+                                    });
                                 });
-
-                                this._on( this.input, {
-                                    autocompleteselect: function( event, ui ) {
-                                        ui.item.option.selected = true;
-                                        this._trigger( "select", event, {
-                                            item: ui.item.option
-                                        });
-                                    },
-                                });
-                        },
-
-                        _createShowAllButton: function() {
-                            var input = this.input,
-                            wasOpen = false;
-
-                            $( "<a>" )
-                                .attr( "tabIndex", -1 )
-                                .tooltip()
-                                .insertAfter( this.element )
-                                .button({
-                                    icons: {
-                                        primary: "ui-icon-triangle-1-s"
-                                    },
-                                    text: false
-                                })
-                                .removeClass( "ui-corner-all" )
-                                .addClass( "custom-combobox-toggle ui-corner-right general_template_{$key}" )
-                                .css("display", "{$display}")
-                                .html("<span class=\"arrow-down\"></span>")
-                                .mousedown(function() {
-                                    wasOpen = input.autocomplete( "widget" ).is(":visible");
-                                })
-                                .click(function() {
-                                    input.focus();
-
-                                    if ( wasOpen ) {
-                                        return;
-                                    }
-
-                                    input.autocomplete( "search", "" );
-                                });
-                        },
-
-                        _source: function( request, response ) {
-                            var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
-                            response( this.element.children( "option" ).map(function() {
-                                var text = $( this ).text();
-                                if ( this.value && ( !request.term || matcher.test(text) ) )
-                                return {
-                                    label: text,
-                                    value: text,
-                                    option: this
-                                };
-                             }) );
-                        },
-                    });
-                })( jQuery );
-                $(function() {
-                    $("#{$nameId}").combobox();
-                    $("#{$nameId}").siblings('input.{$nameId}').click(function(){
-                        if ($(this).autocomplete( "widget" ).is(":visible")) {
-                            $(this).autocomplete( "close" );
-                        } else {
-                            $(this).autocomplete( "search", "" );
-                        }
-                    });
-                });
-            </script>
-HTML;
+                            </script>
+                HTML;
 
         }
         return $html;

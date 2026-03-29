@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -22,13 +23,13 @@ $db->create($config->db['prefix'] . 'ideal_structure_log', $cfg['fields']);
 
 $db->insert(
     $dataListTable,
-    array(
+    [
         'prev_structure' => '0-3',
         'structure' => 'Ideal_Log',
         'pos' => $newPos,
         'name' => 'Лог администраторов',
         'url' => 'log-administratorov',
         'parent_url' => '---',
-        'annot' => ''
-    )
+        'annot' => '',
+    ],
 );

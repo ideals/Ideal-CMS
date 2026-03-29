@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -19,9 +20,8 @@ use Ideal\Core\Util;
  */
 class SiteModel extends AbstractSiteModel
 {
-
     /** @var array Массив правил для запрещения отображения ссылок в карте сайта */
-    protected $disallow = array();
+    protected $disallow = [];
 
     /**
      * Извлечение настроек карты сайта из своей таблицы,
@@ -65,30 +65,80 @@ class SiteModel extends AbstractSiteModel
         $startStructure = new $className($structure['ID']);
         $elements = $startStructure->getStructureElements();
 
-        $path = array($structure);
+        $path = [$structure];
         $elements = $this->recursive($path, $elements);
 
         return $elements;
     }
 
     /**
+     * Построение html-карты сайта на основе древовидного списка
+     *
+     * @param array $list Древовидный список
+     * @return string html-код списка ссылок карты сайта
+     */
+    public function createSiteMap($list)
+    {
+        $str = '';
+        $lvl = 0;
+        foreach ($list as $k => $v) {
+            if ($v['lvl'] > $lvl) {
+                $str .= "\n<ul class=\"site-map\">\n";
+            } elseif ($v['lvl'] == $lvl) {
+                $str .= "</li>\n";
+            } elseif ($v['lvl'] < $lvl) {
+                // Если двойной или тройной выход добавляем соответствующий мультипликатор
+                $c = $lvl - $v['lvl'];
+                $str .= str_repeat("</li>\n</ul>\n</li>\n", $c);
+            }
+
+            if ((!isset($v['link']) || empty($v['link']))
+                || (isset($v['is_skip']) && ($v['is_skip'] == 1) && ($v['url'] == '---'))) {
+                // Если у элемента нет ссылки, или у него прописан is_skip=1 и url='--', то не выводим ссылку
+                $str .= '<li>' . $v['name'];
+            } else {
+                // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
+                // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
+                $tmp = $this->disallow;
+
+                $link = array_reduce($tmp, function (&$res, $rule) {
+                    if (!empty($rule)) {
+                        if ($res == 1 || preg_match($rule, $res)) {
+                            return 1;
+                        }
+                    }
+                    return $res;
+                }, $v['link']);
+                if ($v['link'] !== $link) {
+                    // Сработало одно из регулярных выражений, значит ссылку нужно исключить
+                    continue;
+                }
+                $href = strpos($v['link'], 'href=') === false ? 'href="' . $v['link'] . '"' : $v['link'];
+                $href = $href == 'href=""' ? '' : $href;
+                $str .= '<li><a ' . $href . '>' . $v['name'] . '</a>';
+            }
+            $lvl = $v['lvl'];
+        }
+        $str .= "</li>\n</ul>\n";
+        return $str;
+    }
+
+    /**
      * Рекурсивный метод построения дерева карты сайта
      *
-     * @param $path
-     * @param $elements
      * @return array
      */
     protected function recursive($path, $elements)
     {
         if (empty($elements)) {
-            return array();
+            return [];
         }
 
         $config = Config::getInstance();
         $end = end($path);
         $fullPath = $path;
         $lvl = 0;
-        $newElements = array();
+        $newElements = [];
         // Проходился по всем внутренним структурам и, если вложены другие структуры, получаем и их элементы
         foreach ($elements as $element) {
             $newElements[] = $element;
@@ -141,57 +191,5 @@ class SiteModel extends AbstractSiteModel
         }
 
         return $newElements;
-    }
-
-    /**
-     * Построение html-карты сайта на основе древовидного списка
-     *
-     * @param array $list Древовидный список
-     * @return string html-код списка ссылок карты сайта
-     */
-    public function createSiteMap($list)
-    {
-        $str = '';
-        $lvl = 0;
-        foreach ($list as $k => $v) {
-            if ($v['lvl'] > $lvl) {
-                $str .= "\n<ul class=\"site-map\">\n";
-            } elseif ($v['lvl'] == $lvl) {
-                $str .= "</li>\n";
-            } elseif ($v['lvl'] < $lvl) {
-                // Если двойной или тройной выход добавляем соответствующий мультипликатор
-                $c = $lvl - $v['lvl'];
-                $str .= str_repeat("</li>\n</ul>\n</li>\n", $c);
-            }
-
-            if ((!isset($v['link']) || empty($v['link'] ))
-                || (isset($v['is_skip']) && ($v['is_skip'] == 1) && ($v['url'] == '---'))) {
-                // Если у элемента нет ссылки, или у него прописан is_skip=1 и url='--', то не выводим ссылку
-                $str .= '<li>' . $v['name'];
-            } else {
-                // Проходимся по массиву регулярных выражений. Если array_reduce вернёт саму ссылку,
-                // то подходящего правила в disallow не нашлось и можно эту ссылку добавлять в карту сайта
-                $tmp = $this->disallow;
-
-                $link = array_reduce($tmp, function (&$res, $rule) {
-                    if (!empty($rule)) {
-                        if ($res == 1 || preg_match($rule, $res)) {
-                            return 1;
-                        }
-                    }
-                    return $res;
-                }, $v['link']);
-                if ($v['link'] !== $link) {
-                    // Сработало одно из регулярных выражений, значит ссылку нужно исключить
-                    continue;
-                }
-                $href = strpos($v['link'], 'href=') === false ? 'href="' . $v['link'] . '"' : $v['link'];
-                $href = $href == 'href=""' ? '' : $href;
-                $str .= '<li><a ' . $href . '>' . $v['name'] . '</a>';
-            }
-            $lvl = $v['lvl'];
-        }
-        $str .= "</li>\n</ul>\n";
-        return $str;
     }
 }

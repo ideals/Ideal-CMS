@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -15,9 +16,8 @@ namespace Ideal\Core;
  */
 abstract class Filter
 {
-
     /** @var array Массив для хранения параметров фильтрации и сортировки */
-    protected $params = array();
+    protected $params = [];
 
     /** @var string Строка содержащая информацию о фильтрации в запросе */
     protected $where = '';
@@ -66,14 +66,6 @@ abstract class Filter
     }
 
     /**
-     * Генерирует order by часть запроса
-     */
-    protected function generateOrderBy()
-    {
-        $this->orderBy = '';
-    }
-
-    /**
      * Фильтр может сам посчитать кол-во элементов (если null - то подсчёт будет через sql-запрос)
      */
     public function getCount(): ?int
@@ -87,5 +79,13 @@ abstract class Filter
     public function sortList(array $list): array
     {
         return $list;
+    }
+
+    /**
+     * Генерирует order by часть запроса
+     */
+    protected function generateOrderBy()
+    {
+        $this->orderBy = '';
     }
 }

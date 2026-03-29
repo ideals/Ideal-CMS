@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -7,10 +8,10 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-return array(
+return [
     'name' => 'Карта сайта',
     'pos' => 60,
     'info' => '',
     'structure' => 'Ideal_Service',
-    'ID' => 'Ideal_SiteMap'
-);
+    'ID' => 'Ideal_SiteMap',
+];

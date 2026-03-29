@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -18,7 +19,6 @@ use Ideal\Structure\Log\Model as LogModel;
 
 abstract class Model extends Core\Model
 {
-
     public function __construct($prevStructure)
     {
         parent::__construct($prevStructure);
@@ -43,7 +43,7 @@ abstract class Model extends Core\Model
     {
         // Из общего списка введённых данных выделяем те, что помечены general
         foreach ($result['items'] as $v) {
-            list($group, $field) = explode('_', $v['fieldName'], 2);
+            [$group, $field] = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName && $field == 'prev_structure' && $v['value'] == '') {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
@@ -150,7 +150,7 @@ abstract class Model extends Core\Model
             if ((isset($pageData['addon']) && $pageData['addon'] != 'null')) {
                 $preSaveAddonsInfo = json_decode($pageData['addon']);
             } else {
-                $preSaveAddonsInfo = array();
+                $preSaveAddonsInfo = [];
             }
             if (!empty($preSaveAddonsInfo)) {
                 foreach ($preSaveAddonsInfo as $key => $preSaveAddonInfo) {
@@ -175,7 +175,7 @@ abstract class Model extends Core\Model
     {
         // Из общего списка введённых данных выделяем те, что помечены general
         foreach ($result['items'] as $v) {
-            list($group, $field) = explode('_', $v['fieldName'], 2);
+            [$group, $field] = explode('_', $v['fieldName'], 2);
 
             if ($group == $groupName && $field == 'prev_structure' && $v['value'] == '') {
                 $result['items'][$v['fieldName']]['value'] = $this->prevStructure;
@@ -198,7 +198,7 @@ abstract class Model extends Core\Model
         $db = Db::getInstance();
 
         $db->update($this->_table)->set($groups[$groupName]);
-        $db->where('ID = :id', array('id' => $groups[$groupName]['ID']))->exec();
+        $db->where('ID = :id', ['id' => $groups[$groupName]['ID']])->exec();
         if ($db->errno > 0) {
             // Если при попытке обновления произошла ошибка не выполнять доп. запросы, а сообщить об этом пользователю
             $result['isCorrect'] = false;
@@ -244,11 +244,11 @@ abstract class Model extends Core\Model
     {
         $headers = $this->getHeaders();
         $sortFieldArray = $this->getSortField();
-        $headerNames = array();
+        $headerNames = [];
 
         // Составляем список названий колонок
         foreach ($headers as $v) {
-            $headerNames[$v] = array($this->fields[$v]['label'], $v, );
+            $headerNames[$v] = [$this->fields[$v]['label'], $v, ];
             if (isset($sortFieldArray[$v])) {
                 $headerNames[$v][2] = $sortFieldArray[$v];
             }
@@ -258,7 +258,7 @@ abstract class Model extends Core\Model
 
     public function getHeaders()
     {
-        $headers = array();
+        $headers = [];
 
         // Убираем символы ! из заголовков
         foreach ($this->params['field_list'] as $v) {
@@ -299,14 +299,14 @@ abstract class Model extends Core\Model
      */
     public function parseInputParams($isCreate = false)
     {
-        $result = array(
+        $result = [
             'isCorrect' => true,
-            'errorTabs' => array(),
-            'items' => array()
-        );
+            'errorTabs' => [],
+            'items' => [],
+        ];
 
         // Для каждого поля прописываем имя вкладки, в которой оно находится
-        $tabs = array('tab1');
+        $tabs = ['tab1'];
         foreach ($this->fields as $fieldName => $field) {
             if ($this->fieldsGroup != 'general') {
                 // Пока на каждый шаблон можно использовать только одну вкладку
@@ -390,7 +390,7 @@ abstract class Model extends Core\Model
      */
     public function setPageDataNew()
     {
-        $this->setPageData(array());
+        $this->setPageData([]);
     }
 
     public function delete()
@@ -419,10 +419,10 @@ abstract class Model extends Core\Model
     public function saveToLog($action)
     {
         $logModel = new LogModel();
-        $context = array(
+        $context = [
             'model' => $this,
             'type' => 'admin',
-        );
+        ];
         $pageData = $this->getPageData();
         $logName = empty($pageData['name']) ? print_r($pageData, true) : $pageData['name'];
         $message = $action . ' «' . $logName . '»';
@@ -430,8 +430,31 @@ abstract class Model extends Core\Model
     }
 
     /**
-     * @param $addonInfo
-     * @param $addonDataPrevStructure
+     * Получение списка элементов с наложением списка прав доступа
+     *
+     * @param int $page Номер отображаемой страницы
+     * @return array Полученный список элементов
+     */
+    public function getListAcl($page)
+    {
+        $config = Config::getInstance();
+        $structure = $config->getStructureByClass(get_class($this));
+        $list = $this->getList($page);
+        $ids = [];
+        foreach ($list as $k => $v) {
+            $ids[$v['ID']] = $structure['ID'] . '-' . $v['ID'];
+        }
+        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
+        $acl = $aclModel->getAcl($ids);
+        foreach ($list as $k => $v) {
+            if (!empty($acl[$ids[$v['ID']]])) {
+                $list[$k]['acl'] = $acl[$ids[$v['ID']]];
+            }
+        }
+        return $list;
+    }
+
+    /**
      */
     protected function deleteAddon($addonInfo, $addonDataPrevStructure)
     {
@@ -464,31 +487,6 @@ abstract class Model extends Core\Model
     }
 
     /**
-     * Получение списка элементов с наложением списка прав доступа
-     *
-     * @param int $page Номер отображаемой страницы
-     * @return array Полученный список элементов
-     */
-    public function getListAcl($page)
-    {
-        $config = Config::getInstance();
-        $structure = $config->getStructureByClass(get_class($this));
-        $list = $this->getList($page);
-        $ids = array();
-        foreach ($list as $k => $v) {
-            $ids[$v['ID']] = $structure['ID'] . '-' . $v['ID'];
-        }
-        $aclModel = new \Ideal\Structure\Acl\Admin\Model();
-        $acl = $aclModel->getAcl($ids);
-        foreach ($list as $k => $v) {
-            if (!empty($acl[$ids[$v['ID']]])) {
-                $list[$k]['acl'] = $acl[$ids[$v['ID']]];
-            }
-        }
-        return $list;
-    }
-
-    /**
      * Получение поля по которому должна идти сортировка
      *
      * @return array Массив с названием поля и порядком сортировки по нему
@@ -498,19 +496,19 @@ abstract class Model extends Core\Model
         // Определяем название поля и порядок сортировки по умолчанию
         $fieldSort = explode(' ', $this->params['field_sort']);
 
-        $sortArray = array($fieldSort[0] => empty($fieldSort[1]) ? 'asc' : strtolower($fieldSort[1]));
+        $sortArray = [$fieldSort[0] => empty($fieldSort[1]) ? 'asc' : strtolower($fieldSort[1])];
         $request = new Request();
 
         // Проверяем была ли применена сортировка по возростанию
         $ascSort = $request->asc;
         if ($ascSort) {
-            $sortArray = array($ascSort => 'asc');
+            $sortArray = [$ascSort => 'asc'];
         }
 
         // Проверяем была ли применена сортировка по убыванию
         $descSort = $request->desc;
         if ($descSort) {
-            $sortArray = array($descSort => 'desc');
+            $sortArray = [$descSort => 'desc'];
         }
         return $sortArray;
     }

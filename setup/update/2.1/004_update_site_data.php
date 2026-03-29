@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Добавление дополнительных полей для Яндекса в конфигурационный файл site_data.php
  */
@@ -9,20 +10,20 @@ $configSD = new \Ideal\Structure\Service\SiteData\ConfigPhp();
 $file = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/site_data.php';
 $configSD->loadFile($file);
 $params = $configSD->getParams();
-$params['yandex'] = array(
+$params['yandex'] = [
     'name' => 'Яндекс',
-    'arr' => array(
-        'yandexLogin' => array(
+    'arr' => [
+        'yandexLogin' => [
             'label' => 'Яндекс логин',
             'value' => '',
-            'type' => 'Ideal_Text'
-        ),
-        'yandexKey' => array(
+            'type' => 'Ideal_Text',
+        ],
+        'yandexKey' => [
             'label' => 'Яндекс ключ',
             'value' => '',
-            'type' => 'Ideal_Text'
-        )
-    )
-);
+            'type' => 'Ideal_Text',
+        ],
+    ],
+];
 $configSD->setParams($params);
 $configSD->saveFile($file);

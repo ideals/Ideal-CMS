@@ -47,7 +47,7 @@ if ($file->getError() > 1) {
     </tr>
     <?php
     echo $table;
-    ?>
+?>
 </table>
 
 <br/>

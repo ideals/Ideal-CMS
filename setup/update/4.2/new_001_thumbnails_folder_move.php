@@ -1,4 +1,5 @@
 <?php
+
 // Путь до папки, которую необходимо перенести
 $resourceFolder = DOCUMENT_ROOT . DIRECTORY_SEPARATOR . '_thumbs';
 
@@ -14,10 +15,10 @@ if (is_dir($resourceFolder) && $destExist) {
     $iterator = new \RecursiveIteratorIterator(
         new \RecursiveDirectoryIterator($resourceFolder, RecursiveDirectoryIterator::SKIP_DOTS),
         RecursiveIteratorIterator::SELF_FIRST,
-        RecursiveIteratorIterator::CATCH_GET_CHILD
+        RecursiveIteratorIterator::CATCH_GET_CHILD,
     );
     $ok = true;
-    $dirsForDelete = array();
+    $dirsForDelete = [];
     foreach ($iterator as $info) {
         // Берём информацию о пути до рассматриваемого элемента
         // и обрезаем путь до папки "ресурса", чтобы получить относительный путь

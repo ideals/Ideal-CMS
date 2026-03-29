@@ -1,10 +1,11 @@
 <?php
+
 // -----------------------------------------------
 // Cryptographp v1.4
-// (c) 2006-2007 Sylvain BRISON 
+// (c) 2006-2007 Sylvain BRISON
 //
-// www.cryptographp.com 
-// cryptographp@alphpa.com 
+// www.cryptographp.com
+// cryptographp@alphpa.com
 //
 // Licence CeCILL modifi�e
 // => Voir fichier Licence_CeCILL_V2-fr.txt)
@@ -67,13 +68,13 @@ $charclear = 0; // Intensit� de la transparence des caract�res (0->127)
 //$tfont[] = 'bsurp.ttf';       // Vous devez copier les fichiers correspondants
 //$tfont[] = 'elecha.ttf';       // sur le serveur.
 $tfont[] = 'luggerbu.ttf'; // Ajoutez autant de lignes que vous voulez
-//$tfont[] = 'rascal.ttf';       // Respectez la casse ! 
+//$tfont[] = 'rascal.ttf';       // Respectez la casse !
 $tfont[] = 'scrawl.ttf';
-//$tfont[] = 'wavy.ttf';   
+//$tfont[] = 'wavy.ttf';
 //$tfont[] = 'verdana.ttf';
 
 // Caracteres autoris�s
-// Attention, certaines polices ne distinguent pas (ou difficilement) les majuscules 
+// Attention, certaines polices ne distinguent pas (ou difficilement) les majuscules
 // et les minuscules. Certains caract�res sont faciles � confondre, il est donc
 // conseill� de bien choisir les caract�res utilis�s.
 
@@ -162,7 +163,7 @@ $cryptoneuse = false; // Si vous souhaitez que la page de verification ne valide
 // Sinon, le rechargement de la page confirmera toujours la saisie.
 
 error_reporting(E_ALL ^ E_NOTICE);
-srand((double)microtime() * 1000000);
+srand((float) microtime() * 1000000);
 
 session_start();
 
@@ -179,15 +180,15 @@ if ($_SESSION['cryptcptuse'] >= $cryptusemax) {
 $delai = time() - $_SESSION['crypttime'];
 if ($delai < $cryptusetimer) {
     switch ($cryptusertimererror) {
-        case 2  :
+        case 2:
             header("Content-type: image/png");
             readfile($folder . 'images/erreur2.png');
             exit;
-        case 3  :
+        case 3:
             sleep($cryptusetimer - $delai);
             break; // Fait une pause
-        case 1  :
-        default :
+        case 1:
+        default:
             exit; // Quitte le script sans rien faire
     }
 }
@@ -207,12 +208,12 @@ for ($i = 1; $i <= $charnb; $i++) {
     $tword[$i]['angle'] = (rand(1, 2) == 1) ? rand(0, $charanglemax) : rand(360 - $charanglemax, 360);
 
     if ($crypteasy) {
-        $tword[$i]['element'] = (!$pair) ? $charelc{rand(0, strlen($charelc) - 1)} : $charelv{rand(
+        $tword[$i]['element'] = (!$pair) ? $charelc[rand(0, strlen($charelc) - 1)] : $charelv[rand(
             0,
-            strlen($charelv) - 1
-        )};
+            strlen($charelv) - 1,
+        )];
     } else {
-        $tword[$i]['element'] = $charel{rand(0, strlen($charel) - 1)};
+        $tword[$i]['element'] = $charel[rand(0, strlen($charel) - 1)];
     }
 
     $pair = !$pair;
@@ -229,7 +230,7 @@ for ($i = 1; $i <= $charnb; $i++) {
         $tword[$i]['y'],
         $black,
         $lafont,
-        $tword[$i]['element']
+        $tword[$i]['element'],
     );
 
     $x += $charspace;
@@ -280,7 +281,7 @@ if ($bgimg and is_dir($bgimg)) {
     $bgimg = $bgimg . '/' . $files[array_rand($files, 1)];
 }
 if ($bgimg) {
-    list($getwidth, $getheight, $gettype, $getattr) = getimagesize($bgimg);
+    [$getwidth, $getheight, $gettype, $getattr] = getimagesize($bgimg);
     switch ($gettype) {
         case "1":
             $imgread = imagecreatefromgif($bgimg);
@@ -305,7 +306,7 @@ if ($bgimg) {
 function ecriture()
 {
     global $folder;
-// Cr�ation de l'�criture
+    // Cr�ation de l'�criture
     global $img, $ink, $charR, $charG, $charB, $charclear, $xvariation, $charnb, $charcolorrnd, $charcolorrndlevel, $tword, $charspace;
     if (function_exists('imagecolorallocatealpha')) {
         $ink = imagecolorallocatealpha(
@@ -313,7 +314,7 @@ function ecriture()
             $charR,
             $charG,
             $charB,
-            $charclear
+            $charclear,
         );
     } else {
         $ink = imagecolorallocate($img, $charR, $charG, $charB);
@@ -330,27 +331,27 @@ function ecriture()
                 $rndB = rand(0, 255);
                 $rndcolor = $rndR + $rndG + $rndB;
                 switch ($charcolorrndlevel) {
-                    case 1  :
+                    case 1:
                         if ($rndcolor < 200) {
                             $ok = true;
                         }
                         break; // tres sombre
-                    case 2  :
+                    case 2:
                         if ($rndcolor < 400) {
                             $ok = true;
                         }
                         break; // sombre
-                    case 3  :
+                    case 3:
                         if ($rndcolor > 500) {
                             $ok = true;
                         }
                         break; // claires
-                    case 4  :
+                    case 4:
                         if ($rndcolor > 650) {
                             $ok = true;
                         }
                         break; // tr�s claires
-                    default :
+                    default:
                         $ok = true;
                 }
             } while (!$ok);
@@ -361,7 +362,7 @@ function ecriture()
                     $rndR,
                     $rndG,
                     $rndB,
-                    $charclear
+                    $charclear,
                 );
             } else {
                 $rndink = imagecolorallocate($img, $rndR, $rndG, $rndB);
@@ -377,7 +378,7 @@ function ecriture()
             $tword[$i]['y'],
             $charcolorrnd ? $rndink : $ink,
             $lafont,
-            $tword[$i]['element']
+            $tword[$i]['element'],
         );
 
         $x += $charspace;
@@ -389,14 +390,14 @@ function noisecolor()
 {
     global $img, $noisecolorchar, $ink, $bg, $brushsize;
     switch ($noisecolorchar) {
-        case 1  :
+        case 1:
             $noisecol = $ink;
             break;
-        case 2  :
+        case 2:
             $noisecol = $bg;
             break;
-        case 3  :
-        default :
+        case 3:
+        default:
             $noisecol = imagecolorallocate($img, rand(0, 255), rand(0, 255), rand(0, 255));
             break;
     }
@@ -421,7 +422,7 @@ function bruit()
             $img,
             rand(0, $cryptwidth - 1),
             rand(0, $cryptheight - 1),
-            noisecolor()
+            noisecolor(),
         );
     }
     for ($i = 1; $i <= $nbline; $i++) {
@@ -431,7 +432,7 @@ function bruit()
             rand(0, $cryptheight - 1),
             rand(0, $cryptwidth - 1),
             rand(0, $cryptheight - 1),
-            noisecolor()
+            noisecolor(),
         );
     }
     for ($i = 1; $i <= $nbcircle; $i++) {
@@ -443,7 +444,7 @@ function bruit()
             $rayon,
             0,
             360,
-            noisecolor()
+            noisecolor(),
         );
     }
 }
@@ -478,38 +479,38 @@ $word = ($difuplow ? $word : strtoupper($word));
 
 // Retourne 2 informations dans la session:
 // - Le code du cryptogramme (crypt� ou pas)
-// - La Date/Heure de la cr�ation du cryptogramme au format integer "TimeStamp" 
+// - La Date/Heure de la cr�ation du cryptogramme au format integer "TimeStamp"
 switch (strtoupper($cryptsecure)) {
-    case "MD5"  :
+    case "MD5":
         $_SESSION['cryptcode'] = md5($word);
         break;
-    case "SHA1" :
+    case "SHA1":
         $_SESSION['cryptcode'] = sha1($word);
         break;
-    default     :
+    default:
         $_SESSION['cryptcode'] = $word;
         break;
 }
 $_SESSION['crypttime'] = time();
 $_SESSION['cryptcptuse']++;
 
-// Envoi de l'image finale au navigateur 
+// Envoi de l'image finale au navigateur
 switch (strtoupper($cryptformat)) {
-    case "JPG"  :
-    case "JPEG" :
+    case "JPG":
+    case "JPEG":
         if (imagetypes() & IMG_JPG) {
             header("Content-type: image/jpeg");
             imagejpeg($img, null, 80);
         }
         break;
-    case "GIF"  :
+    case "GIF":
         if (imagetypes() & IMG_GIF) {
             header("Content-type: image/gif");
             imagegif($img);
         }
         break;
-    case "PNG"  :
-    default     :
+    case "PNG":
+    default:
         if (imagetypes() & IMG_PNG) {
             header("Content-type: image/png");
             imagepng($img);
@@ -517,5 +518,5 @@ switch (strtoupper($cryptformat)) {
 }
 
 imagedestroy($img);
-unset ($word, $tword);
-unset ($_SESSION['cryptreload']); 
+unset($word, $tword);
+unset($_SESSION['cryptreload']);

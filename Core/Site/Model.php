@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -14,10 +15,9 @@ use Ideal\Field;
 
 abstract class Model extends Core\Model
 {
-
-    public $metaTags = array(
-        'robots' => 'index, follow'
-    );
+    public $metaTags = [
+        'robots' => 'index, follow',
+    ];
 
     /** @var bool Нужно ли удалять заголовок h1 из текста */
     protected $isExtractHeader = true;
@@ -33,7 +33,7 @@ abstract class Model extends Core\Model
      */
     public function getStructureElements()
     {
-        return array();
+        return [];
     }
 
     public function getBreadCrumbs()
@@ -47,8 +47,8 @@ abstract class Model extends Core\Model
         }
 
         // Отображение хлебных крошек
-        $pars = array();
-        $breadCrumbs = array();
+        $pars = [];
+        $breadCrumbs = [];
         $url = new Field\Url\Model();
         foreach ($path as $v) {
             if (isset($v['is_skip']) && $v['is_skip'] && isset($v['is_not_menu']) && $v['is_not_menu']) {
@@ -59,19 +59,19 @@ abstract class Model extends Core\Model
             $pars[] = $v;
             if ($link === '/') {
                 if ($v['url'] === '') {
-                    $breadCrumbs[] = array(
+                    $breadCrumbs[] = [
                         'link' => $link,
-                        'name' => $v['startName']
-                    );
+                        'name' => $v['startName'],
+                    ];
                 } else {
                     // В случае, если путь строится для главной страницы - дублирование не нужно
                     continue;
                 }
             } else {
-                $breadCrumbs[] = array(
+                $breadCrumbs[] = [
                     'link' => $link,
-                    'name' => $v['name']
-                );
+                    'name' => $v['name'],
+                ];
             }
         }
         return $breadCrumbs;
@@ -82,7 +82,7 @@ abstract class Model extends Core\Model
         $header = '';
         // Если есть шаблон с контентом, пытаемся из него извлечь заголовок H1
         if (isset($this->pageData['content']) && !empty($this->pageData['content'])) {
-            list($header, $text) = $this->extractHeader($this->pageData['content']);
+            [$header, $text] = $this->extractHeader($this->pageData['content']);
             $this->pageData['content'] = $text;
         } elseif (!empty($this->pageData['addon'])) {
             // Последовательно пытаемся получить заголовок из всех аддонов до первого найденного
@@ -91,7 +91,7 @@ abstract class Model extends Core\Model
                     if (isset($this->pageData['addons'][$i]['content'])
                         && $this->pageData['addons'][$i]['content'] !== ''
                     ) {
-                        list($header, $text) = $this->extractHeader($this->pageData['addons'][$i]['content']);
+                        [$header, $text] = $this->extractHeader($this->pageData['addons'][$i]['content']);
                         if (!empty($header)) {
                             $this->pageData['addons'][$i]['content'] = $text;
                             break;
@@ -117,7 +117,7 @@ abstract class Model extends Core\Model
             }
             $header = $headerArray[1];
         }
-        return array($header, $text);
+        return [$header, $text];
     }
 
     /**
@@ -168,9 +168,9 @@ abstract class Model extends Core\Model
         $concat = ($this->pageNum > 1) ? str_replace('[N]', $this->pageNum, $this->pageNumTitle) : '';
         if (isset($end['title']) && $end['title'] != '') {
             return $end['title'] . $concat;
-        } else {
-            return $end['name'] . $concat;
         }
+        return $end['name'] . $concat;
+
     }
 
     /**
@@ -181,7 +181,7 @@ abstract class Model extends Core\Model
     public function getCanonical()
     {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-        list($path) = explode('?', $_SERVER['REQUEST_URI']);
+        [$path] = explode('?', $_SERVER['REQUEST_URI']);
         $canonical = "{$protocol}{$_SERVER['HTTP_HOST']}{$path}";
         $config = Core\Config::getInstance();
         $indexedOptions = explode(',', $config->cms['indexedOptions']);

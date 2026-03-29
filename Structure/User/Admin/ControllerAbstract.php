@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -26,7 +27,7 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         if ($actionName == 'loginAction') {
             $this->view->header = '';
             $this->view->title = 'Вход в систему администрирования';
-            $this->view->structures = array();
+            $this->view->structures = [];
             $this->view->breadCrumbs = '';
         }
     }
@@ -74,19 +75,19 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
             // При ajax авторизации отдаём json ответы
             if ($jsonResponse) {
                 if ($user->login($_POST['user'], $_POST['pass'])) {
-                    echo json_encode(array('login' => 'true'));
+                    echo json_encode(['login' => 'true']);
                 } else {
-                    echo json_encode(array(
+                    echo json_encode([
                         'errorResponse' => $user->errorMessage,
-                        'login' => 'false'
-                    ));
+                        'login' => 'false',
+                    ]);
                 }
                 exit;
-            } else {
-                if ($user->login($_POST['user'], $_POST['pass'])) {
-                    header('Location: ' . $_SERVER['REQUEST_URI']);
-                }
             }
+            if ($user->login($_POST['user'], $_POST['pass'])) {
+                header('Location: ' . $_SERVER['REQUEST_URI']);
+            }
+
         } else {
             // На странице авторизации отдавать 404 заголовок
             $this->model->is404 = true;
@@ -96,9 +97,9 @@ class ControllerAbstract extends \Ideal\Core\Admin\Controller
         // отдаём ответ инициализирующий показ формы авторизации
         if ($jsonResponse) {
             echo json_encode(
-                array(
+                [
                     'errorResponse' => 'not Login',
-                )
+                ],
             );
             exit;
         }

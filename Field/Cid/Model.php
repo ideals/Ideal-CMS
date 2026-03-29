@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,7 +18,6 @@ use Ideal\Field;
  */
 class Model
 {
-
     /** @var int Количество цифр (разрядов) на одном уровне вложенности */
     private $digits;
 
@@ -47,9 +47,9 @@ class Model
         $url->setParentUrl($path);
 
         // Записываем в массив первый элемент
-        $categoryList = array(
-            array_shift($menu)
-        );
+        $categoryList = [
+            array_shift($menu),
+        ];
         $categoryList[0]['link'] = $url->getUrl($categoryList[0]);
 
         $prev = $categoryList[0]['lvl'];
@@ -64,7 +64,7 @@ class Model
             } elseif ($m['lvl'] > $prev) {
                 $end = end($categoryList);
                 $key = key($categoryList);
-                $inPath = array_merge($path, array($end));
+                $inPath = array_merge($path, [$end]);
                 $categoryList[$key]['subCategoryList'] = $this->buildTree($menu, $inPath);
             } else {
                 return $categoryList;
@@ -81,7 +81,7 @@ class Model
      */
     public function plainTree($tree)
     {
-        $list = array();
+        $list = [];
         foreach ($tree as $v) {
             if (isset($v['subCategoryList'])) {
                 $arr = $this->plainTree($v['subCategoryList']);
@@ -98,9 +98,9 @@ class Model
     /**
      * Возвращает родительский cid для указанного уровня $lvl
      *
-     * @param string $cid     Cid из которого надо извлечь родителя
-     * @param int    $lvl     Уровень для которого надо извлечь родителя
-     * @param bool   $fullCid Нужно возвращать полный cid или только начальную часть (для поиска)
+     * @param string $cid Cid из которого надо извлечь родителя
+     * @param int $lvl Уровень для которого надо извлечь родителя
+     * @param bool $fullCid Нужно возвращать полный cid или только начальную часть (для поиска)
      * @return string Родительский cid
      */
     public function getCidByLevel($cid, $lvl, $fullCid = true)
@@ -132,7 +132,7 @@ class Model
      */
     public function getParents($cid)
     {
-        $parents = array();
+        $parents = [];
         $parentCid = '';
         $blocks = str_split($cid, $this->digits);
         foreach ($blocks as $v) {
@@ -149,9 +149,9 @@ class Model
     /**
      * Изменение позиции $oldCid на указанном уровне $lvl на указанное значение $newSegment
      *
-     * @param string $oldCid        Полный cid, который нужно переместить
-     * @param int    $newCidSegment Новое значение позиции
-     * @param int    $lvl           Уровень на котором меняется позиция
+     * @param string $oldCid Полный cid, который нужно переместить
+     * @param int $newCidSegment Новое значение позиции
+     * @param int $lvl Уровень на котором меняется позиция
      * @return string
      */
     public function moveCid($oldCid, $newCidSegment, $lvl)
@@ -202,9 +202,9 @@ class Model
      * обнуляются
      *
      * @param string $cid Cid для изменения
-     * @param int    $lvl Уровень, на котором нужно поменять значение
-     * @param int    $n   Число, которое надо прибавить, к тому, что есть
-     * @param bool   $new Флаг обнуления значений после указанного уровня
+     * @param int $lvl Уровень, на котором нужно поменять значение
+     * @param int $n Число, которое надо прибавить, к тому, что есть
+     * @param bool $new Флаг обнуления значений после указанного уровня
      * @return string Изменённый cid
      */
     public function setBlock($cid, $lvl, $n, $new = false)
@@ -237,8 +237,8 @@ class Model
      * Определение cid-блока на уровне $lvl и прибавление к нему $n
      *
      * @param string $cid Исходный cid-адрес
-     * @param int    $lvl Уровень, на котором надо поменять число
-     * @param string|int $n   Число, которое надо прибавить, к тому, что есть
+     * @param int $lvl Уровень, на котором надо поменять число
+     * @param string|int $n Число, которое надо прибавить, к тому, что есть
      * @return string Возвращает только блок из cid на указанном уровне
      */
     public function getBlock($cid, $lvl, $n = 0)
@@ -247,11 +247,11 @@ class Model
         $num = substr($cid, $current, $this->digits); // выцепляем номер
 
         // Изменяем на нужное число
-        $n = (string)$n;
+        $n = (string) $n;
         if ($n[0] === '+') {
-            $num += (int)substr($n, 1);
+            $num += (int) substr($n, 1);
         } elseif ($n[0] === '-') {
-            $num -= (int)substr($n, 1);
+            $num -= (int) substr($n, 1);
         } elseif ($n > 0) {
             $num = $n;
         }

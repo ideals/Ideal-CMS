@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  * @link      http://github.com/ideals/idealcms репозиторий исходного кода
@@ -12,9 +13,6 @@ use Ideal\Core\Config;
 use Ideal\Core\Db;
 use Ideal\Core\Pagination;
 use Ideal\Core\Request;
-use Ideal\Core\Util;
-use Ideal\Field;
-use Ideal\Structure\User;
 
 /**
  * Class ModelAbstract
@@ -70,14 +68,14 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
         $listTag = $db->select($sql);
 
         // Раскладываем айдишники элементов по разделам
-        $tables = array();
+        $tables = [];
         foreach ($listTag as $v) {
             $tables[$v['structure_id']][] = $v['part_id'];
         }
 
         // Построение запросов для извлечения данных из таблиц структур
         $order = (empty($orderBy)) ? '' : ',' . $orderBy;
-        $elements = array();
+        $elements = [];
         foreach ($tables as $structureId => $parts) {
             $structure = $config->getStructureById($structureId);
             $tableStructure = $config->getTableByName($structure['structure']);
@@ -190,6 +188,15 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
         return $result;
     }
 
+    public function getCurrent()
+    {
+        if (isset($this->pageData)) {
+            return $this->pageData;
+        }
+        return false;
+
+    }
+
     /**
      * Построение LIMIT части sql-запроса
      *
@@ -214,14 +221,5 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
 
         $sql = " LIMIT {$start}, {$onPage}";
         return $sql;
-    }
-
-    public function getCurrent()
-    {
-        if (isset($this->pageData)) {
-            return $this->pageData;
-        } else {
-            return false;
-        }
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -21,7 +22,6 @@ use Ideal\Core\Db;
  */
 class AbstractModel
 {
-
     /** @var string Название редактируемого поля */
     protected $fieldName;
 
@@ -39,7 +39,7 @@ class AbstractModel
 
     /**
      * @param \Ideal\Core\Admin\Model $obj
-     * @param string                  $fieldName
+     * @param string $fieldName
      * @throws \Exception
      */
     public function __construct($obj, $fieldName)
@@ -115,7 +115,7 @@ class AbstractModel
         $fieldNames = array_keys($this->fields);
         $ownerField = $fieldNames[0];
         $elementsField = $fieldNames[1];
-        $list = array();
+        $list = [];
 
         // Определяем владельца медиума
         $db = Db::getInstance();

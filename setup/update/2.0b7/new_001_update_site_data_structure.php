@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Создание настройки $config->cache['jsAndCss'] в site_data.php для объединения и минимизации JS и CSS
  */
@@ -11,11 +12,11 @@ $sd = $configSD->getParams();
 
 if (!isset($sd['cache']['arr']['jsAndCss'])) {
     $arr = array_reverse($sd['cache']['arr'], true);
-    $arr['jsAndCss'] = array(
-                'label' => 'Объединение и минификация css и js файлов',
-                'value' => '0',
-                'type' => 'Ideal_Checkbox'
-    );
+    $arr['jsAndCss'] = [
+        'label' => 'Объединение и минификация css и js файлов',
+        'value' => '0',
+        'type' => 'Ideal_Checkbox',
+    ];
     $sd['cache']['arr'] = array_reverse($arr, true);
 }
 

@@ -6,7 +6,7 @@ define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DO
 // Абсолютный адрес размещения админки
 define(
     'CMS_ROOT',
-    $_SERVER['DOCUMENT_ROOT'] . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/setup'))
+    $_SERVER['DOCUMENT_ROOT'] . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '/Ideal/setup')),
 );
 
 // Абсолютный адрес папки, в которой находится папка админки
@@ -97,7 +97,7 @@ function checkPost($post)
 
 function initFormValue($post, $fields)
 {
-    $values = array();
+    $values = [];
     foreach ($fields as $v) {
         $values[$v] = isset($post[$v]) ? htmlspecialchars($post[$v]) : '';
     }
@@ -113,7 +113,7 @@ function initFormValue($post, $fields)
 function installErrorHandler($errno, $errstr, $errfile, $errline)
 {
     global $error;
-    if (in_array($errno, array(E_ERROR, E_WARNING, E_NOTICE))) {
+    if (in_array($errno, [E_ERROR, E_WARNING, E_NOTICE])) {
         $error .= '<div class="alert">Ошибка [' . $errno . '] ' . $errstr
             . ', в строке ' . $errline . ' файла ' . $errfile . '</div>';
         return true;
@@ -286,7 +286,7 @@ function createTables()
         . PATH_SEPARATOR . CMS_ROOT
         . PATH_SEPARATOR . CMS_ROOT . '/Ideal.c/'
         . PATH_SEPARATOR . CMS_ROOT . '/Ideal/'
-        . PATH_SEPARATOR . CMS_ROOT . '/Mods/'
+        . PATH_SEPARATOR . CMS_ROOT . '/Mods/',
     );
 
     // Подключаем автозагрузчик классов
@@ -317,7 +317,7 @@ function createTables()
 
     // Устанавливаем всё что нужно для работы структур
     foreach ($config->structures as $v) {
-        list($module, $structure) = explode('_', $v['structure']);
+        [$module, $structure] = explode('_', $v['structure']);
         $module = ($module == 'Ideal') ? '' : $module . '/';
         if (stream_resolve_include_path($module . 'Structure/' . $structure . '/install.php') !== false) {
             require_once $module . 'Structure/' . $structure . '/install.php';
@@ -328,13 +328,13 @@ function createTables()
     global $formValue;
     $db->insert(
         $config->db['prefix'] . 'ideal_structure_user',
-        array(
+        [
             'email' => $formValue['cmsLogin'],
             'reg_date' => time(),
             'password' => password_hash($formValue['cmsPass'], PASSWORD_DEFAULT),
             'is_active' => 1,
-            'prev_structure' => '0-2'
-        )
+            'prev_structure' => '0-2',
+        ],
     );
 }
 

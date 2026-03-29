@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -25,13 +26,13 @@ $db->create($config->db['prefix'] . 'ideal_structure_order', $cfg['fields']);
 
 $db->insert(
     $dataListTable,
-    array(
+    [
         'prev_structure' => '0-3',
         'structure' => 'Ideal_Order',
         'pos' => $newPos,
         'name' => 'Заказы с сайта',
         'url' => 'zakazy-s-sajta',
         'parent_url' => '---',
-        'annot' => ''
-    )
+        'annot' => '',
+    ],
 );

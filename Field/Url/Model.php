@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -86,7 +87,7 @@ class Model
      */
     public static function translit($nm)
     {
-        $arr = array(
+        $arr = [
             'а' => 'a',
             'б' => 'b',
             'в' => 'v',
@@ -152,34 +153,10 @@ class Model
             'Ю' => 'yu',
             'Я' => 'ya',
             'Ь' => '',
-            'Ъ' => ''
-        );
+            'Ъ' => '',
+        ];
         $nm = strtr($nm, $arr);
         return $nm;
-    }
-
-    /**
-     * Отрезает стандартный суффикс от ссылки
-     *
-     * @param $link
-     * @return string
-     */
-    public function cutSuffix($link)
-    {
-        $config = Config::getInstance();
-        $link = substr($link, 0, -strlen($config->urlSuffix));
-        return $link;
-    }
-
-    /**
-     * Получение url для элемента $lastPart на основании ранее установленного пути или префикса $parentUrl
-     *
-     * @param array $lastPart Массив с основными данными об элементе
-     * @return string Сгенерированный URL этого элемента
-     */
-    public function getUrl($lastPart)
-    {
-        return $this->getUrlWithPrefix($lastPart, $this->parentUrl);
     }
 
     /**
@@ -188,7 +165,7 @@ class Model
      * Метод генерирует событие onGetUrl, которое могут перехватывать плагины ддя создания специальных правил
      * получения URL.
      *
-     * @param array  $lastPart Массив с основными данными об элементе
+     * @param array $lastPart Массив с основными данными об элементе
      * @param string $parentUrl
      * @return string Сгенерированный URL этого элемента
      */
@@ -212,7 +189,7 @@ class Model
         }
 
         $pluginBroker = PluginBroker::getInstance();
-        $arr = array('last' => $lastPart, 'parent' => $parentUrl);
+        $arr = ['last' => $lastPart, 'parent' => $parentUrl];
         $arr = $pluginBroker->makeEvent('onGetUrl', $arr);
         $lastUrlPart = $arr['last']['url'];
 
@@ -247,6 +224,29 @@ class Model
         }
 
         return $url;
+    }
+
+    /**
+     * Отрезает стандартный суффикс от ссылки
+     *
+     * @return string
+     */
+    public function cutSuffix($link)
+    {
+        $config = Config::getInstance();
+        $link = substr($link, 0, -strlen($config->urlSuffix));
+        return $link;
+    }
+
+    /**
+     * Получение url для элемента $lastPart на основании ранее установленного пути или префикса $parentUrl
+     *
+     * @param array $lastPart Массив с основными данными об элементе
+     * @return string Сгенерированный URL этого элемента
+     */
+    public function getUrl($lastPart)
+    {
+        return $this->getUrlWithPrefix($lastPart, $this->parentUrl);
     }
 
     /**
@@ -314,7 +314,7 @@ class Model
         }
         $name = Model::translit($name);
         $name = strtolower($name);
-        $arr = array(
+        $arr = [
             '@' => '',
             '$' => '',
             '^' => '',
@@ -346,8 +346,8 @@ class Model
             ' ' => '-',
             '&' => '',
             ',' => '',
-            '%' => ''
-        );
+            '%' => '',
+        ];
         $name = strtr($name, $arr);
         return $name . $ext;
     }
@@ -371,7 +371,7 @@ class Model
         $path = $structureModel->getLocalPath();
         array_pop($path);
 
-        $url = array();
+        $url = [];
         foreach ($path as $item) {
             $url[] = $item['url'];
         }
@@ -393,9 +393,9 @@ class Model
         $config = Config::getInstance();
 
         // Находим элемент по prevStructure
-        list($structureId, $elementId) = explode('-', $prevStructure);
+        [$structureId, $elementId] = explode('-', $prevStructure);
         $structure = $config->getStructureById($structureId);
-        list($mod, $structure) = explode('_', $structure['structure']);
+        [$mod, $structure] = explode('_', $structure['structure']);
         $class = '\\' . $mod . '\\Structure\\' . $structure . '\\Site\\Model';
 
         /** @var \Ideal\Core\Site\Model $model */

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -21,7 +22,6 @@ use Ideal\Core\Config;
  */
 class AjaxController extends \Ideal\Core\AjaxController
 {
-
     /**
      * Действие срабатывающее при нажатии на кнопку "Очистить кэш"
      */
@@ -54,7 +54,7 @@ class AjaxController extends \Ideal\Core\AjaxController
             unlink(DOCUMENT_ROOT . '/js/all.min.js');
         }
 
-        print json_encode(array('text' => 'ok'));
+        print json_encode(['text' => 'ok']);
         exit;
     }
 
@@ -64,7 +64,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     public function dellCacheFilesAction()
     {
         $config = Config::getInstance();
-        $delPages = array();
+        $delPages = [];
         $pageList = new SiteMap\Model('0-1');
         $pages = $pageList->getList();
         foreach ($pages as $page) {
@@ -74,7 +74,7 @@ class AjaxController extends \Ideal\Core\AjaxController
             }
         }
         $delPages = implode("<br />", $delPages);
-        print json_encode(array('text' => $delPages));
+        print json_encode(['text' => $delPages]);
         exit;
     }
 }

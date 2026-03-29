@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -30,7 +31,6 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
-
     /** @inheritdoc */
     protected static $instance;
 
@@ -45,29 +45,29 @@ class Controller extends AbstractController
         $list = $this->medium->getList();
         $variants = $this->medium->getValues();
         $html = <<<HTML
-<link href="Ideal/Library/bootstrapMultiselect/dist/css/bootstrap-multiselect.css" rel="stylesheet">
-<script type="text/javascript" src="Ideal/Library/bootstrapMultiselect/dist/js/bootstrap-multiselect.js"></script>
-<!-- Initialize the bootstrap multiselect plugin: -->
-<script type="text/javascript">
-    $(document).ready(function() {
-        $('#{$this->htmlName}').multiselect({
-        'onDropdownShown':function(event) {
-        $('.modal-body').height($('.modal-body').height() + $('.multiselect-container.dropdown-menu').height())
-        }
-        });
-    });
-</script>
-<style>
-.btn-group{
-width:100%;
-}
-.multiselect.dropdown-toggle{width: 100%;text-align: left}
-.multiselect-container li {
-padding: 0;
-float: left;
-}
-</style>
-HTML;
+            <link href="Ideal/Library/bootstrapMultiselect/dist/css/bootstrap-multiselect.css" rel="stylesheet">
+            <script type="text/javascript" src="Ideal/Library/bootstrapMultiselect/dist/js/bootstrap-multiselect.js"></script>
+            <!-- Initialize the bootstrap multiselect plugin: -->
+            <script type="text/javascript">
+                $(document).ready(function() {
+                    $('#{$this->htmlName}').multiselect({
+                    'onDropdownShown':function(event) {
+                    $('.modal-body').height($('.modal-body').height() + $('.multiselect-container.dropdown-menu').height())
+                    }
+                    });
+                });
+            </script>
+            <style>
+            .btn-group{
+            width:100%;
+            }
+            .multiselect.dropdown-toggle{width: 100%;text-align: left}
+            .multiselect-container li {
+            padding: 0;
+            float: left;
+            }
+            </style>
+            HTML;
         $html .= '<select multiple="multiple" class="form-control" name="' . $this->htmlName
             . '[]" id="' . $this->htmlName . '">';
         foreach ($list as $k => $v) {
@@ -92,12 +92,12 @@ HTML;
         $this->newValue = null;
         $newValue = $this->pickupNewValue();
 
-        $item = array(
+        $item = [
             'fieldName' => $this->htmlName,
             'value' => null,
             'message' => '',
-            'sqlAdd' => $this->medium->getSqlAdd($newValue)
-        );
+            'sqlAdd' => $this->medium->getSqlAdd($newValue),
+        ];
 
         return $item;
     }

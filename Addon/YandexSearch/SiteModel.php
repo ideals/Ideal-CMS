@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -28,7 +29,6 @@ use Ideal\YandexSearch\WebSearchRequest;
  */
 class SiteModel extends Addon\AbstractSiteModel
 {
-
     /** @var int Общее количество результатов поиска */
     protected $listCount = 0;
 
@@ -57,13 +57,13 @@ class SiteModel extends Addon\AbstractSiteModel
 
         // Номер отображаемой страницы
         $request = new Request();
-        $page = (int)$request->num;
+        $page = (int) $request->num;
         $page = ($page === 0) ? 1 : $page;
         $page--;
 
         // Поисковый запрос
         $request = new Request();
-        $query = trim((string)$request->query);
+        $query = trim((string) $request->query);
         $view->query = $query;
 
         if (!empty($query)) {
@@ -73,7 +73,7 @@ class SiteModel extends Addon\AbstractSiteModel
 
             try {
                 $request = (new WebSearchRequest(
-                    'site:' . $config->domain . ' "' . str_replace('"', '', $query) . '"'
+                    'site:' . $config->domain . ' "' . str_replace('"', '', $query) . '"',
                 ))
                     ->setPerPage((int) $this->params['elements_site'])
                     ->setPage($page);
@@ -84,7 +84,7 @@ class SiteModel extends Addon\AbstractSiteModel
             $client = new Client(
                 $_ENV['YANDEX_CLOUD_SEARCH_URL'],
                 $_ENV['YANDEX_CLOUD_SEARCH_API_KEY'],
-                Logger::getInstance()
+                Logger::getInstance(),
             );
             $response = $client->send($request);
 

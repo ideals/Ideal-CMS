@@ -1,4 +1,5 @@
 <?php
+
 // Подключаем структуру логирования
 
 use Ideal\Core\Config;
@@ -19,15 +20,15 @@ if ($log === false) {
     $logId++;
     $add = <<<ADD
 
-        // Подключаем структуру ведения логов администраторов
-        array(
-            'ID' => {$logId},
-            'structure' => 'Ideal_Log',
-            'name' => 'Лог администраторов',
-            'isShow' => 0,
-            'hasTable' => true
-        ),
-ADD;
+                // Подключаем структуру ведения логов администраторов
+                array(
+                    'ID' => {$logId},
+                    'structure' => 'Ideal_Log',
+                    'name' => 'Лог администраторов',
+                    'isShow' => 0,
+                    'hasTable' => true
+                ),
+        ADD;
     $fileName = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/config.php';
     if (!file_exists($fileName)) {
         throw new \Exception('Файл не найден: ' . $fileName);
@@ -51,15 +52,15 @@ if (empty($log)) {
     // Создаем запись "Лог администраторов" с сайта в Справочниках
     $prevStructureId = $db->insert(
         $dataListTable,
-        array(
+        [
             'prev_structure' => '0-3',
             'structure' => 'Ideal_Log',
             'pos' => $newPos,
             'name' => 'Лог администраторов',
             'url' => 'log-administratorov',
             'parent_url' => '---',
-            'annot' => ''
-        )
+            'annot' => '',
+        ],
     );
 } else {
     $prevStructureId = $log[0]['ID'];

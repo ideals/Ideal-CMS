@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -26,7 +27,6 @@ use Ideal\Field\AbstractController;
  */
 class Controller extends AbstractController
 {
-
     /** {@inheritdoc} */
     protected static $instance;
 
@@ -76,6 +76,27 @@ class Controller extends AbstractController
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getValueForList($values, $fieldName)
+    {
+        $result = '';
+        if ($values[$fieldName] != '') {
+            $result = <<<HTML
+                <span
+                    class="has-popover"
+                    data-placement="top"
+                    data-content="<img src='{$values[$fieldName]}' width='200'>"
+                    data-html="true"
+                    data-trigger="hover">
+                        <span class="glyphicon glyphicon-camera text-muted"></span>
+                </span>
+                HTML;
+        }
+        return $result;
+    }
+
+    /**
      * Удаление resized-вариантов картинки
      *
      * @param string $value
@@ -122,26 +143,5 @@ class Controller extends AbstractController
             unlink($fileName);
         }
         return '';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getValueForList($values, $fieldName)
-    {
-        $result = '';
-        if ($values[$fieldName] != '') {
-            $result = <<<HTML
-<span
-    class="has-popover"
-    data-placement="top"
-    data-content="<img src='{$values[$fieldName]}' width='200'>"
-    data-html="true"
-    data-trigger="hover">
-        <span class="glyphicon glyphicon-camera text-muted"></span>
-</span>
-HTML;
-        }
-        return $result;
     }
 }

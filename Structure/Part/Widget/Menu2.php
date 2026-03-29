@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -48,8 +49,8 @@ class Menu2 extends \Ideal\Core\Widget
 
         // Раскладываем считанное меню во вложенные массивы по cid и lvl
         $num = 0;
-        $menu = array();
-        $parent = array();
+        $menu = [];
+        $parent = [];
         $url = new \Ideal\Field\Url\Model();
         foreach ($menuList as $v) {
             if ($v['lvl'] == 1) {
@@ -64,14 +65,14 @@ class Menu2 extends \Ideal\Core\Widget
                 } else {
                     $v['link'] = 'href="' . $url->getUrlWithPrefix($v, $this->prefix) . '"';
                 }
-                $v['subMenu'] = array();
+                $v['subMenu'] = [];
                 $menu[$num] = $v;
             }
             if ($v['lvl'] == 2) {
                 if (isset($v['url_full']) && strlen($v['url_full']) > 1) {
                     $v['link'] = 'href="' . $v['url_full'] . $config->urlSuffix . '"';
                 } else {
-                    $parentUrl = $url->setParentUrl(array('0' => $parent));
+                    $parentUrl = $url->setParentUrl(['0' => $parent]);
                     $prefix = $this->prefix . '/' . $parentUrl;
                     $v['link'] = 'href="' . $url->getUrlWithPrefix($v, $prefix) . '"';
                 }

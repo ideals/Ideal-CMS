@@ -1,7 +1,9 @@
 <?php
+
 /**
  * Изменение размера изображения
  */
+
 namespace Resize;
 
 class Resize
@@ -63,8 +65,8 @@ class Resize
 
         // Проверяем существование необходимых параметров ширины и высоты
         if (isset($imgSize[0]) && isset($imgSize[1])) {
-            $this->width = (int)$imgSize[0];
-            $this->height = (int)$imgSize[1];
+            $this->width = (int) $imgSize[0];
+            $this->height = (int) $imgSize[1];
         } else {
             $this->exit404();
         }
@@ -197,7 +199,7 @@ class Resize
                     $destWidth,
                     $destHeight,
                     imagesx($src),
-                    imagesy($src)
+                    imagesy($src),
                 );
             } else {
                 // Изменение размера изображения и обрезка по ширине
@@ -229,7 +231,7 @@ class Resize
                     $destWidth,
                     $destHeight,
                     imagesx($src),
-                    imagesy($src)
+                    imagesy($src),
                 );
             } else {
                 // Изменение размера изображения и обрезка по высоте

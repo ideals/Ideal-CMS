@@ -1,18 +1,18 @@
 <?php
+
 namespace FileMonitor;
 
 class FileMonitor
 {
+    /** @var array Массив исключений каталогов и файлов. Требуется полный путь до файла/каталога. */
+    protected $exclude;
     private $files;
 
     /** @var array Массив со списком файлов, собранный в предыдущий раз */
-    private $filesOld = array();
+    private $filesOld = [];
 
     /** @var string Корень сервера, откуда нужно начинать сканирование файлов */
     private $scanDir = '';
-
-    /** @var array Массив исключений каталогов и файлов. Требуется полный путь до файла/каталога. */
-    protected $exclude;
 
     /** @var string Электронный адрес с которого будут отправляться результаты работы */
     private $from;
@@ -30,13 +30,13 @@ class FileMonitor
     private $startTime;
 
     /** @var array Массив изменённых файлов */
-    private $updated = array();
+    private $updated = [];
 
     /** @var array Массив новых файлов */
-    private $added = array();
+    private $added = [];
 
     /** @var array Массив удалённых файлов */
-    private $deleted = array();
+    private $deleted = [];
 
     /** @var string Доменное имя */
     private $domain;
@@ -56,16 +56,16 @@ class FileMonitor
     {
         $this->startTime = microtime(true);
 
-        $defaultValues = array(
+        $defaultValues = [
             'scanDir' => null,
             'tmpDir' => __DIR__,
             'scriptTime' => 50,
             'domain' => null,
             'from' => '',
             'to' => '',
-            'exclude' => array(),
+            'exclude' => [],
             'period' => 'daily',
-        );
+        ];
 
         $settings = $this->loadCmsSetting($settings);
 
@@ -87,7 +87,7 @@ class FileMonitor
 
         foreach ($defaultValues as $key => $item) {
             if (empty($settings[$key])) {
-                if (null === $item) {
+                if ($item === null) {
                     throw new \Exception('Не указан обязательный параметр ' . $key);
                 }
                 $this->$key = $item;
@@ -120,7 +120,7 @@ class FileMonitor
             $temp = file_get_contents($this->fileMonitorTmp);
             $this->files = unserialize($temp);
             $temp = file_get_contents($this->fileMonitorUpd);
-            list($this->updated, $this->added, $this->deleted) = unserialize($temp);
+            [$this->updated, $this->added, $this->deleted] = unserialize($temp);
         } else {
             // Если временного файла нет, строим список файлов в $this->files
             $this->glob($this->scanDir);
@@ -139,7 +139,7 @@ class FileMonitor
         }
 
         echo 'files: ' . count($this->files) . "\n";
-        echo 'updated: ' . count($this->updated)  . "\n";
+        echo 'updated: ' . count($this->updated) . "\n";
         echo 'added: ' . count($this->added) . "\n";
         echo 'deleted: ' . count($this->deleted) . "\n";
     }
@@ -151,7 +151,7 @@ class FileMonitor
      */
     private function glob($dir)
     {
-        $arr = array_diff(scandir($dir), array('.', '..'));
+        $arr = array_diff(scandir($dir), ['.', '..']);
 
         foreach ($arr as $v) {
             $file = $dir . '/' . $v;
@@ -185,7 +185,7 @@ class FileMonitor
                 break;
             }
 
-            if (null !== $hash) {
+            if ($hash !== null) {
                 // Файл уже проверен
                 continue;
             }
@@ -298,7 +298,7 @@ class FileMonitor
         fwrite($fp, $a);
         fclose($fp);
 
-        $a = serialize(array($this->updated, $this->added, $this->deleted));
+        $a = serialize([$this->updated, $this->added, $this->deleted]);
         $fp = fopen($this->fileMonitorUpd, 'w+');
         fwrite($fp, $a);
         fclose($fp);
@@ -332,7 +332,7 @@ class FileMonitor
             $data = require $dataFile;
             $scanDir = $data['monitoring']['scanDir'];
             $settings['scanDir'] = stream_resolve_include_path(
-                empty($scanDir) ? $settings['scanDir'] : $scanDir
+                empty($scanDir) ? $settings['scanDir'] : $scanDir,
             );
             $tmpDir = $settings['scanDir'] . $data['cms']['tmpFolder'];
             $settings['tmpDir'] = empty($tmpDir) ? $settings['tmpDir'] : $tmpDir;

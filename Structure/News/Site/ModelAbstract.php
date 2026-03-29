@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -17,7 +18,6 @@ use Ideal\Structure\User;
 
 class ModelAbstract extends \Ideal\Core\Site\Model
 {
-
     public $cid;
 
     public function detectPageByUrl($path, $url)
@@ -36,7 +36,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         $checkActive = ($user->checkLogin()) ? '' : ' AND is_active=1';
 
         $_sql = "SELECT * FROM {$this->_table} WHERE BINARY url=:url {$checkActive} AND date_create < :time";
-        $par = array('url' => $url[0], 'time' => time());
+        $par = ['url' => $url[0], 'time' => time()];
 
         $news = $db->select($_sql, $par); // запрос на получение всех страниц, соответствующих частям url
 
@@ -50,7 +50,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
         if (count($news) > 1) {
             $c = count($news);
             Util::addError("В базе несколько ({$c}) новостей с одинаковым url: " . implode('/', $url));
-            $news = array($news[0]); // оставляем для отображения первую новость
+            $news = [$news[0]]; // оставляем для отображения первую новость
         }
 
         $news[0]['structure'] = 'Ideal_News';
@@ -119,7 +119,7 @@ class ModelAbstract extends \Ideal\Core\Site\Model
                 $addonGroupName = strtolower(end(explode('_', $addon[1])));
                 $table = $config->db['prefix'] . 'ideal_addon_' . $addonGroupName;
                 $_sql = "SELECT * FROM {$table} WHERE prev_structure=:ps AND tab_ID=:ti";
-                $result = $db->select($_sql, array('ps' => $prevStructure, 'ti' => $addon[0]));
+                $result = $db->select($_sql, ['ps' => $prevStructure, 'ti' => $addon[0]]);
                 $text .= $result[0]['content'];
             }
         } else {

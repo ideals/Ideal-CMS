@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Добавление дополнительного поля в файл site_map.php
  */
@@ -11,25 +12,25 @@ $configSD->loadFile($file);
 $params = $configSD->getParams();
 // Если поле уже есть, то ничего делать не нужно
 if (!isset($params['yandex']['arr']['loginHint'])) {
-    $params['yandex']['arr']['loginHint'] = array(
+    $params['yandex']['arr']['loginHint'] = [
         'label' => 'Электронный адрес или имя пользователя для доступак сервису "Яндекс.Вебмастер"',
         'value' => '',
-        'type' => 'Ideal_Text'
-    );
+        'type' => 'Ideal_Text',
+    ];
 }
 if (!isset($params['yandex']['arr']['clientId'])) {
-    $params['yandex']['arr']['clientId'] = array(
+    $params['yandex']['arr']['clientId'] = [
         'label' => 'Идентификатор приложения для доступа к сервису "Яндекс.Вебмастер"',
         'value' => '',
-        'type' => 'Ideal_Text'
-    );
+        'type' => 'Ideal_Text',
+    ];
 }
 if (!isset($params['yandex']['arr']['token'])) {
-    $params['yandex']['arr']['token'] = array(
+    $params['yandex']['arr']['token'] = [
         'label' => 'Токен для авторизации в сервисе "Яндекс.Вебмастер"',
         'value' => '',
-        'type' => 'Ideal_Text'
-    );
+        'type' => 'Ideal_Text',
+    ];
 }
 $configSD->setParams($params);
 $configSD->saveFile($file);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -6,6 +7,7 @@
  * @copyright Copyright (c) 2012-2014 Ideal CMS (http://idealcms.ru)
  * @license   http://idealcms.ru/license.html LGPL v3
  */
+
 namespace Ideal\Medium\AddonList;
 
 use Ideal\Core\Util;
@@ -22,7 +24,7 @@ class Model extends AbstractModel
     public function getList()
     {
         $addons = $this->obj->fields[$this->fieldName]['available'];
-        $list = array();
+        $list = [];
         foreach ($addons as $addon) {
             $class = Util::getClassName($addon, 'Addon');
             $folder = ltrim(ltrim(str_replace('\\', '/', $class), '/'), 'Ideal/');

@@ -1,10 +1,11 @@
 <?php
+
 namespace Cron;
 
 class CronClass
 {
     /** @var array Обработанный список задач крона */
-    protected $cron = array();
+    protected $cron = [];
 
     /** @var string Путь к файлу с задачами крона */
     protected $cronFile;
@@ -90,7 +91,7 @@ class CronClass
         $taskIsset = false;
         $tasks = $currentTasks = '';
         foreach ($cron as $cronTask) {
-            list($taskExpression, $fileTask) = $this->parseCronTask($cronTask);
+            [$taskExpression, $fileTask] = $this->parseCronTask($cronTask);
 
             // Проверяем правильность написания выражения для крона и существование файла для выполнения
             if (\Cron\CronExpression::isValidExpression($taskExpression) !== true) {
@@ -161,11 +162,11 @@ class CronClass
         // Получаем данные настроек системы
         $siteData = require $dataFileName;
 
-        $data = array(
+        $data = [
             'domain' => $siteData['domain'],
             'robotEmail' => $siteData['robotEmail'],
             'adminEmail' => $this->cronEmail ? $this->cronEmail : $siteData['cms']['adminEmail'],
-        );
+        ];
 
         // Переопределяем стандартный обработчик ошибок для отправки уведомлений на почту
         set_error_handler(function ($errno, $errstr, $errfile, $errline) use ($data) {
@@ -186,7 +187,7 @@ class CronClass
         // Обрабатываем задачи для крона из настроек Ideal CMS
         $nowCron = new \DateTime();
         foreach ($this->cron as $cronTask) {
-            list($taskExpression, $fileTask) = $this->parseCronTask($cronTask);
+            [$taskExpression, $fileTask] = $this->parseCronTask($cronTask);
             if (!$taskExpression || !$fileTask) {
                 continue;
             }
@@ -223,54 +224,6 @@ class CronClass
     }
 
     /**
-     * Разбирает задачу для крона из настроек Ideal CMS
-     * @param string $cronTask Строка в формате "* * * * * /path/to/file.php"
-     * @return array Массив, где первым элементом является строка соответствующая интервалу запуска задачи по крону,
-     *               а вторым элементом является путь до запускаемого файла
-     */
-    protected function parseCronTask($cronTask)
-    {
-        // Получаем cron-формат запуска файла в первых пяти элементах массива и путь до файла в последнем элементе
-        $taskParts = explode(' ', $cronTask, 6);
-        $fileTask = '';
-        if (count($taskParts) >= 6) {
-            $fileTask = array_pop($taskParts);
-        }
-
-        // Если запускаемый скрипт указан относительно корня сайта, то абсолютизируем его
-        if ($fileTask && strpos($fileTask, '/') !== 0) {
-            $fileTask = $this->siteRoot . '/' . $fileTask;
-        }
-
-        $fileTask = trim($fileTask);
-
-        $taskExpression = implode(' ', $taskParts);
-        return array($taskExpression, $fileTask);
-    }
-
-    /**
-     * Загружаем данные из крона в переменные cron, cronEmail, modifyTime
-     *
-     * @throws \Exception
-     */
-    private function loadCrontab($fileName)
-    {
-        $fileName = stream_resolve_include_path($fileName);
-        if ($fileName) {
-            $this->cron = $this->parseCrontab(file_get_contents($fileName));
-        } else {
-            $this->cron = array();
-            $fileName = stream_resolve_include_path(dirname($fileName)) . 'crontab';
-            file_put_contents($fileName, '');
-        }
-        $this->cronFile = $fileName;
-
-        // Получаем дату модификации скрипта (она же считается датой последнего запуска)
-        $this->modifyTime = new \DateTime();
-        $this->modifyTime->setTimestamp(filemtime($fileName));
-    }
-
-    /**
      * Извлечение почтового адреса для отправки уведомлений с крона. Формат MAILTO="email@email.com"
      *
      * @param string $cronString Необработанный crontab
@@ -303,5 +256,53 @@ class CronClass
             }
         }
         return $cron;
+    }
+
+    /**
+     * Разбирает задачу для крона из настроек Ideal CMS
+     * @param string $cronTask Строка в формате "* * * * * /path/to/file.php"
+     * @return array Массив, где первым элементом является строка соответствующая интервалу запуска задачи по крону,
+     *               а вторым элементом является путь до запускаемого файла
+     */
+    protected function parseCronTask($cronTask)
+    {
+        // Получаем cron-формат запуска файла в первых пяти элементах массива и путь до файла в последнем элементе
+        $taskParts = explode(' ', $cronTask, 6);
+        $fileTask = '';
+        if (count($taskParts) >= 6) {
+            $fileTask = array_pop($taskParts);
+        }
+
+        // Если запускаемый скрипт указан относительно корня сайта, то абсолютизируем его
+        if ($fileTask && strpos($fileTask, '/') !== 0) {
+            $fileTask = $this->siteRoot . '/' . $fileTask;
+        }
+
+        $fileTask = trim($fileTask);
+
+        $taskExpression = implode(' ', $taskParts);
+        return [$taskExpression, $fileTask];
+    }
+
+    /**
+     * Загружаем данные из крона в переменные cron, cronEmail, modifyTime
+     *
+     * @throws \Exception
+     */
+    private function loadCrontab($fileName)
+    {
+        $fileName = stream_resolve_include_path($fileName);
+        if ($fileName) {
+            $this->cron = $this->parseCrontab(file_get_contents($fileName));
+        } else {
+            $this->cron = [];
+            $fileName = stream_resolve_include_path(dirname($fileName)) . 'crontab';
+            file_put_contents($fileName, '');
+        }
+        $this->cronFile = $fileName;
+
+        // Получаем дату модификации скрипта (она же считается датой последнего запуска)
+        $this->modifyTime = new \DateTime();
+        $this->modifyTime->setTimestamp(filemtime($fileName));
     }
 }

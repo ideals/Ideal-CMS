@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -37,7 +38,7 @@ class ModelAbstract extends Part\Site\Model
 
         $_sql = "SELECT * FROM {$this->_table} WHERE BINARY url=:url LIMIT 1";
 
-        $list = $db->select($_sql, array('url' => $url)); // получение всех страниц, соответствующих частям url
+        $list = $db->select($_sql, ['url' => $url]); // получение всех страниц, соответствующих частям url
 
         // Страницу не нашли, возвращаем 404
         if (!isset($list[0]['cid'])) {

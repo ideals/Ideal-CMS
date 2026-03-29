@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -37,27 +38,27 @@ class ApplyChange
             $fileContent = file_get_contents($filePath);
             if ($this->value) {
                 $addString = <<<string
-                
-FileETag MTime Size
+                                    
+                    FileETag MTime Size
 
-<IfModule headers_module.c>
-	Header append Cache-Control "public"
-</IfModule>        
+                    <IfModule headers_module.c>
+                    	Header append Cache-Control "public"
+                    </IfModule>        
 
-<IfModule mod_expires.c>
-	ExpiresActive On
-	ExpiresDefault "access plus 0 minutes"
-	ExpiresByType image/ico "access plus 1 years"
-	ExpiresByType text/css "access plus 1 years"
-	ExpiresByType text/javascript "access plus 1 years"
-	ExpiresByType image/gif "access plus 1 years"
-	ExpiresByType image/jpg "access plus 1 years"
-	ExpiresByType image/jpeg "access plus 1 years"
-	ExpiresByType image/bmp "access plus 1 years"
-	ExpiresByType image/png "access plus 1 years"
-</IfModule>
+                    <IfModule mod_expires.c>
+                    	ExpiresActive On
+                    	ExpiresDefault "access plus 0 minutes"
+                    	ExpiresByType image/ico "access plus 1 years"
+                    	ExpiresByType text/css "access plus 1 years"
+                    	ExpiresByType text/javascript "access plus 1 years"
+                    	ExpiresByType image/gif "access plus 1 years"
+                    	ExpiresByType image/jpg "access plus 1 years"
+                    	ExpiresByType image/jpeg "access plus 1 years"
+                    	ExpiresByType image/bmp "access plus 1 years"
+                    	ExpiresByType image/png "access plus 1 years"
+                    </IfModule>
 
-string;
+                    string;
             } else {
                 $addString = "\n";
             }

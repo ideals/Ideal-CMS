@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ideal CMS (http://idealcms.ru/)
  *
@@ -18,11 +19,10 @@ use Ideal\Core\Config;
  */
 class RewriteRule
 {
-
     /**
      * @var int Тип ошибки обработки файлов редиректов
-     * 0 - отсутствие ошибок,
-     * 1 - присутствуют ошибки исправимые в админке,
+     *          0 - отсутствие ошибок,
+     *          1 - присутствуют ошибки исправимые в админке,
      * 2 - присутствуют ошибки, которые нужно исправлять на уровне файловой системы (редиректы не отображаются) */
     protected $error = 0;
 
@@ -37,10 +37,10 @@ class RewriteRule
 
     /**
      * @var array Массив редиректов: ключ — откуда редирект, значение — куда.
-     * Элементы списка редиректов являются массивами и содержат:
-     * to — куда ведёт редирект
-     * error — сообщение об ошибке редиректа
-     * htaccess — аналогичный массив редиректа из файла .htaccess, если он идёт с того же ключа
+     *            Элементы списка редиректов являются массивами и содержат:
+     *            to — куда ведёт редирект
+     *            error — сообщение об ошибке редиректа
+     *            htaccess — аналогичный массив редиректа из файла .htaccess, если он идёт с того же ключа
      */
     protected $redirects;
 
@@ -70,7 +70,7 @@ class RewriteRule
      */
     public function deleteLine($from, $to)
     {
-        $answer = array('error' => false, 'text' => '');
+        $answer = ['error' => false, 'text' => ''];
         if (isset($this->redirects[$from])) {
             if ($this->redirects[$from]['to'] == $to) {
                 unset($this->redirects[$from]);
@@ -97,7 +97,7 @@ class RewriteRule
      */
     public function editLine($from, $to, $oldFrom, $oldTo)
     {
-        $answer = array('error' => false, 'text' => '');
+        $answer = ['error' => false, 'text' => ''];
 
         if (($from == $oldFrom) && ($to == $oldTo)) {
             // Ничего не изменилось, просто перезаписываем файлы редиректов (нужно для разрешения конфликтов)
@@ -135,40 +135,15 @@ class RewriteRule
     }
 
     /**
-     * Сохраняет изменения в редиректах в файлы
-     * Сбрасываются все конфликты. Используется первый срабатывающий редирект,
-     * предпочтение отдаётся редиректам из файла redirect.txt
-     */
-    private function saveFile()
-    {
-        // Запись в redirect.txt
-        $file = "#redirect#\n";
-        foreach ($this->redirects as $k => $v) {
-            $file .= "RewriteRule {$k} {$v['to']} [R=301,L]\n";
-        }
-        $file .= "#redirect#";
-        file_put_contents($this->reFile, $file);
-
-        // Запись в htaccess
-        $t = file_get_contents(DOCUMENT_ROOT . '/.htaccess');
-        $file = str_replace('\\', '\\\\', $file); // заменяем один слэш на два (экранируем)
-        $file = str_replace('$', '\$', $file); // экранируем символ $
-        $file = preg_replace('/\#redirect\#(.*)\#redirect\#/s', $file, $t);
-        file_put_contents($this->htFile, $file);
-
-        return true;
-    }
-
-    /**
      * Создание нового редиректа (либо замена старого)
      *
-     * @param string      $from    Откуда
-     * @param string      $to      Куда
+     * @param string $from Откуда
+     * @param string $to Куда
      * @param bool|string $oldFrom Заменяемый редирект
      */
     public function addLine($from, $to, $oldFrom = false)
     {
-        $answer = array('error' => false, 'text' => '');
+        $answer = ['error' => false, 'text' => ''];
 
         if (isset($this->redirects[$from])) {
             if ($this->redirects[$from]['to'] == $to) {
@@ -193,7 +168,7 @@ class RewriteRule
         if (!$answer['error']) {
             if ($oldFrom) {
                 // Если нужно заменить элемент — указываем куда его поставить
-                $_arr = array();
+                $_arr = [];
                 foreach ($this->redirects as $k => $v) {
                     if ($k === $oldFrom) {
                         $k = $from;
@@ -290,17 +265,17 @@ class RewriteRule
             endswitch;
             */
             $str .= <<<RULE
-<tr id="line{$i}" class="element {$class}">
-<td>{$i}</td>
-<td class="from" {$defaultFrom}>{$from}</td><td><div class="to" {$defaultTo}>{$v['to']}</div>{$info}</td>
-<td><div class="button-edit btn-group btn-group-xs">
-    <button style="width: 47px;" onclick="editLine({$i})" title="Изменить" class="btn btn-info">
-    <span class="glyphicon glyphicon-pencil"></span></button>
-    <button onclick="delLine({$i})" title="Удалить" class="btn btn-danger">
-    <span class="glyphicon glyphicon-remove"></span></button>
-</div></td>
-</tr>
-RULE;
+                <tr id="line{$i}" class="element {$class}">
+                <td>{$i}</td>
+                <td class="from" {$defaultFrom}>{$from}</td><td><div class="to" {$defaultTo}>{$v['to']}</div>{$info}</td>
+                <td><div class="button-edit btn-group btn-group-xs">
+                    <button style="width: 47px;" onclick="editLine({$i})" title="Изменить" class="btn btn-info">
+                    <span class="glyphicon glyphicon-pencil"></span></button>
+                    <button onclick="delLine({$i})" title="Удалить" class="btn btn-danger">
+                    <span class="glyphicon glyphicon-remove"></span></button>
+                </div></td>
+                </tr>
+                RULE;
             $i++;
         }
         return $str;
@@ -357,7 +332,7 @@ RULE;
      * Загрузка редиректов из указанного файла $file
      *
      * @param $file string Полный путь к файлу с редиректами
-     * @return array|bool  Массив с редиректами, либо false — если не удалось считать редиректы
+     * @return array|bool Массив с редиректами, либо false — если не удалось считать редиректы
      */
     protected function loadFile($file)
     {
@@ -372,11 +347,11 @@ RULE;
 
         $fileContent = file_get_contents($file); // Загружаем файл с редиректами в память
 
-        $check = array();
+        $check = [];
         $countTags = preg_match_all(
             '/\#redirect\#/',
             $fileContent,
-            $check
+            $check,
         ); // Ищем теги #redirect# и возвращаем их содержимое
         if ($countTags == 0) {
             // Нет ни одного тега #redirect#, прекращаем обработку и выходим записав ошибку
@@ -399,7 +374,7 @@ RULE;
         }
 
         // Выцепляем строчки наших редиректов между тегами #redirect в переменную $redirects
-        $redirects = $params = array();
+        $redirects = $params = [];
         preg_match_all('/\#redirect\#(.*)\#redirect\#/s', $fileContent, $redirects);
         preg_match_all('/RewriteRule(.*)\[/U', $redirects[1][0], $redirects);
         foreach ($redirects[1] as $val) {
@@ -410,10 +385,10 @@ RULE;
                 continue;
             }
             // Между "откуда" и "куда" присутствует единственный пробел, больше их быть не может, по нему и разбиваем
-            list($from, $to) = explode(' ', $val, 2);
+            [$from, $to] = explode(' ', $val, 2);
 
             // Проверяем, нет ли каких ошибок при парсинге редиректов
-            $param = array('error' => '');
+            $param = ['error' => ''];
             if ($to === null) {
                 $to = '';
                 $param['error'] .= "{$fileName}: Неправильное правило: {$val}<br />";
@@ -428,5 +403,30 @@ RULE;
         }
 
         return $params;
+    }
+
+    /**
+     * Сохраняет изменения в редиректах в файлы
+     * Сбрасываются все конфликты. Используется первый срабатывающий редирект,
+     * предпочтение отдаётся редиректам из файла redirect.txt
+     */
+    private function saveFile()
+    {
+        // Запись в redirect.txt
+        $file = "#redirect#\n";
+        foreach ($this->redirects as $k => $v) {
+            $file .= "RewriteRule {$k} {$v['to']} [R=301,L]\n";
+        }
+        $file .= "#redirect#";
+        file_put_contents($this->reFile, $file);
+
+        // Запись в htaccess
+        $t = file_get_contents(DOCUMENT_ROOT . '/.htaccess');
+        $file = str_replace('\\', '\\\\', $file); // заменяем один слэш на два (экранируем)
+        $file = str_replace('$', '\$', $file); // экранируем символ $
+        $file = preg_replace('/\#redirect\#(.*)\#redirect\#/s', $file, $t);
+        file_put_contents($this->htFile, $file);
+
+        return true;
     }
 }
