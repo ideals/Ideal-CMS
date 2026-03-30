@@ -116,8 +116,10 @@ class Controller extends AbstractController
             $class = Util::getClassName($addonVar, 'Addon') . '\\AdminModel';
 
             /** @var \Ideal\Core\Admin\Model $model */
-            $model = new $class('');
-            $arr[$k][2] = $addonName == '' ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
+            if (class_exists($class)) {
+                $model = new $class('');
+                $arr[$k][2] = $addonName == '' ? $model->params['name'] : $addonName; // если почему-то в БД сбросится
+            }
         }
 
         $options = (defined('JSON_UNESCAPED_UNICODE')) ? JSON_UNESCAPED_UNICODE : 0;

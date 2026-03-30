@@ -29,8 +29,11 @@ class Model extends AbstractModel
         foreach ($addons as $addon) {
             $class = Util::getClassName($addon, 'Addon');
             $folder = ltrim(ltrim(str_replace('\\', '/', $class), '/'), 'Ideal/');
-            $arr = require($folder . '/config.php');
-            $list[$addon] = $arr['params']['name'];
+            $file = $folder . '/config.php';
+            if (file_exists($file)) {
+                $arr = require($file);
+                $list[$addon] = $arr['params']['name'];
+            }
         }
 
         return $list;

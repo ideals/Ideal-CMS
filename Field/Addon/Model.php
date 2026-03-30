@@ -114,6 +114,15 @@ class Model
     public function getTab($id, string $addonVar, $addonName = ''): array
     {
         $class = Util::getClassName($addonVar, 'Addon') . '\\AdminModel';
+
+        if (!class_exists($class)) {
+            return [
+                'name' => $addonName,
+                'header' => 'Отсутствует',
+                'content' => '',
+            ];
+        }
+
         /** @var \Ideal\Core\Admin\Model $model */
         $model = new $class('');
 
