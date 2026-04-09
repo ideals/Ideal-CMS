@@ -8,8 +8,6 @@
  * @license   http://idealcms.ru/license.html LGPL v3
  */
 
-// @codingStandardsIgnoreFile
-
 namespace Ideal\Core;
 
 use Ideal\Field\Url;
@@ -52,13 +50,13 @@ abstract class Model
 
         $parts = preg_split('/[_\\\\]+/', get_class($this));
         $this->module = $parts[0];
-        $module = ($this->module == 'Ideal') ? '' : $this->module . '/';
+        $module = ($this->module === 'Ideal') ? '' : $this->module . '/';
 
         $type = $parts[1]; // Structure или Addon
         $structureName = $parts[2];
         $structureFullName = $this->module . '_' . $structureName;
 
-        if ($structureName == 'Home') {
+        if ($structureName === 'Home') {
             $type = 'Home';
         }
 

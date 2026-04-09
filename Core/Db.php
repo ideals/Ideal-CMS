@@ -315,6 +315,7 @@ class Db extends \mysqli
     public function insertMultiple($table, $params)
     {
         $this->clearCache($table);
+        $vals = [];
         $values = [];
         $columns = [];
 
@@ -332,7 +333,7 @@ class Db extends \mysqli
 
             // Массив всех добавляемых строк
             $values[] = '(' . implode(', ', $vals) . ')';
-            unset($vals);
+            $vals = [];
         }
 
         $columns = implode(', ', $columns);
