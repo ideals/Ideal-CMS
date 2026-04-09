@@ -55,7 +55,7 @@ class Util
                 // Вывод сообщения в текстовый файл
                 $msg = Date('d.m.y H:i', time()) . '  ' . $_SERVER['REQUEST_URI'] . PHP_EOL;
                 $msg .= $txt . $traceStr . PHP_EOL . PHP_EOL;
-                $file = DOCUMENT_ROOT . '/' . $config->cmsFolder . '/error.log';
+                $file = DOCUMENT_ROOT . '/../tmp/error.log';
                 file_put_contents($file, $msg, FILE_APPEND);
                 break;
 
