@@ -65,12 +65,12 @@ class ModelAbstract extends Model
         // Проверка найденных элементов из БД на соответствие последовательности ID в par
         // и последовательности cid адресов
         $cidModel = new Cid\Model($this->params['levels'], $this->params['digits']);
-        $cidPrev = $cidModel->reconstruct('0'); // вначале разбора параметров не существует никакого сида
+        $cidPrev = $cidModel->numToCid(0); // вначале разбора параметров не существует никакого сида
         $trueResult = [];
         $parElement = reset($par);
         foreach ($result as $v) {
             if ($v['ID'] != $parElement) {
-                // Если ID найденного элемента не сооветствует ID в переданной строке par
+                // Если ID найденного элемента не соответствует ID в переданной строке par
                 continue;
             }
 
