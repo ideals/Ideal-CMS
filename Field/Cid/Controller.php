@@ -51,7 +51,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getValueForList($values, $fieldName)
+    public function getValueForList($values, $fieldName): string
     {
         $cid = new Model($this->model->params['levels'], $this->model->params['digits']);
         return $cid->getBlock($values['cid'], $values['lvl']);

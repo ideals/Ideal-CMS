@@ -39,7 +39,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
      * @param array $url Оставшаяся, неразобранная часть URL
      * @return $this
      */
-    public function detectPageByUrl($path, $url): self
+    public function detectPageByUrl($path, $url): \Ideal\Core\Site\Model
     {
         parent::detectPageByUrl($path, $url);
 

@@ -23,7 +23,10 @@ class AbstractSiteModel extends Model
     /**
      * {@inheritdoc}
      */
-    public function detectPageByUrl($path, $url) {}
+    public function detectPageByUrl($path, $url): Model
+    {
+        return $this;
+    }
 
     public function setPageDataByPrevStructure($prevStructure): void
     {

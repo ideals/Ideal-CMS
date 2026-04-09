@@ -23,7 +23,13 @@ abstract class Model extends Core\Model
     /** @var bool Нужно ли удалять заголовок h1 из текста */
     protected $isExtractHeader = true;
 
-    abstract public function detectPageByUrl($path, $url);
+    /**
+     * Определение вызываемой страницы по url
+     *
+     * @param array $path
+     * @param string $url
+     */
+    abstract public function detectPageByUrl($path, $url): Model;
 
     /**
      * Заглушка для метода, возвращающего список вложенных элементов выбранного элемента структуры

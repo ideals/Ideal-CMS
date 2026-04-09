@@ -32,7 +32,7 @@ class ModelAbstract extends Model
         $this->_table = strtolower($config->db['prefix'] . 'Structure_' . $structure['structure']);
     }
 
-    public function detectPageByUrl($path, $url): self
+    public function detectPageByUrl($path, $url): \Ideal\Core\Site\Model
     {
         $db = Db::getInstance();
 

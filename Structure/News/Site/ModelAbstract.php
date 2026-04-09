@@ -21,7 +21,7 @@ class ModelAbstract extends Model
 {
     public $cid;
 
-    public function detectPageByUrl($path, $url): self
+    public function detectPageByUrl($path, $url): Model
     {
         if (count($url) > 1) {
             // URL новостей не может содержать вложенных элементов

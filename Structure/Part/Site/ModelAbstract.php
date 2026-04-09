@@ -20,7 +20,7 @@ use Ideal\Structure\User;
 
 class ModelAbstract extends Model
 {
-    public function detectPageByUrl($path, $url)
+    public function detectPageByUrl($path, $url): Model
     {
         $db = Db::getInstance();
 
