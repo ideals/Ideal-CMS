@@ -10,7 +10,7 @@
 
 namespace Ideal\Core\Site;
 
-use Ideal\Structure\User\Model;
+use Ideal\Structure\User\Model as UserModel;
 use Ideal\Core\Config;
 use Ideal\Core\Request;
 use Ideal\Core\View;
@@ -129,7 +129,6 @@ class Controller
      */
     public function indexAction(): void
     {
-
         // Выдёргиваем заголовок из addonName[key]['content']
         $header = $this->model->getHeader();
 
@@ -216,7 +215,7 @@ class Controller
         $this->view->isProduction = $config->domain == str_replace('www.', '', $_SERVER['HTTP_HOST']);
 
         // Определение залогинен пользователь в админку или нет
-        $user = new Model();
+        $user = new UserModel();
         $this->view->isAdmin = $user->checkLogin();
 
         $helper = new Helper();

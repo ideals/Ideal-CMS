@@ -16,12 +16,15 @@ use Ideal\Field;
 
 abstract class Model extends Core\Model
 {
-    public $metaTags = [
+    /**
+     * @var array<string, string>
+     */
+    public array $metaTags = [
         'robots' => 'index, follow',
     ];
 
     /** @var bool Нужно ли удалять заголовок h1 из текста */
-    protected $isExtractHeader = true;
+    protected bool $isExtractHeader = true;
 
     /**
      * Определение вызываемой страницы по url
@@ -93,19 +96,14 @@ abstract class Model extends Core\Model
         if (isset($this->pageData['content']) && !empty($this->pageData['content'])) {
             [$header, $text] = $this->extractHeader($this->pageData['content']);
             $this->pageData['content'] = $text;
-        } elseif (!empty($this->pageData['addon'])) {
+        } elseif (isset($this->pageData['addons'])) {
             // Последовательно пытаемся получить заголовок из всех аддонов до первого найденного
-            if (isset($this->pageData['addons'])) {
-                $counter = count($this->pageData['addons']);
-                for ($i = 0; $i < $counter; $i++) {
-                    if (isset($this->pageData['addons'][$i]['content'])
-                        && $this->pageData['addons'][$i]['content'] !== ''
-                    ) {
-                        [$header, $text] = $this->extractHeader($this->pageData['addons'][$i]['content']);
-                        if (!empty($header)) {
-                            $this->pageData['addons'][$i]['content'] = $text;
-                            break;
-                        }
+            foreach ($this->pageData['addons'] as $i => $iValue) {
+                if (isset($iValue['content']) && $iValue['content'] !== '') {
+                    [$header, $text] = $this->extractHeader($iValue['content']);
+                    if (!empty($header)) {
+                        $this->pageData['addons'][$i]['content'] = $text;
+                        break;
                     }
                 }
             }
@@ -120,9 +118,9 @@ abstract class Model extends Core\Model
     }
 
     /**
-     * @return array<int, mixed>
+     * @return array<string, string>
      */
-    public function extractHeader($text)
+    public function extractHeader($text): array
     {
         $header = '';
         if (preg_match('/<h1.*>\s*(.*)<\/h1>/isU', $text, $headerArray)) {
@@ -182,7 +180,7 @@ abstract class Model extends Core\Model
     {
         $end = $this->pageData;
         $concat = ($this->pageNum > 1) ? str_replace('[N]', $this->pageNum, $this->pageNumTitle) : '';
-        if (isset($end['title']) && $end['title'] != '') {
+        if (isset($end['title']) && $end['title'] !== '') {
             return $end['title'] . $concat;
         }
 
