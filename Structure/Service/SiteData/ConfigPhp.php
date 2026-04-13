@@ -161,27 +161,32 @@ class ConfigPhp
      * @param string $fileName Имя php-файла из которого читается конфигурация
      * @return bool Флаг успешного считывания данных из файла
      */
-    public function loadFile($fileName): bool
+    public function loadFile(string $fileName): bool
     {
         if (!stream_resolve_include_path($fileName)) {
             return false;
         }
 
         $cfg = file($fileName, FILE_USE_INCLUDE_PATH);
+        if (!is_array($cfg)) {
+            echo 'Не удалось прочитать файл конфигурации ' . $fileName;
+            return false;
+        }
 
         // Убираем служебные символы (пробелы, табуляцию) из начала и из конца строк
         array_walk(
             $cfg,
-            function (&$value): void {
+            static function (string &$value): void {
                 $value = trim($value);
             },
         );
 
         $skip = [
+            '',
             '<?php',
             '// @codingStandardsIgnoreFile',
-            'return array(',
-            ');',
+            'return [',
+            '];',
         ];
 
         $params['default'] = [
@@ -203,14 +208,14 @@ class ConfigPhp
             $label = $cols[1] ?? null;
             if (is_null($label)) {
                 // Комментария в нужном формате нет, значит это массив
-                preg_match('/\'(.*)\'\s*=>\s*array\s*\(\s*\/\/\s*(.*)/i', $other, $match);
+                preg_match('/\'(.*)\'\s*=>\s*\[\s*\/\/\s*(.*)/i', $other, $match);
                 if (!isset($match[1]) || !isset($match[2])) {
-                    echo sprintf('Ошибка парсинга файла %s в строке %d<br />', $fileName, $i);
+                    echo sprintf('Ошибка парсинга файла %s в строке %d: %s<br />', $fileName, $i, $v);
                     exit;
                 }
 
                 $array = [];
-                while ($cfg[++$i] != '),') {
+                while ($cfg[++$i] !== '],') {
                     $v = $cfg[$i];
                     $param = $this->parseStr($v);
                     $array = array_merge($array, $param);
@@ -236,7 +241,7 @@ class ConfigPhp
      * Сеттер для защищённого поля $this->params
      * @param array $params Модифицированный набор полей для сохранения в конфигурационном файле
      */
-    public function setParams($params): void
+    public function setParams(array $params): void
     {
         $this->params = $params;
     }
