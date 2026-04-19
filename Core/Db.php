@@ -169,7 +169,7 @@ class Db extends \mysqli
      * @param array $fields Названия создаваемых полей и описания их типа
      * @return bool|\mysqli_result
      */
-    public function create($table, $fields)
+    public function create(string $table, array $fields, bool $execute = true)
     {
         $sqlFields = [];
 
@@ -182,9 +182,9 @@ class Db extends \mysqli
             $sqlFields[] = sprintf("`%s` %s COMMENT '%s'", $key, $value['sql'], $value['label']);
         }
 
-        $sql = sprintf('CREATE TABLE `%s` (', $table) . implode(',', $sqlFields) . ') DEFAULT CHARSET=utf8';
+        $sql = sprintf('CREATE TABLE `%s` (%s) DEFAULT CHARSET=utf8', $table, implode(',', $sqlFields));
 
-        return $this->query($sql);
+        return $execute ? $this->query($sql) : $sql;
     }
 
     /**
