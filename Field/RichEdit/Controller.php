@@ -17,11 +17,11 @@ use Ideal\Field\AbstractController;
  * Текстовое поле с визуальным редактором html-кода
  *
  * Пример объявления в конфигурационном файле структуры:
- *     'content' => array(
+ *     'content' => [
  *         'label' => 'Текст на странице',
  *         'sql'   => 'text',
- *         'type'  => 'Ideal_RichEdit'
- *     ),
+ *         'type'  => 'Ideal_RichEdit',
+ *     ],
  */
 class Controller extends AbstractController
 {
@@ -33,8 +33,9 @@ class Controller extends AbstractController
      */
     public function showEdit(): string
     {
-        return '<div id="' . $this->htmlName . '-control-group">'
-            . $this->getLabelText() . '<br />' . $this->getInputText() . '</div>';
+        return '<div id="' . $this->htmlName . '-control-group" style="margin-bottom: 15px;">'
+            . '<label for="' . $this->htmlName . '" style="font-weight: 700;">'
+            . $this->getLabelText() . '</label><br />' . $this->getInputText() . '</div>';
     }
 
     /**
