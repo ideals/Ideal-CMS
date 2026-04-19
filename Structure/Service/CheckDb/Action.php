@@ -38,6 +38,11 @@ $dbTables = [];
 foreach ($result as $v) {
     $table = array_shift($v);
 
+    if ($table === $config->db['prefix'] . 'migrations') {
+        // Пропускаем таблицу с миграциями.
+        continue;
+    }
+
     // Получаем информацию о полях таблицы
     $fieldsInfo = $db->select('SHOW COLUMNS FROM ' . $table . ' FROM `' . $config->db['name'] . '`');
     $fields = [];
@@ -107,16 +112,24 @@ foreach ($config->structures as $v) {
     $cfgTablesFull[$table] = $module . 'Structure/' . $structure;
 }
 
+$sqlList = [];
+$execute = $_POST['do'] === 'update';
+
 // Если есть таблицы, которые надо создать
 if (isset($_POST['create'])) {
     foreach ($_POST['create'] as $table => $v) {
-        echo '<p>Создаём таблицу ' . $table . '…';
+        if ($execute) {
+            echo '<p>Создаём таблицу ' . $table . '…';
+        }
         $file = $cfgTablesFull[$table] . '/config.php';
-        /** @noinspection PhpIncludeInspection */
         $data = include($file);
         $fields = getFieldListWithTypes($data);
-        $db->create($table, $data['fields']);
-        echo ' Готово.</p>';
+        $result = $db->create($table, $data['fields'], $execute);
+        if ($execute) {
+            echo ' Готово.</p>';
+        } else {
+            $sqlList[] = $result;
+        }
         $dbTables[$table] = $fields;
     }
 }
@@ -125,9 +138,10 @@ if (isset($_POST['create'])) {
 if (isset($_POST['create_field'])) {
     foreach ($_POST['create_field'] as $tableField => $v) {
         [$table, $field] = explode('-', $tableField);
-        echo '<p>Добавляем поле ' . $field . ' в таблицу ' . $table . '…';
+        if ($execute) {
+            echo '<p>Добавляем поле ' . $field . ' в таблицу ' . $table . '…';
+        }
         $file = $cfgTablesFull[$table] . '/config.php';
-        /** @noinspection PhpIncludeInspection */
         $data = include($file);
 
         //Поиск поля после которого нужно вставить новое
@@ -146,8 +160,12 @@ if (isset($_POST['create_field'])) {
         // Составляем sql запрос для вставки поля в таблицу
         $sql = sprintf('ALTER TABLE %s ADD %s %s', $table, $field, $data['fields'][$field]['sql'])
             . sprintf(" COMMENT '%s' %s;", $data['fields'][$field]['label'], $afterThisField);
-        $db->query($sql);
-        echo ' Готово.</p>';
+        if ($execute) {
+            $db->query($sql);
+            echo ' Готово.</p>';
+        } else {
+            $sqlList[] = $sql;
+        }
         $fields = getFieldListWithTypes($data);
         $dbTables[$table][$field] = $fields[$field];
     }
@@ -156,9 +174,14 @@ if (isset($_POST['create_field'])) {
 // Если есть таблицы, которые надо удалить
 if (isset($_POST['delete'])) {
     foreach ($_POST['delete'] as $table => $v) {
-        echo '<p>Удаляем таблицу ' . $table . '…';
-        $db->query(sprintf('DROP TABLE `%s`', $table));
-        echo ' Готово.</p>';
+        $sql = sprintf('DROP TABLE `%s`', $table);
+        if ($execute) {
+            echo '<p>Удаляем таблицу ' . $table . '…';
+            $db->query($sql);
+            echo ' Готово.</p>';
+        } else {
+            $sqlList[] = $sql;
+        }
         unset($dbTables[$table]);
     }
 }
@@ -167,9 +190,14 @@ if (isset($_POST['delete'])) {
 if (isset($_POST['delete_field'])) {
     foreach ($_POST['delete_field'] as $tableField => $v) {
         [$table, $field] = explode('-', $tableField);
-        echo '<p>Удаляем поле ' . $field . ' в таблице ' . $table . '…';
-        $db->query(sprintf('ALTER TABLE %s DROP COLUMN %s;', $table, $field));
-        echo ' Готово.</p>';
+        $sql = sprintf('ALTER TABLE %s DROP COLUMN %s;', $table, $field);
+        if ($execute) {
+            echo '<p>Удаляем поле ' . $field . ' в таблице ' . $table . '…';
+            $db->query($sql);
+            echo ' Готово.</p>';
+        } else {
+            $sqlList[] = $sql;
+        }
         unset($dbTables[$table][$field]);
     }
 }
@@ -178,18 +206,27 @@ if (isset($_POST['delete_field'])) {
 if (isset($_POST['change_type'])) {
     foreach ($_POST['change_type'] as $tableField => $v) {
         [$table, $field, $type] = explode('-', $tableField, 3);
-        echo '<p>Изменяем поле ' . $field . ' в таблице ' . $table . ' на тип' . $type . '…';
         // Поле с типом "SET", требует особенного подхода в обновлении значений
-        if (strpos(mb_strtolower($type), 'set') === 0) {
-            $db->query(sprintf('ALTER TABLE %s CHANGE %s %s %s;', $table, $field, $field, $type));
+        if (strncasecmp($type, 'set', 3) === 0) {
+            $sql = sprintf('ALTER TABLE %s CHANGE %s %s %s;', $table, $field, $field, $type);
         } else {
-            $db->query(sprintf('ALTER TABLE %s MODIFY %s %s;', $table, $field, $type));
+            $sql = sprintf('ALTER TABLE %s MODIFY %s %s;', $table, $field, $type);
         }
-        echo ' Готово.</p>';
+        if ($execute) {
+            echo '<p>Изменяем поле ' . $field . ' в таблице ' . $table . ' на тип' . $type . '…';
+            $db->query($sql);
+            echo ' Готово.</p>';
+        } else {
+            $sqlList[] = $sql;
+        }
         $dbTables[$table][$field] = $type;
     }
 }
 
+if (isset($_POST['do']) && !$execute) {
+    echo '<p>Миграции:</p>';
+    echo implode('<br>', $sqlList);
+}
 
 $isCool = true;
 
@@ -257,8 +294,8 @@ foreach (array_keys($dbTables) as $tableName) {
 }
 
 // После нажатия на кнопку применить и совершения действий, нужно либо заново перечитывать БД, либо перегружать страницу
-if (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_field'])
-    || isset($_POST['delete_field']) || isset($_POST['change_type'])) {
+if ($execute && (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_field'])
+    || isset($_POST['delete_field']) || isset($_POST['change_type']))) {
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
 }
@@ -266,7 +303,9 @@ if (isset($_POST['create']) || isset($_POST['delete']) || isset($_POST['create_f
 if ($isCool) {
     echo 'Конфигурация в файлах соответствует конфигурации базы данных.';
 } else {
-    echo '<button class="btn btn-primary btn-large" type="submit">Применить</button>';
+    echo '<button class="btn btn-primary btn-large" type="submit" name="do" value="migration">Сгенерировать миграцию</button>';
+    echo ' &nbsp; &nbsp; &nbsp; ';
+    echo '<button class="btn btn-primary btn-large" type="submit" name="do" value="update">Изменить в БД</button>';
 }
 
 // Получаем информацию о полях из конфигурационных файлов
