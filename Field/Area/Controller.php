@@ -16,11 +16,12 @@ use Ideal\Field\AbstractController;
  * Отображение редактирования поля в админке в виде textarea
  *
  * Пример объявления в конфигурационном файле структуры:
- *     'annotation' => array(
+ *     'annotation' => [
  *         'label' => 'Аннотация',
  *         'sql'   => 'text',
- *         'type'  => 'Ideal_Area'
- *     ),
+ *         'type'  => 'Ideal_Area',
+ *         'rows'  => 3, // Количество строк в поле textarea
+ *     ],
  */
 class Controller extends AbstractController
 {
@@ -32,9 +33,11 @@ class Controller extends AbstractController
      */
     public function getInputText(): string
     {
+        $rows = $this->field['rows'] ?? 3;
+
         return
             '<textarea class="form-control" name="' . $this->htmlName
-            . '" id="' . $this->htmlName
+            . '" id="' . $this->htmlName . '" rows=" ' . $rows
             . '">' . htmlspecialchars($this->getValue()) . '</textarea>';
     }
 }
