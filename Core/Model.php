@@ -292,6 +292,9 @@ abstract class Model
     public function initPageData($pageData = null): void
     {
         $this->pageData = $pageData ?? end($this->path);
+        if ($this->pageData === false) {
+            $this->pageData = [];
+        }
 
         // Получаем переменные шаблона
         $config = Config::getInstance();
