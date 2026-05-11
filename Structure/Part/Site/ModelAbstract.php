@@ -296,7 +296,7 @@ class ModelAbstract extends Model
     /**
      * Построение пути в рамках одной структуры.
      */
-    protected function getLocalPath(): array
+    public function getLocalPath(): array
     {
         $category = $this->pageData;
 

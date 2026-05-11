@@ -586,7 +586,7 @@ abstract class Model
      *
      * @throws \Exception
      */
-    protected function getLocalPath()
+    public function getLocalPath()
     {
         throw new \Exception('Вызов не переопределённого метода getLocalPath');
     }
