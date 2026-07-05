@@ -52,7 +52,7 @@ class Tags extends Widget
             $where .= 'WHERE tags.prev_structure = "' . $fields['tag']['prev_structure'] . '"';
         }
 
-        $sql = "SELECT tags.* FROM {$table} AS tags {$where} ORDER BY tags.cid";
+        $sql = sprintf('SELECT tags.* FROM %s AS tags %s ORDER BY tags.cid', $table, $where);
         $result = $db->select($sql);
 
         // Получаем список активных тегов

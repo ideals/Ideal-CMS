@@ -21,11 +21,11 @@ abstract class Model
 
     public $params;
 
+    public $pageData;
+
     protected string $_table;
 
     protected string $module;
-
-    protected $pageData;
 
     protected $pageNum;
 
