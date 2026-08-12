@@ -10,6 +10,7 @@
 
 namespace Ideal\Structure\Service\Cache;
 
+use App\Cache\ClearCache;
 use Ideal\Addon\SiteMap\SiteModel;
 use Ideal\Core\FileCache;
 use Ideal\Core\Memcache;
@@ -27,34 +28,9 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function clearCacheAction(): void
     {
-        $config = Config::getInstance();
-        $configCache = $config->cache;
+        (new ClearCache())->execute();
+        print json_encode(['text' => 'ok'], JSON_THROW_ON_ERROR);
 
-        // Очищаем файловый кэш
-        if (isset($configCache['fileCache']) && $configCache['fileCache']) {
-            FileCache::clearFileCache();
-        }
-
-        // Очищаем Memcache, только если он включён в настройках
-        if ($config->cache['memcache']) {
-            $memcache = Memcache::getInstance();
-            $memcache->flush();
-        }
-
-        // Очищаем twig кэш
-        View::clearTwigCache();
-
-        // Удаляем сжатый css
-        if (file_exists(DOCUMENT_ROOT . '/css/all.min.css')) {
-            unlink(DOCUMENT_ROOT . '/css/all.min.css');
-        }
-
-        // Удаляем сжатый js
-        if (file_exists(DOCUMENT_ROOT . '/js/all.min.js')) {
-            unlink(DOCUMENT_ROOT . '/js/all.min.js');
-        }
-
-        print json_encode(['text' => 'ok']);
         exit;
     }
 
