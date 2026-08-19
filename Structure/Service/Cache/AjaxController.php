@@ -10,12 +10,10 @@
 
 namespace Ideal\Structure\Service\Cache;
 
-use App\Cache\ClearCache;
 use Ideal\Addon\SiteMap\SiteModel;
-use Ideal\Core\FileCache;
-use Ideal\Core\Memcache;
-use Ideal\Core\View;
+use Ideal\Core\ClearCache;
 use Ideal\Core\Config;
+use Ideal\Core\FileCache;
 
 /**
  * Сброс всего кэширования
