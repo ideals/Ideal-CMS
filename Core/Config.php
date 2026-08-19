@@ -9,6 +9,8 @@
 
 namespace Ideal\Core;
 
+use Nyholm\Dsn\DsnParser;
+
 /**
  * Класс конфигурации, в котором хранятся все конфигурационные данные CMS
  *
@@ -199,6 +201,15 @@ class Config
 
         // Загрузка данных из конфигурационных файлов подключённых структур
         $this->loadStructures();
+
+        if (isset($_ENV['MAILER_DSN'])) {
+            $dsn = DsnParser::parse($_ENV['MAILER_DSN']);
+            $this->array['smtp']['isActive'] = '1';
+            $this->array['smtp']['server'] = $dsn->getHost();
+            $this->array['smtp']['port'] = $dsn->getPort();
+            $this->array['smtp']['user'] = $dsn->getUser();
+            $this->array['smtp']['password'] = $dsn->getPassword();
+        }
     }
 
     /**
