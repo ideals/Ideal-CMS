@@ -122,7 +122,7 @@ class Db extends \mysqli
      * @param int $resultMode
      * @return bool|\mysqli_result
      */
-    public function query($query, $resultMode = MYSQLI_STORE_RESULT)
+    public function query($query, $result_mode = MYSQLI_STORE_RESULT): \mysqli_result|bool
     {
         if ($this->logFile) {
             file_put_contents(
@@ -132,7 +132,7 @@ class Db extends \mysqli
             );
         }
 
-        $result = parent::query($query, $resultMode);
+        $result = parent::query($query, $result_mode);
 
         if ($this->logError && $error = $this->error) {
             Util::addError($error . PHP_EOL . 'Query: ' . $query);
