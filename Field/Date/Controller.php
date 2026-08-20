@@ -67,7 +67,7 @@ class Controller extends AbstractController
      */
     public function getValueForList($values, $fieldName): string
     {
-        return date('d.m.Y &\nb\sp; H:i', $values[$fieldName]);
+        return date('d.m.Y \&\n\b\s\p\; H:i', $values[$fieldName]);
     }
 
     /**

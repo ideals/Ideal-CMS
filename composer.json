@@ -13,6 +13,6 @@
         "monolog/monolog": "^2.9",
         "mtdowling/cron-expression": "^1.2",
         "nyholm/dsn": "^2.0",
-        "twig/twig": "^1.42"
+        "twig/twig": "^3.28"
     }
 }

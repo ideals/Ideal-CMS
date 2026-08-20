@@ -48,7 +48,7 @@
         <div class="navbar-collapse collapse" id="bs-main-navbar-collapse-1">
             {% if user.ID %}
                 <ul class="nav navbar-nav">
-                    {% for item in structures if item.isShow %}
+                    {% for item in structures | filter(v => v.isShow) %}
                         <li {% if activeStructureId == item.ID %} class="active" {% endif %}>
                             <a href="index.php?par={{ item.ID }}">{{ item.name }}</a>
                         </li>

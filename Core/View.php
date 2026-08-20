@@ -10,20 +10,22 @@
 
 namespace Ideal\Core;
 
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+use Twig\TemplateWrapper;
+
 /**
  * Класс вида View, обеспечивающий отображение переданных в него данных
  * в соответствии с указанным twig-шаблоном
  */
 class View
 {
-    /** @var \Twig_TemplateInterface */
-    protected $template;
+    protected TemplateWrapper $template;
 
-    /** @var \Twig_Environment * */
-    protected \Twig_Environment $templater;
+    protected Environment $twig;
 
     /** @var array Массив для хранения переменных, передаваемых во View */
-    protected $vars = [];
+    protected array $vars = [];
 
     /**
      * Инициализация шаблонизатора
@@ -33,8 +35,6 @@ class View
      */
     public function __construct($pathToTemplates, $isCache = false)
     {
-
-
         // Определяем корневую папку системы для подключение шаблонов из любой вложенной папки через их путь
         $config = Config::getInstance();
         $cmsFolder = DOCUMENT_ROOT . '/' . $config->cmsFolder;
@@ -53,7 +53,7 @@ class View
 
         $pathToTemplates = array_merge([$cmsFolder], $pathToTemplates, $idealFolders);
 
-        $loader = new \Twig_Loader_Filesystem($pathToTemplates);
+        $loader = new FilesystemLoader($pathToTemplates);
 
         $config = Config::getInstance();
         $params = [];
@@ -70,7 +70,7 @@ class View
             }
         }
 
-        $this->templater = new \Twig_Environment($loader, $params);
+        $this->twig = new Environment($loader, $params);
     }
 
     /**
@@ -143,7 +143,7 @@ class View
      */
     public function loadTemplate($fileName): void
     {
-        $this->template = $this->templater->loadTemplate($fileName);
+        $this->template = $this->twig->load($fileName);
     }
 
     public function render()
