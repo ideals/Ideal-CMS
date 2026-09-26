@@ -45,7 +45,7 @@ class Controller extends AbstractController
      */
     public function getValueForList($values, $fieldName): string
     {
-        return number_format($values[$fieldName], 2, ',', '&nbsp;');
+        return number_format($values[$fieldName] / 100, 2, ',', '&nbsp;');
     }
 
     /**
