@@ -222,7 +222,7 @@ class Util
      * @param int $len Максимальная длина строки (по умолчанию 3072)
      * @return string Безопасный блок текста
      */
-    public static function parseWebArea($str, $len = 3072)
+    public static function parseWebArea($str, $len = 3072): string|array
     {
         // Обрезаем строку до нужного размера
         $str = mb_substr($str, 0, $len);
@@ -246,7 +246,7 @@ class Util
      * @param int $len Максимальная длина строки (по умолчанию 255)
      * @return string Безопасная строка
      */
-    public static function parseWebStr($str, $len = 255)
+    public static function parseWebStr($str, $len = 255): string|array
     {
         $str = Util::parseWebMail($str, $len);
         // Заменяем @ на собаку, в обычном тексте этот символ совершенно не нужен
@@ -328,7 +328,7 @@ class Util
         $firstLen = mb_strlen($str);
         $str = mb_substr($str, 0, $len);
         if ($firstLen !== mb_strlen($str)) {
-            $str = mb_substr($str, 0, mb_strrpos($str, ' '));
+            return mb_substr($str, 0, mb_strrpos($str, ' '));
         }
 
         return $str;
@@ -399,7 +399,7 @@ class Util
      *
      * @return mixed cid из google analytics или false в случае неудачи
      */
-    public static function getGACID()
+    public static function getGACID(): string|false
     {
         $GACid = false;
         if (isset($_COOKIE['_ga'])) {

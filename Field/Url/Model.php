@@ -179,13 +179,12 @@ class Model
 
         $config = Config::getInstance();
         if ($lastUrlPart == '/' || $lastUrlPart == '') {
-            $lastUrlPart = '/';
             // Ссылка на главную обрабатывается особым образом
             if ($config->cms['startUrl'] != '') {
-                $lastUrlPart = $config->cms['startUrl'] . '/';
+                return $config->cms['startUrl'] . '/';
             }
 
-            return $lastUrlPart;
+            return '/';
         }
 
         $pluginBroker = PluginBroker::getInstance();
@@ -194,9 +193,9 @@ class Model
 
         $lastUrlPart = $arr['last']['url'];
 
-        if (strpos($lastUrlPart, 'http:') === 0
-            || strpos($lastUrlPart, 'https:') === 0
-            || strpos($lastUrlPart, '/') === 0
+        if (str_starts_with($lastUrlPart, 'http:')
+            || str_starts_with($lastUrlPart, 'https:')
+            || str_starts_with($lastUrlPart, '/')
             || empty($lastUrlPart)
         ) {
             // Если это уже сформированная или пустая ссылка, её и возвращаем
@@ -229,10 +228,8 @@ class Model
 
     /**
      * Отрезает стандартный суффикс от ссылки
-     *
-     * @return string
      */
-    public function cutSuffix($link)
+    public function cutSuffix($link): string
     {
         $config = Config::getInstance();
         return substr($link, 0, -strlen($config->urlSuffix));
@@ -284,9 +281,9 @@ class Model
                 continue;
             }
 
-            if (strpos($v['url'], 'http:') === 0
-                || strpos($v['url'], 'https:') === 0
-                || strpos($v['url'], '/') === 0
+            if (str_starts_with($v['url'], 'http:')
+                || str_starts_with($v['url'], 'https:')
+                || str_starts_with($v['url'], '/')
             ) {
                 // Если в одном из элементов пути есть ссылки на другие страницы, то путь построить нельзя
                 return '---';

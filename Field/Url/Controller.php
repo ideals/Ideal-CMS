@@ -62,13 +62,11 @@ class Controller extends AbstractController
         $link = $url->getUrlWithPrefix($values, $this->model->getParentUrl());
         if ($link == '---') {
             // Если это страница внутри главной, то просто возвращаем поле url
-            $link = $values[$fieldName];
-        } else {
-            // Если это не страница внутри Главной, то делаем ссылку
-            $link = '<a href="' . $link . '" target="_blank">' . $link . '</a>';
+            return $values[$fieldName];
         }
 
-        return $link;
+        // Если это не страница внутри Главной, то делаем ссылку
+        return '<a href="' . $link . '" target="_blank">' . $link . '</a>';
     }
 
     public function parseInputValue($isCreate)

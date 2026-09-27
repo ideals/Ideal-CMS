@@ -236,7 +236,7 @@ class Controller
 
         // Проводим финальные модификации страницы, общие для всех страниц
         if (method_exists($helper, 'finishMod')) {
-            $text = $helper->finishMod($text);
+            return $helper->finishMod($text);
         }
 
         return $text;
@@ -282,11 +282,11 @@ class Controller
     {
         // Если был введён полный путь то он используется напрямую иначе только имя
         // Считаем что был введён полный путь если присутствует хотябы один слэш
-        if (strpos($tplName, '/') !== false) {
+        if (str_contains($tplName, '/')) {
             return $tplName;
         }
 
-        $parts = explode('\\', get_class($this));
+        $parts = explode('\\', static::class);
         $moduleName = ($parts[0] == 'Ideal') ? '' : $parts[0] . '/';
         return $moduleName . $parts[1] . '/' . $parts[2] . '/Site/' . $tplName;
     }
@@ -295,7 +295,7 @@ class Controller
      * Редирект по указанному адресу
      * @param string $url Адрес для редиректа
      */
-    protected function redirect(string $url)
+    protected function redirect(string $url): never
     {
         header('Location: ' . $url);
         exit;

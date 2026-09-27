@@ -179,7 +179,7 @@ class Model
     private function matchesRules(array $rules, $url): array
     {
         return array_filter($rules, function (string $rule) use ($url): bool {
-            if (strpos($rule, '/') !== 0) {
+            if (!str_starts_with($rule, '/')) {
                 $rule = '/^' . addcslashes($rule, '/\\^$.[]|()?*+{}') . '$/';
             }
 

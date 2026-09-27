@@ -146,7 +146,7 @@ abstract class AbstractController
         // значит неправильно сформировано поле редактирования
         $sql = strtolower($this->field['sql']);
 
-        if (($this->newValue === '') && (strpos($sql, 'not null') !== false) && (strpos($sql, 'default') === false)) {
+        if (($this->newValue === '') && (str_contains($sql, 'not null')) && (!str_contains($sql, 'default'))) {
             // Установлен NOT NULL и нет DEFAULT и $value пустое
             $item['message'] = 'необходимо заполнить это поле';
         }

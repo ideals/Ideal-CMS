@@ -27,7 +27,7 @@ class Model extends AbstractModel
     {
         $config = Config::getInstance();
 
-        $objClassName = get_class($this->obj); // определяем название класса модели редактируемого элемента
+        $objClassName = $this->obj::class; // определяем название класса модели редактируемого элемента
         $objClassNameSlice = explode('\\', $objClassName);
 
         // Получаем название текущего типа структуры

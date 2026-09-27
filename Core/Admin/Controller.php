@@ -133,7 +133,7 @@ class Controller
         $gblRoot = dirname(stream_resolve_include_path($gblName));
 
         // Определение названия модуля из названия класса контроллера
-        $parts = explode('\\', get_class($this));
+        $parts = explode('\\', static::class);
         $moduleName = $parts[0];
         $moduleName = ($moduleName === 'Ideal') ? '' : $moduleName . '/';
 
@@ -242,7 +242,7 @@ class Controller
      *
      * @return string Содержимое отображаемой страницы
      */
-    public function run(Router $router)
+    public function run(Router $router): string
     {
         $this->model = $router->getModel();
 

@@ -46,7 +46,7 @@ class Model extends AbstractModel
     {
         $config = Config::getInstance();
         // Определяем структуру объекта, которому присваиваются теги
-        $structure = $config->getStructureByClass(get_class($this->obj));
+        $structure = $config->getStructureByClass($this->obj::class);
 
         $_sql = sprintf("DELETE FROM %s WHERE part_id='{{ objectId }}' AND structure_id='%s';", $this->table, $structure['ID']);
         if (is_array($newValue) && ($newValue !== [])) {
@@ -71,7 +71,7 @@ class Model extends AbstractModel
 
         $config = Config::getInstance();
         // Определяем структуру объекта, которому присваиваются теги
-        $structure = $config->getStructureByClass(get_class($this->obj));
+        $structure = $config->getStructureByClass($this->obj::class);
 
         $db = Db::getInstance();
         $owner = $this->obj->getPageData();

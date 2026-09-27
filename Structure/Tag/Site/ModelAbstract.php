@@ -110,9 +110,8 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
      * Получение листалки для шаблона и стрелок вправо/влево
      *
      * @param string $pageName Название get-параметра, содержащего страницу
-     * @return mixed
      */
-    public function getElementsPager($pageName)
+    public function getElementsPager($pageName): false|array
     {
         // По заданному названию параметра страницы определяем номер активной страницы
         $request = new Request();
@@ -122,7 +121,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
         $query = $request->getQueryWithout($pageName);
 
         // Определяем кол-во отображаемых элементов на основании названия класса
-        $class = strtolower(get_class($this));
+        $class = strtolower(static::class);
         $class = explode('\\', trim($class, '\\'));
 
         $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
@@ -210,7 +209,7 @@ class ModelAbstract extends \Ideal\Structure\Part\Site\ModelAbstract
         }
 
         // Определяем кол-во отображаемых элементов на основании названия класса
-        $class = strtolower(get_class($this));
+        $class = strtolower(static::class);
         $class = explode('\\', trim($class, '\\'));
 
         $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';

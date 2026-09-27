@@ -41,7 +41,7 @@ class ExampleController extends Controller
      *
      * @return string Содержимое отображаемой страницы
      */
-    public function infoAction(Router $router)
+    public function infoAction(Router $router): string|false
     {
         $response = json_encode(['success' => true], JSON_FORCE_OBJECT);
         $this->jsonResponse = true;

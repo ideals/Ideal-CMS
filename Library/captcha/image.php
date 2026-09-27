@@ -406,18 +406,11 @@ function noisecolor()
 // Fonction permettant de d�terminer la couleur du bruit et la forme du pinceau
 {
     global $img, $noisecolorchar, $ink, $bg, $brushsize;
-    switch ($noisecolorchar) {
-        case 1:
-            $noisecol = $ink;
-            break;
-        case 2:
-            $noisecol = $bg;
-            break;
-        case 3:
-        default:
-            $noisecol = imagecolorallocate($img, random_int(0, 255), random_int(0, 255), random_int(0, 255));
-            break;
-    }
+    $noisecol = match ($noisecolorchar) {
+        1 => $ink,
+        2 => $bg,
+        default => imagecolorallocate($img, random_int(0, 255), random_int(0, 255), random_int(0, 255)),
+    };
 
     if ($brushsize && $brushsize > 1 && function_exists('imagesetbrush')) {
         $brush = imagecreatetruecolor($brushsize, $brushsize);
@@ -500,17 +493,11 @@ $word = ($difuplow ? $word : strtoupper($word));
 // Retourne 2 informations dans la session:
 // - Le code du cryptogramme (crypt� ou pas)
 // - La Date/Heure de la cr�ation du cryptogramme au format integer "TimeStamp"
-switch (strtoupper($cryptsecure)) {
-    case "MD5":
-        $_SESSION['cryptcode'] = md5($word);
-        break;
-    case "SHA1":
-        $_SESSION['cryptcode'] = sha1($word);
-        break;
-    default:
-        $_SESSION['cryptcode'] = $word;
-        break;
-}
+$_SESSION['cryptcode'] = match (strtoupper($cryptsecure)) {
+    "MD5" => md5($word),
+    "SHA1" => sha1($word),
+    default => $word,
+};
 
 $_SESSION['crypttime'] = time();
 $_SESSION['cryptcptuse']++;

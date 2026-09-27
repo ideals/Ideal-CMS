@@ -103,13 +103,11 @@ class Controller extends AbstractController
 
         if ($value == '') {
             // При создании элемента cid нельзя указать, он прописывается автоматически в конец списка
-            $html = '<input type="hidden" id="' . $this->htmlName
+            return '<input type="hidden" id="' . $this->htmlName
                 . '" name="' . $this->htmlName
                 . '" value="' . $value . '">';
-        } else {
-            $html = parent::showEdit();
         }
 
-        return $html;
+        return parent::showEdit();
     }
 }

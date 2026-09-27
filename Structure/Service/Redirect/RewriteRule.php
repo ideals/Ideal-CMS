@@ -344,7 +344,7 @@ class RewriteRule
      * @param $file string Полный путь к файлу с редиректами
      * @return array|bool Массив с редиректами, либо false — если не удалось считать редиректы
      */
-    protected function loadFile($file)
+    protected function loadFile($file): false|array
     {
         $fileName = basename($file);
 

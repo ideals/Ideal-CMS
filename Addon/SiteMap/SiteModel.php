@@ -38,7 +38,7 @@ class SiteModel extends AbstractSiteModel
 
         $this->pageData['content'] = '';
 
-        $mode = explode('\\', get_class($this->parentModel));
+        $mode = explode('\\', $this->parentModel::class);
         if ($mode[3] == 'Site') {
             // Для фронтенда к контенту добавляется карта сайта в виде ul-списка разделов
             $list = $this->getList(1); // считываем из БД все открытые разделы
@@ -111,7 +111,7 @@ class SiteModel extends AbstractSiteModel
                     continue;
                 }
 
-                $href = strpos($v['link'], 'href=') === false ? 'href="' . $v['link'] . '"' : $v['link'];
+                $href = !str_contains($v['link'], 'href=') ? 'href="' . $v['link'] . '"' : $v['link'];
                 $href = $href == 'href=""' ? '' : $href;
                 $str .= '<li><a ' . $href . '>' . $v['name'] . '</a>';
             }

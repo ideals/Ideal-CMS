@@ -69,7 +69,7 @@ class ModelAbstract extends Model
         // Сортируем экшены по полю pos
         usort(
             $actions,
-            fn(array $a, array $b) => $a['pos'] - $b['pos'],
+            fn(array $a, array $b): int|float => $a['pos'] - $b['pos'],
         );
 
         $this->menu = $actions;

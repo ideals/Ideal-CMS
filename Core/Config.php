@@ -42,7 +42,7 @@ class Config
      * @param string $name Название запрашиваемой переменной
      * @return string Значение запрашиваемой переменной
      */
-    public function __get(string $name)
+    public function __get(string $name): mixed
     {
         return $this->array[$name] ?? '';
     }
@@ -53,7 +53,7 @@ class Config
      * @param string $name Название переменной
      * @param mixed $value Значение переменной
      */
-    public function __set(string $name, $value)
+    public function __set(string $name, mixed $value)
     {
         $this->array[$name] = $value;
     }

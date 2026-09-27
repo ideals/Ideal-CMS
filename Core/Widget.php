@@ -17,9 +17,6 @@ use Ideal\Core\Site\Model;
  */
 abstract class Widget
 {
-    /** @var Model Модель страницы с данными */
-    protected $model;
-
     /** @var string Префикс url для списка ссылок, генерируемых виджетом */
     protected $prefix;
 
@@ -31,11 +28,12 @@ abstract class Widget
 
     /**
      * При инициализации виджета необходимо передать модель страницы с данными
+     * @param Model $model
      */
-    public function __construct($model)
-    {
-        $this->model = $model;
-    }
+    public function __construct(
+        /** @var Model Модель страницы с данными */
+        protected $model,
+    ) {}
 
     /**
      * Основной метод получения даных из виджета

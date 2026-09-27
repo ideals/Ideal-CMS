@@ -26,7 +26,7 @@ function myErrorHandler($errno, string $errstr, string $errfile, $errline): void
     Util::addError($err, true);
 }
 
-set_error_handler('myErrorHandler');
+set_error_handler(myErrorHandler(...));
 
 /**
  * Обработчик, вызываемый при завершении работы скрипта.
@@ -46,7 +46,7 @@ function shutDownFunction(): void
     Util::shutDown();
 }
 
-register_shutdown_function('shutdownFunction');
+register_shutdown_function(shutdownFunction(...));
 
 mb_internal_encoding('UTF-8'); // наша кодировка всегда UTF-8
 
@@ -63,7 +63,7 @@ function autoLoad($className): bool
 {
     $className = ltrim($className, '\\');
 
-    if (strpos($className, '\\') === false) {
+    if (!str_contains($className, '\\')) {
         // Имя класса без namespace — значит это не наш класс
         return false;
     }
@@ -94,4 +94,4 @@ function autoLoad($className): bool
     return false;
 }
 
-spl_autoload_register('autoLoad');
+spl_autoload_register(autoLoad(...));

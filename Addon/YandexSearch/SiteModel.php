@@ -41,7 +41,7 @@ class SiteModel extends AbstractSiteModel
     {
         $this->setPageDataByPrevStructure($this->prevStructure);
 
-        $mode = explode('\\', get_class($this->parentModel));
+        $mode = explode('\\', $this->parentModel::class);
 
         if ($mode[3] !== 'Site') {
             // Отображение поиска нужно только для фронтенда, в бэкенде просто возвращаем данные из БД
@@ -77,7 +77,7 @@ class SiteModel extends AbstractSiteModel
                 ))
                     ->setPerPage((int) $this->params['elements_site'])
                     ->setPage($page);
-            } catch (VeryLongQueryException $e) {
+            } catch (VeryLongQueryException) {
                 return [];
             }
 

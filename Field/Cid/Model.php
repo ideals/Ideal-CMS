@@ -18,23 +18,13 @@ use Ideal\Field;
  */
 class Model
 {
-    /** @var int Количество цифр (разрядов) на одном уровне вложенности */
-    private $digits;
-
-    /** @var int Количество уровней вложенности в cid */
-    private $levels;
-
     /**
      * Устанавливает количество уровней вложенности и количество разрядов на одном уровне вложенности
      *
      * @param int $levels Количество уровней вложенности в cid
      * @param int $digits Количество цифр (разрядов) на одном уровне вложенности
      */
-    public function __construct($levels, $digits)
-    {
-        $this->levels = $levels;
-        $this->digits = $digits;
-    }
+    public function __construct(private $levels, private $digits) {}
 
     /**
      * @param array $menu
@@ -103,11 +93,11 @@ class Model
      * @param bool $fullCid Нужно возвращать полный cid или только начальную часть (для поиска)
      * @return string Родительский cid
      */
-    public function getCidByLevel($cid, $lvl, $fullCid = true)
+    public function getCidByLevel($cid, $lvl, $fullCid = true): string
     {
         $parentCid = substr($cid, 0, ($lvl * $this->digits));
         if ($fullCid) {
-            $parentCid = $this->reconstruct($parentCid);
+            return $this->reconstruct($parentCid);
         }
 
         return $parentCid;

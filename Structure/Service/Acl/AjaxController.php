@@ -29,7 +29,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     /**
      * Получение списка первого уровня для управления правами
      */
-    public function mainUserGroupPermissionAction()
+    public function mainUserGroupPermissionAction(): string|false
     {
         $permission = $this->structureAclModel->getMainUserGroupPermission();
         return json_encode($permission, JSON_FORCE_OBJECT);
@@ -38,7 +38,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     /**
      * Получение списка дочерних пунктов для управления правами
      */
-    public function showChildrenAction()
+    public function showChildrenAction(): string|false
     {
         $permission = $this->structureAclModel->getChildrenPermission();
         return json_encode($permission, JSON_FORCE_OBJECT);

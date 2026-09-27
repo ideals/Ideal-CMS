@@ -96,13 +96,13 @@ switch ($ext) {
         }
 
         $file = $fileList[0];
-        if (!($file['status'] === 'ok' && $file['size'] > 0)) {
+        if ($file['status'] !== 'ok' || $file['size'] <= 0) {
             unlink($dumpNameFull);  // удаляем загруженный файл
             $exitScript('', 'Ошибка: .sql файл в архиве поврежден или пустой');
         }
 
         $ext = substr($file['filename'], strrpos($file['filename'], '.') + 1);
-        if ($ext != 'sql') {
+        if ($ext !== 'sql') {
             unlink($dumpNameFull);  // удаляем загруженный файл
             $exitScript('', 'Ошибка: расширение файла должно быть .sql');
         }

@@ -84,7 +84,7 @@ class ConfigPhp
      * @param string $fileName Название php-файла, в который сохраняются данные
      * @return int Возвращает количество записанных в файл байт или false
      */
-    public function saveFile($fileName)
+    public function saveFile($fileName): int|false
     {
         // Изменяем постоянные настройки сайта
         $file = "<?php\n// @codingStandardsIgnoreFile\nreturn array(\n";

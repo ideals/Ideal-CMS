@@ -87,7 +87,7 @@ class MenuList extends Widget
             $menu[$k]['isActivePage'] = 0;
             $currentCid = substr($v['cid'], 0, $v['lvl'] * $digits);
             if (isset($object['lvl']) && $object['lvl'] >= $lvl
-                && substr($smallCidActive, 0, strlen($currentCid)) === $currentCid
+                && str_starts_with($smallCidActive, $currentCid)
             ) {
                 $menu[$k]['isActivePage'] = 1;
             }

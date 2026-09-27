@@ -41,7 +41,7 @@ class Pagination
         $endPage = ($actualBlock === $endBlock) ? $pagesCount : $startPage + $this->visiblePages - 1;
 
         // Если переменные в GET-запросе уже есть добавляем с амперсандом, иначе с вопросом
-        $urlParam = strpos($urlString, '?') !== false ? '&' . $urlParam . '=' : '?' . $urlParam . '=';
+        $urlParam = str_contains($urlString, '?') ? '&' . $urlParam . '=' : '?' . $urlParam . '=';
 
         $pages = [];
 

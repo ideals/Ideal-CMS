@@ -127,7 +127,7 @@ class Model
 
         if (isset($context['model'])) {
             $model = $context['model'];
-            $structure = $config->getStructureByClass(get_class($model));
+            $structure = $config->getStructureByClass($model::class);
             $pageData = $model->getPageData();
             $json['structure_id'] = $structure['ID'];
             $json['element_id'] = $pageData['ID'];

@@ -153,7 +153,7 @@ class Model
                 $structure = '0-' . $data['ID'];
             } else {
                 $config = Config::getInstance();
-                $structure = $config->getStructureByClass(get_class($model));
+                $structure = $config->getStructureByClass($model::class);
                 $structure = $structure['ID'] . '-' . $data['ID'];
             }
 
@@ -232,7 +232,7 @@ class Model
             $structureTable = $config->getTableByName($structure['structure']);
 
             // Для дочерних элементов пункта "Сервис" не нужно пытаться получать информацию о структуре
-            if (strpos($structureTable, 'ideal_structure_service') === false) {
+            if (!str_contains($structureTable, 'ideal_structure_service')) {
                 $partitionType = $db->select(
                     sprintf('SELECT * FROM %s WHERE ID = :ID', $structureTable),
                     [
@@ -315,7 +315,7 @@ class Model
 
                     // Формируем cid для WHERE-части запроса на выборку дочерних элементов
                     $cid = str_split($cid[0]['cid'], $digits);
-                    $cid = array_filter($cid, fn($v): int => intval($v));
+                    $cid = array_filter($cid, intval(...));
                     $cid = implode('', $cid);
                     $cidRegexpString = '^' . $cid . '(.){' . $digits . '}';
                     if (strlen($cidRegexpString) < $digits * $levels) {
@@ -336,7 +336,7 @@ class Model
                     sprintf('SELECT * FROM %s%s', $childrenStructure['tableName'], $whereString),
                     $par,
                 );
-            } elseif (strpos($elementID, '_') === false) {
+            } elseif (!str_contains($elementID, '_')) {
                 // Если запрашиваются дочерние элементы пункта "Сервис", то собираем их по особенному
                 // Второй уровень вложенности пункта "Сервис" (вкладки), не обслуживается
                 $service = new ServiceModel('');

@@ -23,10 +23,10 @@ abstract class Model extends Core\Model
     {
         parent::__construct($prevStructure);
 
-        $class = strtolower(get_class($this));
+        $class = strtolower(static::class);
         $class = explode('\\', trim($class, '\\'));
 
-        $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
+        $nameParam = ($class[3] === 'admin') ? 'elements_cms' : 'elements_site';
 
         $request = new Request();
 
@@ -107,7 +107,7 @@ abstract class Model extends Core\Model
 
         // Считываем данные дополнительных табов
         foreach ($this->fields as $fieldName => $field) {
-            if (strpos($field['type'], '_Addon') === false) {
+            if (!str_contains($field['type'], '_Addon')) {
                 continue;
             }
 
@@ -234,7 +234,7 @@ abstract class Model extends Core\Model
 
     public function detectPageByIds($path, $par)
     {
-        throw new \Exception('Попытка вызвать непереопределённый метод detectPageByIds в классе ' . get_class($this));
+        throw new \Exception('Попытка вызвать непереопределённый метод detectPageByIds в классе ' . static::class);
     }
 
     public function getFieldsList($tab)
@@ -455,7 +455,7 @@ abstract class Model extends Core\Model
     public function getListAcl($page)
     {
         $config = Config::getInstance();
-        $structure = $config->getStructureByClass(get_class($this));
+        $structure = $config->getStructureByClass(static::class);
         $list = $this->getList($page);
         $ids = [];
         foreach ($list as $k => $v) {
@@ -496,7 +496,7 @@ abstract class Model extends Core\Model
     {
         // Добавляем проверку на скрытие части страниц с помощью прав доступа
         $config = Config::getInstance();
-        $structure = $config->getStructureByClass(get_class($this));
+        $structure = $config->getStructureByClass(static::class);
         $user = \Ideal\Structure\User\Model::getInstance();
         $aclTable = $config->db['prefix'] . 'ideal_structure_acl';
         $sqlAcl = sprintf("SELECT structure FROM %s WHERE user_group_id='%s' AND `show`=0", $aclTable, $user->data['user_group']);
@@ -527,7 +527,7 @@ abstract class Model extends Core\Model
         // Проверяем была ли применена сортировка по убыванию
         $descSort = $request->desc;
         if ($descSort) {
-            $sortArray = [$descSort => 'desc'];
+            return [$descSort => 'desc'];
         }
 
         return $sortArray;

@@ -21,7 +21,7 @@ class AjaxController extends \Ideal\Core\AjaxController
     /**
      * Добавление аддона к списку
      */
-    public function addAction()
+    public function addAction(): string|false
     {
         $request = new Request();
 

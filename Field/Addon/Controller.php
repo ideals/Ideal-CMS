@@ -97,7 +97,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getValue()
+    public function getValue(): string|false
     {
         $value = parent::getValue();
         if (empty($value) || $value == 'null') {

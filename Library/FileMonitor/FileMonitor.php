@@ -27,8 +27,8 @@ class FileMonitor
     /** @var int Время, отведёное скрипту на выполнение работы в секундах */
     private $scriptTime = 50;
 
-    /** @var int Время начала работы скрипта в формате timestamp */
-    private float $startTime;
+    /** @var float Время начала работы скрипта в формате timestamp */
+    private readonly float $startTime;
 
     /** @var array Массив изменённых файлов */
     private $updated = [];
@@ -50,8 +50,6 @@ class FileMonitor
     private string $fileMonitorTmp = '/file-monitor-tmp.txt';
 
     private string $fileMonitorUpd = '/file-monitor-upd.txt';
-
-    private string $tmpDir;
 
     /**
      * Устанавливает время начала работы скрипта и список файлов/каталогов для исключения из сбора.
@@ -91,6 +89,10 @@ class FileMonitor
         $settings['exclude'][] = '/^' . $patternDir . '\/sitemap\.xml/';
 
         foreach ($defaultValues as $key => $item) {
+            if (!property_exists($this, $key)) {
+                continue;
+            }
+
             if (empty($settings[$key])) {
                 if ($item === null) {
                     throw new \Exception('Не указан обязательный параметр ' . $key);

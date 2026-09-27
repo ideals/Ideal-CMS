@@ -81,9 +81,8 @@ class Controller extends AbstractController
      */
     public function getValueForList($values, $fieldName): string
     {
-        $result = '';
         if ($values[$fieldName] != '') {
-            $result = <<<HTML
+            return <<<HTML
                 <span
                     class="has-popover"
                     data-placement="top"
@@ -95,7 +94,7 @@ class Controller extends AbstractController
                 HTML;
         }
 
-        return $result;
+        return '';
     }
 
     /**

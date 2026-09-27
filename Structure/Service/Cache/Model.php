@@ -21,17 +21,12 @@ use Ideal\Core\View;
  */
 class Model
 {
-    protected $configFileClass;
-
     /**
      * При инициализации модели сохраняем класс ConfigPhp в отдельную переменную
      *
      * @param ConfigPhp $configFileClass Экземпляр клаксса "ConfigPhp"
      */
-    public function __construct($configFileClass)
-    {
-        $this->configFileClass = $configFileClass;
-    }
+    public function __construct(protected $configFileClass) {}
 
     /**
      * Отвечает за реакции системы на изменения настроек файлового кэширования,

@@ -84,7 +84,7 @@ class Controller extends AbstractController
 
         if (isset($this->field['values'])) {
             // Если значения select заданы с помощью массива в поле values
-            $value = $this->field['values'][$value];
+            return $this->field['values'][$value];
         }
 
         return $value;

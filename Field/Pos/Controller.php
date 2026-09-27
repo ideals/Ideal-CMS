@@ -78,13 +78,11 @@ class Controller extends AbstractController
         $value = $this->getValue();
 
         if ($value == '') {
-            $html = '<input type="hidden" id="' . $this->htmlName
+            return '<input type="hidden" id="' . $this->htmlName
                 . '" name="' . $this->htmlName
                 . '" value="' . $value . '">';
-        } else {
-            $html = parent::showEdit();
         }
 
-        return $html;
+        return parent::showEdit();
     }
 }

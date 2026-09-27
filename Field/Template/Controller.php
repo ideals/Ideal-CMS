@@ -194,7 +194,7 @@ class Controller extends Select\Controller
         if (isset($request->{'general_structure'})) {
             $lastPrefix = strtolower($request->{'general_structure'});
         } else {
-            $objClassName = get_class($this->model);
+            $objClassName = $this->model::class;
             $objClassNameSlice = explode('\\', $objClassName);
             $lastPrefix = strtolower($objClassNameSlice[0] . '_' . $objClassNameSlice[2]);
         }

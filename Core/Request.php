@@ -29,7 +29,7 @@ class Request
      * @param string $name Название параметра
      * @return string Значение этого параметра в $_REQUEST
      */
-    public function __get(string $name)
+    public function __get(string $name): mixed
     {
         // Перенос в $_REQUEST значений из formValues (используется исключительно для работы в админке)
         if (isset($_REQUEST['formValues'])) {
@@ -47,7 +47,7 @@ class Request
      * @param string $name Название параметра, который нужно задать
      * @param mixed $value Значение параметра
      */
-    public function __set(string $name, $value)
+    public function __set(string $name, mixed $value)
     {
         $_REQUEST[$name] = $value;
     }
@@ -81,7 +81,7 @@ class Request
      * @param string $url Полный адрес вызываемой страницы
      * @return string Query string без параметра $without
      */
-    public function getQueryWithout(string $without, $url = '')
+    public function getQueryWithout(string $without, $url = ''): string|array|null
     {
         $url = empty($url) ? $_SERVER['REQUEST_URI'] : $url;
         // Убираем переменную $without стоящую внутри GET-строки

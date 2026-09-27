@@ -49,7 +49,7 @@ foreach ($result as $v) {
     array_walk($fieldsInfo, function (array $v) use (&$fields): void {
         $fields[$v['Field']] = $v['Type'];
     });
-    if (strpos($table, (string) $config->db['prefix']) === 0) {
+    if (str_starts_with($table, (string) $config->db['prefix'])) {
         $dbTables[$table] = $fields;
     }
 }
@@ -321,7 +321,7 @@ function getFieldListWithTypes(array $data): array
             if (isset($value['sql'])) {
                 $type = '';
                 // получение всех значений при указании типа "SET"
-                if (strpos(mb_strtolower($value['sql']), 'set') === 0) {
+                if (str_starts_with(mb_strtolower($value['sql']), 'set')) {
                     preg_match('/set\(.*?\)/is', $value['sql'], $matchesType);
                     if (isset($matchesType[0])) {
                         $type = preg_replace('/\v|\s\s/is', '', $matchesType[0]);

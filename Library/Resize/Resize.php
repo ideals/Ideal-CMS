@@ -78,7 +78,7 @@ class Resize
         }
 
         // Заданы нулевые размеры для resize, такой картинки не бывает
-        if ($this->width == 0 && $this->height == 0) {
+        if ($this->width === 0 && $this->height === 0) {
             $this->exit404();
         }
 
@@ -126,7 +126,7 @@ class Resize
 
         // Проверяем есть ли в списке разрешённых размеров изображений запрошенное
         $allowResize = explode("\n", $config['allowResize']);
-        return in_array($this->width . $this->sizeDelimiter . $this->height, $allowResize);
+        return in_array($this->width . $this->sizeDelimiter . $this->height, $allowResize, true);
     }
 
     /**
@@ -134,7 +134,7 @@ class Resize
      *
      * @return mixed Данные изображения
      */
-    protected function resizeImage()
+    protected function resizeImage(): string|false
     {
         $imageInfo = getimagesize($this->fullNameOriginal);
         $src = null;
@@ -276,7 +276,7 @@ class Resize
      * @param string $mime Тип файла
      * @return mixed Идентификатор изображения
      */
-    protected function imageCreate($width, $height, $mime)
+    protected function imageCreate($width, $height, $mime): \GdImage|false
     {
         $img = imagecreatetruecolor($width, $height);
         if ($mime == "image/png") {
@@ -335,7 +335,7 @@ class Resize
     /**
      *  Отправка 404 ошибки
      */
-    protected function exit404()
+    protected function exit404(): never
     {
         header("HTTP/1.x 404 Not Found");
         exit;

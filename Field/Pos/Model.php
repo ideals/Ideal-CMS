@@ -23,7 +23,7 @@ class Model
      * @param \Ideal\Core\Model $model
      * @return int
      */
-    public function getNewPos($model)
+    public function getNewPos($model): int|float
     {
         $db = Db::getInstance();
 

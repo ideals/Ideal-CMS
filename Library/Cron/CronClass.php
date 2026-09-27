@@ -73,7 +73,7 @@ class CronClass
 
         // Проверяем правильность задач в файле
         if (!$this->testTasks($this->cron)) {
-            $success = false;
+            return false;
         }
 
         return $success;
@@ -231,7 +231,7 @@ class CronClass
      * @param string $cronString Необработанный crontab
      * @return array Обработанный crontab
      */
-    public function parseCrontab($cronString)
+    public function parseCrontab($cronString): array
     {
         $cron = explode(PHP_EOL, $cronString);
         foreach ($cron as $k => $item) {
@@ -280,7 +280,7 @@ class CronClass
         }
 
         // Если запускаемый скрипт указан относительно корня сайта, то абсолютизируем его
-        if ($fileTask && strpos($fileTask, '/') !== 0) {
+        if ($fileTask && !str_starts_with($fileTask, '/')) {
             $fileTask = $this->siteRoot . '/' . $fileTask;
         }
 

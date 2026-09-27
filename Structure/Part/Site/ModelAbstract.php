@@ -78,7 +78,7 @@ class ModelAbstract extends Model
 
         usort(
             $branches,
-            function (array $a, array $b) {
+            function (array $a, array $b): float|int {
                 $res = $b['count'] - $a['count'];
                 if ($res === 0) {
                     // Количество элементов одинаковое, сортируем по is_skip (первыми без него)
@@ -376,10 +376,10 @@ class ModelAbstract extends Model
     protected function getNestedStructure(array $end): ?object
     {
         $config = Config::getInstance();
-        $rootStructure = $config->getStructureByClass(get_class($this));
+        $rootStructure = $config->getStructureByClass(static::class);
         $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\Site\\Model';
 
-        if (get_class($this) == trim($modelClassName, '\\')) {
+        if (static::class == trim($modelClassName, '\\')) {
             // todo Если вложена такая же структура, то надо продолжать разбор url, но не здесь
             return null;
         }
@@ -413,7 +413,7 @@ class ModelAbstract extends Model
         }
 
         if ($where !== '') {
-            $where = 'WHERE ' . $where;
+            return 'WHERE ' . $where;
         }
 
         return $where;

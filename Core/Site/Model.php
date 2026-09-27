@@ -111,7 +111,7 @@ abstract class Model extends Core\Model
 
         if ($header === '' && isset($this->pageData['name'])) {
             // Если заголовка H1 в тексте нет, берём его из названия name
-            $header = $this->pageData['name'];
+            return $this->pageData['name'];
         }
 
         return $header;

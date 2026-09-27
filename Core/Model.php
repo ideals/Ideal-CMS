@@ -35,20 +35,16 @@ abstract class Model
 
     protected $path = [];
 
-    protected $prevStructure;
-
     /** @var Model Используется только в Addon для обозначения модели-владельца аддона */
     protected $parentModel;
 
     protected $fieldsGroup = 'general';
 
-    public function __construct($prevStructure)
+    public function __construct(protected $prevStructure)
     {
-        $this->prevStructure = $prevStructure;
-
         $config = Config::getInstance();
 
-        $parts = preg_split('/[_\\\\]+/', get_class($this));
+        $parts = preg_split('/[_\\\\]+/', static::class);
         $this->module = $parts[0];
         $module = ($this->module === 'Ideal') ? '' : $this->module . '/';
 
@@ -90,13 +86,6 @@ abstract class Model
         $this->_table = strtolower($config->db['prefix'] . $this->module . '_' . $type . '_' . $structureName);
     }
 
-    public function __get(string $name)
-    {
-        if ($name === 'object') {
-            throw new \Exception('Свойство object упразднено.');
-        }
-    }
-
     /**
      * Определение сокращённого имени структуры Модуль_Структура по имени этого класса
      *
@@ -114,7 +103,7 @@ abstract class Model
         $model = $this;
         $count = count($this->path);
 
-        $class = get_class($this);
+        $class = static::class;
         if ($class == \Ideal\Structure\Home\Site\Model::class) {
             // В случае если у нас открыта главная страница, не нужно переопределять модель как обычной страницы
             return $model;
@@ -132,13 +121,13 @@ abstract class Model
             $prev = $this->path[($count - 2)];
 
             $endClass = ltrim(Util::getClassName($end['structure'], 'Structure'), '\\');
-            $thisClass = get_class($this);
+            $thisClass = static::class;
 
             // Проверяем, соответствует ли класс объекта вложенной структуре
-            if (strpos($thisClass, $endClass) === false) {
+            if (!str_contains($thisClass, $endClass)) {
                 // Если структура активного элемента не равна структуре предыдущего элемента,
                 // то нужно инициализировать модель структуры активного элемента
-                $name = explode('\\', get_class($this));
+                $name = explode('\\', static::class);
                 $modelClassName = Util::getClassName($end['structure'], 'Structure') . '\\' . $name[3] . '\\Model';
                 $prevStructure = $config->getStructureByName($prev['structure']);
                 /* @var $model Model */
@@ -236,7 +225,7 @@ abstract class Model
             $this->setPageNum($page);
         } else {
             // Определяем кол-во отображаемых элементов на основании названия класса
-            $class = strtolower(get_class($this));
+            $class = strtolower(static::class);
             $class = explode('\\', trim($class, '\\'));
             $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
             $onPage = $this->params[$nameParam];
@@ -300,7 +289,7 @@ abstract class Model
         $config = Config::getInstance();
         foreach ($this->fields as $k => $v) {
             // Пропускаем все поля, которые не являются аддоном
-            if (strpos($v['type'], '_Addon') === false) {
+            if (!str_contains($v['type'], '_Addon')) {
                 continue;
             }
 
@@ -310,7 +299,7 @@ abstract class Model
             }
 
             // Определяем структуру на основании названия класса
-            $structure = $config->getStructureByClass(get_class($this));
+            $structure = $config->getStructureByClass(static::class);
 
             if ($structure === false) {
                 // Не удалось определить структуру из конфига (Home)
@@ -330,7 +319,7 @@ abstract class Model
             if (is_array($addonsInfo)) {
                 foreach ($addonsInfo as $addonInfo) {
                     // Инициализируем модель аддона
-                    $class = strtolower(get_class($this));
+                    $class = strtolower(static::class);
                     $class = explode('\\', trim($class, '\\'));
                     $modelName = ($class[3] == 'admin') ? '\\AdminModel' : '\\SiteModel';
                     $className = Util::getClassName($addonInfo[1], 'Addon') . $modelName;
@@ -369,7 +358,7 @@ abstract class Model
         $query = $request->getQueryWithout($pageName);
 
         // Определяем кол-во отображаемых элементов на основании названия класса
-        $class = strtolower(get_class($this));
+        $class = strtolower(static::class);
         $class = explode('\\', trim($class, '\\'));
 
         $nameParam = ($class[3] == 'admin') ? 'elements_cms' : 'elements_site';
@@ -568,7 +557,7 @@ abstract class Model
         $data = $this->getPageData();
         if (isset($data['prev_structure'])) {
             $config = Config::getInstance();
-            $structure = $config->getStructureByClass(get_class($this));
+            $structure = $config->getStructureByClass(static::class);
             $prevStructure = $structure['ID'] . '-' . $data['ID'];
         } else {
             throw new \Exception('No prev_structure in data');

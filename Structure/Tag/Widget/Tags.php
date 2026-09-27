@@ -131,7 +131,10 @@ class Tags extends Widget
         $this->allowedIds = $allowedIds;
     }
 
-    private function setActiveTag(array &$tags, $parentCid, $lvl): void
+    /**
+     * @param array<string, mixed> $tags
+     */
+    private function setActiveTag(array &$tags, string $parentCid, $lvl): void
     {
         if ($lvl == 2) {
             $key = 'top';

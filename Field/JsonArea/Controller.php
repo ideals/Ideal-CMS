@@ -47,7 +47,7 @@ class Controller extends AbstractController
     {
         $value = json_decode(parent::getValue(), true);
         if (!empty($value) && is_array($value)) {
-            $value = implode("\n", $value);
+            return implode("\n", $value);
         }
 
         return $value;
@@ -56,7 +56,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function pickupNewValue()
+    public function pickupNewValue(): string|array|false|int|float|null
     {
         $value = parent::pickupNewValue();
         if (!empty($value)) {

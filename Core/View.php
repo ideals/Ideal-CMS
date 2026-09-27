@@ -90,7 +90,7 @@ class View
      * @param string $name Название переменной
      * @param mixed $value Значение переменной
      */
-    public function __set(string $name, $value)
+    public function __set(string $name, mixed $value)
     {
         $this->vars[$name] = $value;
     }
@@ -125,7 +125,7 @@ class View
      * @param string $name Название переменной
      * @return mixed Переменная
      */
-    public function &__get(string $name)
+    public function &__get(string $name): mixed
     {
         if (is_scalar($this->vars[$name])) {
             $property = $this->vars[$name];
@@ -146,7 +146,7 @@ class View
         $this->template = $this->twig->load($fileName);
     }
 
-    public function render()
+    public function render(): string
     {
         return $this->template->render($this->vars);
     }

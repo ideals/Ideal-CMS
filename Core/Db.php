@@ -120,9 +120,8 @@ class Db extends \mysqli
      * @link http://php.net/manual/ru/mysqli.query.php
      * @param string $query
      * @param int $resultMode
-     * @return bool|\mysqli_result
      */
-    public function query($query, $result_mode = MYSQLI_STORE_RESULT): \mysqli_result|bool
+    public function query($query, int $result_mode = MYSQLI_STORE_RESULT): \mysqli_result|bool
     {
         if ($this->logFile) {
             file_put_contents(
@@ -150,7 +149,6 @@ class Db extends \mysqli
      * @param array $involvedTables Массив с именами таблиц, участвующих в запросе.
      *                              Используется в случаях, когда SQL-запрос содержит JOIN или
      *                              вложенные подзапросы
-     * @return $this
      */
     public function cacheMe($involvedTables = null): self
     {
@@ -169,7 +167,7 @@ class Db extends \mysqli
      * @param array $fields Названия создаваемых полей и описания их типа
      * @return bool|\mysqli_result
      */
-    public function create(string $table, array $fields, bool $execute = true)
+    public function create(string $table, array $fields, bool $execute = true): \mysqli_result|bool|string
     {
         $sqlFields = [];
 
@@ -195,7 +193,6 @@ class Db extends \mysqli
      * ВНИМАНИЕ: в результате выполнения этого метода сбрасывается кэш БД
      *
      * @param string $table Таблица, в которой будут удаляться строки
-     * @return $this
      */
     public function delete($table): self
     {
@@ -214,7 +211,7 @@ class Db extends \mysqli
      * @param bool $exec Флаг выполнять/возвращать сформированный sql-запрос
      * @return bool|string Либо флаг успешности выполнения запроса, либо сам sql-запрос
      */
-    public function exec($exec = true)
+    public function exec($exec = true): string|bool
     {
         if (!$this->updateTableName && !$this->deleteTableName) {
             Util::addError('Попытка вызова exec() без update() или delete().');
@@ -265,7 +262,7 @@ class Db extends \mysqli
      * @param array $params Значения полей для вставки строки
      * @return int ID вставленной строки
      */
-    public function insert($table, $params)
+    public function insert($table, $params): int|string
     {
         $this->clearCache($table);
         $values = [];
@@ -312,7 +309,7 @@ class Db extends \mysqli
      * @param array $params Значения полей для вставки строки
      * @return int количество затронутых строк
      */
-    public function insertMultiple($table, $params)
+    public function insertMultiple($table, $params): string|int
     {
         $this->clearCache($table);
         $vals = [];
@@ -427,7 +424,6 @@ class Db extends \mysqli
      * ВНИМАНИЕ: в результате выполнения этого метода сбрасывается кэш БД
      *
      * @param string $table Таблица, в которой будут обновляться строки
-     * @return $this
      */
     public function update($table): self
     {
@@ -449,7 +445,6 @@ class Db extends \mysqli
      *
      * @param string $sql Строка where-условия
      * @param array $params Параметры, используемые в строке where-условия
-     * @return $this
      */
     public function where($sql, $params = ''): self
     {
@@ -603,7 +598,7 @@ class Db extends \mysqli
 
         // Полученное значение разбивается на массив и очищается от кавычек и псевдонимов
 
-        if (strpos($query, ',') !== false) {
+        if (str_contains($query, ',')) {
             $query = explode(',', $query);
         }
 

@@ -52,7 +52,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
      * @param string $where Исходная WHERE-часть
      * @return string Модифицированная WHERE-часть, с расширенным запросом, если установлена GET-переменная category
      */
-    protected function getWhere($where)
+    protected function getWhere($where): string|false|int|float|null
     {
         $request = new Request();
         $currentType = '';
@@ -71,7 +71,7 @@ class ModelAbstract extends \Ideal\Structure\Roster\Admin\ModelAbstract
         }
 
         if ($where != '') {
-            $where = 'WHERE ' . $where;
+            return 'WHERE ' . $where;
         }
 
         return $where;

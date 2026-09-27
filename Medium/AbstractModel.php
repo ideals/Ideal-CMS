@@ -23,14 +23,8 @@ use Ideal\Core\Db;
  */
 class AbstractModel
 {
-    /** @var string Название редактируемого поля */
-    protected $fieldName;
-
     /** @var array Список полей в медиум-таблице, если она есть */
     protected $fields;
-
-    /** @var Model Модель редактируемого элемента */
-    protected $obj;
 
     /** @var array Настройки медиума из конфигурационного файла */
     protected $params;
@@ -43,14 +37,11 @@ class AbstractModel
      * @param string $fieldName
      * @throws \Exception
      */
-    public function __construct($obj, $fieldName)
+    public function __construct(protected $obj, protected $fieldName)
     {
         $config = Config::getInstance();
 
-        $this->obj = $obj;
-        $this->fieldName = $fieldName;
-
-        $parts = preg_split('/[_\\\\]+/', get_class($this));
+        $parts = preg_split('/[_\\\\]+/', static::class);
         $this->table = strtolower($config->db['prefix'] . $parts[0] . '_' . $parts[1] . '_' . $parts[2]);
         $module = $parts[0];
         $module = ($module == 'Ideal') ? '' : $module . '/';
@@ -72,11 +63,10 @@ class AbstractModel
      * Получение списка элементов для отображения в select'е или другом поле редактирования
      *
      * @throws \Exception
-     * @return array|void
      */
-    public function getList()
+    public function getList(): array
     {
-        throw new \Exception('Вызов в медиуме ' . get_class($this) . ' не переопределённого метода getList');
+        throw new \Exception('Вызов в медиуме ' . static::class . ' не переопределённого метода getList');
     }
 
     /**

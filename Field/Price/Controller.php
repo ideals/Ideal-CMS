@@ -35,7 +35,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function getValue()
+    public function getValue(): int|float
     {
         return (int) parent::getValue() / 100;
     }
@@ -51,7 +51,7 @@ class Controller extends AbstractController
     /**
      * {@inheritdoc}
      */
-    public function pickupNewValue()
+    public function pickupNewValue(): int|float
     {
         $request = new Request();
         $fieldName = $this->groupName . '_' . $this->name;

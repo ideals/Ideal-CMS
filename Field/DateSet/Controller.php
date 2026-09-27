@@ -50,7 +50,7 @@ class Controller extends Date\Controller
     {
         $value = parent::getValue();
         if ($this->getNow && $value == '') {
-            $value = time();
+            return time();
         }
 
         return $value;
