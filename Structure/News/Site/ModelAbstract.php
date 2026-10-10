@@ -123,7 +123,8 @@ class ModelAbstract extends Model
             }
 
             foreach ($addons as $addon) {
-                $addonGroupName = strtolower(end(explode('_', $addon[1])));
+                $addonClass = explode('_', $addon[1]);
+                $addonGroupName = strtolower(end($addonClass));
                 $table = $config->db['prefix'] . 'ideal_addon_' . $addonGroupName;
                 $_sql = sprintf('SELECT * FROM %s WHERE prev_structure=:ps AND tab_ID=:ti', $table);
                 $result = $db->select($_sql, ['ps' => $prevStructure, 'ti' => $addon[0]]);

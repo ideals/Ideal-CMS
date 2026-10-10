@@ -17,12 +17,6 @@ if (!defined('IN_CKFINDER')) exit;
  * @subpackage Utils
  * @copyright CKSource - Frederico Knabben
  */
-
-/**
- * @package CKFinder
- * @subpackage Utils
- * @copyright CKSource - Frederico Knabben
- */
 class CKFinder_Connector_Utils_Security
 {
 
@@ -32,7 +26,7 @@ class CKFinder_Connector_Utils_Security
      */
     public function getRidOfMagicQuotes()
     {
-        if (CKFINDER_CONNECTOR_PHP_MODE<6 && get_magic_quotes_gpc()) {
+        if (defined('CKFINDER_CONNECTOR_PHP_MODE') && CKFINDER_CONNECTOR_PHP_MODE < 6) {
             if (!empty($_GET)) {
                 $this->stripQuotes($_GET);
             }
@@ -43,7 +37,7 @@ class CKFinder_Connector_Utils_Security
                 $this->stripQuotes($_COOKIE);
             }
             if (!empty($_FILES)) {
-                while (list($k,$v) = each($_FILES)) {
+                foreach ($_FILES as $k => $v) {
                     if (isset($_FILES[$k]['name'])) {
                         $this->stripQuotes($_FILES[$k]['name']);
                     }
@@ -63,13 +57,13 @@ class CKFinder_Connector_Utils_Security
     public function stripQuotes(&$var, $depth=0, $howDeep=5)
     {
         if (is_array($var)) {
-            if ($depth++<$howDeep) {
-                while (list($k,$v) = each($var)) {
-                    $this->stripQuotes($var[$k], $depth, $howDeep);
+            if ($depth++ < $howDeep) {
+                foreach ($var as &$v) {
+                    $this->stripQuotes($v, $depth, $howDeep);
                 }
             }
         } else {
-            $var = stripslashes($var);
+            $var = stripslashes((string)$var);
         }
     }
 }

@@ -440,9 +440,10 @@ class CKFinder_Connector_Core_Config
             return $_null;
         }
 
-        reset($GLOBALS['config']['ResourceType']);
-        while (list($_key,$_resourceTypeNode) = each($GLOBALS['config']['ResourceType'])) {
-            if ($_resourceTypeNode['name'] === $resourceTypeName) {
+        // Конструкция reset() + while + each() полностью удалена.
+        // Заменено на современный, быстрый и поддерживаемый цикл foreach.
+        foreach ($GLOBALS['config']['ResourceType'] as $_resourceTypeNode) {
+            if (isset($_resourceTypeNode['name']) && $_resourceTypeNode['name'] === $resourceTypeName) {
                 $this->_resourceTypeConfigCache[$resourceTypeName] = new CKFinder_Connector_Core_ResourceTypeConfig($_resourceTypeNode);
 
                 return $this->_resourceTypeConfigCache[$resourceTypeName];
