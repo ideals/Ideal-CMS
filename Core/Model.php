@@ -504,7 +504,7 @@ abstract class Model
             return $this->pageNum;
         }
 
-        $this->pageNum = 0;
+        $this->pageNum = 1;
         if ($pageNum !== null) {
             $page = intval(substr($pageNum, 0, 10)); // отсекаем всякую ерунду и слишком большие числа в листалке
             // Если номер страницы отрицательный или ноль, то устанавливаем первую страницу

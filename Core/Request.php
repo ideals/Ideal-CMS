@@ -38,7 +38,7 @@ class Request
             unset($_REQUEST['formValues']);
         }
 
-        return $_REQUEST[$name] ?? '';
+        return $_REQUEST[$name] ?? null;
     }
 
     /**
