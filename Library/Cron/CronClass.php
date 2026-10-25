@@ -302,8 +302,9 @@ class CronClass
             $this->cron = $this->parseCrontab(file_get_contents($fileName));
         } else {
             $this->cron = [];
-            $fileName = stream_resolve_include_path(dirname($fileName)) . 'crontab';
+            $fileName = stream_resolve_include_path(dirname($fileName)) . '/crontab';
             file_put_contents($fileName, '');
+            // todo файл крона не найден, добавить в логи запись о создании файла
         }
 
         $this->cronFile = $fileName;
