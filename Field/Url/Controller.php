@@ -151,10 +151,6 @@ class Controller extends AbstractController
         curl_exec($ch);
 
         // Получаем HTTP код
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        curl_close($ch);
-
-        return $httpCode;
+        return curl_getinfo($ch, CURLINFO_HTTP_CODE);
     }
 }
