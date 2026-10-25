@@ -10,8 +10,6 @@
 
 namespace Ideal\Core;
 
-use Ideal\Mailer;
-
 /**
  * Класс полезных функций
  *
@@ -309,10 +307,12 @@ class Util
             }
 
             $subject = 'Сообщение об ошибке на сайте ' . $config->domain;
-            $mail = new Mailer();
-            $mail->setSubj($subject);
-            $mail->setPlainBody($text);
-            $mail->sent($config->robotEmail, $config->cms['adminEmail']);
+            new Mailer()
+                ->subject($subject)
+                ->text($text)
+                ->to($config->cms['adminEmail'])
+                ->sent()
+            ;
         }
     }
 

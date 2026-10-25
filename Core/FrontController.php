@@ -12,7 +12,6 @@ namespace Ideal\Core;
 
 use Ideal\Core\Api\Router;
 use Ideal\Structure\User\Model;
-use Ideal\Mailer;
 
 /**
  * Front Controller объединяет всю обработку запросов, пропуская запросы через единственный объект-обработчик.
@@ -154,10 +153,12 @@ class FrontController
 
             $message .= '$_SERVER = ' . "\n" . print_r($_SERVER, true) . "\n\n";
             $subject = "Страница не найдена (404) на сайте " . $config->domain;
-            $mail = new Mailer();
-            $mail->setSubj($subject);
-            $mail->setPlainBody($message);
-            $mail->sent($config->robotEmail, $config->cms['adminEmail']);
+            new Mailer()
+                ->subject($subject)
+                ->text($message)
+                ->to($config->cms['adminEmail'])
+                ->sent()
+            ;
         }
     }
 }

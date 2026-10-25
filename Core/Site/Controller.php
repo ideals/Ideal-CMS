@@ -44,7 +44,7 @@ class Controller
         $title = 'Страница не найдена';
         if ($this->view !== null) {
             // Если шаблон был инициирован ранее, сбрасываем его, чтобы поставить шаблон 404-ой ошибки
-            unset($this->view);
+            $this->view = null;
         }
 
         $this->templateInit('404.twig');
