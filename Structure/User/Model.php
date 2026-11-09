@@ -11,6 +11,7 @@ namespace Ideal\Structure\User;
 
 use Ideal\Core\Config;
 use Ideal\Core\Db;
+use Ideal\Core\Session;
 
 /**
  * Класс для работы с пользователем
@@ -48,11 +49,7 @@ class Model
      */
     public function __construct($seance = '')
     {
-        // Запуск сессий только в случае, если они не запущены
-        if (session_id() == '') {
-            // Для корректной работы этого класса нужны сессии
-            session_start();
-        }
+        Session::start();
 
         $config = Config::getInstance();
 

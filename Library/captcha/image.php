@@ -9,6 +9,8 @@
 // Licence CeCILL modifi�e
 // => Voir fichier Licence_CeCILL_V2-fr.txt)
 // -----------------------------------------------
+use Ideal\Core\Session;
+
 if (!defined('DOCUMENT_ROOT')) {
     define('DOCUMENT_ROOT', getenv('SITE_ROOT') ? getenv('SITE_ROOT') : $_SERVER['DOCUMENT_ROOT']);
 }
@@ -164,7 +166,7 @@ $cryptoneuse = false; // Si vous souhaitez que la page de verification ne valide
 error_reporting(E_ALL ^ E_NOTICE);
 srand((double)microtime() * 1000000);
 
-session_start();
+Session::start();
 
 $path = pathinfo($_SERVER['SCRIPT_NAME']);
 $folder = DOCUMENT_ROOT . $path['dirname'] . '/';

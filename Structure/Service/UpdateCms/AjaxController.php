@@ -10,6 +10,7 @@
 namespace Ideal\Structure\Service\UpdateCms;
 
 use Ideal\Core\Config;
+use Ideal\Core\Session;
 
 /**
  * Обновление IdealCMS или одного модуля
@@ -63,9 +64,7 @@ class AjaxController extends \Ideal\Core\AjaxController
         );
 
         // Создаём сессию для хранения данных между ajax запросами
-        if (session_id() == '') {
-            session_start();
-        }
+        Session::start();
 
         if (!isset($_POST['version']) || !isset($_POST['name'])) {
             $this->updateModel->addAnswer('Непонятно, что обновлять. Не указаны version и name', 'error');
