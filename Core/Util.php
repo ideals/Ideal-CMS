@@ -312,10 +312,7 @@ class Util
                 $text .= '$_COOKIE = ' . "\n" . print_r($_COOKIE, true) . "\n\n";
             }
             $subject = "Сообщение об ошибке на сайте " . $config->domain;
-            $mail = new \Ideal\Mailer();
-            $mail->setSubj($subject);
-            $mail->setPlainBody($text);
-            $mail->sent($config->robotEmail, $config->cms['adminEmail']);
+            (new Mailer)->send($config->cms['adminEmail'], $subject, $text);
         }
     }
 
