@@ -26,10 +26,10 @@ class Logger
 
         $log = new MonologLogger($channel);
         $log->pushHandler(
-            (new StreamHandler(
+            new StreamHandler(
                 DOCUMENT_ROOT . '/../tmp/log/' . $_ENV['APP_ENV'] . '.log',
                 MonologLogger::DEBUG,
-            ))->setFormatter($formatter),
+            )->setFormatter($formatter),
         );
 
         self::$instance[$channel] = $log;

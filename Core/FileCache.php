@@ -217,8 +217,9 @@ class FileCache
      */
     private static function checkDir(string $path): void
     {
-        if (!is_dir($path)) {
-            mkdir($path, 0777, true);
+        /** @noinspection MkdirRaceConditionInspection */
+        if (!is_dir($path) && !mkdir($path, 0o777, true)) {
+            throw new \RuntimeException(sprintf('Directory "%s" was not created', $path));
         }
     }
 }

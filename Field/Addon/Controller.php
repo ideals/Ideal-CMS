@@ -34,6 +34,7 @@ use Ideal\Field\AbstractController;
 class Controller extends AbstractController
 {
     /** {@inheritdoc} */
+    #[\Override]
     protected static $instance;
 
     /**

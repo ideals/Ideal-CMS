@@ -29,6 +29,7 @@ use Ideal\Field\Date;
 class Controller extends Date\Controller
 {
     /** {@inheritdoc} */
+    #[\Override]
     protected static $instance;
 
     /** @var bool Флаг необходимости получить текущую дату и время, либо считывать сохранённые из БД */

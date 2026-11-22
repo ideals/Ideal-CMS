@@ -27,6 +27,7 @@ use Ideal\Core\Config;
 class Controller extends AbstractController
 {
     /** @inheritdoc */
+    #[\Override]
     protected static $instance;
 
     /**
@@ -99,9 +100,9 @@ class Controller extends AbstractController
 
         // Проверяем url на существование
         $httpCode = $this->checkUrl($link);
-        if ($httpCode == 200) {
+        if ($httpCode === 200) {
             $item['message'] = 'URL: ' . $link . ' уже используется!';
-        } elseif ($httpCode != 404) {
+        } elseif ($httpCode !== 404) {
             // Если не 404 ошибка, то уведомляем об этом польлзователя и не создаём страницу
             $item['message'] = 'URL: ' . $link . ' выдаёт ошибку с HTTP-кодом ' . $httpCode;
         }
@@ -126,7 +127,7 @@ class Controller extends AbstractController
      * @param string $url SEO ссылка на создаваемый/редактируемый материал
      * @return mixed HTTP-код ответа сервера
      */
-    private function checkUrl($url)
+    private function checkUrl($url): int
     {
         // Выстраиваем ссылку к создаваемой странице
         $config = Config::getInstance();

@@ -231,7 +231,7 @@ if (isset($_POST['do']) && !$execute) {
 $isCool = true;
 
 foreach ($cfgTables as $tableName => $tableFields) {
-    if (!array_key_exists($tableName, $dbTables)) {
+    if (!array_key_exists((string) $tableName, $dbTables)) {
         echo '<p class="well"><input type="checkbox" name="create[' . $tableName . ']">&nbsp; ';
         echo 'Таблица <strong>' . $tableName . '</strong> отсутствует в базе данных. Создать?</p>';
         $isCool = false;

@@ -72,9 +72,9 @@ class SiteModel extends AbstractSiteModel
             $this->params['elements_site'] = empty($elementsSite) ? 15 : $elementsSite;
 
             try {
-                $request = (new WebSearchRequest(
+                $request = new WebSearchRequest(
                     'site:' . $config->domain . ' "' . str_replace('"', '', $query) . '"',
-                ))
+                )
                     ->setPerPage((int) $this->params['elements_site'])
                     ->setPage($page);
             } catch (VeryLongQueryException) {

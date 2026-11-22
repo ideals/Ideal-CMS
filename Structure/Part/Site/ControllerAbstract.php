@@ -16,6 +16,7 @@ use Ideal\Core\Request;
 class ControllerAbstract extends Controller
 {
     /** @var bool Включение листалки (пагинации) */
+    #[\Override]
     protected $isPager = false;
 
     public function indexAction(): void

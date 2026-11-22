@@ -17,6 +17,7 @@ use Ideal\Core\Request;
 class ControllerAbstract extends Controller
 {
     /** @var $model Model */
+    #[\Override]
     protected $model;
 
     public function detailAction(): void

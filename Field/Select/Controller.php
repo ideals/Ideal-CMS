@@ -36,6 +36,7 @@ use Ideal\Field\AbstractController;
 class Controller extends AbstractController
 {
     /** @inheritdoc */
+    #[\Override]
     protected static $instance;
 
     /** @var array Список вариантов выбора для select */

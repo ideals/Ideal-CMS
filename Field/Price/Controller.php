@@ -18,6 +18,7 @@ use Ideal\Core\Request;
  */
 class Controller extends AbstractController
 {
+    #[\Override]
     protected static $instance;
 
     /**

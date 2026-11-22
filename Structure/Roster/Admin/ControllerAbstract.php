@@ -16,6 +16,7 @@ use Ideal\Core\Request;
 class ControllerAbstract extends Controller
 {
     /* @var $model ModelAbstract */
+    #[\Override]
     protected $model;
 
     public function indexAction(): void

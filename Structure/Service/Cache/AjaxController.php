@@ -26,7 +26,7 @@ class AjaxController extends \Ideal\Core\AjaxController
      */
     public function clearCacheAction(): void
     {
-        (new ClearCache())->execute();
+        new ClearCache()->execute();
         print json_encode(['text' => 'ok'], JSON_THROW_ON_ERROR);
 
         exit;

@@ -270,7 +270,6 @@ while ($x > 0 && !$xend) {
 }
 
 $xvariation = round(($cryptwidth / 2) - (($xend - $xbegin) / 2));
-imagedestroy($imgtmp);
 
 // Cr�ation du cryptogramme d�finitif
 // Cr�ation du fond
@@ -309,7 +308,6 @@ if ($bgimg !== '') {
     }
 
     imagecopyresized($img, $imgread, 0, 0, 0, 0, $cryptwidth, $cryptheight, $getwidth, $getheight);
-    imagedestroy($imgread);
 } else {
     $bg = imagecolorallocate($img, $bgR, $bgG, $bgB);
     imagefill($img, 0, 0, $bg);
@@ -529,6 +527,5 @@ switch (strtoupper($cryptformat)) {
         }
 }
 
-imagedestroy($img);
 unset($word, $tword);
 unset($_SESSION['cryptreload']);

@@ -60,8 +60,8 @@ class View
         if ($isCache) {
             $cachePath = DOCUMENT_ROOT . $config->cms['tmpFolder'] . '/templates';
             $params['cache'] = stream_resolve_include_path($cachePath);
-            if ($params['cache'] == false) {
-                if (mkdir($cachePath, 0777, true)) {
+            if ($params['cache'] === false) {
+                if (mkdir($cachePath, 0o777, true) || is_dir($cachePath)) {
                     $params['cache'] = stream_resolve_include_path($cachePath);
                 } else {
                     Util::addError('Не удалось определить путь для кэша шаблонов: ' . $cachePath);

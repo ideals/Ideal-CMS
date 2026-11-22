@@ -12,8 +12,9 @@ use Symfony\Component\Mime\Email;
 
 class Mailer
 {
-    private SymfonyMailer $mailer;
-    private Email $email;
+    private readonly SymfonyMailer $mailer;
+
+    private readonly Email $email;
 
     public function __construct()
     {

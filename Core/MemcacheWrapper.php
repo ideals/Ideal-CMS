@@ -210,12 +210,6 @@ class MemcacheWrapper extends \Memcache
 
         $tagsVersions = (array) parent::get(array_keys($tags));
 
-        foreach ($tagsVersions as $tagKey => $tagVersion) {
-            if (is_null($tagVersion) || $tags[$tagKey] != $tagVersion) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all($tagsVersions, fn($tagVersion, $tagKey): bool => !is_null($tagVersion) && $tags[$tagKey] == $tagVersion);
     }
 }

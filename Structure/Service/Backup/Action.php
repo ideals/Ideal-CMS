@@ -30,7 +30,7 @@ try {
     $tmpFull = stream_resolve_include_path($tmpFolder);
 
     // Проверяем существует ли временная папка и если нет, то пытаемся её создать
-    if ($tmpFull === false && mkdir($tmpFolder, 0755)) {
+    if ($tmpFull === false && mkdir($tmpFolder, 0o755)) {
         $tmpFull = stream_resolve_include_path($tmpFolder);
     }
 
@@ -45,7 +45,7 @@ try {
     // Проверяем существует ли папка для создания бэкапов и если нет, то пытаемся её создать
     $backupFolder = $tmpFull . $backupFolder;
     $backupPart = stream_resolve_include_path($backupFolder);
-    if ($backupPart === false && mkdir($backupFolder, 0755)) {
+    if ($backupPart === false && mkdir($backupFolder, 0o755)) {
         $backupPart = stream_resolve_include_path($backupFolder);
     }
 

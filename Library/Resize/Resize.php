@@ -238,7 +238,6 @@ class Resize
                 $destHeight2 = ($destHeight - $this->height) / 2;
                 imageCopyResampled($dest, $src, 0, 0, 0, 0, $this->width, $destHeight, imagesx($src), imagesy($src));
                 imagecopy($dest2, $dest, 0, 0, 0, $destHeight2, imagesx($dest), imagesy($dest));
-                imagedestroy($dest);
             }
         }
 
@@ -300,7 +299,7 @@ class Resize
 
         /** Добавляем структуру категорий */
         if (!is_dir($pathResizedImg)) {
-            mkdir($pathResizedImg, 0777, true);
+            mkdir($pathResizedImg, 0o777, true);
         }
 
         $this->fullNameResized = $resizedImgFile;

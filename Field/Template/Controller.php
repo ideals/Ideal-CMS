@@ -31,6 +31,7 @@ use Ideal\Core\Request;
 class Controller extends Select\Controller
 {
     /** @inheritdoc */
+    #[\Override]
     protected static $instance;
 
     /**
